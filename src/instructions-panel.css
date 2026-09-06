@@ -1,0 +1,32 @@
+#instructions-panel{min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column;color:var(--theme-text,#d6e1e6)}#instructions-panel[hidden]{display:none}.output-pane.instructions-open{grid-template-rows:47px minmax(0,1fr)!important;grid-template-columns:minmax(0,1fr)!important}.output-pane.instructions-open #instructions-panel{grid-row:2;grid-column:1}.output-pane.instructions-open :is(.stdin-section,.runtime-card,#clear){display:none}.output-pane.instructions-open .output-header{grid-column:1;grid-row:1}.output-header .tabs{min-width:0;overflow-x:auto}.output-header .tabs button{flex-shrink:0;padding-left:10px;padding-right:10px}.instruction-search{padding:12px 14px 4px;display:grid;gap:7px}.instruction-search :is(input,select),.instruction-detail>select{width:100%;min-width:0;padding:7px 9px;border:1px solid var(--theme-border,#40515c);border-radius:4px;background:var(--theme-bg,#151a21);color:var(--theme-text,#d6e1e6);font:12px system-ui}.instruction-count{margin:3px 14px;font-size:11px;color:var(--theme-muted,#91a19e)}.instruction-index{padding:0 14px 10px;max-height:170px;overflow:auto;flex-shrink:0;border-bottom:1px solid var(--theme-border,#40515c);font:12px/1.7 system-ui}.instruction-index summary{cursor:pointer;padding:4px 0}.instruction-buttons{display:flex;gap:5px;flex-wrap:wrap;padding:5px 0}.instruction-buttons button{border:1px solid var(--theme-border,#40515c);border-radius:4px;background:var(--theme-bg,#151a21);color:var(--theme-text,#d6e1e6);padding:4px 7px;font:12px Consolas,monospace;cursor:pointer}.instruction-buttons button[aria-pressed=true]{border-color:var(--theme-accent,#91caba);background:var(--theme-selection,#23352f)}.instruction-detail{overflow:auto;min-height:0;padding:16px;font:13px/1.8 system-ui;overflow-wrap:anywhere}.instruction-detail h2{font:700 23px Consolas,monospace;margin:3px 0;color:var(--theme-accent,#91caba)}.instruction-detail h3{font-size:12px;margin:15px 0 6px}.instruction-detail h4{font-size:11px;margin:0 0 5px}.instruction-eyebrow,.instruction-title,.instruction-local-note{font-size:11px;color:var(--theme-muted,#91a19e)}.instruction-title{margin:0}.instruction-summary{margin:12px 0}.instruction-reading,.instruction-advanced{border:1px solid var(--theme-border,#40515c);border-radius:5px;padding:8px 10px;margin:12px 0}.instruction-detail summary{cursor:pointer;font-weight:600}.instruction-example{white-space:pre-wrap;padding:9px;background:var(--theme-bg,#151a21);border:1px solid var(--theme-border,#40515c);border-radius:4px;font:12px/1.7 Consolas,monospace}.instruction-pair{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:6px}.instruction-arrow{align-self:center;color:var(--theme-accent,#91caba);font-size:20px}.instruction-value{display:flex;gap:6px;padding:6px;margin:3px 0;background:var(--theme-bg,#151a21);border-left:2px solid var(--theme-border,#40515c);border-radius:3px;font-size:12px}.instruction-pair section:last-child .instruction-value{background:var(--theme-selection,#23352f);border-left-color:var(--theme-accent,#91caba)}.instruction-value small{font:9px/2 Consolas,monospace;color:var(--theme-muted,#91a19e)}.instruction-empty,.instruction-rest{padding:5px;font-size:10px;color:var(--theme-muted,#91a19e);text-align:center}.instruction-empty{border:1px dashed var(--theme-border,#40515c)}.instruction-note{font-size:12px}.instruction-detail a{color:var(--theme-accent,#91caba)}.instruction-advanced pre{white-space:pre-wrap}.instruction-advanced table{display:block;overflow:auto}.instruction-advanced ul{padding-left:18px}.instruction-advanced :is(h1,h2,h3,h4,h5){font-size:13px;margin-top:14px}.instruction-reading p{font-size:12px}@media(max-width:650px){.instruction-index{max-height:95px}.instruction-search{grid-template-columns:1fr 1fr;padding:7px 10px 0}.instruction-detail{padding:10px}.output-pane.instructions-open{grid-template-rows:40px minmax(0,1fr)!important}}
+
+#instructions-panel{container-type:inline-size;background:var(--theme-surface,#0e151b)}
+.instruction-body{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden}
+.instruction-detail{flex:1}
+@container (min-width:650px){
+ .instruction-search{grid-template-columns:1fr 250px;padding-top:7px}
+ .instruction-body{display:grid;grid-template-columns:220px minmax(0,1fr)}
+ .instruction-index{max-height:none;min-height:0;border-bottom:0;border-right:1px solid var(--theme-border,#40515c)}
+ .instruction-detail{padding:8px 18px}
+ .instruction-detail>header{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+ .instruction-detail .instruction-eyebrow{display:none}
+}
+@media(max-width:650px){.instruction-index{max-height:65px}.instruction-search :is(input,select){padding:5px}.instruction-detail{min-height:75px}}
+
+@media(min-width:801px){:root[data-theme^="hitachi-"] .workspace:has(.instructions-open){grid-template-rows:88px minmax(200px,1fr) minmax(340px,45%)}}
+@media(max-width:800px){:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace:has(.instructions-open){grid-template-rows:auto auto 420px 460px}}
+
+.instruction-detail h2{color:var(--instruction-color,var(--theme-accent))}
+
+/* Selection is a temporary overlay; the instruction always gets the full body. */
+#instructions-panel{position:relative}
+.instruction-search{display:block;position:relative;padding:10px 14px;flex-shrink:0;z-index:2}
+.instruction-chooser{position:absolute;top:100%;left:14px;right:14px;max-height:min(400px,55vh);overflow:auto;padding:10px 0;background:var(--theme-surface,#202833);border:1px solid var(--theme-border,#40515c);box-shadow:0 8px 20px #0005;border-radius:4px}
+.instruction-chooser>select{width:calc(100% - 20px);margin:0 10px 6px}
+.instruction-index{max-height:none;border:0;overflow:visible}
+.instruction-body{display:flex;flex-direction:column}
+.instruction-advanced{border:0;border-radius:0;padding:0;margin:20px 0}
+.instruction-pair>section{display:flex;flex-direction:column;min-width:0}
+.instruction-values{display:flex;flex:1;flex-direction:column;justify-content:flex-end}
+.instruction-rest{font-size:16px;padding:0 5px}
+.instruction-category-note{font-size:12px;color:var(--theme-muted,#91a19e)}
