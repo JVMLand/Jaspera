@@ -1,0 +1,275 @@
+package tokyo.peya.langjal.compiler.utils;
+
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import tokyo.peya.langjal.compiler.JALParser;
+import tokyo.peya.langjal.compiler.exceptions.IllegalValueException;
+import tokyo.peya.langjal.compiler.jvm.EOpcodes;
+
+import java.util.function.Function;
+
+/**
+ * Utility class providing common evaluation functions for the compiler.
+ */
+public class EvaluatorCommons {
+    /**
+     * Converts an access level context to its corresponding opcode value.
+     *
+     * @param accessLevel The access level context.
+     * @return The opcode value for the access level.
+     */
+    public static int asAccessLevel(@Nullable JALParser.AccessLevelContext accessLevel) {
+        if (accessLevel == null)
+            return 0;
+
+        if (accessLevel.KWD_ACC_PUBLIC() != null)
+            return EOpcodes.ACC_PUBLIC;
+        if (accessLevel.KWD_ACC_PRIVATE() != null)
+            return EOpcodes.ACC_PRIVATE;
+        if (accessLevel.KWD_ACC_PROTECTED() != null)
+            return EOpcodes.ACC_PROTECTED;
+
+        throw new IllegalArgumentException("Unknown access level: " + accessLevel.getText());
+    }
+
+    /**
+     * Converts a terminal node to its string value, removing quotes and escape sequences.
+     *
+     * @param node The terminal node.
+     * @return The unwrapped string value, or null if empty.
+     */
+    public static String asString(@NotNull TerminalNode node) {
+        String text = node.getText();
+        if (text == null || text.isEmpty())
+            return null;
+
+        return unescapeStringLiteral(text);
+    }
+
+    public static String unescapeStringLiteral(@NotNull String text) {
+        if (text.startsWith("\"") && text.endsWith("\""))
+            text = text.substring(1, text.length() - 1);
+        else if (text.startsWith("'") && text.endsWith("'"))
+            text = text.substring(1, text.length() - 1);
+
+        StringBuilder result = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c != '\\' || i + 1 >= text.length()) {
+                result.append(c);
+                continue;
+            }
+
+            char escaped = text.charAt(++i);
+            switch (escaped) {
+                case 'b' -> result.append('\b');
+                case 't' -> result.append('\t');
+                case 'n' -> result.append('\n');
+                case 'f' -> result.append('\f');
+                case 'r' -> result.append('\r');
+                case '"', '\'', '\\' -> result.append(escaped);
+                default -> result.append('\\').append(escaped);
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Converts a terminal node to its integer value.
+     *
+     * @param node The terminal node.
+     * @return The integer value.
+     * @throws IllegalValueException if the value is invalid.
+     */
+    public static int asInteger(@NotNull TerminalNode node) {
+        Number number = toNumber(node);
+        if (number == null)
+            throw new IllegalValueException("Invalid integer value: " + node.getText(), node);
+        return number.intValue();
+    }
+
+    /**
+     * Converts a terminal node to a Number object.
+     *
+     * @param number The terminal node.
+     * @return The Number object, or null if invalid.
+     * @throws IllegalValueException if the value is invalid.
+     */
+    public static Number toNumber(@Nullable TerminalNode number) {
+        if (number == null || number.getText() == null || number.getText().isEmpty())
+            return null;
+
+        try {
+            return toNumber(number.getText());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalValueException(e.getMessage(), number);
+        }
+    }
+
+    /**
+     * Converts a string to a Number object.
+     *
+     * @param numberString The string representation of the number.
+     * @return The Number object, or null if invalid.
+     * @throws IllegalArgumentException if the value is invalid.
+     */
+    public static Number toNumber(@Nullable String numberString) {
+        if (numberString == null || numberString.isEmpty())
+            return null;
+
+        String type = getNumberType(numberString);
+        Function<String, ? extends Number> parseFunction = getNumberParsingFunction(type);
+        if (parseFunction == null)
+            throw new IllegalArgumentException("Unknown number type: " + type + " for number: " + numberString);
+
+        if (!type.startsWith("may-")) {
+            // "may-" で始まらない場合は，接尾辞がついているので，取り除く
+            numberString = numberString.replaceAll("[fFdDlL]$", "");
+        }
+        if (type.endsWith("-hex"))
+            numberString = numberString.startsWith("-0x")
+                    ? "-" + numberString.substring(3)
+                    : numberString.substring(2);
+
+        try {
+            return parseFunction.apply(numberString);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid number format: " + numberString + " for type: " + type, e);
+        }
+    }
+
+    /**
+     * Checks if the given string is a valid number.
+     *
+     * @param number The string to check.
+     * @return True if valid, false otherwise.
+     */
+    public static boolean isNumber(@Nullable String number) {
+        if (number == null || number.isEmpty())
+            return false;
+
+        try {
+            toNumber(number);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Gets the parsing function for the given number type.
+     *
+     * @param type The number type.
+     * @return The parsing function, or null if unknown.
+     */
+    private static Function<String, ? extends Number> getNumberParsingFunction(@NotNull String type) {
+        return switch (type) {
+            case "float" -> Float::parseFloat;
+            case "double", "may-double" -> Double::parseDouble;
+            case "long" -> Long::parseLong;
+            case "long-hex" -> s -> Long.parseLong(s, 16);
+            case "int", "may-int" -> Integer::parseInt;
+            case "may-int-hex" -> s -> Integer.parseInt(s, 16);
+            default -> null; // null を返すことで fallback させる
+
+        };
+    }
+
+    /**
+     * Determines the type of the given number string.
+     *
+     * @param number The number string.
+     * @return The type string, or null if invalid.
+     */
+    public static String getNumberType(String number) {
+        if (number == null || number.isEmpty())
+            return null;
+
+        if (number.startsWith("0x") || number.startsWith("-0x")) {
+            if (number.endsWith("l") || number.endsWith("L"))
+                return "long-hex";
+            else
+                return fitsInInt(number, 16) ? "may-int-hex" : "long-hex";
+        }
+
+        if (number.endsWith("f") || number.endsWith("F"))
+            return "float";
+        else if (number.endsWith("d") || number.endsWith("D"))
+            return "double";
+        else if (number.endsWith("l") || number.endsWith("L"))
+            return "long";
+        else if (number.contains("."))
+            return "may-double";
+        else
+            return fitsInInt(number, 10) ? "may-int" : "long";
+    }
+
+    private static boolean fitsInInt(@NotNull String number, int radix) {
+        String normalized = number;
+        if (radix == 16)
+            normalized = number.startsWith("-0x") ? "-" + number.substring(3) : number.substring(2);
+
+        try {
+            Integer.parseInt(normalized, radix);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Unwraps a class type descriptor to its internal name.
+     *
+     * @param typeDescriptor The type descriptor context.
+     * @return The internal class name.
+     * @throws IllegalValueException if the descriptor is invalid.
+     */
+    public static String unwrapClassTypeDescriptor(@NotNull JALParser.TypeDescriptorContext typeDescriptor) {
+        String typeName = typeDescriptor.getText();
+        while (typeName.startsWith("[")) {
+            typeName = typeName.substring(1);
+        }
+
+        if (typeName.startsWith("L") && typeName.endsWith(";"))
+            return typeName.substring(1, typeName.length() - 1);
+        else
+            throw new IllegalValueException("Invalid class type descriptor: " + typeName, typeDescriptor);
+    }
+
+    /**
+     * Converts a terminal node to its boolean value.
+     *
+     * @param value The terminal node.
+     * @return The boolean value.
+     * @throws IllegalValueException if the value is invalid.
+     */
+    public static boolean toBoolean(@NotNull TerminalNode value) {
+
+        String valueText = value.getText();
+        if ("true".equalsIgnoreCase(valueText) || "1".equals(valueText))
+            return true;
+        else if ("false".equalsIgnoreCase(valueText) || "0".equals(valueText))
+            return false;
+        else
+            throw new IllegalValueException("Invalid boolean value: " + valueText, value);
+    }
+
+    /**
+     * Evaluates a scalar argument from the parser context.
+     *
+     * @param scalar The scalar type context.
+     * @return The evaluated value (Number, String, or Boolean).
+     * @throws IllegalValueException if the type is unknown.
+     */
+    public static Object evaluateScalar(JALParser.JvmInsArgScalarTypeContext scalar) {
+        if (scalar.NUMBER() != null)
+            return toNumber(scalar.NUMBER());
+        else if (scalar.STRING() != null) {
+            return asString(scalar.STRING());
+        } else if (scalar.BOOLEAN() != null)
+            return toBoolean(scalar.BOOLEAN());
+        else
+            throw new IllegalValueException("Unknown scalar type: " + scalar.getText(), scalar);
+    }
+}
