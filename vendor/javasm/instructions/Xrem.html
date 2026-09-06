@@ -1,0 +1,62 @@
+<!-- Instructions: irem, lrem, frem, drem -->
+<div class="definition">
+    <h2>Remainder Instructions</h2>
+    <p>
+        <b>{link:irem}</b> - <code>0x70</code> (112)<br>
+        <b>{link:lrem}</b> - <code>0x71</code> (113)<br>
+        <b>{link:frem}</b> - <code>0x72</code> (114)<br>
+        <b>{link:drem}</b> - <code>0x73</code> (115)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>Computes the remainder of dividing the second-top operand by the top operand and pushes the result. Integer
+        division by zero throws <code>ArithmeticException</code>. Floating-point operations follow IEEE 754 semantics.
+    </p>
+    <ul>
+        <li><b>{link:irem}</b>/<b>{link:lrem}</b>: result sign follows dividend; division-by-zero is exceptional.</li>
+        <li><b>{link:frem}</b>/<b>{link:drem}</b>: IEEE 754 remainder behaviour, including NaN propagation.</li>
+    </ul>
+
+    <h5><b>Operands:</b> None</h5>
+
+    <h5><b>Format:</b> <code>{instruction}</code></h5>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>irem</code></li>
+        <li><code>drem</code></li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li><b>{link:irem}</b>, <b>{link:frem}</b><br>
+            Before: <code>..., value1, value2</code> (category-1; value1 is dividend)<br>
+            After: <code>..., remainder</code> (category-1)
+        </li>
+        <li><b>{link:lrem}</b>, <b>{link:drem}</b><br>
+            Before: <code>..., value1, value2</code> (category-2 values; value1 is dividend)<br>
+            After: <code>..., remainder</code> (category-2)
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification requires that the operand stack can accept the appropriate category of values at the point of
+            this instruction.
+        </li>
+    </ul>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li><code>frem</code> and <code>drem</code> follow IEEE 754 rules, so division by zero is not an exception but
+            results in specific values (<code>Infinity</code> or <code>NaN</code>).
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions:</b></h5>
+    <ul>
+        <li><code>ArithmeticException</code>: thrown by <code>irem</code> or <code>lrem</code> if the divisor (top
+            operand) is zero.
+        </li>
+    </ul>
+</div>

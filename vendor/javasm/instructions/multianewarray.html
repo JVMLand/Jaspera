@@ -1,0 +1,81 @@
+<!-- Instructions: multianewarray -->
+<div class="definition">
+    <h2>Multidimensional Array Creation Instruction</h2>
+    <p><b>{link:multianewarray}</b> - <code>0xc5</code> (197)</p>
+
+    <h4>Purpose</h4>
+    <p>
+        Creates a new multidimensional array of a specified type. The sizes for the dimensions to be initialized
+        are taken from the operand stack. Only the specified number of leading dimensions are allocated.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li>
+            <code>indexbyte1, indexbyte2</code>: Index into the runtime constant pool of the current class,
+            referencing a symbolic reference to an array type.
+        </li>
+        <li>
+            <code>dimensions</code>: An unsigned byte indicating the number of dimensions to initialize.
+        </li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <p><code>multianewarray &lt;indexbyte1&gt; &lt;indexbyte2&gt; &lt;dimensions&gt;</code></p>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>multianewarray [[I 2</code></li>
+        <li><code>multianewarray [[[Ljava/lang/String; 2</code></li>
+    </ul>
+
+    <h5><b>TypeDescriptor:</b></h5>
+    <p>
+        The referenced constant pool entry must be a symbolic reference to an array type descriptor.
+        The descriptor uses the following encoding:
+    </p>
+    <ul>
+        <li><code>[</code>: Indicates an array dimension</li>
+        <li>Primitive types: <code>I</code>, <code>J</code>, <code>F</code>, <code>D</code>, <code>Z</code>,
+            <code>B</code>, <code>C</code>, <code>S</code></li>
+        <li><code>L&lt;classname&gt;;</code>: Reference type</li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li>
+            Before: <code>..., count1, count2, ..., countN</code> (all <code>int</code>, category-1)
+        </li>
+        <li>
+            After: <code>..., arrayref</code> (category-1)
+        </li>
+    </ul>
+    <p>
+        The counts are taken in order, where <code>count1</code> corresponds to the outermost dimension.
+    </p>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li>
+            The value of <code>dimensions</code> must be less than or equal to the number of dimensions in the
+            array type descriptor.
+        </li>
+        <li>
+            Only the first <code>dimensions</code> dimensions are allocated. Remaining dimensions are left
+            uninitialized,
+            meaning their elements are <code>null</code> references.
+        </li>
+        <li>
+            Multidimensional arrays in the JVM are implemented as arrays of arrays.
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <ul>
+        <li><code>NegativeArraySizeException</code>: If any dimension size is negative.</li>
+        <li><code>ClassNotFoundException</code> (wrapped in <code>NoClassDefFoundError</code>): If the array type cannot
+            be resolved.
+        </li>
+        <li><code>IllegalAccessError</code>: If the referenced class or interface is not accessible.</li>
+    </ul>
+</div>

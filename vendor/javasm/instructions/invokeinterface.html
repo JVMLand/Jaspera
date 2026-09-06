@@ -1,0 +1,94 @@
+<!-- Instructions: invokeinterface -->
+<div class="definition">
+    <h2>Invoke Interface Method</h2>
+    <p>
+        <b>{link:invokeinterface}</b> - <code>0xb9</code> (185)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>
+        Invokes an interface instance method using interface dispatch semantics.
+        The receiver object is taken from the operand stack and must be non-null.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>methodref</code> (2 bytes): Index into the constant pool, pointing to an
+            <code>InterfaceMethodref</code></li>
+        <li><code>count</code> (1 byte): Number of argument slots, including receiver <code>this</code>;
+            category-2 parameters (<code>long</code>/<code>double</code>) count as two slots
+        </li>
+        <li><code>zero</code> (1 byte): Must be 0 (reserved for future use)</li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <code>invokeinterface &lt;methodref&gt; &lt;count&gt; 0</code>
+
+    <h5><b>Methodref format:</b></h5>
+    <p>The method reference format specifies the target method as follows:</p>
+    <pre>
+&lt;classname&gt;-&gt;&lt;methodname&gt;(&lt;argument_descriptor&gt;)&lt;return_descriptor&gt;
+    </pre>
+    <ul>
+        <li><b>&lt;classname&gt;</b>: Fully qualified class or interface name in JVM internal form (slash-separated),
+            e.g., <code>java/lang/String</code></li>
+        <li><b>&lt;methodname&gt;</b>: Method name, e.g., <code>substring</code>, <code>size</code></li>
+        <li><b>&lt;argument_descriptor&gt;</b>: JVM method argument descriptor, e.g., <code>I</code> (int), <code>Ljava/lang/String;</code>
+            (String object)
+        </li>
+        <li><b>&lt;return_descriptor&gt;</b>: JVM return type descriptor, e.g., <code>V</code> (void), <code>I</code>
+            (int), <code>Ljava/lang/Object;</code> (Object)
+        </li>
+    </ul>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>invokeinterface java/lang/String->awdw$1_35(Ljava/lang/String;)Ljava/lang/String;</code></li>
+        <li><code>invokeinterface my/pkg/MyInterface->doSomething(I)V</code></li>
+        <li><code>invokeinterface java/util/List->size()I</code></li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <p>
+        Before: <code>..., objectref, arg1, arg2, ..., argN</code><br>
+        After: <code>..., returnValue?</code> (if return type is non-void)
+    </p>
+    <p>
+        Pops receiver plus all descriptor arguments. Pushes return value according to the method descriptor
+        (category-2 for <code>long</code>/<code>double</code>, category-1 otherwise).
+    </p>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li>This instruction explicitly encodes argument-slot count, unlike <code>invokevirtual</code>.</li>
+        <li>The symbolic interface method is resolved, then dispatch selects an implementation for the runtime class.
+        </li>
+        <li>Default methods may participate in method selection according to JVM interface resolution rules.</li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification checks that the method reference is valid, the operand stack has a compatible object reference
+            and enough argument slots, and that the resolved method is an interface method.
+        </li>
+        <li>If type resolution fails, the corresponding linkage error is thrown.</li>
+        <li>At runtime, the JVM performs interface method dispatch based on the actual class of the receiver object,
+            following the JVM's method resolution and selection rules for interfaces.
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <ul>
+        <li><code>NullPointerException</code>: if the receiver object reference is null.</li>
+        <li><code>IncompatibleClassChangeError</code>: if the resolved method is not an interface method.</li>
+        <li><code>AbstractMethodError</code>: if the resolved method is abstract and the actual class of the receiver
+            does not provide an implementation.
+        </li>
+        <li><code>LinkageError</code>: if the symbolic method reference cannot be resolved or if the resolved method is
+            not accessible.
+        </li>
+        <li><code>WrongMethodTypeException</code>: if the actual argument types do not match the method descriptor at
+            runtime.
+        </li>
+    </ul>
+</div>

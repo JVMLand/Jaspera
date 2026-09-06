@@ -1,0 +1,60 @@
+<!-- Instructions: pop, pop2 -->
+<div class="definition">
+    <h2>Stack Popping Instructions</h2>
+    <p>
+        <b>{link:pop}</b> - <code>0x57</code> (87)<br>
+        <b>{link:pop2}</b> - <code>0x58</code> (88)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>Removes one or two values from the top of the operand stack.</p>
+
+    <h5><b>Operands:</b> None</h5>
+    <h5><b>Format:</b> <code>{instruction}</code></h5>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li><b>pop</b><br>
+            Before: <code>..., value</code><br>
+            After: <code>...</code><br>
+            (Removes one category-1 value: <code>int</code>, <code>float</code>, reference, etc.)
+        </li>
+        <li><b>pop2</b><br>
+            Two valid use cases:<br>
+            - <b>Case 1 (two category-1 values)</b><br>
+            Before: <code>..., value2, value1</code><br>
+            After: <code>...</code><br><br>
+            - <b>Case 2 (one category-2 value)</b><br>
+            Before: <code>..., value</code> (long or double)<br>
+            After: <code>...</code>
+        </li>
+    </ul>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>pop</code> (e.g. discard an unused int)</li>
+        <li><code>pop2</code> (e.g. discard a double or two ints)</li>
+    </ul>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li><code>pop</code> is valid only when the top stack value is category-1.</li>
+        <li><code>pop2</code> is valid only for the two forms shown above.</li>
+        <li>Invalid category/shape usage is rejected by bytecode verification (commonly surfaced as
+            <code>VerifyError</code> during loading/linking).
+        </li>
+        <li>These instructions do not resolve constant-pool entries and have no instruction-specific runtime
+            exception.
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification requires that the operand stack can accept the appropriate category of values at the point of
+            this instruction.
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <p>These instructions do not throw any instruction-specific runtime exceptions.</p>
+</div>

@@ -1,0 +1,66 @@
+<!-- Instructions: istore, lstore, fstore, dstore, astore -->
+<div class="definition">
+    <h2>Store Instructions</h2>
+    <p>
+        <b>{link:istore}</b> - <code>0x36</code> (54)<br>
+        <b>{link:lstore}</b> - <code>0x37</code> (55)<br>
+        <b>{link:fstore}</b> - <code>0x38</code> (56)<br>
+        <b>{link:dstore}</b> - <code>0x39</code> (57)<br>
+        <b>{link:astore}</b> - <code>0x3a</code> (58)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>Stores a value from the operand stack into a local variable at the specified index <code>N</code>.</p>
+    <p>
+        In bytecode encoding, <code>N</code> is unsigned 8-bit unless prefixed with <code>wide</code>, in which case it
+        is unsigned 16-bit.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>N</code>: Local variable index (decimal or hexadecimal, e.g., <code>5</code> or <code>0x05</code>)
+        </li>
+    </ul>
+
+    <h5><b>Format:</b> <code>{instruction} N</code></h5>
+
+    <h5><b>Notes on <code>wide</code> prefix:</b></h5>
+    <p>If the <code>wide</code> prefix is used, the index operand <code>N</code> is extended from 1 byte to 2 bytes,
+        allowing for larger local variable indices.</p>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>istore 3</code></li>
+        <li><code>lstore 0x0A</code></li>
+        <li><code>wide fstore 0x0100</code> (index 256)</li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li><b>istore, fstore, astore</b><br>
+            Before: <code>..., value</code><br>
+            After: <code>...</code> (category-1 value stored in local variable <code>N</code>)
+        </li>
+        <li><b>lstore, dstore</b><br>
+            Before: <code>..., value</code> (category-2)<br>
+            After: <code>...</code> (value stored in local variable <code>N</code>)<br>
+            (Note: long and double use two stack slots)
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification requires that the operand stack contains a value of the appropriate type for the instruction at
+            the point of this instruction.
+        </li>
+        <li>For <code>istore</code>, the value must be an <code>int</code>.
+            For <code>lstore</code>, a <code>long</code>.
+            For <code>fstore</code>, a <code>float</code>.
+            For <code>dstore</code>, a <code>double</code>.
+            For <code>astore</code>, a reference type.
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <p>These instructions do not throw any instruction-specific runtime exceptions.</p>
+</div>

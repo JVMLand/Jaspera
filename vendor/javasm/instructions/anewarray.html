@@ -1,0 +1,55 @@
+<!-- Instructions: anewarray -->
+<div class="definition">
+    <h2>Create new reference array</h2>
+    <p><b>{link:anewarray}</b> - <code>0xbd</code> (189)</p>
+
+    <h4>Purpose</h4>
+    <p>Creates a new array of references with component type specified by a <code>TypeDescriptor</code>. The length of
+        the array is popped from the stack.</p>
+    <p>
+        The symbolic type reference is resolved from the run-time constant pool and must denote a reference component
+        type (class, interface, or array type).
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>TypeDescriptor</code>: a constant pool index referencing the class or interface type descriptor. Must
+            represent a reference type (e.g., <code>Ljava/lang/String;</code>), <strong>primitive types are not
+                allowed</strong>.
+        </li>
+    </ul>
+
+    <h5><b>Format:</b> <code>anewarray &lt;TypeDescriptor&gt;</code></h5>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>anewarray Ljava/lang/String;</code></li>
+        <li><code>anewarray Ljava/util/List;</code></li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li>Before: <code>..., count</code></li>
+        <li>After: <code>..., arrayref</code> (a new reference array)</li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification requires a reference-compatible input and guarantees a reference result for successor frames.
+        </li>
+        <li>If type resolution fails, the corresponding linkage error is thrown.</li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <ul>
+        <li><code>NegativeArraySizeException</code>: if the length of the array is negative.</li>
+        <li><code>OutOfMemoryError</code>: if the Java Virtual Machine cannot allocate the array because it is out of
+            memory.
+        </li>
+        <li>Linkage errors (such as <code>NoClassDefFoundError</code>,
+            <code>IllegalAccessError</code>,
+            or <code>IncompatibleClassChangeError</code>):
+            if the symbolic type reference cannot be resolved or if the resolved type is not accessible.
+        </li>
+    </ul>
+</div>

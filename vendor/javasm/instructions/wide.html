@@ -1,0 +1,78 @@
+<!-- Instructions: wide -->
+<div class="definition">
+    <h2>Widening Instruction</h2>
+    <p><b>{link:wide}</b> - <code>0xc4</code> (196)</p>
+
+    <h4>Purpose</h4>
+    <p>
+        Modifies specific local-variable instructions so their local-variable index is encoded as 16 bits.
+        For <code>iinc</code>, it also widens the increment constant to signed 16 bits.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>Instruction</code>: one of <code>iload</code>, <code>fload</code>, <code>aload</code>,
+            <code>lload</code>,
+            <code>dload</code>, <code>istore</code>, <code>fstore</code>, <code>astore</code>, <code>lstore</code>,
+            <code>dstore</code>, <code>ret</code>, or <code>iinc</code>.
+        </li>
+        <li><code>Index</code>: unsigned 16-bit local-variable index.</li>
+        <li><code>Const</code>: signed 16-bit increment value (only for <code>wide iinc</code>).</li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <p><code>wide &lt;Instruction&gt; &lt;Index&gt; [const]</code></p>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>wide iload 300</code> (loads a local variable at index 300)</li>
+        <li><code>wide iinc 300 5</code> (increments the local variable at index 300 by 5)</li>
+    </ul>
+
+    <h5><b>Supported Instructions:</b></h5>
+    <p>The following instructions can be modified by <b>wide</b>:</p>
+    <ul>
+        <li><code>iload</code></li>
+        <li><code>fload</code></li>
+        <li><code>aload</code></li>
+        <li><code>lload</code></li>
+        <li><code>dload</code></li>
+        <li><code>istore</code></li>
+        <li><code>fstore</code></li>
+        <li><code>astore</code></li>
+        <li><code>lstore</code></li>
+        <li><code>dstore</code></li>
+        <li><code>ret</code></li>
+        <li><code>iinc</code></li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <p>
+        The stack effect depends on the instruction being modified by <b>wide</b>. For example:
+    </p>
+    <ul>
+        <li><b>wide iload</b>:<br>
+            Before: <code>...</code><br>
+            After: <code>..., value</code>
+        </li>
+        <li><b>wide istore</b>:<br>
+            Before: <code>..., value</code><br>
+            After: <code>...</code>
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li><code>wide</code> does not change instruction semantics, only operand encoding width.</li>
+        <li>Using <code>wide</code> with unsupported opcodes is invalid class-file structure.</li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <p>
+        <code>wide</code> itself does not throw any instruction-specific runtime exceptions.
+        However, the modified instruction may throw exceptions as per its normal semantics
+        (for example, <code>wide iload</code> may throw <code>NullPointerException</code>
+        if loading a reference from an uninitialized local variable).
+    </p>
+</div>
+

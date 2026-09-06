@@ -1,0 +1,76 @@
+<!-- Instructions: ldc, ldc_w, ldc2_w -->
+<div class="definition">
+    <h2>Load Constant Instructions</h2>
+    <p>
+        <b>{link:ldc}</b> - <code>0x12</code> (18)<br>
+        <b>{link:ldc_w}</b> - <code>0x13</code> (19)<br>
+        <b>{link:ldc2_w}</b> - <code>0x14</code> (20)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>
+        Loads a constant from the run-time constant pool onto the operand stack.
+        The permitted constant kind depends on the opcode and the constant's category.
+    </p>
+    <p>
+        In JAL language, it's common to use <b>{link:ldc}</b> for loading strings.
+        For numeric constants, it's recommended to explicitly show category 1 vs category 2 constants for readability.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>ConstantIndex</code>: constant-pool index. The constant type determines which opcode is valid:
+            <ul>
+                <li><b>{link:ldc}</b>: 8-bit index; loads category-1 constants (for example <code>int</code>,
+                    <code>float</code>, <code>String</code>, class literal, method type, method handle, or category-1
+                    dynamic constant).
+                </li>
+                <li><b>{link:ldc_w}</b>: same constant kinds as <b>{link:ldc}</b>, but with 16-bit index.</li>
+                <li><b>{link:ldc2_w}</b>: 16-bit index; loads category-2 constants (<code>long</code>,
+                    <code>double</code>, or category-2 dynamic constant).
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <ul>
+        <li><code>ldc &lt;ConstantIndex&gt;</code></li>
+        <li><code>ldc_w &lt;ConstantIndex&gt;</code></li>
+        <li><code>ldc2_w &lt;ConstantIndex&gt;</code></li>
+    </ul>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>ldc 10</code> (loads a category-1 constant from CP index 10)</li>
+        <li><code>ldc_w 300</code> (same semantics, wider index encoding)</li>
+        <li><code>ldc2_w 5</code> (loads a category-2 constant, such as <code>long</code> or <code>double</code>)</li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <ul>
+        <li><b>ldc, ldc_w</b><br>
+            Before: <code>...</code><br>
+            After: <code>..., value</code> (one category-1 value)
+        </li>
+        <li><b>ldc2_w</b><br>
+            Before: <code>...</code><br>
+            After: <code>..., value</code> (one category-2 value occupying two stack slots)
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Using an opcode with an incompatible constant kind is rejected by verification/linking.</li>
+        <li>Class, method type, method handle, and dynamic constants may trigger resolution/linkage activity.</li>
+        <li>Dynamic constants are computed via bootstrap methods; linkage failures are reported as linkage errors.</li>
+        <li>No operand-stack inputs are consumed by these instructions.</li>
+    </ul>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li><b>{link:ldc}</b> vs <b>{link:ldc_w}</b> differs only by index width, not by loaded value semantics.</li>
+        <li>Prefer mnemonic examples that show constant category, because category drives verifier behaviour.</li>
+    </ul>
+</div>
+

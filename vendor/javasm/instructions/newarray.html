@@ -1,0 +1,67 @@
+<!-- Instructions: newarray -->
+<div class="definition">
+    <h2>Create New Array Instruction</h2>
+    <p><b>{link:newarray}</b> - <code>0xbc</code> (188)</p>
+
+    <h4>Purpose</h4>
+    <p>
+        Creates a new one-dimensional array of a primitive component type.
+        The length is popped from the operand stack, and an array reference is pushed.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>atype</code>: unsigned byte selecting the primitive component type:
+            <ul>
+                <li><code>4</code>: boolean</li>
+                <li><code>5</code>: char</li>
+                <li><code>6</code>: float</li>
+                <li><code>7</code>: double</li>
+                <li><code>8</code>: byte</li>
+                <li><code>9</code>: short</li>
+                <li><code>10</code>: int</li>
+                <li><code>11</code>: long</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <p><code>newarray &lt;atype&gt;</code></p>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>newarray 10</code> (creates <code>int[]</code>)</li>
+        <li><code>newarray 7</code> (creates <code>double[]</code>)</li>
+    </ul>
+
+    <h5><b>Type Scope:</b></h5>
+    <p>
+        <code>newarray</code> is for primitive arrays only.
+        Use <code>anewarray</code> for reference-component arrays and <code>multianewarray</code> for multi-dimensional
+        creation.
+    </p>
+
+    <h5><b>Stack Effect:</b></h5>
+    <p>
+        The operand stack must contain the size of the array to create. The size must be a non-negative integer.
+    </p>
+    <ul>
+        <li>Before: <code>..., count</code></li>
+        <li>After: <code>..., arrayref</code> (category-1 reference)</li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <ul>
+        <li><code>NegativeArraySizeException</code>: if the length of the array is negative.</li>
+        <li><code>OutOfMemoryError</code>: if the Java Virtual Machine cannot allocate the array because it is out of
+            memory.
+        </li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification requires that the operand stack can accept an <code>int</code> value for the array size and
+            that the <code>atype</code> operand is valid.
+        </li>
+    </ul>
+</div>

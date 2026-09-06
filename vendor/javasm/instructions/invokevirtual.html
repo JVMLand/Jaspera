@@ -1,0 +1,117 @@
+<!-- Instructions: invokevirtual -->
+<div class="definition">
+    <h2>Invoke Instance Method</h2>
+    <p>
+        <b>{link:invokevirtual}</b> - <code>0xb6</code> (182)
+    </p>
+
+    <h4>Purpose</h4>
+    <p>
+        Executes an instance (virtual) method on a given object reference. The actual method to be invoked is determined
+        at runtime based on the dynamic type of the object, enabling polymorphism via <i>dynamic dispatch</i>. This
+        instruction is commonly used to invoke overridden methods in a class hierarchy.
+    </p>
+    <p>
+        Unlike <code>invokespecial</code> (which bypasses dynamic dispatch), <code>invokevirtual</code> consults the
+        method table (vtable) of the runtime class of the object. This allows the most specific implementation to be
+        called, even if the declared type is a superclass or interface.
+    </p>
+
+    <h5><b>Operands:</b></h5>
+    <ul>
+        <li><code>methodref</code> (2 bytes): A constant pool index pointing to a <code>CONSTANT_Methodref_info</code>
+            structure, which includes the class and the method's name and descriptor.
+        </li>
+    </ul>
+
+    <h5><b>Format:</b></h5>
+    <code>invokevirtual &lt;methodref&gt;</code>
+
+    <h5><b>Methodref format:</b></h5>
+    <p>The symbolic reference is resolved at runtime to identify the target method:</p>
+    <pre>
+&lt;classname&gt;-&gt;&lt;methodname&gt;(&lt;argument_descriptor&gt;)&lt;return_descriptor&gt;
+    </pre>
+    <ul>
+        <li><b>&lt;classname&gt;</b>: Fully qualified internal JVM class name (e.g., <code>java/lang/String</code>)</li>
+        <li><b>&lt;methodname&gt;</b>: Name of the method (e.g., <code>equals</code>, <code>length</code>)</li>
+        <li><b>&lt;argument_descriptor&gt;</b>: Describes argument types using JVM descriptors (e.g., <code>I</code>,
+            <code>Ljava/lang/Object;</code>)
+        </li>
+        <li><b>&lt;return_descriptor&gt;</b>: Describes the return type (e.g., <code>V</code> for void, <code>Ljava/lang/String;</code>
+            for String)
+        </li>
+    </ul>
+
+    <h5><b>Examples:</b></h5>
+    <ul>
+        <li><code>invokevirtual java/lang/String->length()I</code></li>
+        <li><code>invokevirtual java/util/List->get(I)Ljava/lang/Object;</code></li>
+        <li><code>invokevirtual java/lang/Object->toString()Ljava/lang/String;</code></li>
+    </ul>
+
+    <h5><b>Stack Effect:</b></h5>
+    <p>
+        The operand stack must contain the object reference and method arguments, in left-to-right order.
+    </p>
+    <p>
+        Before: <code>..., objectref, arg1, arg2, ..., argN</code><br>
+        After: <code>..., returnValue?</code>
+    </p>
+    <p>
+        The object reference is consumed, along with all arguments. If the method returns a value, it is pushed back
+        onto the stack. If the return type is <code>void</code>, nothing is pushed.
+        Return category follows descriptor type rules (category-2 for <code>long</code>/<code>double</code>).
+    </p>
+
+    <h5><b>Dispatch Insight:</b></h5>
+    <ul>
+        <li>Resolution validates the symbolic method reference and access constraints.</li>
+        <li>Dynamic dispatch then selects the most specific applicable implementation in the receiver class hierarchy.
+        </li>
+        <li>This two-step model is central to understanding polymorphic behaviour and late failures.</li>
+    </ul>
+
+    <h5><b>Tutorial Pattern:</b></h5>
+    <ul>
+        <li>A common safe sequence is <code>instanceof</code>, then branch, then <code>checkcast</code>, then
+            <code>invokevirtual</code>.
+        </li>
+        <li>When transforming bytecode, preserve exact receiver position and descriptor slot accounting.</li>
+    </ul>
+
+    <h5><b>Notes:</b></h5>
+    <ul>
+        <li>The resolved target must be an instance method suitable for virtual invocation.</li>
+        <li><code>&lt;init&gt;</code> and <code>&lt;clinit&gt;</code> are not invoked via <code>invokevirtual</code>.
+        </li>
+        <li>Use <code>invokespecial</code> for constructors, private methods, and explicit super calls.</li>
+    </ul>
+
+    <h5><b>Verification:</b></h5>
+    <ul>
+        <li>Verification ensures the operand stack has a reference-compatible object and arguments matching the method
+            descriptor.
+        </li>
+        <li>Linkage errors occur if the symbolic reference cannot be resolved or if the resolved method is not
+            accessible.
+        </li>
+    </ul>
+
+    <h5><b>Runtime Exceptions and Errors:</b></h5>
+    <ul>
+        <li><code>NullPointerException</code>: if the object reference is null.</li>
+        <li><code>IncompatibleClassChangeError</code>: if the resolved method is static or if the resolved class is an
+            interface.
+        </li>
+        <li><code>AbstractMethodError</code>: if the resolved method is abstract and the actual class of the receiver
+            does not provide an implementation.
+        </li>
+        <li><code>LinkageError</code>: if the symbolic method reference cannot be resolved or if the resolved method is
+            not accessible.
+        </li>
+        <li><code>WrongMethodTypeException</code>: if the actual argument types do not match the method descriptor at
+            runtime.
+        </li>
+    </ul>
+</div>
