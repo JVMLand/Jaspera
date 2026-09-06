@@ -1,0 +1,72 @@
+{
+  "licenses/OpenJDK-classpath-exception.txt": {
+    "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-23%2B37/ADDITIONAL_LICENSE_INFO",
+    "sha256": "a69bce275ba7a3570af6579cb0f55682cd75fedfcd49e0e8e9022270c447c916",
+    "bytes": 2114
+  },
+  "licenses/Bovine-JVM.txt": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/LICENSE",
+    "sha256": "ae0567bbf64d2081a7deb811dbedae242bd77ca4e2d71e908b62e279f1b9eb4d",
+    "bytes": 1069
+  },
+  "licenses/OpenJDK.txt": {
+    "url": "https://raw.githubusercontent.com/openjdk/jdk/jdk-23%2B37/LICENSE",
+    "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726",
+    "bytes": 19274
+  },
+  "src/vendor/bovine/bjvm2.ts": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/js/bjvm2.ts",
+    "sha256": "73545a44ba7d4389a617a0653d3671be5bab3eb47343c82ee1dc176ed63453c9",
+    "bytes": 32843
+  },
+  "public/runtime/jdk23/lib/security/default.policy": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/lib/security/default.policy",
+    "sha256": "feb816214fec0c13d57cd3d6202b84679f7f0fa19c8e9f71581de419a4695fa0",
+    "bytes": 9271
+  },
+  "public/runtime/jdk23/conf/security/java.policy": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/conf/security/java.policy",
+    "sha256": "d51bcab7ed301caeff3779a5e777e6019864cecee5e2abc102ef991b0de77af2",
+    "bytes": 2294
+  },
+  "public/runtime/jdk23/conf/security/java.security": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/conf/security/java.security",
+    "sha256": "17532b46489e9db1d523cb8b4381670c652d45b41e746f1d1d3d9dc720560516",
+    "bytes": 65249
+  },
+  "src/vendor/build/bjvm_main.js": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/build/bjvm_main.js",
+    "sha256": "877e9c64fd855771d53987130bdc2678166baac7447350245093405ca2d151f7",
+    "bytes": 171478
+  },
+  "public/runtime/bjvm_main.wasm": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/build/bjvm_main.wasm",
+    "sha256": "3a0e899ba06c466ced8fb326ec0ff50f759ec47f709584eed9e1cbef116dd2f0",
+    "bytes": 930096
+  },
+  "public/runtime/jdk23/lib/modules": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/lib/modules",
+    "sha256": "5460a8443693395bbd6d33b1922cc70c509e3d4a487f0d793d60f5191f74bfcb",
+    "bytes": 29722869
+  },
+  "licenses/JZlib.txt": {
+    "url": "https://raw.githubusercontent.com/ymnk/jzlib/1.1.3/LICENSE.txt",
+    "sha256": "9aa93e9bc58ae423a9e6476f608ee8f46063f5679e3bac0bc55f2f4b10d243ee",
+    "bytes": 1639
+  },
+  ".cache/runtime/jdk23.jar": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23.jar",
+    "sha256": "1c6d9ec10634f3fd23019ab8d63f6e197cd0cc1fdccc5b2fb216faf6ff1424c8",
+    "bytes": 25761120
+  },
+  ".cache/runtime/temurin23-jre.zip": {
+    "url": "https://github.com/adoptium/temurin23-binaries/releases/download/jdk-23.0.2%2B7/OpenJDK23U-jre_x64_windows_hotspot_23.0.2_7.zip",
+    "sha256": "8de3b72f164555ad4b847d45bad2e455d60d414b58f63a07e3c6e4b744a7e5a1",
+    "bytes": 48858441
+  },
+  "public/runtime/jdk23/conf/logging.properties": {
+    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/conf/logging.properties",
+    "sha256": "8590633e1e8a7d88ffe74cc04189c5c61b1ed4703180cbc851dcd5575efcce74",
+    "bytes": 2740
+  }
+}
