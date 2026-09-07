@@ -1,3 +1,4 @@
+import {installEditorCommands,installWindowCommands} from './editor-commands';
 import {installSearchEverywhere} from './search-everywhere';
 import {tabLabels} from './file-labels';
 import {inlayHintOptions} from './inlay-hint-style';
@@ -101,8 +102,6 @@ const dropFiles=paneDrop(document.body,bridge?.workspaceId??'',(key,event)=>{
 const searchEverywhere=installSearchEverywhere(()=>bridge?.searchTargets()??Promise.resolve([]),async target=>{const result=await bridge?.searchDefinition(target);if(!result)throw new Error('定義が見つかりません。');return async()=>{await bridge?.openDefinition(group,result.uri,result.range);};});
 const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>{const tab=[...tabs.values()].find(t=>t.model===model);return tab?bridge?.definitions(tab.state.id,offset,labelsOnly)??Promise.resolve([]):Promise.resolve([]);},(uri,range)=>bridge?.openDefinition(group,uri,range)??false);
 
-editor.addAction({id:'detached.undo',label:'Undo',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyZ],run:()=>{if(active)bridge?.undo(active,false);}});
-editor.addAction({id:'detached.redo',label:'Redo',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyY,monaco.KeyMod.CtrlCmd|monaco.KeyMod.Shift|monaco.KeyCode.KeyZ],run:()=>{if(active)bridge?.undo(active,true);}});
-editor.addAction({id:'detached.run',label:'Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run});
-window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();save();}else if(e.key.toLowerCase()==='o'){e.preventDefault();if(!document.querySelector('dialog[open]'))filePicker.open();}}});
-window.addEventListener('pagehide',()=>{searchEverywhere.dispose();filePicker.dispose();dropFiles.dispose();instructionClicks.dispose();toolTabs?.dispose();stackHover.dispose();definitionUI.dispose();bridge?.release(group);observer.disconnect();overlays.remove();sourceAnalysis.dispose();editor.dispose();for(const tab of tabs.values()){tab.model.dispose();}});
+const editorCommands=installEditorCommands(editor,run,redo=>{if(active)bridge?.undo(active,redo);});
+const windowCommands=installWindowCommands({save,open:filePicker.open});
+window.addEventListener('pagehide',()=>{editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();filePicker.dispose();dropFiles.dispose();instructionClicks.dispose();toolTabs?.dispose();stackHover.dispose();definitionUI.dispose();bridge?.release(group);observer.disconnect();overlays.remove();sourceAnalysis.dispose();editor.dispose();for(const tab of tabs.values()){tab.model.dispose();}});

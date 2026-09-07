@@ -1,3 +1,5 @@
+import {sourceMerge} from './source-merge';
+import {installEditorCommands,installWindowCommands} from './editor-commands';
 import {installSearchEverywhere} from './search-everywhere';
 import type {AnalysisProgress} from './protocol';
 import {memoryPolicy} from './memory-policy';
@@ -362,7 +364,7 @@ async function pollFolder(){
     project.name=disk.project.name;project.workspace.entryFile=disk.project.workspace.entryFile;
    }else{
     sourcesChanged=true;const model=models.get(path),local=model?.getValue();
-    if(local!==old&&local!==next){conflicts.push(path);continue;}
+    if(sourceMerge(old,local,next)==='conflict'){conflicts.push(path);continue;}
     if(next===undefined){
      if(editor.getModel()===model)editor.setModel(null);
      model?.dispose();models.delete(path);closedSourceTabs.delete(path);project.files=project.files.filter(f=>f.path!==path);
@@ -455,7 +457,7 @@ function bindGroupEditor(view:monaco.editor.IStandaloneCodeEditor,side:Side){
  if(side==='source')return;
  groupResources.push(installStackHover(view,compileModel),followInstructionClicks(view,op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);}));
  view.onDidChangeCursorPosition(({position})=>{el('cursor').textContent=`Ln ${position.lineNumber}, Col ${position.column}`;});
- view.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
+ groupResources.push(installEditorCommands(view,()=>void run()));
 }
 
 function queueClass(getFile:()=>Promise<File>,key:string,title:string,select=true,folderPath?:string,silent=false){
@@ -714,8 +716,8 @@ async function run(requestedModel?:monaco.editor.ITextModel) {
   finally {owned?.stop();if(token===runToken){runner=undefined;running=false;updateActions();}}
 }
 el('run').onclick=()=>void run();
-editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
-window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
+const editorCommands=installEditorCommands(editor,()=>void run());
+const windowCommands=installWindowCommands({save:()=>void saveProject(),open:filePicker.open});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);

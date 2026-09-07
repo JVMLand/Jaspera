@@ -73,3 +73,21 @@ test('malformed layout is isolated, duplicate tabs and windows are sanitized',()
  const bad=structuredClone(layout);bad.tabs.push(...bad.tabs);bad.windows.push(...bad.windows);bad.dock.sizes=[0,-1,'huge'];bad.views['src/Main.jal'].line=-1;bad.windows[0].width=-900;
  const result=parseProperties(JSON.stringify({...props,editor:bad})).editor;assert.equal(result.tabs.length,1);assert.equal(result.windows.length,1);assert.equal(result.views['src/Main.jal'].line,1);assert.equal(result.windows[0].width,320);assert.ok(result.dock.sizes.every(n=>n>0));
 });
+
+test('saved files invalidate timestamp caches even when size and mtime are unchanged',async()=>{
+ const root=new Directory();await saveFolder(newBinding(root),defaultProject());const state=await openFolder(root);
+ const file=state.project.files[0];file.source=file.source.replace('Hello','Hallo');await saveFolder(state.binding,state.project);
+ const reopened=await openFolder(root,false,state.binding);assert.equal(reopened.project.files[0].source,file.source);
+});
+test('a partial save can be retried without overwriting an external edit',async()=>{
+ const root=new Directory(),binding=newBinding(root),p=defaultProject();p.files.push({path:'src/Helper.jal',source:'public class Helper {}'});await saveFolder(binding,p);
+ const src=root.children.get('src'),helper=src.children.get('Helper.jal');p.files[0].source+='// edit';p.files[1].source+='// edit';helper.fail=true;
+ await assert.rejects(()=>saveFolder(binding,p),/Disk full/);assert.equal(src.children.get('Main.jal').text,p.files[0].source);
+ helper.fail=false;helper.text='external';await assert.rejects(()=>saveFolder(binding,p),/外部/);assert.equal(helper.text,'external');
+});
+test('save takes its source snapshot before awaiting permission',async()=>{
+ const root=new Directory(),binding=newBinding(root),p=defaultProject(),original=p.files[0].source;
+ let release;root.queryPermission=()=>new Promise(resolve=>{release=()=>resolve('granted');});
+ const pending=saveFolder(binding,p);p.files[0].source+='// newer edit';release();await pending;
+ assert.equal(root.children.get('src').children.get('Main.jal').text,original);assert.notEqual(p.files[0].source,original);
+});

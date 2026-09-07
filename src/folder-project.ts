@@ -73,10 +73,10 @@ export function newBinding(root:DirectoryHandle):FolderBinding{return {root,conf
 export async function saveFolder(binding:FolderBinding,project:Project):Promise<void>{
  const config=binding.properties===false?undefined:serializeProperties(project),{root,baseline}=binding;
  validateProject(project);
+ const desired=new Map(project.files.map(f=>[f.path,f.source]));if(config!==undefined)desired.set(binding.configName,config);
  if(root.queryPermission&&await root.queryPermission({mode:'readwrite'})!=='granted'){
   if(!root.requestPermission||await root.requestPermission({mode:'readwrite'})!=='granted')throw new Error('フォルダーへの書き込みが許可されていません。');
  }
- const desired=new Map(project.files.map(f=>[f.path,f.source]));if(config!==undefined)desired.set(binding.configName,config);
  // Check all destinations before writing. Keep per-file baselines after partial saves so retry is safe.
  if(config!==undefined&&!baseline.size)for await(const [,h] of root.entries())if(h.kind==='file'&&h.name.endsWith('.jalprj'))throw new Error('このフォルダーには既存のプロジェクトがあります。「フォルダーを開く」で開いてください。');
  const paths=new Set([...baseline.keys(),...desired.keys()]);
@@ -86,14 +86,14 @@ export async function saveFolder(binding:FolderBinding,project:Project):Promise<
   if(path===binding.configName||baseline.get(path)===source)continue;
   await check(path);const {dir,name}=await resolve(root,path,true),h=await dir.getFileHandle(name,{create:true});
   if(!baseline.has(path))baseline.set(path,'');
-  const writable=await h.createWritable();try{await writable.write(source);await writable.close();baseline.set(path,source);}catch(e){try{await writable.abort();}catch{}throw e;}
+  const writable=await h.createWritable();try{await writable.write(source);await writable.close();baseline.set(path,source);binding.cache?.delete(path);}catch(e){try{await writable.abort();}catch{}throw e;}
  }
  for(const path of [...baseline.keys()])if(!desired.has(path)){
-  validatePath(path);await check(path);const {dir,name}=await resolve(root,path);await dir.removeEntry(name);baseline.delete(path);
+  validatePath(path);await check(path);const {dir,name}=await resolve(root,path);await dir.removeEntry(name);baseline.delete(path);binding.cache?.delete(path);
  }
  if(config!==undefined&&baseline.get(binding.configName)!==config){
   await check(binding.configName);const h=await root.getFileHandle(binding.configName,{create:true});if(!baseline.has(binding.configName))baseline.set(binding.configName,'');const w=await h.createWritable();
-  try{await w.write(config);await w.close();baseline.set(binding.configName,config);}catch(e){try{await w.abort();}catch{}throw e;}
+  try{await w.write(config);await w.close();baseline.set(binding.configName,config);binding.cache?.delete(binding.configName);}catch(e){try{await w.abort();}catch{}throw e;}
  }
 }
 export async function pickFolder():Promise<DirectoryHandle>{
