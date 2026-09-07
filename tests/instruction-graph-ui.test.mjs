@@ -7,6 +7,19 @@ test('graph follows edits and selections, navigates to source, and works in a de
  await page.locator('.graph-node rect').first().waitFor();assert.equal(await page.locator('.graph-node').count(),4);assert.ok(await page.locator('.graph-edge.stack').count()>0);
  await page.locator('.graph-node').filter({hasText:'ldc'}).click();assert.equal(await page.evaluate(async()=>(await import('/src/main.ts')).editor.getPosition().lineNumber),5);
  assert.equal(await page.locator('#graph-panel select,#graph-panel button').count(),0);assert.equal(await page.locator('.graph-node-meta').count(),0);
+ const arithmetic=`public class Main { public static main([Ljava/lang/String;)V {
+ getstatic java/lang/System->out:Ljava/io/PrintStream;
+ bipush 7
+ iconst_5
+ iadd
+ iconst_3
+ imul
+ invokevirtual java/io/PrintStream->println(I)V
+ return
+ } }`;
+ await page.evaluate(async source=>(await import('/src/main.ts')).editor.setValue(source),arithmetic);await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length===8);
+ assert.equal(await page.locator('.graph-edge').evaluateAll(paths=>paths.every(path=>path.getAttribute('d').match(/-?[\d.]+/g).length===4)),true);
+ await page.locator('#graph-panel').screenshot({path:'.cache/instruction-graph-straight.png'});
  const source=`public class Main {
  public static main([Ljava/lang/String;)V {
   iconst_0
@@ -24,7 +37,7 @@ test('graph follows edits and selections, navigates to source, and works in a de
  }
 }`;
  await page.locator('#console-tab').click();
- await page.evaluate(async source=>(await import('/src/main.ts')).editor.setValue(source),source);await page.waitForTimeout(400);assert.equal(await page.locator('.graph-node').count(),4);await page.locator('#graph-tab').click();await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length===9);
+ await page.evaluate(async source=>(await import('/src/main.ts')).editor.setValue(source),source);await page.waitForTimeout(400);assert.equal(await page.locator('.graph-node').count(),8);await page.locator('#graph-tab').click();await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length===9);
  await page.getByLabel('制御フロー',{exact:true}).uncheck();await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length===9&&!document.querySelector('.graph-edge.control'));await page.getByLabel('制御フロー',{exact:true}).check();await page.locator('.graph-edge.control').first().waitFor({state:'attached'});
  const transform=await page.locator('.graph-canvas>g').getAttribute('transform');await page.locator('.graph-canvas').hover();await page.mouse.wheel(0,100);await page.waitForTimeout(100);assert.notEqual(await page.locator('.graph-canvas>g').getAttribute('transform'),transform);
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:13,column:3});});assert.equal(await page.locator('.graph-node').count(),9);assert.deepEqual(await page.locator('.graph-method').allTextContents(),['main([Ljava/lang/String;)V','other()I']);
