@@ -1,5 +1,6 @@
 import {inlayHintColors} from './inlay-hint-style';
 import './brand-themes.css';
+import './vibe-theme.css';
 import {instructionColorRules,instructionColors} from './instruction-colors';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import darcula from './darcula.json';

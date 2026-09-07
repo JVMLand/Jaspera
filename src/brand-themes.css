@@ -30,27 +30,6 @@
 :root[data-theme-family] .detached-window #file-tabs .file-tab{height:100%}
 :root[data-theme-family] .detached-window :is(#editor,.detached-tools){margin:0 8px 8px;border:1px solid var(--theme-border);border-radius:var(--pane-radius);overflow:hidden;box-shadow:var(--pane-shadow)}
 
-/* Vibe: glass, electric gradients, star fields, soft neon edges and oversized pills. */
-:root[data-theme-family="vibe"]{--pane-radius:17px;--pane-header-height:46px;--theme-canvas:#09071b;--pane-shadow:0 12px 32px #02001855,0 0 20px #6e42ed12}
-:root[data-theme="vibe-light"]{--theme-canvas:#f1eafd;--pane-shadow:0 12px 28px #563e8c18,0 0 22px #b982e814}
-:root[data-theme-family="vibe"] #app{grid-template-rows:68px 38px minmax(0,1fr) 28px}
-:root[data-theme-family="vibe"] .toolbar{background:linear-gradient(105deg,var(--theme-bg),var(--theme-surface));border-bottom-color:color-mix(in srgb,var(--theme-accent) 35%,transparent)}
-:root[data-theme-family="vibe"] .brand h1{font-weight:800;letter-spacing:-1px;background:linear-gradient(110deg,var(--theme-accent),#b093ff 55%,#dc7ae0);background-clip:text;color:transparent}
-:root[data-theme-family="vibe"] .brand h1 span{color:inherit}
-:root[data-theme-family="vibe"] .brand-logo{filter:drop-shadow(0 0 9px #9561f688)}
-:root[data-theme-family="vibe"] .workspace{padding:18px;background:radial-gradient(ellipse at 20% 0%,#7136c923,transparent 60%),radial-gradient(ellipse at 95% 90%,#009ee81c,transparent 50%),var(--theme-canvas)}
-:root[data-theme-family="vibe"] .workspace-summary{min-height:112px;border:1px solid var(--theme-border);border-radius:22px;background:radial-gradient(circle at 80% 30%,#7438cc55,transparent 30%),radial-gradient(circle at 55% 130%,#00cfee45,transparent 50%),linear-gradient(120deg,var(--theme-bg),var(--theme-surface));box-shadow:inset 0 1px #ffffff22,0 0 36px #712df41a;padding:22px 28px}
-:root[data-theme-family="vibe"] .workspace-summary::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 65% 25%,#91f4ff 0 1px,transparent 3px),radial-gradient(circle at 85% 70%,#ff9cff 0 1px,transparent 3px),radial-gradient(circle at 40% 65%,#a297fa 0 1px,transparent 3px),linear-gradient(115deg,transparent 60%,#a2a4ff10 60.1%,transparent 60.5%),repeating-linear-gradient(0deg,transparent 0 23px,#8174d40c 24px),repeating-linear-gradient(90deg,transparent 0 39px,#8174d410 40px);pointer-events:none}
-:root[data-theme-family="vibe"] .workspace-summary::after{content:"";position:absolute;right:18%;top:12px;width:210px;height:160px;border:1px solid #86eaff99;border-radius:50%;transform:rotate(-25deg);box-shadow:0 0 30px #b45bff55,inset 0 0 25px #42ddff33;pointer-events:none}
-:root[data-theme-family="vibe"] .workspace-summary h2{font-size:32px;font-weight:750}
-:root[data-theme-family="vibe"] .workspace-summary button{border:1px solid #b6a4ff99;border-radius:30px;background:linear-gradient(115deg,#6943de,#a43fc8);color:#fff;box-shadow:0 4px 20px #7547da44,inset 0 1px #ffffff40;padding:12px 20px;font-weight:600}
-:root[data-theme-family="vibe"] :is(.menu>button,#file-list button){border-radius:10px}
-:root[data-theme-family="vibe"] .menu-popup{box-shadow:0 16px 50px #15072555;backdrop-filter:blur(18px);background:color-mix(in srgb,var(--theme-bg) 95%,transparent)}
-:root[data-theme-family="vibe"] [data-pane-key]:has([aria-selected=true]){box-shadow:inset 0 2px var(--theme-accent),inset 0 -12px 20px #895cdd16;background:var(--theme-selection)!important}
-:root[data-theme-family="vibe"] .runtime-dot{box-shadow:0 0 12px #80edc6}
-:root[data-theme-family="vibe"] .instruction-article{border-radius:14px}
-:root[data-theme="vibe-light"] .brand h1{background-image:linear-gradient(110deg,#007eaa,#743bca 55%,#ac358e)}
-
 /* DenDen: restrained portal navigation, a blue network panorama and fine card frames. */
 :root[data-theme-family="denden"]{--pane-radius:7px;--theme-canvas:var(--theme-surface);--pane-shadow:0 2px 8px #173f6d06}
 :root[data-theme-family="denden"] .brand h1{color:var(--theme-accent);letter-spacing:-.5px}
