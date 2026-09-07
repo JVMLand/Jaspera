@@ -63,7 +63,7 @@ function update(snapshot:EditorSnapshot){
 function remove(id:string){const tab=tabs.get(id);if(!tab)return;const keys=[...tabs.keys()],at=keys.indexOf(id);tabs.delete(id);if(active===id){editor.setModel(null);active=undefined;}tab.model.dispose();if(!active){const next=[...tabs.keys()][Math.min(at,tabs.size-1)];if(next)select(next);}renderTabs();updateActions();}
 function updateActions(){
  const tab=current();document.title=(toolTabs?.active??tab?.state.title??'JALWeb Editor')+' — JALWeb';menus.hidden('save-project',!workspace.canSave);menus.disabled('close-tab',!tab&&!toolTabs?.active);menus.disabled('close-others',!tab||tabs.size<2);menus.disabled('open-workspace-file',!workspace.files.length);
- for(const id of ['undo','redo','replace','comment','quick-fix'])menus.disabled(id,!tab||tab.state.readOnly);menus.disabled('save-file-as',!tab);menus.disabled('find',!tab);menus.disabled('download',!tab||tab.state.readOnly);menus.label('menu-run',workspace.running?'停止':'実行');
+ for(const id of ['undo','redo','replace','format','comment','quick-fix'])menus.disabled(id,!tab||tab.state.readOnly);menus.disabled('save-file-as',!tab);menus.disabled('find',!tab);menus.disabled('download',!tab||tab.state.readOnly);menus.label('menu-run',workspace.running?'停止':'実行');
 }
 const action=(id:string)=>{editor.focus();editor.trigger('menu',id,undefined);};
 const save=()=>{if(workspace.canSave)bridge?.save();};const run=()=>bridge?.run(active);

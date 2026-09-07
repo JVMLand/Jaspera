@@ -14,6 +14,14 @@ export class SourceAnalysis {
   private cache=new WeakMap<Model,{version:number;data:Analysis}>();
   private pending=new Map<Model,{timer:ReturnType<typeof setTimeout>;dispose:monaco.IDisposable}>();
   private disposed=false;
+  private formatting=monaco.languages.registerDocumentFormattingEditProvider('jal',{
+    provideDocumentFormattingEdits:async(model,options,token)=>{
+      const version=model.getVersionId(),source=model.getValue();
+      const text=await this.worker.call(api=>api.format(source,options));
+      if(this.disposed||token.isCancellationRequested||model.isDisposed()||model.getVersionId()!==version||text===source)return [];
+      return [{range:model.getFullModelRange(),text}];
+    }
+  });
   private hintsChanged=new monaco.Emitter<void>();
   private hints=monaco.languages.registerInlayHintsProvider('jal',{
     onDidChangeInlayHints:this.hintsChanged.event,
@@ -57,7 +65,7 @@ export class SourceAnalysis {
     return cached?.version===model?.getVersionId()?cached?.data.offsets??[]:[];
   }
   private cancel(model:Model){const pending=this.pending.get(model);if(pending){clearTimeout(pending.timer);pending.dispose.dispose();this.pending.delete(model);}}
-  dispose(){this.disposed=true;this.hints.dispose();this.hintsChanged.dispose();for(const model of this.pending.keys())this.cancel(model);this.worker.dispose();}
+  dispose(){this.disposed=true;this.formatting.dispose();this.hints.dispose();this.hintsChanged.dispose();for(const model of this.pending.keys())this.cancel(model);this.worker.dispose();}
 }
 
 export function showBytecodeOffsets(view:monaco.editor.IStandaloneCodeEditor,offsets:SourceOffset[]){

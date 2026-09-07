@@ -209,7 +209,7 @@ function updateActions() {
   publishWorkspaceAvailability();
   refreshOffsets();
   const model=editor.getModel(),readOnly=editor.getRawOptions().readOnly;
-  for(const id of ['undo','redo','replace','comment','quick-fix'])menus.disabled(id,!model||!!readOnly);
+  for(const id of ['undo','redo','replace','format','comment','quick-fix'])menus.disabled(id,!model||!!readOnly);
   menus.disabled('find',!model);
   menus.disabled('rename-file',!!activePreview||!editor.getModel()||!project.files.length);menus.disabled('close-tab',!editor.getModel());menus.hidden('save-class-source',!activePreview);
   menus.disabled('project-properties-menu',folder?.properties===false);el<HTMLButtonElement>('summary-properties').disabled=folder?.properties===false;
