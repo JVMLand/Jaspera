@@ -9,7 +9,7 @@ try{
  for(let i=0;i<100;i++){try{if((await fetch('http://127.0.0.1:5222')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({channel:'msedge',headless:true});const runs=[];
  for(let i=0;i<3;i++){
-  const context=await browser.newContext();const page=await context.newPage();const workers=[];page.on('worker',w=>workers.push(w.url().split('/').at(-1)));
+  const context=await browser.newContext();const page=await context.newPage();if(process.env.JALWEB_DEVICE_MEMORY)await page.addInitScript(value=>Object.defineProperty(navigator,'deviceMemory',{value}),Number(process.env.JALWEB_DEVICE_MEMORY));const workers=[];page.on('worker',w=>workers.push(w.url().split('/').at(-1)));
   await page.addInitScript(()=>{window.longTasks=[];new PerformanceObserver(list=>window.longTasks.push(...list.getEntries().map(e=>({start:e.startTime,duration:e.duration})))).observe({type:'longtask',buffered:true});});
   const start=performance.now();await page.goto('http://127.0.0.1:5222');await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます',{},{timeout:60000});
   const readyMs=performance.now()-start;await page.waitForTimeout(300);const hiddenGraph={visible:await page.locator('#graph-panel').isVisible(),nodes:await page.locator('.graph-node').count(),workers:[...workers]};
