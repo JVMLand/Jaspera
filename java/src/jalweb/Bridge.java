@@ -62,7 +62,7 @@ public final class Bridge {
         String source=new String(Base64.getDecoder().decode(encodedSource),StandardCharsets.UTF_8);
         diagnostics.clear();
         tokyo.peya.langjal.compiler.member.InstructionSources.clear();
-        String className=""; String encoded=""; List<String> stackFrames=new ArrayList<>();
+        String className=""; String encoded=""; List<String> stackFrames=new ArrayList<>(); List<String> graphs=new ArrayList<>();
         try {
             String expanded=JALPreprocessor.preprocess(source);
             // Catch lexer errors too: the upstream parser's error strategy handles parser errors only.
@@ -94,6 +94,7 @@ public final class Bridge {
                         BasicVerifier verifier=new StackFrames.Verifier();
                         Frame<BasicValue>[] frames=new Analyzer<>(verifier).analyzeAndComputeMaxs(node.name,method);
                         StackFrames.append(stackFrames,method,frames,verifier);
+                        graphs.add(InstructionGraph.compute(node.name,method,frames));
                     }
                     catch(AnalyzerException e) {
                         int line=1;
@@ -117,7 +118,7 @@ public final class Bridge {
             if(diagnostics.isEmpty()) compileError(e);
         } catch(Throwable e) { add("error",e.toString(),1,0,1); }
         tokyo.peya.langjal.compiler.member.InstructionSources.clear();
-        return "{\"className\":"+quote(className)+",\"bytecode\":"+quote(encoded)+",\"diagnostics\":"+diagnosticJson()+",\"stackFrames\":["+String.join(",",stackFrames)+"]}";
+        return "{\"className\":"+quote(className)+",\"bytecode\":"+quote(encoded)+",\"diagnostics\":"+diagnosticJson()+",\"stackFrames\":["+String.join(",",stackFrames)+"],\"graphs\":["+String.join(",",graphs)+"]}";
     }
     private static class ProgramLoader extends ClassLoader {
         final java.util.Map<String,byte[]> classes=new java.util.HashMap<>();
