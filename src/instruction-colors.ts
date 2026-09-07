@@ -8,7 +8,7 @@ export function instructionHighlightGroup(op:string){return membership.get(op);}
 // integer negation/arraylength; keep shifts, casts and comparisons in their original families.
 const dark=['A6B0BF','82B8F0','D5A5F5','F493A6','EDAC76','E6CB83','9CB0F3','8ECDAD','B6CD7B','E39CD4','90CFD6','D9BC92','B8AAF0','8BC8BD','B5D18C','F1B69A','DCA6BD','B2BDD9'];
 const light=['566274','245C99','773B9B','A0224C','92471D','745A08','454D9B','226345','49620F','903776','166570','725128','604399','216857','52651F','934326','8C405D','4F5B82'];
-const accents:Record<string,string>={'jal-night':'81C7BE',darcula:'CCAA83','vs-dark':'9CDCFE',vs:'005FB8','japan-dark':'96B9FF','japan-light':'193C87','hitachi-dark':'8EC2D6','hitachi-light':'235A79','denden-night':'78BAFF','denden-light':'0757AD','vibe-night':'C5A0FF','vibe-light':'713BD0','googol-night':'A8C7FA','googol-light':'1967D2','entrance-night':'6CB8F6','entrance-light':'006CBE'};
+const accents:Record<string,string>={'jal-night':'81C7BE',darcula:'CCAA83','vs-dark':'9CDCFE',vs:'005FB8','japan-light':'193C87','hitachi-dark':'8EC2D6','hitachi-light':'235A79','denden-night':'78BAFF','denden-light':'0757AD','vibe-night':'C5A0FF','vibe-light':'713BD0','googol-night':'A8C7FA','googol-light':'1967D2','entrance-night':'6CB8F6','entrance-light':'006CBE'};
 export function instructionColors(theme:string):Record<InstructionGroup,string>{
  const isLight=theme==='vs'||theme==='hc-light'||theme.endsWith('-light');
  const palette=isLight?light:dark,accent=accents[theme];

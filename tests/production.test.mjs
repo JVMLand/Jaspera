@@ -37,7 +37,7 @@ test('Production static build works under a subdirectory and on mobile',{timeout
   assert.equal(await page.locator('.monaco-editor').first().evaluate(e=>getComputedStyle(e).backgroundColor),id==='vs'?'rgb(255, 255, 254)':bg);
   assert.equal(await page.locator('.source-pane').evaluate(e=>getComputedStyle(e).backgroundColor),bg);
  }
- for(const [id,bg] of [['japan-light','rgb(255, 255, 255)'],['japan-dark','rgb(20, 27, 41)'],['hitachi-light','rgb(255, 255, 255)'],['hitachi-dark','rgb(21, 29, 36)'],['denden-light','rgb(255, 255, 255)'],['denden-night','rgb(12, 25, 45)']]) {
+ for(const [id,bg] of [['japan-light','rgb(255, 255, 255)'],['hitachi-light','rgb(255, 255, 255)'],['hitachi-dark','rgb(21, 29, 36)'],['denden-light','rgb(255, 255, 255)'],['denden-night','rgb(12, 25, 45)']]) {
   await page.locator('#theme-select').selectOption(id);
   assert.equal(await page.locator('.monaco-editor').first().evaluate(e=>getComputedStyle(e).backgroundColor),bg);
   assert.equal(await page.evaluate(()=>document.documentElement.style.colorScheme),id.endsWith('light')?'light':'dark');

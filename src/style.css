@@ -15,8 +15,6 @@
 :root[data-theme^="japan-"] :is(.toolbar-actions button,.menu-popup,.dialog-actions button,textarea,dialog,#theme-select){border-radius:1px}
 :root[data-theme^="japan-"] .statusbar{background:var(--theme-button);color:var(--theme-on-button)}
 :root[data-theme^="japan-"] #instruction-hint{color:var(--theme-on-button)}
-:root[data-theme^="japan-"] .project-heading{background:var(--theme-button);color:var(--theme-on-button)}
-:root[data-theme^="japan-"] .project-heading button{color:var(--theme-on-button)}
 :root[data-theme^="hitachi-"] :is(.toolbar,.menubar){--theme-surface:#17222b;--theme-bg:#17222b;--theme-text:#f0f4f7;--theme-muted:#c0ccd4;--theme-border:#364955;--theme-accent:#b0d3e2;--theme-selection:#314654;background:var(--theme-surface);color:var(--theme-text)}
 :root[data-theme^="hitachi-"] .menu-popup{--theme-button:#34586c;--theme-on-button:#ffffff}
 :root[data-theme^="hitachi-"] .toolbar{border-bottom-color:#364955}
