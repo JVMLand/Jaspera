@@ -42,8 +42,10 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  const entries=new Map<string,Entry>(),groups=new Map<string,Group>();
  const snapshot=(e:Entry):EditorSnapshot=>({id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
  const broadcast=(e:Entry)=>{if(!e.model.isDisposed())try{groups.get(e.group)?.client?.update(snapshot(e));}catch{}};
- const remove=(id:string)=>{const e=entries.get(id);if(!e)return;entries.delete(id);for(const d of e.subscriptions)d.dispose();groups.get(e.group)?.client?.remove?.(id);onReturn(e.key);};
+ const remove=(id:string)=>{const e=entries.get(id);if(!e)return;entries.delete(id);for(const d of e.subscriptions)d.dispose();groups.get(e.group)?.client?.remove?.(id);onReturn(e.key);closeIfEmpty(e.group);};
  const release=(id:string)=>{const g=groups.get(id);if(!g)return;groups.delete(id);for(const name of g.panels)onReturn('panel:'+name);for(const e of [...entries.values()])if(e.group===id)remove(e.id);try{g.popup.close();}catch{}};
+ // Check after the entire tab transfer, not during temporary empty client states.
+ function closeIfEmpty(id:string){queueMicrotask(()=>{const g=groups.get(id);if(g&&!g.panels.size&&![...entries.values()].some(e=>e.group===id))release(id);});}
  const add=(group:string,doc:DetachedDocument,id=crypto.randomUUID())=>{
   const e:Entry={...doc,id,group,subscriptions:[]};entries.set(id,e);doc.model.pushStackElement();
   e.subscriptions.push(doc.model.onDidChangeContent(()=>broadcast(e)),doc.model.onWillDispose(()=>remove(id)),monaco.editor.onDidChangeMarkers(uris=>{if(uris.some(u=>u.toString()===doc.model.uri.toString()))broadcast(e);}));
@@ -52,11 +54,11 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  const openTab=(group:string,key:string)=>{
   if(!groups.has(group))return;const doc=options.document(key);if(!doc||doc.model.isDisposed())return;
   let e=[...entries.values()].find(e=>e.key===doc.key);
-  if(e&&e.group!==group){groups.get(e.group)?.client?.remove?.(e.id);e.group=group;}
+  if(e&&e.group!==group){const previous=e.group;groups.get(previous)?.client?.remove?.(e.id);e.group=group;closeIfEmpty(previous);}
   if(!e)e=add(group,doc);broadcast(e);onReturn(e.key);return snapshot(e);
  };
- const closePanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(g?.panels.delete(name)){g.client?.panelRemoved?.(name);onReturn('panel:'+name);}};
- const openPanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(!g)return;for(const other of groups.values())if(other.id!==group&&other.panels.delete(name))other.client?.panelRemoved?.(name);g.panels.add(name);options.panelOpened?.(name);g.client?.panel?.(name);};
+ const closePanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(g?.panels.delete(name)){g.client?.panelRemoved?.(name);onReturn('panel:'+name);closeIfEmpty(group);}};
+ const openPanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(!g)return;for(const other of groups.values())if(other.id!==group&&other.panels.delete(name)){other.client?.panelRemoved?.(name);closeIfEmpty(other.id);}g.panels.add(name);options.panelOpened?.(name);g.client?.panel?.(name);};
  window.jalwebDetached={workspaceId:crypto.randomUUID(),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
