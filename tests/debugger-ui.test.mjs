@@ -18,21 +18,28 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  }
 }`);editor.setPosition({lineNumber:6,column:1});editor.focus();await editor.getAction('jaspera.toggleBreakpoint').run();});
  await page.locator('.debug-breakpoint').waitFor();assert.equal(await page.locator('.debug-breakpoint').count(),1);
- await page.locator('#run').click();
+ await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.executeEdits('insert-line',[{range:{startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:1},text:'// insertion before breakpoint\n'}]);});
+ // Hold runtime loading so breakpoint edits during startup are deterministic.
+ let release;const gate=new Promise(resolve=>release=resolve);await page.route('**/runtime/bovine.js',async route=>{await gate;await route.continue();});
+ await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
+ await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.dataset.state==='starting');
+ assert.equal(await page.locator('.debug-toolbar [data-command=debug-pause]').isDisabled(),true);
+ await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});release();
  await page.waitForFunction(()=>document.querySelector('.debug-status')?.textContent.startsWith('停止中'));
  await page.locator('.debug-current-line').waitFor();assert.equal(await page.locator('.debug-current-line').count(),1);
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent.includes(' · 3 で停止中'));
  assert.match(await page.locator('.debug-values').innerText(),/5/);
  await page.screenshot({path:'.cache/debugger-ui.png'});
+ await page.locator('.debug-toolbar [data-command=debug-over]').focus();
  const popupEvent=page.waitForEvent('popup');
  await page.locator('#debug-tab').click({button:'right'});await page.getByRole('menuitem',{name:'小窓で開く',exact:true}).click();
  const popup=await popupEvent;popup.setDefaultTimeout(60000);await popup.waitForLoadState();await popup.locator('.debug-toolbar [data-command=debug-over]').waitFor();
- await popup.locator('.debug-toolbar [data-command=debug-over]').click();
+ await popup.evaluate(()=>{window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));});
  await popup.waitForFunction(()=>document.querySelector('.debug-values')?.textContent.includes('#1'));
  assert.match(await popup.locator('.debug-values').innerText(),/5/);
  await popup.locator('.debug-toolbar [data-command=debug-continue]').click();await popup.waitForFunction(()=>document.querySelector('.debug-status')?.textContent==='実行が終了しました。');
  await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.hidden===true);
- await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:6,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
+ await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
  await page.locator('.debug-breakpoint').waitFor({state:'detached'});assert.equal(await page.locator('.debug-breakpoint').count(),0);
  await page.evaluate(()=>{window.__debugStops=0;const observer=new MutationObserver(()=>{if(document.querySelector('.debug-current-line'))window.__debugStops++;});observer.observe(document.querySelector('#editor'),{subtree:true,childList:true});});
  await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行が完了しました');

@@ -1,3 +1,4 @@
+import {BreakpointStore} from './breakpoint-store';
 import {installDebugPanel,debugMenuItems,installDebugKeys} from './debug-panel';
 import {installDebugEditor} from './debug-editor';
 import type {DebugState,DebugCommand,DebugFrame} from './debug-protocol';
@@ -90,9 +91,19 @@ const debugSources=new Map<string,string>();
 const debugEditors:ReturnType<typeof installDebugEditor>[]=[];
 const debugActions={start:()=>{if(!running)void run(undefined,true);},command:debugCommand,stop:()=>stopRun(),reveal:(frame:DebugFrame)=>{void revealDebugFrame(frame);}};
 function debugState(patch:Partial<DebugState>){workspaceState.update({debug:{...workspaceState.value.debug!,...patch}});}
-function toggleBreakpoint(uri:string,line:number){const before=workspaceState.value.debug!.breakpoints;debugState({breakpoints:before.some(b=>b.uri===uri&&b.line===line)?before.filter(b=>b.uri!==uri||b.line!==line):[...before,{uri,line}]});if(runner&&workspaceState.value.debug?.status==='paused'||runner&&workspaceState.value.debug?.status==='running')void runner.debugBreakpoints(runtimeBreakpoints()).catch(()=>{});}
+const breakpoints=new BreakpointStore(points=>{
+ debugState({breakpoints:points});
+ if(runner&&['paused','running'].includes(workspaceState.value.debug!.status))void runner.debugBreakpoints(runtimeBreakpoints()).catch(()=>{});
+});
+function toggleBreakpoint(uri:string,line:number){const model=monaco.editor.getModel(monaco.Uri.parse(uri));if(model)breakpoints.toggle(model,line);}
+
 function runtimeBreakpoints(){return workspaceState.value.debug!.breakpoints.flatMap(b=>{const owner=[...debugSources].find(([,uri])=>uri===b.uri)?.[0];return owner?[{className:owner,line:b.line}]:[];});}
-function debugCommand(command:DebugCommand){const state=workspaceState.value.debug;if(!runner||!state||!['paused','running'].includes(state.status))return;if(command!=='pause')debugState({status:'running'});void runner.debugCommand(command).catch(e=>status(e.message,'error'));}
+function debugCommand(command:DebugCommand){
+ const state=workspaceState.value.debug,owned=runner,token=runToken;
+ if(!owned||!state||(command==='pause'?state.status!=='running':state.status!=='paused'))return;
+ if(command!=='pause')debugState({status:'running'});
+ void owned.debugCommand(command).catch(e=>{if(runner!==owned||token!==runToken)return;stopRun(false);status(e.message,'error');});
+}
 async function revealDebugFrame(frame:DebugFrame){
  const snapshot=workspaceState.value.debug?.snapshot;if(!snapshot)return;
  const current=()=>workspaceState.value.debug?.status==='paused'&&workspaceState.value.debug.snapshot===snapshot;
@@ -622,7 +633,7 @@ async function changePath(old:string,isFolder:boolean,move:boolean){
   for(const [from,to] of changes){
    const model=models.get(from)!,source=model.getValue(),key='source:'+from,newKey='source:'+to;
    const views=[...groupEditors.values()].filter(view=>view.getModel()===model).map(view=>({view,state:view.saveViewState()}));
-   attachModel(to,source);const next=models.get(to)!;
+   attachModel(to,source);const next=models.get(to)!;breakpoints.move(model,next);
    const file=project.files.find(f=>f.path===from)!;file.path=to;file.source=source;
    if(project.workspace.entryFile===from)project.workspace.entryFile=to;
    if(project.workspace.activeFile===from)project.workspace.activeFile=to;
@@ -742,9 +753,14 @@ async function run(requestedModel?:monaco.editor.ITextModel,debugging=true) {
     owned=new Runtime(memory.executionHeapMiB);runner=owned;owned.onOutput=(stream,text)=>{if(token===runToken)output(text,stream);};owned.onProgress=loaded=>{if(token===runToken)status(`実行用 JVM を準備中… ${(loaded/1024/1024).toFixed(1)} MB`,'loading');};
     if(debugging){
       debugSources.clear();if(example)debugSources.set(entry.className,model!.uri.toString());else for(const [path,c] of results){const m=models.get(path);if(m)debugSources.set(c.className,m.uri.toString());}
-      for(const uri of debugSources.values()){const m=monaco.editor.getModel(monaco.Uri.parse(uri));if(m)debugDisposals.push(m.onDidChangeContent(()=>{stopRun(false);status('ソースが変更されたため，デバッグ実行を停止しました。');}),m.onWillDispose(()=>stopRun(false)));}
+      for(const uri of debugSources.values()){const m=monaco.editor.getModel(monaco.Uri.parse(uri));if(m)debugDisposals.push(m.onDidChangeContent(()=>{if(token!==runToken)return;stopRun(false);status('ソースが変更されたため，デバッグ実行を停止しました。');}),m.onWillDispose(()=>{if(token===runToken)stopRun(false);}));}
       owned.onDebug=snapshot=>{if(token!==runToken)return;debugState({status:'paused',previous:workspaceState.value.debug?.snapshot,snapshot});status(`${snapshot.location.className}.${snapshot.location.method} · ${snapshot.location.pc} で停止中`);selectTab('debug');void revealDebugFrame(snapshot.frames[0]);};
-      debugState({status:'running',documents:Object.fromEntries(debugSources)});
+      debugState({documents:Object.fromEntries(debugSources)});
+      owned.onDebugReady=async()=>{
+        if(token!==runToken)return;
+        try{await owned!.debugBreakpoints(runtimeBreakpoints());if(token===runToken)debugState({status:'running'});}
+        catch(e){if(token===runToken){stopRun(false);status(e instanceof Error?e.message:String(e),'error');}}
+      };
     }
     await owned.run({...entry,classes:classes.map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin,debugging?{classes:classes.map(c=>c.className),breakpoints:runtimeBreakpoints()}:undefined);
     if(token===runToken){status('実行が完了しました');el('timing').textContent=`${((performance.now()-started)/1000).toFixed(2)} s`;}
@@ -755,5 +771,5 @@ el('run').onclick=()=>void run();
 const editorCommands=installEditorCommands(editor,()=>void run());
 const windowCommands=installWindowCommands({save:()=>void saveProject(),open:filePicker.open});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;unsubscribeDebug();debugPanel.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;unsubscribeDebug();breakpoints.dispose();debugPanel.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);
