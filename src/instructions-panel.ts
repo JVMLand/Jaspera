@@ -33,6 +33,17 @@ export function installInstructionsPanel(host:HTMLElement){
   markdown=renderMarkdown({value:entry.markdown,isTrusted:false,supportHtml:false});
   for(const anchor of markdown.element.querySelectorAll<HTMLAnchorElement>('a[data-href]')){const href=anchor.dataset.href!;if(/^https:\/\//.test(href)){anchor.href=href;anchor.target='_blank';anchor.rel='noopener noreferrer';}}
   advanced.append(markdown.element);if(entry.markdown.trim())detail.append(advanced);
+  if(entry.related.length){
+   detail.append(el('h3','関連命令'));
+   const related=el('nav',undefined,'instruction-related');related.setAttribute('aria-label','関連命令');
+   for(const other of entry.related){
+    const target=entries.find(e=>e.op===other)!;
+    const anchor=document.createElement('a');anchor.href='#instruction-'+other;anchor.dataset.op=other;
+    anchor.textContent=other;anchor.title=target.summary;
+    anchor.onclick=e=>{e.preventDefault();navigate(other);detail.focus({preventScroll:true});};related.append(anchor);
+   }
+   detail.append(related);
+  }
   const link=document.createElement('a');link.textContent='JVM 仕様書で命令を確認 ↗';link.href='https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.'+op.replace(/^([ilfd])const_(?:m1|[0-5])$/, '$1const_$1').replace(/_([0-3])$/, '_n').replace(/^([fd])cmp[lg]$/, '$1cmp_op').replace(/^if_([ai])cmp(?:eq|ne|lt|ge|gt|le)$/, 'if_$1cmp_cond').replace(/^if(?:eq|ne|lt|ge|gt|le)$/, 'if_cond');link.target='_blank';link.rel='noopener noreferrer';detail.append(link);detail.scrollTop=0;
  }
  function filter(){
@@ -47,5 +58,6 @@ export function installInstructionsPanel(host:HTMLElement){
   {label:'選択範囲をコピー',disabled:!selection,action:()=>copyText(selection)},null,
   {label:'命令を検索',action:()=>{search.focus();toggle(true);}}
  ];});
- search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);},dispose(){context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
+ function navigate(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);}
+ search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction:navigate,dispose(){context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
 }

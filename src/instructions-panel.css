@@ -36,3 +36,7 @@
 .instruction-advanced h3{font-size:18px;margin:24px 0 10px}
 .instruction-advanced h4{font-size:15px;margin:18px 0 6px}
 .instruction-advanced h5,.instruction-advanced h6{font-size:13px;margin:14px 0 5px}
+
+.instruction-related{display:flex;flex-wrap:wrap;gap:8px 16px;margin:8px 0 24px}
+.instruction-related a{font:13px/1.8 Consolas,monospace;text-underline-offset:3px}
+.instruction-related a:focus-visible{outline:2px solid var(--theme-accent);outline-offset:3px}

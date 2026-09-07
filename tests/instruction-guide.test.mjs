@@ -34,3 +34,14 @@ test('explanations distinguish behaviour rather than inheriting generic document
  assert.equal(guide('newarray').example,'newarray I');
  assert.match(guide('iconst_3').summary,/int の定数 3/);
 });
+
+test('related pages exist, exclude self, and keep other instruction behaviour out of the body',()=>{
+ for(const op of instructionList){const related=guide(op).related;assert.equal(new Set(related).size,related.length,op);assert.ok(!related.includes(op),op);for(const target of related)assert.ok(instructionList.includes(target),`${op} -> ${target}`);}
+ for(const op of ['ireturn','lreturn','freturn','dreturn','areturn','return']){
+  assert.equal(guide(op).related.length,5);
+  for(const other of guide(op).related)assert.doesNotMatch(guide(op).markdown,new RegExp('\\b'+other+'\\b'));
+ }
+ for(const [op,other] of [['iconst_1','bipush'],['pop','pop2'],['goto','goto_w'],['invokeinterface','invokestatic'],['ret','jsr_w']]){
+  assert.ok(guide(op).related.includes(other));assert.doesNotMatch(guide(op).markdown,new RegExp('\\b'+other+'\\b'));
+ }
+});

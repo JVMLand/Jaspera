@@ -1,3 +1,4 @@
+import {relatedInstructions} from './instruction-relations';
 import {instructionDetails} from './instruction-details';
 import language from './generated/language.json';
 export const categories=['読み込み・保存と定数','算術・ビット演算','型変換','オブジェクト・配列・フィールド','スタック操作','比較・分岐','メソッド呼び出し・復帰','例外','同期','補助命令'] as const;
@@ -130,5 +131,5 @@ export function guide(op:string){
  };
  if(examples[op])example=examples[op];
  if(constraints[op])forms.forEach((form,i)=>form.note=constraints[op][i]);
- return {op,category:category(op),title:doc.title,summary,example,forms,markdown:instructionDetails(op)};
+ return {op,related:relatedInstructions(op),category:category(op),title:doc.title,summary,example,forms,markdown:instructionDetails(op)};
 }
