@@ -15,3 +15,22 @@ test('editorial summaries keep operand order only where it matters',()=>{
  assert.doesNotMatch(guide('i2l').markdown,/NaN|丸め/);assert.match(guide('d2i').markdown,/NaN/);
  for(const op of instructionList)assert.doesNotMatch(guide(op).markdown,/##### \*\*(形式|スタック効果|例):/,op);
 });
+
+test('explanations distinguish behaviour rather than inheriting generic documentation',()=>{
+ for(const op of instructionList)assert.ok(guide(op).markdown.length>30,op);
+ assert.equal(new Set(['invokevirtual','invokeinterface','invokespecial','invokestatic','invokedynamic'].map(op=>guide(op).summary)).size,5);
+ assert.match(guide('invokevirtual').markdown,/オーバーライド/);
+ assert.match(guide('invokedynamic').markdown,/bootstrap.*CallSite/);
+ assert.match(guide('if_acmpeq').markdown,/内容ではなく/);
+ assert.match(guide('bastore').markdown,/下位 1 ビット/);
+ assert.match(guide('caload').markdown,/ゼロ拡張/);
+ assert.match(guide('saload').markdown,/符号を保って/);
+ assert.match(guide('fcmpl').markdown,/NaN のときは −1/);
+ assert.match(guide('fcmpg').markdown,/NaN のときは 1/);
+ assert.doesNotMatch(guide('lcmp').forms[0].note,/NaN/);
+ assert.match(guide('ret').markdown,/51.0/);
+ assert.match(guide('putstatic').markdown,/<clinit>/);
+ assert.doesNotMatch(guide('putstatic').example,/System->out/);
+ assert.equal(guide('newarray').example,'newarray I');
+ assert.match(guide('iconst_3').summary,/int の定数 3/);
+});
