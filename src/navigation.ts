@@ -4,8 +4,8 @@ import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import NavigationWorker from './navigation.worker?worker';
 import type {SymbolIndex,SymbolReference,ClassSymbol,Span} from './symbols.js';
-export interface DefinitionDocument {uri:string;source:string;range:monaco.IRange;origin:monaco.IRange}
-export function installDefinitionUI(resolve:(model:monaco.editor.ITextModel,offset:number)=>Promise<DefinitionDocument[]>,open:(uri:string,range?:monaco.IRange|monaco.IPosition)=>boolean|Promise<boolean>){
+export interface DefinitionDocument {uri:string;source:string;range:monaco.IRange;origin:monaco.IRange;label?:boolean}
+export function installDefinitionUI(resolve:(model:monaco.editor.ITextModel,offset:number,labelsOnly?:boolean)=>Promise<DefinitionDocument[]>,open:(uri:string,range?:monaco.IRange|monaco.IPosition)=>boolean|Promise<boolean>){
  const provider=monaco.languages.registerDefinitionProvider('jal',{async provideDefinition(model,position,token){
   const version=model.getVersionId();try{
    const results=await resolve(model,model.getOffsetAt(position));if(token.isCancellationRequested||model.isDisposed()||model.getVersionId()!==version)return [];
@@ -13,7 +13,26 @@ export function installDefinitionUI(resolve:(model:monaco.editor.ITextModel,offs
   }catch{return [];}
  }});
  const opener=monaco.editor.registerEditorOpener({openCodeEditor:(_editor,uri,selection)=>open(uri.toString(),selection)});
- return {dispose(){provider.dispose();opener.dispose();}};
+ const listeners=new Map<monaco.editor.ICodeEditor,monaco.IDisposable>();
+ const attach=(editor:monaco.editor.ICodeEditor)=>{
+  let request=0;
+  const mouse=editor.onMouseDown(event=>{
+   const ticket=++request,position=event.target.position,model=editor.getModel();
+   if(!event.event.leftButton||!event.event.shiftKey||event.event.ctrlKey||event.event.metaKey||event.event.altKey||!position||!model||event.target.type!==monaco.editor.MouseTargetType.CONTENT_TEXT)return;
+   const version=model.getVersionId();
+   void resolve(model,model.getOffsetAt(position),true).then(targets=>{
+    if(ticket!==request||editor.getModel()!==model||model.isDisposed()||model.getVersionId()!==version||!targets.length||!targets.every(t=>t.label))return;
+    editor.setPosition(position);editor.focus();
+    if(targets.length===1){editor.setSelection(targets[0].range);editor.revealRangeInCenterIfOutsideViewport(targets[0].range);}
+    else editor.trigger('label-navigation','editor.action.peekDefinition',{});
+   }).catch(()=>{});
+  });
+  const dispose=()=>{++request;mouse.dispose();listeners.delete(editor);};
+  const closed=editor.onDidDispose(dispose);listeners.set(editor,{dispose(){dispose();closed.dispose();}});
+ };
+ for(const editor of monaco.editor.getEditors())attach(editor);
+ const created=monaco.editor.onDidCreateEditor(attach);
+ return {dispose(){created.dispose();for(const listener of [...listeners.values()])listener.dispose();provider.dispose();opener.dispose();}};
 }
 interface Host {models:()=>monaco.editor.ITextModel[];classBytes:(owner:string)=>Promise<Uint8Array|undefined>;disassemble:(bytes:Uint8Array)=>Promise<{source:string;className:string}>}
 export function createNavigation(host:Host){
@@ -62,11 +81,18 @@ export function createNavigation(host:Host){
    }
    return catalog;
   },
-  async resolve(model:monaco.editor.ITextModel,offset:number):Promise<DefinitionDocument[]>{
-   const current=epoch,version=model.getVersionId(),symbols=await index(model),ref=symbols.references.find(r=>offset>=r.start&&offset<r.end);if(!ref)return [];
-   const targets=ref.kind==='label'&&ref.target?[{model,span:ref.target}]:await lookup(ref);
+  async resolve(model:monaco.editor.ITextModel,offset:number,labelsOnly=false):Promise<DefinitionDocument[]>{
+   const current=epoch,version=model.getVersionId(),symbols=await index(model),ref=symbols.references.find(r=>offset>=r.start&&offset<r.end);if(!ref||(labelsOnly&&ref.kind!=='label'))return [];
+   let targets:{model:monaco.editor.ITextModel;span:Span}[];
+   if(ref.kind==='label'){
+    const target=ref.target;if(!target)return [];
+    const spans=ref.start===target.start
+     ? symbols.references.filter(r=>r.kind==='label'&&r.target?.start===target.start&&r.target?.end===target.end&&r.start!==ref.start)
+     : [target];
+    targets=spans.map(span=>({model,span}));
+   }else targets=await lookup(ref);
    if(current!==epoch||model.isDisposed()||model.getVersionId()!==version)return [];
-   return targets.filter(t=>!t.model.isDisposed()).map(t=>({uri:t.model.uri.toString(),source:t.model.getValue(),range:range(t.model,t.span),origin:range(model,ref)}));
+   return targets.filter(t=>!t.model.isDisposed()).map(t=>({uri:t.model.uri.toString(),source:t.model.getValue(),range:range(t.model,t.span),origin:range(model,ref),label:ref.kind==='label'}));
   },
   reset(){epoch++;definitions.clear();cache=new WeakMap();for(const model of owned)if(!model.isDisposed())model.dispose();owned.clear();},
   dispose(){this.reset();worker.dispose();}

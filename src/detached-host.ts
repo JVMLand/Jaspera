@@ -23,7 +23,7 @@ export interface DetachedBridge {graphFocus:(id:string,line:number,column:number
  attach:(id:string,client:DetachedClient)=>EditorSnapshot|undefined;
  tabs:(id:string)=>EditorSnapshot[];openTab:(group:string,key:string)=>EditorSnapshot|undefined;closeTab:(group:string,id:string)=>void;
  edit:(id:string,version:number,source:string)=>EditorSnapshot|undefined;undo:(id:string,redo:boolean)=>void;
- definitions:(id:string,offset:number)=>Promise<DefinitionDocument[]>;openDefinition:(group:string,uri:string,range?:monaco.IRange|monaco.IPosition)=>Promise<boolean>;
+ definitions:(id:string,offset:number,labelsOnly?:boolean)=>Promise<DefinitionDocument[]>;openDefinition:(group:string,uri:string,range?:monaco.IRange|monaco.IPosition)=>Promise<boolean>;
  save:()=>void;run:(id?:string)=>void;stop:()=>void;check:(id?:string)=>void;theme:(id:string)=>void;
  classFile:(id:string)=>Promise<{name:string;bytecode:string}|undefined>;release:(id:string)=>void;
 }
@@ -52,7 +52,7 @@ interface Options {graphFocus:(model:monaco.editor.ITextModel,line:number,column
  completionCatalog:()=>Promise<Catalog>;
  subscribe:(listener:()=>void)=>()=>void;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
- resolve:(model:monaco.editor.ITextModel,offset:number)=>Promise<DefinitionDocument[]>;
+ resolve:(model:monaco.editor.ITextModel,offset:number,labelsOnly?:boolean)=>Promise<DefinitionDocument[]>;
  stop:()=>void;check:(model?:monaco.editor.ITextModel)=>void;theme:(id:string)=>void;classFile:(model:monaco.editor.ITextModel)=>Promise<{name:string;bytecode:string}|undefined>;
 }
 export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:(model?:monaco.editor.ITextModel)=>void,options:Options){
@@ -95,7 +95,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   closeTab(group,id){if(entries.get(id)?.group===group)remove(id);},
   edit(id,version,source){const e=entries.get(id);if(!e||e.model.isDisposed())return;if(!e.readOnly&&version===e.model.getVersionId())replaceText(e.model,source);return snapshot(e);},
   undo(id,redo){const e=entries.get(id);if(e&&!e.readOnly&&!e.model.isDisposed()){e.model.pushStackElement();const history=e.model as UndoableModel;if(redo)void history.redo();else void history.undo();}},
-  definitions(id,offset){const e=entries.get(id);return e?options.resolve(e.model,offset):Promise.resolve([]);},
+  definitions(id,offset,labelsOnly){const e=entries.get(id);return e?options.resolve(e.model,offset,labelsOnly):Promise.resolve([]);},
   async openDefinition(group,uri,range){const state=openTab(group,uri);if(!state)return false;groups.get(group)?.client?.reveal?.(range,state.id);return true;},
   save(){if(options.state().canSave)save();},run(id){run(id?entries.get(id)?.model:undefined);},stop:options.stop,check(id){options.check(id?entries.get(id)?.model:undefined);},theme:options.theme,
   classFile:async id=>{const e=entries.get(id);return e&&!e.readOnly?options.classFile(e.model):undefined;},release

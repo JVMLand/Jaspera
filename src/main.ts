@@ -128,7 +128,7 @@ const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeOb
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions'|'graph');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
- graphFocus,graphCompilation,graphNavigate,projectAction,compileUsage,compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
+ graphFocus,graphCompilation,graphNavigate,projectAction,compileUsage,compile:compileModel,resolve:(model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:setStdin,clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
@@ -147,7 +147,7 @@ const navigation=createNavigation({
   const work=classQueue.then(()=>compilationService.disassemble(btoa(binary)));classQueue=work.then(()=>{},()=>{});return work;
  }
 });
-const definitionUI=installDefinitionUI((model,offset)=>navigation.resolve(model,offset),openDefinition);
+const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),openDefinition);
 function previewTitle(p:ClassPreview){return p.example?p.title:p.title+' (JAL)';}
 function ensureExample(path:string){
  const key='example:'+path;if(classPreviews.has(key))return classPreviews.get(key);

@@ -43,7 +43,8 @@ export function helpMenuItems(detached=false,canSave=()=>true){
       row('定義へ移動',['F12']);
       const hover=element('p','命令にマウスを重ねると、実行前後のスタックが表示されます。');
       const tabs=element('p');tabs.append(element('kbd','Alt'),' を押しながらタブをクリックすると、同じグループのほかのタブを閉じます。');
-      openHelp('ショートカット',[table,hover,tabs]);
+      const labels=element('p');labels.append(element('kbd','Shift'),' を押しながらラベルをクリックすると、定義または使用箇所へ移動します。');
+      openHelp('ショートカット',[table,labels,hover,tabs]);
     }},
     {id:'help-about',label:'JALWeb について',action:()=>showHelpMessage('JALWeb','JVM Assembly Language（JAL）のコードを編集・実行できます。')}
   ];

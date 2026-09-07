@@ -97,7 +97,7 @@ const dropFiles=paneDrop(document.body,bridge?.workspaceId??'',(key,event)=>{
  else {const snapshot=bridge?.openTab(group,key);if(snapshot){update(snapshot);select(snapshot.id);editor.focus();}}
  renderTabs();
 });
-const definitionUI=installDefinitionUI((model,offset)=>{const tab=[...tabs.values()].find(t=>t.model===model);return tab?bridge?.definitions(tab.state.id,offset)??Promise.resolve([]):Promise.resolve([]);},(uri,range)=>bridge?.openDefinition(group,uri,range)??false);
+const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>{const tab=[...tabs.values()].find(t=>t.model===model);return tab?bridge?.definitions(tab.state.id,offset,labelsOnly)??Promise.resolve([]):Promise.resolve([]);},(uri,range)=>bridge?.openDefinition(group,uri,range)??false);
 
 editor.addAction({id:'detached.undo',label:'Undo',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyZ],run:()=>{if(active)bridge?.undo(active,false);}});
 editor.addAction({id:'detached.redo',label:'Redo',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyY,monaco.KeyMod.CtrlCmd|monaco.KeyMod.Shift|monaco.KeyCode.KeyZ],run:()=>{if(active)bridge?.undo(active,true);}});
