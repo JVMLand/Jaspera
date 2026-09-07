@@ -12,15 +12,29 @@ const arithmetic={name:'main([Ljava/lang/String;)V',nodes:[
  ...['out','seven','five','add','three','multiply','print'].map((id,i)=>edge(id,['seven','five','add','three','multiply','print','return'][i])),
  edge('out','print','stack'),edge('seven','add','stack'),edge('five','add','stack'),edge('add','multiply','stack'),edge('three','multiply','stack'),edge('multiply','print','stack')
 ]};
-test('arithmetic dependencies slide their endpoints into clear straight corridors',async()=>{
+test('aligned arithmetic columns keep control edges straight and dependencies clear',async()=>{
  const result=await positionGraphs([arithmetic],elk);
- for(const e of result.edges){assert.equal(e.points.length,2,JSON.stringify(e));assert.equal(e.points[0].x,e.points[1].x);}
+ assert.equal(new Set(result.nodes.map(n=>n.x)).size,1);
  for(const e of result.edges){
-  const [a,b]=e.points;
-  for(const n of result.nodes){if(n.id===e.from||n.id===e.to)continue;
-   assert.ok(!(a.x>n.x-n.width/2&&a.x<n.x+n.width/2&&Math.min(a.y,b.y)<n.y+n.height/2&&Math.max(a.y,b.y)>n.y-n.height/2),'edge crosses '+n.id);
+  if(e.kind==='control'){assert.equal(e.points.length,2);assert.equal(e.points[0].x,e.points[1].x);}
+  for(let i=1;i<e.points.length;i++){
+   const a=e.points[i-1],b=e.points[i];assert.ok(a.x===b.x||a.y===b.y);
+   for(const n of result.nodes){if(n.id===e.from||n.id===e.to)continue;
+    const crossed=a.x===b.x?a.x>n.x-n.width/2&&a.x<n.x+n.width/2&&Math.min(a.y,b.y)<n.y+n.height/2&&Math.max(a.y,b.y)>n.y-n.height/2:a.y>n.y-n.height/2&&a.y<n.y+n.height/2&&Math.min(a.x,b.x)<n.x+n.width/2&&Math.max(a.x,b.x)>n.x-n.width/2;
+    assert.ok(!crossed,'edge crosses '+n.id);
+   }
   }
  }
+});
+
+for(const compound of [false,true])test('String constructor instructions share a center line '+compound,async()=>{
+ const texts=['aload_0','invokespecial java/lang/Object-><init>()V','iload_3','iload 4','aload_1','arraylength','invokestatic java/lang/String->checkBoundsOffCount(III)I','pop','iload 4','ifne L0'];
+ const nodes=texts.map((text,i)=>({...node('n'+i),text}));
+ const edges=[...texts.slice(1).map((_,i)=>edge('n'+i,'n'+(i+1))),...[[0,1],[2,6],[3,6],[4,5],[5,6],[6,7],[8,9]].map(([a,b])=>edge('n'+a,'n'+b,'stack'))];
+ if(compound){nodes.push({...node('exit'),block:'B1'});edges.push(edge('n9','exit'));}
+ const result=await positionGraphs([{name:'constructor()V',nodes,edges}],elk),column=result.nodes.filter(n=>n.block==='B0');
+ assert.equal(new Set(column.map(n=>Math.round(n.x*1000))).size,1);
+ for(let i=1;i<column.length;i++)assert.ok(column[i].y>column[i-1].y);
 });
 
 test('blocked corridors retain ELK detours and clear horizontal corridors use side ports',async()=>{
@@ -45,4 +59,10 @@ test('label blocks contain their instructions and exception arrows attach to blo
   assert.ok(p.x>=b.x-.01&&p.x<=b.x+b.width+.01&&p.y>=b.y-.01&&p.y<=b.y+b.height+.01,JSON.stringify({id,b,p}));
   assert.ok([Math.abs(p.x-b.x),Math.abs(p.x-b.x-b.width),Math.abs(p.y-b.y),Math.abs(p.y-b.y-b.height)].some(d=>d<.01),JSON.stringify({id,b,p}));
  }
+});
+
+test('hiding all arrows preserves the ordered instruction column',async()=>{
+ const result=await positionGraphs([{...arithmetic,edges:[]}],elk);
+ assert.equal(result.edges.length,0);assert.equal(new Set(result.nodes.map(n=>n.x)).size,1);
+ for(let i=1;i<result.nodes.length;i++)assert.ok(result.nodes[i].y-result.nodes[i-1].y>=30);
 });

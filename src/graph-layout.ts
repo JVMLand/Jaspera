@@ -7,6 +7,13 @@ interface PlacedEdge extends GraphEdge {points:ElkPoint[];x?:number;y?:number}
 interface BlockBox {id:string;x:number;y:number;width:number;height:number}
 interface MethodBox {name:string;x:number;y:number;width:number;height:number}
 
+// Seed a shared center line; interactive placement preserves it while ELK routes
+// around the actual instruction widths. Each label block gets its own column.
+const columnNode=(node:GraphNode,index:number)=>{
+ const width=Math.min(460,Math.max(110,node.text.length*7+24));
+ return {id:node.id,width,height:30,x:230-width/2,y:index*62};
+};
+
 /** ELK routes orthogonal edges while placing nodes, instead of adding elbows afterwards. */
 export async function positionGraphs(methods:MethodGraph[],elk:Pick<ELK,'layout'>){
  const nodes:PlacedNode[]=[],edges:PlacedEdge[]=[],boxes:MethodBox[]=[],blocks:BlockBox[]=[];
@@ -17,15 +24,22 @@ export async function positionGraphs(methods:MethodGraph[],elk:Pick<ELK,'layout'
   const compound=grouped.size>1||method.edges.some(e=>e.kind==='exception');
   const graph:ElkNode={id:'method',layoutOptions:{
    'elk.hierarchyHandling':'INCLUDE_CHILDREN',
+   ...(!compound?{'elk.layered.nodePlacement.strategy':'INTERACTIVE'}:{}),
    'elk.algorithm':'layered','elk.direction':'DOWN','elk.edgeRouting':'ORTHOGONAL',
    'elk.padding':'[top=24,left=24,bottom=24,right=24]',
    'elk.spacing.nodeNode':'24','elk.layered.spacing.nodeNodeBetweenLayers':'32',
    'elk.layered.nodePlacement.favorStraightEdges':'true',
    'elk.layered.unnecessaryBendpoints':'false',
    'elk.layered.considerModelOrder.strategy':'NODES_AND_EDGES'
-  },children:method.nodes.map(node=>({id:node.id,width:Math.min(460,Math.max(110,node.text.length*7+24)),height:30})),
+  },children:method.nodes.map(columnNode),
   edges:method.edges.map((edge,i)=>({id:'e'+i,sources:[edge.from],targets:[edge.to],...(edge.label?{labels:[{text:edge.label,width:Math.max(...edge.label.split('\n').map(line=>line.length*6)),height:edge.label.split('\n').length*14}]}:{})}))};
-  if(compound)graph.children=[...grouped].map(([id,items])=>({id,layoutOptions:{'elk.padding':'[top=18,left=18,bottom=18,right=18]'},children:items.map(node=>({id:node.id,width:Math.min(460,Math.max(110,node.text.length*7+24)),height:30}))}));
+  if(compound)graph.children=[...grouped].map(([id,items])=>({id,layoutOptions:{'elk.padding':'[top=18,left=18,bottom=18,right=18]','elk.layered.nodePlacement.strategy':'INTERACTIVE'},children:items.map(columnNode)}));
+  // Filtering arrows must not remove the instruction order within a block.
+  const linked=new Set(method.edges.map(e=>JSON.stringify([e.from,e.to])));
+  for(const items of grouped.values())for(let i=1;i<items.length;i++){
+   const from=items[i-1].id,to=items[i].id;
+   if(!linked.has(JSON.stringify([from,to])))graph.edges!.push({id:'order:'+from+':'+to,sources:[from],targets:[to]});
+  }
   const result=await elk.layout(graph);
   if(!compound)straightenGraphEdges(result);
   const prefix='m'+index+':',offset=top+30;
@@ -42,7 +56,7 @@ export async function positionGraphs(methods:MethodGraph[],elk:Pick<ELK,'layout'
   for(const node of method.nodes){const position=geometry.get(node.id)!;nodes.push({...node,id:prefix+node.id,x:position.x+position.width/2,y:position.y+position.height/2+offset,width:position.width,height:position.height});}
   if(!compound&&method.nodes.length){const positions=[...geometry.values()],x=Math.min(...positions.map(p=>p.x))-12,y=Math.min(...positions.map(p=>p.y))-12;
    blocks.push({id:prefix+[...grouped.keys()][0],x,y:y+offset,width:Math.max(...positions.map(p=>p.x+p.width))-x+12,height:Math.max(...positions.map(p=>p.y+p.height))-y+12});}
-  for(const {route,x:parentX,y:parentY} of routes){const container=route.container?geometry.get(route.container):undefined,x=container?.x??parentX,y=container?.y??parentY;const edge=method.edges[Number(route.id.slice(1))],label=route.labels?.[0];
+  for(const {route,x:parentX,y:parentY} of routes){if(route.id.startsWith('order:'))continue;const container=route.container?geometry.get(route.container):undefined,x=container?.x??parentX,y=container?.y??parentY;const edge=method.edges[Number(route.id.slice(1))],label=route.labels?.[0];
    for(const section of route.sections??[])edges.push({...edge,from:prefix+edge.from,to:prefix+edge.to,points:[section.startPoint,...section.bendPoints??[],section.endPoint].map(point=>({x:point.x+x,y:point.y+y+offset})),...(label?{x:label.x!+label.width!/2+x,y:label.y!+y+offset+10}:{})});
   }
   const w=Math.max(result.width??0,method.name.length*7+32),h=(result.height??0)+30;

@@ -18,7 +18,8 @@ test('graph follows edits and selections, navigates to source, and works in a de
  return
  } }`;
  await page.evaluate(async source=>(await import('/src/main.ts')).editor.setValue(source),arithmetic);await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length===8);
- assert.equal(await page.locator('.graph-edge').evaluateAll(paths=>paths.every(path=>path.getAttribute('d').match(/-?[\d.]+/g).length===4)),true);
+ assert.equal(await page.locator('.graph-edge.control').evaluateAll(paths=>paths.every(path=>path.getAttribute('d').match(/-?[\d.]+/g).length===4)),true);
+ assert.equal(await page.locator('.graph-node').evaluateAll(nodes=>new Set(nodes.map(n=>Math.round((n.transform.baseVal.getItem(0).matrix.e+Number(n.querySelector('rect').getAttribute('width'))/2)*1000))).size),1);
  await page.locator('#graph-panel').screenshot({path:'.cache/instruction-graph-straight.png'});
  const source=`public class Main {
  public static main([Ljava/lang/String;)V {
