@@ -13,7 +13,8 @@
     "build": "pnpm run generate && pnpm run typecheck && vite build && node scripts/build-offline.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
-    "prebuild": "node scripts/check-runtime.mjs"
+    "prebuild": "node scripts/check-runtime.mjs",
+    "build:runtime": "node scripts/build-runtime.mjs"
   },
   "dependencies": {
     "antlr4": "4.13.2",
