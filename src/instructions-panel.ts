@@ -1,3 +1,4 @@
+import {renderFrameTransition} from './frame-transition';
 import {instructionHighlightGroup} from './instruction-colors';
 import {renderMarkdown} from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
 import {categories,instructionList,guide,type Diagram} from './instruction-guide';
@@ -12,21 +13,13 @@ export function installInstructionsPanel(host:HTMLElement){
  const outside=(e:PointerEvent)=>{if(!toolbar.contains(e.target as Node))toggle(false);};document.addEventListener('pointerdown',outside,true);search.onclick=()=>toggle(true);search.onkeydown=e=>{if(e.key==='Escape')toggle(false);if(e.key==='ArrowDown'){toggle(true);list.querySelector<HTMLButtonElement>('button')?.focus();e.preventDefault();}};
  const entries=instructionList.map(guide);let selected='iadd',markdown:ReturnType<typeof renderMarkdown>|undefined;
  function comparison(form:Diagram){
-  const wrap=el('div',undefined,'instruction-diagram');
-  const pair=(before:string[],after:string[],local=false)=>{
-   const grid=el('div',undefined,'instruction-pair');
-   for(const [i,values] of [before,after].entries()){
-    if(i)grid.append(el('span','→','instruction-arrow'));
-    const col=el('section'),valuesBox=el('div',undefined,'instruction-values');col.append(el('h4',i?'実行後':'実行前'),valuesBox);
-    if(!values.length)valuesBox.append(el('div',local?'変更なし':(!before.length&&!after.length?'変化なし':'対象の値なし'),'instruction-empty'));
-    for(const [j,value] of [...values].reverse().entries()){const row=el('div',undefined,'instruction-value');if(!local)row.append(el('small',j===0?'TOP':''));row.append(el('code',value));valuesBox.append(row);}
-    if(!local&&!after.includes('メソッド終了'))valuesBox.append(el('div','⋯','instruction-rest'));grid.append(col);
-   }return grid;
-  };
-  wrap.append(el('h3','スタック'),pair(form.before,form.after));
-  if(form.locals)wrap.append(el('h3','ローカル変数'),pair(form.locals.before,form.locals.after,true));else if(!/return$|^athrow$/.test(selected))wrap.append(el('p','ローカル変数の更新なし（現在のメソッド）','instruction-local-note'));
-  if(form.note)wrap.append(el('p',form.note,'instruction-note'));return wrap;
+  const terminal=form.after.includes('メソッド終了')?'メソッド終了':undefined;
+  const labels=form.locals?.before.map(v=>v.match(/^(#[^:]+):/)?.[1]??'');
+  const localValues=(values:string[])=>values.map(v=>v.replace(/^#[^:]+:\s*/,''));
+  return renderFrameTransition({before:form.before,after:terminal?[]:form.after,consumed:form.before.length,produced:form.after.length,tail:!terminal,terminal,note:form.note,
+   locals:form.locals?{before:localValues(form.locals.before),after:localValues(form.locals.after),labels}:undefined});
  }
+
  function show(op:string){
   selected=op;detail.style.setProperty('--instruction-color',`var(--instruction-${instructionHighlightGroup(op)})`);markdown?.dispose();detail.replaceChildren();const entry=entries.find(e=>e.op===op)!;
   for(const button of list.querySelectorAll<HTMLButtonElement>('button'))button.setAttribute('aria-pressed',String(button.dataset.op===op));
