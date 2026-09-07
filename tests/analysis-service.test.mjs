@@ -66,3 +66,20 @@ test('progress is shared with late subscribers and stops retaining callbacks aft
  const pending=service.compile(doc,'source',p=>first.push(p));await tick();const graph={name:'x()V',nodes:[],edges:[]};report({phase:'frames',method:'x()V',completed:1,total:2,finished:true,graph});
  assert.equal(service.compile(doc,'source',p=>late.push(p)),pending);assert.ok(late.some(p=>p.graph===graph));report({phase:'frames',method:'y()V',completed:1,total:2});assert.equal(late.at(-1).method,'y()V');worker.calls[0].resolve({graphs:[graph]});await pending;await tick();const count=first.length;report({phase:'complete',completed:1,total:1});assert.equal(first.length,count);service.dispose();
 });
+
+ test('requested outputs upgrade queued work and completed supersets satisfy smaller requests',async()=>{
+  const calls=[],service=new CompilationService({stop(){},async compile(source,progress,options){calls.push({...options});return {className:'X',bytecode:'',diagnostics:[]};}}),doc={};
+  const check=service.compile(doc,'one',undefined,{});
+  assert.equal(service.compile(doc,'one',undefined,{graphs:true}),check);
+  await check;assert.deepEqual(calls,[{graphs:true,stackFrames:false}]);
+  assert.equal(service.compile(doc,'one',undefined,{}),check);
+  await service.compile(doc,'one',undefined,{stackFrames:true});assert.deepEqual(calls[1],{graphs:true,stackFrames:true});
+  await service.compile(doc,'two',undefined,{});assert.deepEqual(calls[2],{});service.dispose();
+ });
+
+test('completed compilation cache is bounded and recently used documents survive eviction',async()=>{
+ let calls=0;const service=new CompilationService({stop(){},async compile(){calls++;return {className:'X',bytecode:'',diagnostics:[]};}}),documents=Array.from({length:65},()=>({}));
+ for(const doc of documents.slice(0,64))await service.compile(doc,'same');assert.equal(calls,64);
+ await service.compile(documents[0],'same');await service.compile(documents[64],'same');await service.compile(documents[0],'same');assert.equal(calls,65);
+ await service.compile(documents[1],'same');assert.equal(calls,66);service.dispose();
+});

@@ -74,7 +74,7 @@ const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promi
     await initialize(heapMiB);
     if (data.type === 'compile') {
       compiling=true;progressText="";
-      const compilation = JSON.parse(await bridge.compileWithProgress(encodeText(data.source)));
+      const compilation = JSON.parse(await bridge.compileSelected(encodeText(data.source), (data.options?.stackFrames ? 1 : 0) | (data.options?.graphs ? 2 : 0)));
       return compilation;
     } else if(data.type==='disassemble'){
       if(data.bytecode.length>1400000)throw new Error('class は 1 MiB 以下にしてください。');

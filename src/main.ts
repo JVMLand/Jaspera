@@ -101,14 +101,14 @@ const compilationService=new CompilationService(compiler,memory.backgroundIdleMs
 const visibilityChanged=()=>compilationService.setBackground(document.visibilityState==='hidden');
 document.addEventListener('visibilitychange',visibilityChanged);visibilityChanged();
 const compileUsage=usageCompiler(compilationService,memory.usageCacheEntries);
-const compileModel=(model:monaco.editor.ITextModel)=>compilationService.compile(model,model.getValue());
+const compileModel=(model:monaco.editor.ITextModel)=>compilationService.compile(model,model.getValue(),undefined,{stackFrames:true});
 function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){
  const previous=workspaceState.value.graphDocument,uri=model.uri.toString(),version=model.getVersionId();
  const same=previous?.uri===uri&&previous.version===version;if(same&&previous.line===line&&previous.column===column)return;
  workspaceState.update({graphDocument:{uri,version,line,column,source:same?previous.source:model.getValue()}});
 }
 function graphModel(doc:GraphDocument){const model=monaco.editor.getModel(monaco.Uri.parse(doc.uri));return model&&!model.isDisposed()&&model.getVersionId()===doc.version&&model.getValue()===doc.source?model:undefined;}
-const graphCompilation=(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>{const model=graphModel(doc);return model?compilationService.compile(model,model.getValue(),onProgress):Promise.reject(new Error('文書の版が変更されています。'));};
+const graphCompilation=(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>{const model=graphModel(doc);return model?compilationService.compile(model,model.getValue(),onProgress,{graphs:true}):Promise.reject(new Error('文書の版が変更されています。'));};
 const graphNavigate=(doc:GraphDocument,line:number,column:number)=>{if(graphModel(doc))void openDefinition(doc.uri,{lineNumber:line,column});};
 let runner:Runtime|undefined;
 const editorOverlays=document.createElement('div');editorOverlays.id='editor-overlays';document.body.append(editorOverlays);
@@ -162,7 +162,7 @@ async function checkDocument(model:monaco.editor.ITextModel|null=editor.getModel
  try{const result=await compileExample(model);status(result.diagnostics.some(d=>d.severity==='error')?'コンパイルエラー':'実行できます',result.diagnostics.some(d=>d.severity==='error')?'error':'ready');}catch(error){status(String(error),'error');}
 }
 async function compileExample(model:monaco.editor.ITextModel){
- const version=model.getVersionId(),result=await compileModel(model);
+ const version=model.getVersionId(),result=await compilationService.compile(model,model.getValue(),undefined,{});
  if(!model.isDisposed()&&model.getVersionId()===version)monaco.editor.setModelMarkers(model,'jal',result.diagnostics.map(d=>{
   const p=model.validatePosition({lineNumber:d.line,column:d.column});return {severity:d.severity==='error'?monaco.MarkerSeverity.Error:monaco.MarkerSeverity.Warning,message:d.message,startLineNumber:p.lineNumber,startColumn:p.column,endLineNumber:p.lineNumber,endColumn:Math.min(model.getLineMaxColumn(p.lineNumber),p.column+Math.max(1,d.length)),source:'JAL'};
  }));return result;
@@ -671,7 +671,7 @@ async function analyze():Promise<void> {
       try {
         const next=new Map<string,Compilation>();
         for(const f of sources) {
-          const c=await compilationService.compile(f.model,f.source);
+          const c=await compilationService.compile(f.model,f.source,undefined,{});
           if(checked!==revision)break;
           next.set(f.path,{...c,diagnostics:[...c.diagnostics]});
         }

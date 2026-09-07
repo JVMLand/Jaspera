@@ -37,3 +37,10 @@ test('disassembled lookupswitch puts every case and default on its own line',asy
  const probe=directory+'/LookupDisassembly.java';await writeFile(probe,'import jalweb.Bridge; public class LookupDisassembly { public static void main(String[] a) { System.out.println(Bridge.disassemble(a[0])); } }');const output=JSON.parse(java(['-cp','public/runtime/jalweb-compiler.jar',probe,result.bytecode])).source;
  assert.match(output,/    lookupswitch \{\n      0: L\d+,\n      92906313: L\d+,\n      271239035: L\d+,\n      1544803905: L\d+,\n      default: L\d+\n    \}/);assert.deepEqual((await compile('lookup-roundtrip',output)).diagnostics,[]);
 });
+
+test('selective outputs preserve bytecode and reject invalid stacks in every mode',async()=>{
+ const probe=directory+'/SelectedProbe.java';await writeFile(probe,'import jalweb.Bridge; public class SelectedProbe { public static void main(String[] a) { System.out.println(Bridge.compileSelected(a[0],Integer.parseInt(a[1]))); } }');
+ const compileSelected=(source,mode)=>JSON.parse(java(['-cp','public/runtime/jalweb-compiler.jar',probe,Buffer.from(source).toString('base64'),String(mode)]).split(/\r?\n/).at(-1));
+ const source='public class Main (major_version=67, minor_version=0) { public static value()I { iconst_1 ireturn } }';let bytecode;
+ for(let mode=0;mode<4;mode++){const result=compileSelected(source,mode);assert.deepEqual(result.diagnostics,[]);bytecode??=result.bytecode;assert.equal(result.bytecode,bytecode);assert.equal(result.stackFrames.length>0,!!(mode&1));assert.equal(result.graphs.length>0,!!(mode&2));const bad=compileSelected(source.replace('iconst_1','aconst_null'),mode);assert.equal(bad.bytecode,'');assert.ok(bad.diagnostics.some(d=>d.severity==='error'));}
+});

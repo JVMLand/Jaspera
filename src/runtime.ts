@@ -1,7 +1,7 @@
 import {expose,transfer} from 'comlink';
 import {WorkerRpc,scopedEndpoint} from './worker-rpc';
 import type {RuntimeApi} from './runtime.worker';
-import type {Compilation,Disassembly,RuntimeRequest,RuntimeEvents,AnalysisProgress} from './protocol';
+import type {Compilation,Disassembly,RuntimeRequest,RuntimeEvents,AnalysisProgress,CompileOptions} from './protocol';
 export class Runtime {
  private rpc=new WorkerRpc<RuntimeApi>(()=>new Worker(new URL('./runtime.worker.ts',import.meta.url),{type:'module'}));
  private active?:object;
@@ -18,7 +18,7 @@ export class Runtime {
   catch(error){if(this.active===token)this.rpc.stop();throw error;}
   finally{scope.dispose();channel.port2.close();if(this.active===token)this.active=undefined;}
  }
- compile(source:string,onProgress?:(progress:AnalysisProgress)=>void){return this.request({type:'compile',source},60_000,onProgress) as Promise<Compilation>;}
+ compile(source:string,onProgress?:(progress:AnalysisProgress)=>void,options:CompileOptions={stackFrames:true,graphs:true}){return this.request({type:'compile',source,options},60_000,onProgress) as Promise<Compilation>;}
  disassemble(bytecode:string){return this.request({type:'disassemble',bytecode},30_000) as Promise<Disassembly>;}
  run(compilation:Compilation,stdin:string){return this.request({type:'run',compilation,stdin},30_000);}
  stop(message='停止しました。'){this.active=undefined;this.rpc.stop(message);}

@@ -5,6 +5,6 @@ export function usageCompiler(service:Pick<CompilationService,'compile'>,capacit
  return (source:string)=>{
   const document=documents.get(source)??{};documents.delete(source);documents.set(source,document);
   while(documents.size>Math.max(1,capacity))documents.delete(documents.keys().next().value!);
-  return service.compile(document,source);
+  return service.compile(document,source,undefined,{stackFrames:true});
  };
 }

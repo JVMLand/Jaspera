@@ -71,7 +71,13 @@ public final class Bridge {
         reportProgress=true;
         try { return compile(encodedSource); } finally { reportProgress=false; }
     }
-    public static String compile(String encodedSource) {
+    /** Bit 0 requests hover frames; bit 1 requests graphs. Verification always runs. */
+    public static String compileSelected(String encodedSource, int outputs) {
+        reportProgress=(outputs&2)!=0;
+        try { return compile(encodedSource, outputs); } finally { reportProgress=false; }
+    }
+    public static String compile(String encodedSource) { return compile(encodedSource, 3); }
+    private static String compile(String encodedSource, int outputs) {
         String source=new String(Base64.getDecoder().decode(encodedSource),StandardCharsets.UTF_8);
         diagnostics.clear();
         progress("parse","","",0,0);
@@ -119,9 +125,9 @@ public final class Bridge {
                     try {
                         BasicVerifier verifier=new StackFrames.Verifier();
                         Frame<BasicValue>[] frames=new Analyzer<>(verifier).analyzeAndComputeMaxs(node.name,method);
-                        StackFrames.append(stackFrames,method,frames,verifier);
-                        String graph=InstructionGraph.compute(node.name,method,frames);
-                        graphs.add(graph);
+                        if((outputs&1)!=0) StackFrames.append(stackFrames,method,frames,verifier);
+                        String graph=(outputs&2)!=0?InstructionGraph.compute(node.name,method,frames):null;
+                        if(graph!=null) graphs.add(graph);
                         methodProgress("frames",owner,method.name+method.desc,frameCompleted,frameTotal,true,graph);
                     }
                     catch(AnalyzerException e) {
