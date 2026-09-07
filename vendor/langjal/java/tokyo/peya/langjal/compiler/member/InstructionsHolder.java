@@ -203,8 +203,10 @@ public class InstructionsHolder {
         boolean includeLineNumberTable =
                 (compileSettings & CompileSettings.INCLUDE_LINE_NUMBER_TABLE) != 0;
         for (InstructionInfo instruction : this.instructions) {
-            if (instruction.assignedLabel() != null)  // 命令にラベルが割り当てられている場合
+            if (instruction.assignedLabel() != null) {
                 this.ownerMethod.instructions.add(instruction.assignedLabel().node());
+                InstructionSources.markLabel(instruction.insn());
+            }
 
             // 行番号を付加する。それにはラベルが必要なので，もし命令にラベルが貼っ付いていたら再利用する。
             if (includeLineNumberTable)
