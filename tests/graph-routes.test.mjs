@@ -31,8 +31,8 @@ for(const mirrored of [false,true])for(const narrowTarget of [false,true])test('
  const occupied={from:'other',to:'t',label:'',points:[{x:336,y:50},{x:336,y:270}]};
  if(mirrored){for(const box of boxes)box.x=500-box.x-box.width;for(const e of [edge,occupied])e.points=e.points.map(p=>({x:500-p.x,y:p.y}));}
  const end={...edge.points.at(-1)};simplifyGraphRoutes(boxes,narrowTarget?[edge,occupied]:[edge],new Map(),bounds);
- assert.equal(edge.points.length,narrowTarget?4:3);assert.equal(edge.points[0].x,mirrored?310:190);assert.equal(edge.points[1].x,mirrored?120:380);
- assert.deepEqual(edge.points.at(-1),narrowTarget?{x:mirrored?160:340,y:281}:{x:mirrored?120:380,y:270});
+ assert.equal(edge.points.length,narrowTarget?4:3);assert.equal(edge.points[0].x,mirrored?310:190);assert.equal(edge.points[1].x,narrowTarget?(mirrored?120:380):(mirrored?135:365));
+ assert.deepEqual(edge.points.at(-1),narrowTarget?{x:mirrored?160:340,y:281}:{x:mirrored?135:365,y:270});
  for(let i=1;i<edge.points.length;i++)assert.ok(edge.points[i].y>=edge.points[i-1].y);
 });
 
@@ -47,7 +47,7 @@ for(const blocked of [false,true])test('inter-block stack routes remove intermed
  const control={from:'goto',to:'t',label:'',points:[{x:666.5,y:506},{x:666.5,y:905},{x:502,y:905}]};
  simplifyGraphRoutes(boxes,[edge,occupied,control],new Map([['s','B1'],['t','B3']]),{x:0,y:0,width:957,height:1012});
  if(blocked)assert.deepEqual(edge.points,old);
- else {assert.equal(edge.points.length,5);assert.deepEqual(edge.points[0],old[0]);assert.deepEqual(edge.points.at(-1),old.at(-1));assert.ok(edge.points.every(p=>p.x>=370.57));}
+ else {assert.equal(edge.points.length,3);assert.deepEqual(edge.points[0],old[0]);const end=edge.points.at(-1);assert.equal(end.y,890);assert.ok(end.x>491.5&&end.x<494);assert.ok(edge.points.every(p=>p.x>=end.x));}
 });
 
 for(const mirrored of [false,true])test('parallel stack and control routes use separate straight lanes beside an exception '+mirrored,()=>{
@@ -88,4 +88,14 @@ for(const mirrored of [false,true])for(const interlocked of [false,true])test('d
  assert.ok(far.points[0].y<near.points[0].y);
  assert.ok(mirrored?far.points[1].x<near.points[1].x:far.points[1].x>near.points[1].x);
  assert.equal(near.to,'init');assert.equal(far.to,'put');
+});
+
+for(const mirrored of [false,true])test('side-to-top connections find fresh clear lanes between occupied original lanes '+mirrored,()=>{
+ const boxes=[{id:'s',x:60,y:100,width:170,height:45},{id:'middle',x:60,y:190,width:170,height:45},{id:'t',x:0,y:400,width:400,height:45}];
+ const edge={from:'s',to:'t',label:'',points:[{x:173,y:145},{x:173,y:175},{x:245,y:175},{x:245,y:275},{x:262,y:275},{x:262,y:400}]};
+ const occupied=[245,262,278].map((x,i)=>({from:'other'+i,to:'t',label:'',points:[{x,y:50},{x,y:400}]}));
+ if(mirrored){for(const box of boxes)box.x=500-box.x-box.width;for(const e of [edge,...occupied])e.points=e.points.map(p=>({x:500-p.x,y:p.y}));}
+ simplifyGraphRoutes(boxes,[edge,...occupied],new Map(),{x:0,y:0,width:500,height:500});
+ assert.equal(edge.points.length,3);assert.deepEqual(edge.points[0],{x:mirrored?270:230,y:mirrored?141:122.5});assert.equal(edge.points[1].x,edge.points[2].x);assert.equal(edge.points[2].y,400);
+ const lane=mirrored?500-edge.points[1].x:edge.points[1].x;assert.ok(lane>230&&lane<241);
 });

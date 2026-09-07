@@ -1,6 +1,6 @@
 interface Point {x:number;y:number}
 interface Box {id:string;x:number;y:number;width:number;height:number}
-interface Route {from:string;to:string;points:Point[];label:string;x?:number;y?:number}
+interface Route {kind?:string;from:string;to:string;points:Point[];label:string;x?:number;y?:number}
 const epsilon=.01,gap=4;
 const length=(a:Point,b:Point)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const overlaps=(a:Box,b:Box)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;
@@ -24,7 +24,7 @@ function crossings(points:Point[],other:Point[]){
 }
 
 /** Find open vertical corridors across the shared width, rather than trying only its center. */
-function straightLanes(left:number,right:number,top:number,bottom:number,obstacles:Box[],edge:Route,edges:Route[]){
+function straightLanes(left:number,right:number,top:number,bottom:number,obstacles:Box[],edge:Route,edges:Route[],nearLeft=false){
  let lanes=[[left,right]];
  const exclude=(start:number,end:number)=>{lanes=lanes.flatMap(([a,b])=>end<=a||start>=b?[[a,b]]:[[a,Math.min(b,start)],[Math.max(a,end),b]].filter(([x,y])=>y-x>epsilon));};
  for(const box of obstacles)if(box.y<bottom&&box.y+box.height>top)exclude(box.x-gap,box.x+box.width+gap);
@@ -33,7 +33,7 @@ function straightLanes(left:number,right:number,top:number,bottom:number,obstacl
   if(Math.abs(a.x-b.x)<epsilon&&Math.max(a.y,b.y)>top&&Math.min(a.y,b.y)<bottom)exclude(a.x-gap,b.x+gap);
  }
  const center=(left+right)/2;
- return lanes.map(([a,b])=>(a+b)/2).sort((a,b)=>Math.abs(a-center)-Math.abs(b-center));
+ return lanes.map(([a,b])=>nearLeft?Math.min(a+gap,(a+b)/2):(a+b)/2).sort((a,b)=>nearLeft?a-b:Math.abs(a-center)-Math.abs(b-center));
 }
 
 /** Keep the downward ELK placement; reduce elbows or center an east departure.
@@ -59,6 +59,18 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
    // Existing lane coordinates also make good landing points on a wide target.
    // Slide the destination along its top border instead of returning to a fixed port.
    const landingXs=new Set([tx,...old.map(p=>Math.max(target.x+gap,Math.min(p.x,target.x+target.width-gap)))]);
+   // A wider destination can accept new lanes between the existing ones.
+   // Do not limit a side-to-top connection to ELK's original port coordinates.
+   if(old.length>3){
+   const oldCrossings=edges.reduce((sum,e)=>sum+(e===edge?0:crossings(old,e.points)),0);
+   for(const y of [sy,bottom-gap])for(const [left,right] of [[Math.max(target.x+gap,source.x+source.width+gap),target.x+target.width-gap],[target.x+gap,Math.min(target.x+target.width-gap,source.x-gap)]]){
+    if(left>right||y>target.y)continue;
+    for(const x of straightLanes(left,right,y,target.y,obstacles,edge,edges)){
+     const points=[{x:x>sx?source.x+source.width:source.x,y},{x,y},{x,y:target.y}];
+     if(edges.reduce((sum,e)=>sum+(e===edge?0:crossings(points,e.points)),0)<=oldCrossings)candidates.push(points);
+    }
+   }
+   }
    for(const y of [sy,bottom-gap])for(const x of landingXs){
     if(y<=target.y&&(x>source.x+source.width||x<source.x))candidates.push([{x:x>sx?source.x+source.width:source.x,y},{x,y},{x,y:target.y}]);
    }
@@ -112,6 +124,7 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
   if(edge.points===old)break;
   }
  }
+ straightenTopFans(boxes,edges,parents);
  untangleSideFans(boxes,edges,parents);
 }
 
@@ -143,5 +156,35 @@ function untangleSideFans(boxes:Box[],edges:Route[],parents:Map<string,string>){
   const before=score(ordered.map(e=>e.points)),after=score(proposed.map(p=>p.points));
   if(after>before||after===before&&proposed.reduce((n,p)=>n+p.points.length,0)>=ordered.reduce((n,e)=>n+e.points.length,0))continue;
   for(const {edge,points} of proposed)edge.points=points;
+ }
+}
+
+/** Allocate incoming stack lanes together, from the lowest producer outward. */
+function straightenTopFans(boxes:Box[],edges:Route[],parents:Map<string,string>){
+ const byId=new Map(boxes.map(b=>[b.id,b])),groups=new Map<string,Route[]>();
+ for(const edge of edges)if(edge.kind==='stack'&&!edge.label&&edge.points.length>2){const group=groups.get(edge.to)??[];group.push(edge);groups.set(edge.to,group);}
+ for(const group of groups.values()){
+  if(group.length<2)continue;
+  const target=byId.get(group[0].to);if(!target)continue;
+  const ordered=[...group].sort((a,b)=>(byId.get(b.from)?.y??0)-(byId.get(a.from)?.y??0)),outside=edges.filter(e=>!group.includes(e));
+  const proposed:Route[]=[];
+  for(const edge of ordered){
+   const source=byId.get(edge.from);if(!source||source.y+source.height>target.y)break;
+   const y=source.y+source.height/2,left=Math.max(source.x+source.width+gap,target.x+gap),right=target.x+target.width-gap;
+   if(left>right)break;
+   const obstacles=boxes.filter(b=>b.id!==edge.from&&b.id!==edge.to&&b.id!==parents.get(edge.from)&&b.id!==parents.get(edge.to));
+   for(const other of outside)if(other.label&&other.x!==undefined&&other.y!==undefined){const lines=other.label.split('\n'),width=Math.max(...lines.map(line=>line.length*6));obstacles.push({id:'',x:other.x-width/2,y:other.y-10,width,height:lines.length*14});}
+   const occupied=[...outside,...proposed];
+   const points=straightLanes(left,right,y,target.y,obstacles,edge,occupied,true).map(x=>[{x:source.x+source.width,y},{x,y},{x,y:target.y}]).find(points=>
+    !points.slice(1).some((p,i)=>obstacles.some(b=>hits(points[i],p,b)))&&!occupied.some(e=>parallelOverlap(points,e.points)||crossings(points,e.points)>0));
+   if(!points)break;
+   proposed.push({...edge,points});
+  }
+  if(proposed.length!==ordered.length)continue;
+  const shorter=proposed.reduce((n,e)=>n+e.points.length,0)<ordered.reduce((n,e)=>n+e.points.length,0);
+  const west=ordered.some(e=>e.points[1].x<e.points[0].x);
+  const crossed=ordered.some((e,i)=>ordered.slice(i+1).some(o=>crossings(e.points,o.points)>0));
+  if(!shorter&&!west&&!crossed)continue;
+  ordered.forEach((edge,i)=>{edge.points=proposed[i].points;});
  }
 }

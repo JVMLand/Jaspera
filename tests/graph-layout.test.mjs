@@ -66,3 +66,12 @@ test('hiding all arrows preserves the ordered instruction column',async()=>{
  assert.equal(result.edges.length,0);assert.equal(new Set(result.nodes.map(n=>n.x)).size,1);
  for(let i=1;i<result.nodes.length;i++)assert.ok(result.nodes[i].y-result.nodes[i-1].y>=30);
 });
+
+test('PrintStream constructor arguments descend from centered east exits with one elbow each',async()=>{
+ const texts=['aload_0','aload_3','iload_1','aload_2','invokespecial java/io/PrintStream-><init>(Ljava/io/OutputStream;ZLjava/nio/charset/Charset;)V','return'];
+ const nodes=texts.map((text,i)=>({...node('arg'+i),text,opcode:text.split(' ')[0]}));
+ const method={name:'<init>(ZLjava/nio/charset/Charset;Ljava/io/OutputStream;)V',nodes,edges:[...nodes.slice(1).map((_,i)=>edge('arg'+i,'arg'+(i+1))),...[3,2,1,0].map(i=>edge('arg'+i,'arg4','stack'))]};
+ const result=await positionGraphs([method],elk),routes=[0,1,2].map(i=>result.edges.find(e=>e.from==='m0:arg'+i&&e.kind==='stack'));
+ for(const [i,route] of routes.entries()){const source=result.nodes[i];assert.equal(route.points.length,3);assert.deepEqual(route.points[0],{x:source.x+source.width/2,y:source.y});assert.equal(route.points[1].x,route.points[2].x);}
+ assert.ok(routes[0].points[1].x>routes[1].points[1].x&&routes[1].points[1].x>routes[2].points[1].x);
+});
