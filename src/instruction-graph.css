@@ -3,3 +3,6 @@
 .graph-filters label::after{content:"";width:14px;border-top:2px solid var(--theme-accent,#91caba)}.graph-filters [data-kind=local]::after{border-color:#b28cde;border-top-style:dashed}.graph-filters [data-kind=control]::after{border-color:var(--theme-muted,#98a4b3);border-top-style:dashed}.graph-filters [data-kind=exception]::after{border-color:#d98653;border-top-style:dotted}
 
 .graph-status:empty{display:none}.graph-filters{padding-top:10px;padding-bottom:10px}.graph-method{fill:var(--theme-text,#d7dce3);font:12px Consolas,monospace}
+
+.graph-method-progress{fill:#999;fill-opacity:.28;transition:width .18s ease}.graph-method-state{fill:var(--theme-muted,#98a4b3);font:12px system-ui;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.graph-method-progress{transition:none}}

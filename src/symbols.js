@@ -19,7 +19,7 @@ export function analyzeSymbols(source){
    for(const f of collect(c,'fieldDefinition'))if(valid(f.fieldName())&&valid(f.typeDescriptor()))info.members.push({kind:'field',static:f.accModField().accAttrField().some(a=>a.getText()==='static'),name:f.fieldName().getText(),descriptor:f.typeDescriptor().getText(),...span(f.fieldName())});
    for(const m of collect(c,'methodDefinition')){
     if(!valid(m.methodName())||!valid(m.methodDescriptor()))continue;
-    info.members.push({kind:'method',static:m.accModMethod().accAttrMethod().some(a=>a.getText()==='static'),name:m.methodName().getText(),descriptor:m.methodDescriptor().getText(),...span(m.methodName())});
+    info.members.push({kind:'method',hasCode:!m.accModMethod().accAttrMethod().some(a=>a.getText()==='native'||a.getText()==='abstract'),static:m.accModMethod().accAttrMethod().some(a=>a.getText()==='static'),name:m.methodName().getText(),descriptor:m.methodDescriptor().getText(),...span(m.methodName())});
     const labels=collect(m,'label');
     for(const label of collect(m,'labelName')){const name=label.getText(),targets=labels.filter(l=>l.labelName().getText()===name);if(targets.length===1)add(label,{kind:'label',owner,name,target:span(targets[0].labelName())});}
    }

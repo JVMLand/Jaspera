@@ -16,7 +16,7 @@ export function installDetachedTools(bridge:DetachedBridge|undefined,group:strin
  const collapsed=new Set<string>();let lastFiles:DetachedState['files']|undefined;
  const panels={project:get('popup-project'),console:get('popup-console'),problems:get('popup-problems'),instructions:get('instructions-panel'),graph:get('graph-panel')};
  const instructions=installInstructionsPanel(panels.instructions,source=>bridge?bridge.compileUsage(source):Promise.reject(new Error('元のワークスペースに接続できません。')));
- const graph=installInstructionGraph(panels.graph,doc=>bridge?bridge.graphCompilation(doc):Promise.reject(new Error('元のワークスペースに接続できません。')),(doc,line,column)=>bridge?.graphNavigate(doc,line,column));
+ const graph=installInstructionGraph(panels.graph,(doc,onProgress)=>bridge?bridge.graphCompilation(doc,onProgress):Promise.reject(new Error('元のワークスペースに接続できません。')),(doc,line,column)=>bridge?.graphNavigate(doc,line,column));
  const contexts=[installConsoleContextMenu(panels.console,get('popup-output'),()=>bridge?.clearOutput()),installProblemsContextMenu(panels.problems)];
  const input=get('popup-stdin') as HTMLTextAreaElement;input.oninput=()=>bridge?.stdin(input.value);get('popup-clear').onclick=()=>bridge?.clearOutput();
  function refresh(){container.hidden=!active;document.getElementById('editor')!.hidden=!!active;for(const name of ['project','console','problems','instructions','graph'] as const)panels[name].hidden=name!==active;onChange();}

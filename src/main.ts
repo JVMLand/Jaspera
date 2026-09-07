@@ -1,3 +1,4 @@
+import type {AnalysisProgress} from './protocol';
 import {memoryPolicy} from './memory-policy';
 import {usageCompiler} from './usage-compilation';
 import {installInstructionGraph} from './instruction-graph';
@@ -107,7 +108,7 @@ function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){
  workspaceState.update({graphDocument:{uri,version,line,column,source:same?previous.source:model.getValue()}});
 }
 function graphModel(doc:GraphDocument){const model=monaco.editor.getModel(monaco.Uri.parse(doc.uri));return model&&!model.isDisposed()&&model.getVersionId()===doc.version&&model.getValue()===doc.source?model:undefined;}
-const graphCompilation=(doc:GraphDocument)=>{const model=graphModel(doc);return model?compileModel(model):Promise.reject(new Error('文書の版が変更されています。'));};
+const graphCompilation=(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>{const model=graphModel(doc);return model?compilationService.compile(model,model.getValue(),onProgress):Promise.reject(new Error('文書の版が変更されています。'));};
 const graphNavigate=(doc:GraphDocument,line:number,column:number)=>{if(graphModel(doc))void openDefinition(doc.uri,{lineNumber:line,column});};
 let runner:Runtime|undefined;
 const editorOverlays=document.createElement('div');editorOverlays.id='editor-overlays';document.body.append(editorOverlays);

@@ -1,3 +1,4 @@
+import type {AnalysisProgress} from './protocol';
 import type {WorkspaceState} from './workspace-state';
 export type {ToolState} from './workspace-state';
 import type {Compilation,GraphDocument} from './protocol';
@@ -14,7 +15,7 @@ export interface DetachedDocument {key:string;title:string;model:monaco.editor.I
 export interface DetachedBridge {graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
- graphCompilation:(doc:GraphDocument)=>Promise<Compilation>;
+ graphCompilation:(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>Promise<Compilation>;
  graphNavigate:(doc:GraphDocument,line:number,column:number)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compilation:(id:string,version:number)=>Promise<Compilation>;
@@ -44,7 +45,7 @@ interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLa
 interface Options {graphFocus:(model:monaco.editor.ITextModel,line:number,column:number)=>void;view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
- graphCompilation:(doc:GraphDocument)=>Promise<Compilation>;
+ graphCompilation:(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>Promise<Compilation>;
  graphNavigate:(doc:GraphDocument,line:number,column:number)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
@@ -80,7 +81,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
   projectAction:(action,path,folder)=>options.projectAction(action,path,folder),
-  graphCompilation:doc=>options.graphCompilation(doc),graphNavigate:(doc,line,column)=>options.graphNavigate(doc,line,column),
+  graphCompilation:(doc,onProgress)=>options.graphCompilation(doc,onProgress),graphNavigate:(doc,line,column)=>options.graphNavigate(doc,line,column),
   graphFocus(id,line,column){const e=entries.get(id);if(e&&!e.model.isDisposed())options.graphFocus(e.model,line,column);},
   compileUsage:source=>options.compileUsage(source),
   compilation(id,version){
