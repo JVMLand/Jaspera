@@ -74,7 +74,7 @@ export function guide(op:string){
   dup2_x1:['すべての値はカテゴリ1です。','TOP の value1 はカテゴリ2、その下の value2 はカテゴリ1です。'],
   dup2_x2:['すべての値はカテゴリ1です。','TOP の value1 はカテゴリ2、その下の value2・value3 はカテゴリ1です。','TOP の value1・value2 はカテゴリ1、その下の value3 はカテゴリ2です。','value1・value2 はカテゴリ2です。']
  };
- if(op==='iadd')forms.unshift({label:'具体例: 2 + 3',before:['2 : int','3 : int'],after:['5 : int']});
+
  if(/^if/.test(op)){
   const relation:Record<string,string>={eq:'等しい',ne:'異なる',lt:'小さい',ge:'以上',gt:'大きい',le:'以下'};
   const condition=op==='ifnull'?'参照が null':op==='ifnonnull'?'参照が null 以外':/cmp/.test(op)?(['eq','ne'].includes(op.slice(-2))?`2つの値が${relation[op.slice(-2)]}`:`TOP の下の値が TOP の値と比較して「${relation[op.slice(-2)]}」`):`TOP の int 値が 0 と比較して「${relation[op.slice(-2)]}」`;
@@ -131,5 +131,7 @@ export function guide(op:string){
  };
  if(examples[op])example=examples[op];
  if(constraints[op])forms.forEach((form,i)=>form.note=constraints[op][i]);
+ const names=(text:string)=>text.replace(/value([1-4])|値([1-4])/g,(_,a,b)=>'abcd'[Number(a??b)-1]).replace(/\bvalue\b/g,'a');
+ for(const form of forms){form.before=form.before.map(names);form.after=form.after.map(names);if(form.note)form.note=names(form.note);}
  return {op,related:relatedInstructions(op),category:category(op),title:doc.title,summary,example,forms,markdown:instructionDetails(op)};
 }

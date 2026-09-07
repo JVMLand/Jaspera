@@ -13,6 +13,7 @@ export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
+ compileUsage:(source:string)=>Promise<Compilation>;
  compilation:(id:string,version:number)=>Promise<Compilation>;
  openFiles:(files:File[],group:string)=>Promise<void>;
  completionCatalog:()=>Promise<Catalog>;
@@ -39,6 +40,7 @@ interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
 interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
+ compileUsage:(source:string)=>Promise<Compilation>;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
  openFiles:(files:File[])=>Promise<string[]>;
  completionCatalog:()=>Promise<Catalog>;
@@ -71,6 +73,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
+  compileUsage:source=>options.compileUsage(source),
   compilation(id,version){
    const entry=entries.get(id);
    if(!entry||entry.model.isDisposed()||entry.model.getVersionId()!==version)return Promise.reject(new Error('文書の版が変更されています。'));

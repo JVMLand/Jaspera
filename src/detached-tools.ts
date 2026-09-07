@@ -13,7 +13,7 @@ export function installDetachedTools(bridge:DetachedBridge|undefined,group:strin
  document.body.append(container);const get=(id:string)=>container.querySelector<HTMLElement>('#'+id)!;
  const collapsed=new Set<string>();let lastFiles='';
  const panels={project:get('popup-project'),console:get('popup-console'),problems:get('popup-problems'),instructions:get('instructions-panel')};
- const instructions=installInstructionsPanel(panels.instructions);
+ const instructions=installInstructionsPanel(panels.instructions,source=>bridge?bridge.compileUsage(source):Promise.reject(new Error('元のワークスペースに接続できません。')));
  const contexts=[installConsoleContextMenu(panels.console,get('popup-output'),()=>bridge?.clearOutput()),installProblemsContextMenu(panels.problems)];
  const input=get('popup-stdin') as HTMLTextAreaElement;input.oninput=()=>bridge?.stdin(input.value);get('popup-clear').onclick=()=>bridge?.clearOutput();
  function refresh(){container.hidden=!active;document.getElementById('editor')!.hidden=!!active;for(const name of ['project','console','problems','instructions'] as const)panels[name].hidden=name!==active;onChange();}

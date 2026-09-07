@@ -1,10 +1,12 @@
+import {installInstructionUsage} from './instruction-usage-view';
+import type {Compilation} from './protocol';
 import {installContextMenu,copyText,selectedText} from './context-menu';
 import {renderFrameTransition} from './frame-transition';
 import {instructionHighlightGroup} from './instruction-colors';
 import {renderMarkdown} from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
 import {categories,instructionList,guide,type Diagram} from './instruction-guide';
 import './instructions-panel.css';
-export function installInstructionsPanel(host:HTMLElement){
+export function installInstructionsPanel(host:HTMLElement,analyze:(source:string)=>Promise<Compilation>){
  const el=(tag:string,text?:string,className?:string)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;};
  const toolbar=el('div',undefined,'instruction-search'),search=document.createElement('input'),category=document.createElement('select');search.type='search';search.placeholder='命令名・説明で検索';search.setAttribute('aria-label','命令を検索');category.setAttribute('aria-label','命令カテゴリ');
  for(const value of ['',...categories]){const o=document.createElement('option');o.value=value;o.textContent=value||'すべてのカテゴリ';category.append(o);}toolbar.append(search);
@@ -12,6 +14,7 @@ export function installInstructionsPanel(host:HTMLElement){
  const resize=new ResizeObserver(()=>{chooser.style.maxHeight=Math.max(80,Math.min(400,host.clientHeight-toolbar.offsetHeight-8))+'px';});resize.observe(host);
  function toggle(open:boolean){chooser.style.maxHeight=Math.max(80,Math.min(400,host.clientHeight-toolbar.offsetHeight-8))+'px';chooser.hidden=!open;search.setAttribute('aria-expanded',String(open));}
  const outside=(e:PointerEvent)=>{if(!toolbar.contains(e.target as Node))toggle(false);};document.addEventListener('pointerdown',outside,true);search.onclick=()=>toggle(true);search.onkeydown=e=>{if(e.key==='Escape')toggle(false);if(e.key==='ArrowDown'){toggle(true);list.querySelector<HTMLButtonElement>('button')?.focus();e.preventDefault();}};
+ let usage:ReturnType<typeof installInstructionUsage>|undefined;
  const entries=instructionList.map(guide);let selected='iadd',markdown:ReturnType<typeof renderMarkdown>|undefined;
  function comparison(form:Diagram){
   const terminal=form.after.includes('メソッド終了')?'メソッド終了':undefined;
@@ -22,13 +25,15 @@ export function installInstructionsPanel(host:HTMLElement){
  }
 
  function show(op:string){
-  selected=op;detail.style.setProperty('--instruction-color',`var(--instruction-${instructionHighlightGroup(op)})`);markdown?.dispose();detail.replaceChildren();const entry=entries.find(e=>e.op===op)!;
+  usage?.dispose();usage=undefined;selected=op;detail.style.setProperty('--instruction-color',`var(--instruction-${instructionHighlightGroup(op)})`);markdown?.dispose();detail.replaceChildren();const entry=entries.find(e=>e.op===op)!;
   for(const button of list.querySelectorAll<HTMLButtonElement>('button'))button.setAttribute('aria-pressed',String(button.dataset.op===op));
   const header=el('header');header.append(el('span',entry.category,'instruction-eyebrow'),el('h2',op),el('p',entry.title,'instruction-title'));detail.append(header,el('p',entry.summary,'instruction-summary'));
   if(entry.forms.some(f=>/long|double|カテゴリ2/.test([...f.before,...f.after,f.note??''].join(' '))))detail.append(el('p','カテゴリ2の long / double は1つの値で2スロットを使います。カテゴリ1の int / float / 参照は1スロットです。','instruction-category-note'));
   detail.append(el('h3',entry.example===op?'命令':'書き方の例'),el('pre',entry.example,'instruction-example'));
-  const diagram=el('div');if(entry.forms.length>1){const select=document.createElement('select');select.setAttribute('aria-label','スタックの形式');entry.forms.forEach((form,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=form.label;select.append(o);});select.onchange=()=>diagram.replaceChildren(comparison(entry.forms[Number(select.value)]));detail.append(select);}
-  if(entry.forms.length)diagram.append(comparison(entry.forms[0]));else diagram.append(el('p','この命令の前後状態は、下の「スタック効果」で確認できます。'));detail.append(diagram);
+  for(const form of entry.forms){if(entry.forms.length>1)detail.append(el('h4',form.label));detail.append(comparison(form));}
+  detail.append(el('h3','使用例'));
+  const example=el('div',undefined,'instruction-usage');detail.append(example);
+  usage=installInstructionUsage(example,op,analyze);
   const advanced=el('div',undefined,'instruction-advanced');
   markdown=renderMarkdown({value:entry.markdown,isTrusted:false,supportHtml:false});
   for(const anchor of markdown.element.querySelectorAll<HTMLAnchorElement>('a[data-href]')){const href=anchor.dataset.href!;if(/^https:\/\//.test(href)){anchor.href=href;anchor.target='_blank';anchor.rel='noopener noreferrer';}}
@@ -59,5 +64,5 @@ export function installInstructionsPanel(host:HTMLElement){
   {label:'命令を検索',action:()=>{search.focus();toggle(true);}}
  ];});
  function navigate(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);}
- search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction:navigate,dispose(){context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
+ search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction:navigate,dispose(){usage?.dispose();context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
 }
