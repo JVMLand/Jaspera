@@ -1,6 +1,6 @@
 import type {FileView} from './project';
 export const layoutSides=['project','source','output'] as const;
-export const layoutPanels=['project','console','problems','instructions','graph'] as const;
+export const layoutPanels=['project','console','problems','instructions','graph','debug'] as const;
 export type LayoutSide=typeof layoutSides[number];
 export type LayoutPanel=typeof layoutPanels[number];
 export interface DockLayout {order:Record<LayoutSide,LayoutPanel[]>;selected:Record<LayoutSide,LayoutPanel|null>;closed:LayoutPanel[];sizes:number[];swapped:boolean}

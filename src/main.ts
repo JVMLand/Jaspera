@@ -1,3 +1,6 @@
+import {installDebugPanel,debugMenuItems,installDebugKeys} from './debug-panel';
+import {installDebugEditor} from './debug-editor';
+import type {DebugState,DebugCommand,DebugFrame} from './debug-protocol';
 import {APP_NAME,APP_TAGLINE,APP_TITLE} from './brand';
 import {sourceMerge} from './source-merge';
 import {installEditorCommands,installWindowCommands} from './editor-commands';
@@ -70,10 +73,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="editor-footer"><span id="cursor">Ln 1, Col 1</span><span>UTF-8 <span class="separator">/</span> JAL</span></div>
   </section>
   <section class="output-pane" aria-label="実行結果">
-    <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button><button role="tab" id="graph-tab" aria-controls="graph-panel" aria-selected="false" tabindex="-1">Graph</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
+    <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button><button role="tab" id="graph-tab" aria-controls="graph-panel" aria-selected="false" tabindex="-1">Graph</button><button role="tab" id="debug-tab" aria-controls="debug-panel" aria-selected="false" tabindex="-1">Debug</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
     <div id="console-panel" role="tabpanel" aria-labelledby="console-tab"><div id="console-empty"><span class="terminal-symbol" aria-hidden="true">&gt;_</span><p>コードを書いて，実行しよう。</p><span>Run または Ctrl + Enter</span></div><pre id="output" aria-label="標準出力と標準エラー" tabindex="0"></pre></div>
     <div id="problems-panel" role="tabpanel" aria-labelledby="problems-tab" hidden><p class="empty-problems">文法とスタックを検査しています…</p><ul id="problems"></ul></div>
-    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div><div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div>
+    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div><div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div><div id="debug-panel" role="tabpanel" aria-labelledby="debug-tab" hidden></div>
     <div class="stdin-section"><label for="stdin">STANDARD INPUT <span>実行開始時に読み込み</span></label><textarea id="stdin" spellcheck="false" placeholder="標準入力（任意）" aria-label="標準入力"></textarea></div>
     <div class="runtime-card"><span class="runtime-dot"></span><div><strong>WebAssembly JVM</strong><span>OpenJDK 23 · ブラウザ内で実行</span></div><span class="runtime-label">LOCAL</span></div>
   </section>
@@ -82,6 +85,22 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 const el = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
 let project=defaultProject();
 const workspaceState=new WorkspaceStateStore();
+workspaceState.update({debug:{status:'idle',breakpoints:[]}});
+const debugSources=new Map<string,string>();
+const debugEditors:ReturnType<typeof installDebugEditor>[]=[];
+const debugActions={start:()=>{if(!running)void run(undefined,true);},command:debugCommand,stop:()=>stopRun(),reveal:(frame:DebugFrame)=>{void revealDebugFrame(frame);}};
+function debugState(patch:Partial<DebugState>){workspaceState.update({debug:{...workspaceState.value.debug!,...patch}});}
+function toggleBreakpoint(uri:string,line:number){const before=workspaceState.value.debug!.breakpoints;debugState({breakpoints:before.some(b=>b.uri===uri&&b.line===line)?before.filter(b=>b.uri!==uri||b.line!==line):[...before,{uri,line}]});if(runner&&workspaceState.value.debug?.status==='paused'||runner&&workspaceState.value.debug?.status==='running')void runner.debugBreakpoints(runtimeBreakpoints()).catch(()=>{});}
+function runtimeBreakpoints(){return workspaceState.value.debug!.breakpoints.flatMap(b=>{const owner=[...debugSources].find(([,uri])=>uri===b.uri)?.[0];return owner?[{className:owner,line:b.line}]:[];});}
+function debugCommand(command:DebugCommand){const state=workspaceState.value.debug;if(!runner||!state||!['paused','running'].includes(state.status))return;if(command!=='pause')debugState({status:'running'});void runner.debugCommand(command).catch(e=>status(e.message,'error'));}
+async function revealDebugFrame(frame:DebugFrame){
+ const snapshot=workspaceState.value.debug?.snapshot;if(!snapshot)return;
+ const current=()=>workspaceState.value.debug?.status==='paused'&&workspaceState.value.debug.snapshot===snapshot;
+ const uri=debugSources.get(frame.className);if(uri&&frame.line>0){if(current())await openDefinition(uri,{lineNumber:frame.line,column:1});return;}
+ try{const target=await navigation.searchDefinition({kind:'method',label:frame.method,detail:frame.className,owner:frame.className,name:frame.method,descriptor:frame.descriptor});if(target&&current())await openDefinition(target.uri,target.range);}
+ catch(error){if(current())status(error instanceof Error?error.message:String(error),'error');}
+}
+
 const unsubscribeTheme=onThemeChange(theme=>workspaceState.update({theme}));
 interface ClassPreview {example?:boolean;key:string;title:string;model:monaco.editor.ITextModel;folderPath?:string;mtime:number;size:number}
 const classPreviews=new Map<string,ClassPreview>();let activePreview:string|undefined,previewEpoch=0,dropSequence=0;
@@ -133,7 +152,8 @@ const syncOverlayTheme=()=>{editorOverlays.className=editor.getDomNode()!.classN
 const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeObserver.observe(editor.getDomNode()!,{attributes:true,attributeFilter:['class']});syncOverlayTheme();
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
-if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions'|'graph');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
+if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions'|'graph'|'debug');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
+ debugStart:model=>{if(!running)void run(model,true);},debugCommand,toggleBreakpoint,debugReveal:frame=>void revealDebugFrame(frame),
  searchTargets:()=>navigation.searchTargets(),searchDefinition:target=>navigation.searchDefinition(target),
  graphFocus,graphCompilation,graphNavigate,projectAction,compileUsage,compile:compileModel,resolve:(model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
@@ -219,12 +239,13 @@ const menus=installMenus(el('menus'),[
     {id:'project-properties-menu',label:'プロジェクトのプロパティ…',action:openProperties}
   ]},
   {label:'Edit',items:editMenuItems(editAction)},
-  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions','graph'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
+  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions','graph','debug'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
   {label:'Build',items:[
     {id:'check-project',label:'検査',action:()=>void checkDocument()},
     {id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:()=>void run()},
     {id:'download',label:'class に書き出す…',action:downloadClass}
   ]},
+  {label:'Debug',items:debugMenuItems(debugActions)},
   {label:'Help',items:helpMenuItems()}
 ]);
 function status(text:string,kind:'ready'|'loading'|'error'='ready') {workspaceState.update({status:text});el('state').textContent=text;el('state-dot').className=`status-dot ${kind}`;}
@@ -456,6 +477,7 @@ function bindGroupEditor(view:monaco.editor.IStandaloneCodeEditor,side:Side){
  groupResources.push(view.onDidChangeModel(follow),view.onDidFocusEditorText(follow),view.onDidChangeCursorPosition(follow),view.onDidChangeModelContent(follow));
 
  view.onDidFocusEditorText(()=>{if(editor===view)return;captureView();editor=view;activeSide=side;const model=view.getModel(),path=[...models].find(([,m])=>m===model)?.[0];if(path){project.workspace.activeFile=path;activePreview=undefined;}else activePreview=[...classPreviews.values()].find(p=>p.model===model)?.key;renderFiles();updateActions();});
+ const debug=installDebugEditor(view,()=>workspaceState.value.debug,toggleBreakpoint,name=>debugSources.get(name));debugEditors.push(debug);groupResources.push(debug);
  view.onDidChangeModel(()=>refreshOffsets(view));
  if(side==='source')return;
  groupResources.push(installStackHover(view,compileModel),followInstructionClicks(view,op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);}));
@@ -634,6 +656,9 @@ function setStdin(text:string,edited=true){
 el<HTMLTextAreaElement>('stdin').oninput=()=>setStdin(el<HTMLTextAreaElement>('stdin').value);
 function output(text:string,stream='stdout') {workspaceState.updateTools({output:[...workspaceState.value.tools.output,{text,stream}]});el('console-empty').hidden=true;const span=document.createElement('span');span.className=stream;span.textContent=text;el('output').append(span);const scroller=document.querySelector<HTMLElement>('.dock-console-body')??el('console-panel');scroller.scrollTop=scroller.scrollHeight;}
 const instructionPanel=installInstructionsPanel(el('instructions-panel'),compileUsage);
+const debugPanel=installDebugPanel(el('debug-panel'),debugActions);
+const debugKeys=installDebugKeys(debugActions);
+const unsubscribeDebug=workspaceState.subscribe(()=>{debugPanel.update(workspaceState.value.debug);for(const view of debugEditors)view.update();});debugPanel.update(workspaceState.value.debug);
 const graphPanel=installInstructionGraph(el('graph-panel'),graphCompilation,graphNavigate);
 const unsubscribeGraph=workspaceState.subscribe(()=>graphPanel.update(workspaceState.value.graphDocument));
 if(editor.getModel())graphFocus(editor.getModel()!,editor.getPosition()?.lineNumber,editor.getPosition()?.column);
@@ -644,7 +669,7 @@ bindGroupEditor(groupEditors.get('source')!,'source');
 for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));
 const detachPane=(key:string)=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}};
 groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,detachPane),paneWindowExit(window.jalwebDetached!.workspaceId,detachPane));
-function selectTab(tab:'project'|'console'|'problems'|'instructions'|'graph'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
+function selectTab(tab:'project'|'console'|'problems'|'instructions'|'graph'|'debug'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
 groupResources.push(installConsoleContextMenu(el('console-panel'),el('output'),()=>el('clear').click()),installProblemsContextMenu(el('problems-panel')));
 el('clear').onclick=()=>{workspaceState.updateTools({output:[]});el('output').textContent='';el('console-empty').hidden=false;};
 function showDiagnostics() {
@@ -698,11 +723,12 @@ editor.onDidChangeCursorPosition(({position})=>{
   el('cursor').textContent=`Ln ${position.lineNumber}, Col ${position.column}`;
   el('instruction-hint').textContent='命令ホバーでスタックの変化を表示';
 });
-function stopRun(show=true) {runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
-async function run(requestedModel?:monaco.editor.ITextModel) {
+function stopRun(show=true) {debugState({status:'finished',snapshot:undefined,previous:undefined});runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
+async function run(requestedModel?:monaco.editor.ITextModel,debugging=false) {
   const model=requestedModel??editor.getModel(),example=model?.uri.authority==='example';
   if(running){stopRun();return;}running=true;const token=++runToken;updateActions();let owned:Runtime|undefined;const started=performance.now();
-  el('clear').click();el('console-empty').hidden=true;selectTab('console');status('コンパイル中…','loading');
+  const debugDisposals:monaco.IDisposable[]=[];if(debugging)debugState({status:'starting',snapshot:undefined,previous:undefined});
+  el('clear').click();el('console-empty').hidden=true;selectTab(debugging?'debug':'console');status('コンパイル中…','loading');
   try {
     let entry:Compilation|undefined,classes:Compilation[];
     if(example){entry=await compileExample(model!);classes=entry.bytecode?[entry]:[];}
@@ -714,14 +740,20 @@ async function run(requestedModel?:monaco.editor.ITextModel) {
     if(token!==runToken)return;
     if(!entry?.bytecode)throw new Error(entry?.diagnostics.map(d=>d.message).join('\n')||'実行対象をコンパイルできませんでした。');
     owned=new Runtime(memory.executionHeapMiB);runner=owned;owned.onOutput=(stream,text)=>{if(token===runToken)output(text,stream);};owned.onProgress=loaded=>{if(token===runToken)status(`実行用 JVM を準備中… ${(loaded/1024/1024).toFixed(1)} MB`,'loading');};
-    await owned.run({...entry,classes:classes.map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin);
+    if(debugging){
+      debugSources.clear();if(example)debugSources.set(entry.className,model!.uri.toString());else for(const [path,c] of results){const m=models.get(path);if(m)debugSources.set(c.className,m.uri.toString());}
+      for(const uri of debugSources.values()){const m=monaco.editor.getModel(monaco.Uri.parse(uri));if(m)debugDisposals.push(m.onDidChangeContent(()=>{stopRun(false);status('ソースが変更されたため，デバッグ実行を停止しました。');}),m.onWillDispose(()=>stopRun(false)));}
+      owned.onDebug=snapshot=>{if(token!==runToken)return;debugState({status:'paused',previous:workspaceState.value.debug?.snapshot,snapshot});status(`${snapshot.location.className}.${snapshot.location.method} · ${snapshot.location.pc} で停止中`);selectTab('debug');void revealDebugFrame(snapshot.frames[0]);};
+      debugState({status:'running',documents:Object.fromEntries(debugSources)});
+    }
+    await owned.run({...entry,classes:classes.map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin,debugging?{classes:classes.map(c=>c.className),breakpoints:runtimeBreakpoints()}:undefined);
     if(token===runToken){status('実行が完了しました');el('timing').textContent=`${((performance.now()-started)/1000).toFixed(2)} s`;}
   }catch(e){if(token===runToken){output(`${e instanceof Error?e.message:String(e)}\n`,'stderr');status('実行に失敗しました','error');}}
-  finally {owned?.stop();if(token===runToken){runner=undefined;running=false;updateActions();}}
+  finally {for(const d of debugDisposals)d.dispose();owned?.stop();if(token===runToken){if(debugging)debugState({status:'finished',snapshot:undefined,previous:undefined});runner=undefined;running=false;updateActions();}}
 }
 el('run').onclick=()=>void run();
 const editorCommands=installEditorCommands(editor,()=>void run());
 const windowCommands=installWindowCommands({save:()=>void saveProject(),open:filePicker.open});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;unsubscribeDebug();debugPanel.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);

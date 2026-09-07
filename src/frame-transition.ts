@@ -2,6 +2,7 @@ import {formatFrameValue} from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {
  before:string[];after:string[];consumed:number;produced:number;
+ beforeLabel?:string;afterLabel?:string;limit?:number;
  tail?:boolean;terminal?:string;note?:string;
  locals?:{before:string[];after:string[];labels?:string[];changed?:number[];effect?:string};
 }
@@ -13,11 +14,11 @@ export function renderFrameTransition(frame:FrameTransition){
   const grid=node('div',undefined,'frame-pair');
   [before,after].forEach((values,side)=>{
    if(side)grid.append(node('span','→','frame-arrow'));
-   const col=node('section',undefined,'frame-column'),body=node('div',undefined,'frame-values');col.append(node('h4',side?'実行後':'実行前'),body);
+   const col=node('section',undefined,'frame-column'),body=node('div',undefined,'frame-values');col.append(node('h4',side?(frame.afterLabel??'実行後'):(frame.beforeLabel??'実行前')),body);
    const terminal=side===1&&!locals&&frame.terminal;
    if(terminal)body.append(node('div',terminal,'frame-terminal'));
    else{
-    const order=values.map((_,i)=>i);if(!locals)order.reverse();const visible=order.slice(0,8);
+    const order=values.map((_,i)=>i);if(!locals)order.reverse();const visible=order.slice(0,frame.limit??8);
     if(!values.length)body.append(node('div',locals?'未設定':'空','frame-empty'));
     for(const index of visible){
      const changed=locals?(frame.locals?.changed??values.map((_,i)=>i)).includes(index):index>=values.length-(side?frame.produced:frame.consumed);

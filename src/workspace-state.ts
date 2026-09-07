@@ -1,3 +1,4 @@
+import type {DebugState} from './debug-protocol';
 import type {GraphDocument} from './protocol';
 export interface ToolState {
   output:{text:string;stream:string}[];
@@ -5,6 +6,7 @@ export interface ToolState {
   problems:{label:string;severity:string}[];
 }
 export interface WorkspaceState {
+  debug?:DebugState;
   graphDocument?:GraphDocument;
   tools:ToolState;
   canSave:boolean;

@@ -1,3 +1,4 @@
+import type {DebugCommand,DebugFrame} from './debug-protocol';
 import type {AnalysisProgress} from './protocol';
 import type {WorkspaceState} from './workspace-state';
 export type {ToolState} from './workspace-state';
@@ -6,13 +7,13 @@ import type {FileView} from './project';
 import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
 import type {Catalog} from './completion';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import type {DefinitionDocument,SearchTarget} from './navigation';
 export interface EditorSnapshot {view?:FileView;key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
 export type DetachedState=WorkspaceState;
 export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
-export interface DetachedBridge {graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
+export interface DetachedBridge {debugStart:(id?:string)=>void;debugCommand:(command:DebugCommand)=>void;toggleBreakpoint:(uri:string,line:number)=>void;debugReveal:(frame:DebugFrame)=>void;graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  detach:(group:string,key:string)=>boolean;panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
  graphCompilation:(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>Promise<Compilation>;
@@ -43,7 +44,7 @@ export function replaceText(model:monaco.editor.ITextModel,text:string){
 type UndoableModel=monaco.editor.ITextModel & {undo:()=>void|Promise<void>;redo:()=>void|Promise<void>};
 interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;subscriptions:monaco.IDisposable[]}
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
-interface Options {graphFocus:(model:monaco.editor.ITextModel,line:number,column:number)=>void;view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
+interface Options {debugStart:(model?:monaco.editor.ITextModel)=>void;debugCommand:(command:DebugCommand)=>void;toggleBreakpoint:(uri:string,line:number)=>void;debugReveal:(frame:DebugFrame)=>void;graphFocus:(model:monaco.editor.ITextModel,line:number,column:number)=>void;view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
  graphCompilation:(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>Promise<Compilation>;
@@ -111,6 +112,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   undo(id,redo){const e=entries.get(id);if(e&&!e.readOnly&&!e.model.isDisposed()){e.model.pushStackElement();const history=e.model as UndoableModel;if(redo)void history.redo();else void history.undo();}},
   definitions(id,offset,labelsOnly){const e=entries.get(id);return e?options.resolve(e.model,offset,labelsOnly):Promise.resolve([]);},
   async openDefinition(group,uri,range){const state=openTab(group,uri);if(!state)return false;groups.get(group)?.client?.reveal?.(range,state.id);return true;},
+  debugStart(id){options.debugStart(id?entries.get(id)?.model:undefined);},debugCommand:options.debugCommand,toggleBreakpoint:options.toggleBreakpoint,debugReveal:options.debugReveal,
   save(){if(options.state().canSave)save();},run(id){run(id?entries.get(id)?.model:undefined);},stop:options.stop,check(id){options.check(id?entries.get(id)?.model:undefined);},theme:options.theme,
   classFile:async id=>{const e=entries.get(id);return e&&!e.readOnly?options.classFile(e.model):undefined;},release
  };

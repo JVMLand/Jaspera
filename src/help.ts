@@ -40,6 +40,12 @@ export function helpMenuItems(detached=false,canSave=()=>true){
       row('どこでも検索',['Shift を2回']);
       row('コードを整形',['Shift','Alt','F']);
       row('実行 / 停止',[mod,'Enter'],['F5']);
+      row('デバッグ実行',['Shift','F5']);
+      row('ブレークポイント',['F9']);
+      row('デバッグを再開',['F8']);
+      row('ステップオーバー',['F10']);
+      row('ステップイン',['F11']);
+      row('ステップアウト',['Shift','F11']);
       row('補完',[mod,'Space']);
       row('クイックフィックス',[mod,'.']);
       row('検索',[mod,'F']);
