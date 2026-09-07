@@ -86,8 +86,8 @@ public class MethodAnalyser {
      * @return The method analysis result.
      */
     public MethodAnalysisResult analyse() {
-        this.context.postInfo("Analysing method: " + this.method.name + " in class: " + this.method.desc);
-        this.context.postDebug("Preparing analyser state for method: " + this.method.name + this.method.desc);
+        if (this.context.isInfoEnabled()) this.context.postInfo("Analysing method: " + this.method.name + " in class: " + this.method.desc);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Preparing analyser state for method: " + this.method.name + this.method.desc);
 
         // Make analyse() re-entrant: it can be called multiple times on the same instance.
         this.analysers.clear();
@@ -98,7 +98,7 @@ public class MethodAnalyser {
 
         this.createAnalysers();
         if (this.analysers.isEmpty()) {
-            this.context.postInfo("There are no instruction sets to analyse in method: " + this.method.name);
+            if (this.context.isInfoEnabled()) this.context.postInfo("There are no instruction sets to analyse in method: " + this.method.name);
             return MethodAnalysisResult.empty(this.method);  // インストラクションセットがない場合は空の結果を返す
         }
         this.printAnalyseTargets();
@@ -109,12 +109,12 @@ public class MethodAnalyser {
         this.maxStackSize = Math.max(this.maxStackSize, firstPropagation.maxStackSize());
         this.maxLocalSize = Math.max(this.maxLocalSize, firstPropagation.maxLocalSize());
         this.pendingPropagations.add(firstPropagation);
-        this.context.postDebug("Initial propagation queued: " + firstPropagation);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Initial propagation queued: " + firstPropagation);
 
         // 各インストラクション・セットのスタックとローカル変数の動きを解析
         this.analyseLoop();
         this.pendingPropagations.addAll(this.createExceptionHandlerPropagations());
-        this.context.postDebug("Exception handler propagation pass queued " + this.pendingPropagations.size() +
+        if (this.context.isDebugEnabled()) this.context.postDebug("Exception handler propagation pass queued " + this.pendingPropagations.size() +
                 " propagation(s).");
         this.analyseLoop();
         this.maxLocalSize = Math.max(this.maxLocalSize, this.locals.getMaxLocalSize());
@@ -136,18 +136,18 @@ public class MethodAnalyser {
             iterationCount++;
             if (iterationCount % 5 == 0) {
                 long elapsedTime = System.currentTimeMillis() - startTime;
-                this.context.postInfo("Processing propagation: " + iterationCount +
+                if (this.context.isInfoEnabled()) this.context.postInfo("Processing propagation: " + iterationCount +
                         ", Pending: " + this.pendingPropagations.size() +
                         ", Elapsed: " + elapsedTime + "ms");
             }
 
             FramePropagation propagation = this.pendingPropagations.removeFirst();
-            this.context.postDebug("Dequeued propagation #" + iterationCount + ": " + propagation +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Dequeued propagation #" + iterationCount + ": " + propagation +
                     ", remaining pending: " + this.pendingPropagations.size());
             LabelInfo receiver = propagation.receiver();
 
             if (receiver == this.labels.getGlobalEnd()) {
-                this.context.postDebug("Reached global end label, stopping analysis for branch: " + propagation.sender()
+                if (this.context.isDebugEnabled()) this.context.postDebug("Reached global end label, stopping analysis for branch: " + propagation.sender()
                         .name());
                 continue;  // グローバル終了ラベルに到達した場合、分析を停止
             }
@@ -156,7 +156,7 @@ public class MethodAnalyser {
         }
 
         long elapsedTime = System.currentTimeMillis() - startTime;
-        this.context.postInfo("Analysis completed for method: " + this.method.name +
+        if (this.context.isInfoEnabled()) this.context.postInfo("Analysis completed for method: " + this.method.name +
                 ", Total iterations: " + iterationCount +
                 ", Max stack size: " + this.maxStackSize +
                 ", Max local size: " + this.maxLocalSize +
@@ -166,7 +166,7 @@ public class MethodAnalyser {
     private void analysePropagation(@NotNull FramePropagation propagation) {
         LabelInfo sender = propagation.sender();
         LabelInfo receiver = propagation.receiver();
-        this.context.postDebug("Analysing propagation for jump " + sender.name() + " -> " + receiver.name() +
+        if (this.context.isDebugEnabled()) this.context.postDebug("Analysing propagation for jump " + sender.name() + " -> " + receiver.name() +
                 ", Stack size: " + propagation.stack().length +
                 ", Local size: " + propagation.locals().length +
                 ", Stack: " + StackElementUtils.stackToString(propagation.stack()) +
@@ -176,22 +176,22 @@ public class MethodAnalyser {
             if (!analyser.getLabel().equals(receiver))  // 該当するインストラクション・セットを探す
                 continue;
 
-            this.context.postDebug("Matched propagation receiver " + receiver.name() +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Matched propagation receiver " + receiver.name() +
                     " to instruction set with " + analyser.getInstructions().size() + " instruction(s).");
             InstructionSetAnalysisResult analysisResult = analyser.analyse(propagation);
             this.confirmedAnalysisResults.put(propagation, analysisResult);  // 分析結果を確定
             this.updateMaxes(analysisResult);
-            this.context.postDebug("Confirmed propagation " + sender.name() + " -> " + receiver.name() +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Confirmed propagation " + sender.name() + " -> " + receiver.name() +
                     ", result stack: " + StackElementUtils.stackToString(analysisResult.stack()) +
                     ", result locals: " + StackElementUtils.stackToString(analysisResult.locals()) +
                     ", emitted propagations: " + analysisResult.framePropagations().length);
             for (FramePropagation nextPropagation : analysisResult.framePropagations()) {
                 if (this.checkConfirmedPropagation(nextPropagation)) {
-                    this.context.postDebug("New propagation found: " + nextPropagation);
+                    if (this.context.isDebugEnabled()) this.context.postDebug("New propagation found: " + nextPropagation);
                     this.pendingPropagations.add(nextPropagation);  // 新しい伝播を追加
                 }
                 else
-                    this.context.postDebug("Skipping already-confirmed propagation: " + nextPropagation);
+                    if (this.context.isDebugEnabled()) this.context.postDebug("Skipping already-confirmed propagation: " + nextPropagation);
             }
             break;
         }
@@ -208,7 +208,7 @@ public class MethodAnalyser {
                         Arrays.equals(confirmed.locals(), propagation.locals()))
                     return false;  // 同じスタックとローカル変数の組み合わせが既に存在する
                 else {
-                    this.context.postDebug("Found existing propagation with different stack/locals: " + confirmed +
+                    if (this.context.isDebugEnabled()) this.context.postDebug("Found existing propagation with different stack/locals: " + confirmed +
                             ", replacement: " + propagation);
                     // 既存の伝播と異なるスタックやローカル変数がある場合、更新する
                     iterator.remove();  // 古い伝播を削除
@@ -222,9 +222,9 @@ public class MethodAnalyser {
     }
 
     private void printAnalyseTargets() {
-        this.context.postInfo("Analysing the following instruction sets in method: " + this.method.name);
+        if (this.context.isInfoEnabled()) this.context.postInfo("Analysing the following instruction sets in method: " + this.method.name);
         for (InstructionSetAnalyser analyser : this.analysers)
-            this.context.postInfo(" - Name: " + analyser.getLabel().name() +
+            if (this.context.isInfoEnabled()) this.context.postInfo(" - Name: " + analyser.getLabel().name() +
                     ", Instructions: " + analyser.getInstructions().size());
     }
 
@@ -240,7 +240,7 @@ public class MethodAnalyser {
         LocalVariableInfo[] locals = this.locals.getParameters();
         LocalStackElement[] localStack = this.createLocalStack(locals);
         if (localStack.length == 0)
-            this.context.postInfo("No local variables found for method: " + this.method.name);
+            if (this.context.isInfoEnabled()) this.context.postInfo("No local variables found for method: " + this.method.name);
 
         return new FramePropagation(
                 sender,
@@ -353,7 +353,7 @@ public class MethodAnalyser {
                     this.liveLocalsAtEntry
             );
             if (analyser == null) {
-                this.context.postDebug(String.format(
+                if (this.context.isDebugEnabled()) this.context.postDebug(String.format(
                         "No instructions found for label: %s, creating empty analyser.",
                         label.name()
                 ));
@@ -381,7 +381,7 @@ public class MethodAnalyser {
                 BitSet nextLive = this.computeLiveLocalsAtEntry(analyser);
                 BitSet previousLive = this.liveLocalsAtEntry.get(analyser.getLabel());
                 if (!nextLive.equals(previousLive)) {
-                    this.context.postDebug("Live locals changed at " + analyser.getLabel().name() +
+                    if (this.context.isDebugEnabled()) this.context.postDebug("Live locals changed at " + analyser.getLabel().name() +
                             " on pass " + pass + ": " + previousLive + " -> " + nextLive);
                     this.liveLocalsAtEntry.put(analyser.getLabel(), nextLive);
                     updated = true;
@@ -389,18 +389,18 @@ public class MethodAnalyser {
             }
         }
         while (updated);
-        this.context.postDebug("Live local analysis converged in " + pass + " pass(es): " + this.liveLocalsAtEntry);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Live local analysis converged in " + pass + " pass(es): " + this.liveLocalsAtEntry);
     }
 
     private @NotNull BitSet computeLiveLocalsAtEntry(@NotNull InstructionSetAnalyser analyser) {
         BitSet liveLocals = this.computeLiveLocalsAtExit(analyser.getLabel());
-        this.context.postDebug("Initial live locals at exit of " + analyser.getLabel().name() + ": " + liveLocals);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Initial live locals at exit of " + analyser.getLabel().name() + ": " + liveLocals);
         List<InstructionInfo> instructions = analyser.getInstructions();
         for (int i = instructions.size() - 1; i >= 0; i--) {
             BitSet before = (BitSet) liveLocals.clone();
             this.applyInstructionLiveness(instructions.get(i), liveLocals);
             if (!before.equals(liveLocals))
-                this.context.postDebug("Liveness after walking " + instructions.get(i) +
+                if (this.context.isDebugEnabled()) this.context.postDebug("Liveness after walking " + instructions.get(i) +
                         " backwards: " + before + " -> " + liveLocals);
         }
 
@@ -414,7 +414,7 @@ public class MethodAnalyser {
             if (successorLive != null)
                 liveLocals.or(successorLive);
         }
-        this.context.postDebug("Computed live locals at exit of " + label.name() + ": " + liveLocals);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Computed live locals at exit of " + label.name() + ": " + liveLocals);
         return liveLocals;
     }
 

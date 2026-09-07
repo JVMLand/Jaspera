@@ -80,10 +80,10 @@ public class StackFrameMapCreator {
      *                     for each instruction in the method
      */
     public void updateFrames(@NotNull FramePropagation[] propagations) {
-        this.context.postInfo("Updating stack frames for method: " + this.method.name);
+        if (this.context.isInfoEnabled()) this.context.postInfo("Updating stack frames for method: " + this.method.name);
         for (FramePropagation propagation : propagations)
             this.updateFrame(propagation);
-        this.context.postInfo("Finished updating stack frames for method: " + this.method.name);
+        if (this.context.isInfoEnabled()) this.context.postInfo("Finished updating stack frames for method: " + this.method.name);
     }
 
     /**
@@ -113,15 +113,15 @@ public class StackFrameMapCreator {
             return;
         }
 
-        this.context.postDebug("Merging frame at " + label.name() + " with existing frame.");
+        if (this.context.isDebugEnabled()) this.context.postDebug("Merging frame at " + label.name() + " with existing frame.");
 
         // 既に同じものがあったら，スタックとローカル変数をマージする。
         InstructionSetFrame existingFrame = this.frames.get(label);
-        this.context.postDebug("Existing frame: " + this.formatFrame(existingFrame));
-        this.context.postDebug("Incoming frame: " + this.formatFrame(newFrame));
+        if (this.context.isDebugEnabled()) this.context.postDebug("Existing frame: " + this.formatFrame(existingFrame));
+        if (this.context.isDebugEnabled()) this.context.postDebug("Incoming frame: " + this.formatFrame(newFrame));
         InstructionSetFrame mergedFrame = mergeFrames(existingFrame, newFrame);
 
-        this.context.postDebug("Merged frame at " + label.name() + ":");
+        if (this.context.isDebugEnabled()) this.context.postDebug("Merged frame at " + label.name() + ":");
         this.printFrame(mergedFrame);
 
         this.frames.put(label, mergedFrame);
@@ -143,7 +143,7 @@ public class StackFrameMapCreator {
      * If there is only one frame or none, it returns an empty array.
      */
     public StackFrameMapEntry[] createStackFrameMap() {
-        this.context.postInfo("Creating stack frame map for method: " + this.method.name);
+        if (this.context.isInfoEnabled()) this.context.postInfo("Creating stack frame map for method: " + this.method.name);
         // フレームをラベルのインデックス順にする
         List<InstructionSetFrame> frames =
                 this.frames.values().stream()
@@ -151,7 +151,7 @@ public class StackFrameMapCreator {
                         .toList();
         this.printFrames(frames);
         if (frames.size() < 2) {
-            this.context.postInfo("No need to compute frames, StackFrameMap will be empty.");
+            if (this.context.isInfoEnabled()) this.context.postInfo("No need to compute frames, StackFrameMap will be empty.");
             return new StackFrameMapEntry[0];
         }
 
@@ -161,12 +161,12 @@ public class StackFrameMapCreator {
             InstructionSetFrame previous = frames.get(i);
             InstructionSetFrame next = frames.get(i + 1);
             StackFrameMapEntry nextFrame = computeNextFrame(previous, next);
-            this.context.postDebug("Computed StackMap frame transition " + previous.label().name() +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Computed StackMap frame transition " + previous.label().name() +
                     " -> " + next.label().name() + ": " + nextFrame);
             stackFrameMap[i] = nextFrame;
         }
 
-        this.context.postInfo("Stack frame map created with " + stackFrameMap.length + " entries.");
+        if (this.context.isInfoEnabled()) this.context.postInfo("Stack frame map created with " + stackFrameMap.length + " entries.");
         return stackFrameMap;
     }
 
@@ -236,9 +236,9 @@ public class StackFrameMapCreator {
     }
 
     private void printFrames(List<InstructionSetFrame> frames) {
-        this.context.postDebug("----- Stack Frames of " + this.method.name + " -----");
+        if (this.context.isDebugEnabled()) this.context.postDebug("----- Stack Frames of " + this.method.name + " -----");
         if (this.frames.isEmpty()) {
-            this.context.postDebug("No stack frames found.");
+            if (this.context.isDebugEnabled()) this.context.postDebug("No stack frames found.");
             return;
         }
         for (InstructionSetFrame frame : frames)
@@ -246,7 +246,7 @@ public class StackFrameMapCreator {
     }
 
     private void printFrame(@NotNull InstructionSetFrame frame) {
-        this.context.postDebug(this.formatFrame(frame));
+        if (this.context.isDebugEnabled()) this.context.postDebug(this.formatFrame(frame));
     }
 
     private @NotNull String formatFrame(@NotNull InstructionSetFrame frame) {

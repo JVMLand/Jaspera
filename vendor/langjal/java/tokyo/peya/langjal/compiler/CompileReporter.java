@@ -12,6 +12,8 @@ import java.nio.file.Path;
  * Implementations can handle reporting to logs, consoles, or other outputs.
  */
 public interface CompileReporter {
+    default boolean isDebugEnabled() { return true; }
+    default boolean isInfoEnabled() { return true; }
     /**
      * Posts a warning message.
      *

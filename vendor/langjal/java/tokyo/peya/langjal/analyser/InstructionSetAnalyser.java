@@ -143,10 +143,10 @@ public class InstructionSetAnalyser {
      */
     @NotNull
     public InstructionSetAnalysisResult analyse(@NotNull FramePropagation propagation) {
-        this.context.postInfo("Analysing instructions set named '%s' with %d instructions".formatted(
+        if (this.context.isInfoEnabled()) this.context.postInfo("Analysing instructions set named '%s' with %d instructions".formatted(
                 this.label.name(), this.instructions.size()
         ));
-        this.context.postDebug("Incoming propagation for instruction set '" + this.label.name() + "': " + propagation);
+        if (this.context.isDebugEnabled()) this.context.postDebug("Incoming propagation for instruction set '" + this.label.name() + "': " + propagation);
 
         this.resetAnalysisState();
         this.applyPropagation(propagation);
@@ -163,7 +163,7 @@ public class InstructionSetAnalyser {
                 FramePropagation[] newPropagations = new FramePropagation[propagations.length + 1];
                 System.arraycopy(propagations, 0, newPropagations, 0, propagations.length);
                 newPropagations[propagations.length] = this.createPropagations(nextBlockLabel);
-                this.context.postDebug("Instruction set '" + this.label.name() +
+                if (this.context.isDebugEnabled()) this.context.postDebug("Instruction set '" + this.label.name() +
                         "' falls through to next block '" + nextBlockLabel.name() + "'.");
                 propagations = newPropagations;
             }
@@ -185,7 +185,7 @@ public class InstructionSetAnalyser {
         this.doesContainCriticalJump = false;
         this.maxStackSize = 0;
         this.maxLocalSize = 0;
-        this.context.postDebug("Reset analysis state for instruction set '" + this.label.name() + "'.");
+        if (this.context.isDebugEnabled()) this.context.postDebug("Reset analysis state for instruction set '" + this.label.name() + "'.");
     }
 
     private void applyPropagation(@NotNull FramePropagation propagation) {
@@ -204,7 +204,7 @@ public class InstructionSetAnalyser {
             this.propagatedStack.addAll(List.of(stack));
             this.propagatedLocals.addAll(List.of(locals));
             this.initialiseCurrentFrameInfo();  // 現在のフレーム情報を初期化
-            this.context.postDebug("Applied first propagation to '" + this.label.name() +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Applied first propagation to '" + this.label.name() +
                     "', stack: " + StackElementUtils.stackToString(this.stack.toArray(new StackElement[0])) +
                     ", locals: " + StackElementUtils.stackToString(this.locals.toArray(new LocalStackElement[0])));
             return;
@@ -216,7 +216,7 @@ public class InstructionSetAnalyser {
         StackElement[] mergedStack = StackElementUtils.mergeStack(this.label, lastPropagatedStack, stack);
         this.propagatedStack.clear();
         Collections.addAll(this.propagatedStack, mergedStack);
-        this.context.postDebug("Merged propagated stack for '" + this.label.name() +
+        if (this.context.isDebugEnabled()) this.context.postDebug("Merged propagated stack for '" + this.label.name() +
                 "': previous=" + StackElementUtils.stackToString(lastPropagatedStack) +
                 ", incoming=" + StackElementUtils.stackToString(stack) +
                 ", merged=" + StackElementUtils.stackToString(mergedStack));
@@ -232,7 +232,7 @@ public class InstructionSetAnalyser {
         );
         this.propagatedLocals.clear();
         Collections.addAll(this.propagatedLocals, mergedLocals);
-        this.context.postDebug("Merged propagated locals for '" + this.label.name() +
+        if (this.context.isDebugEnabled()) this.context.postDebug("Merged propagated locals for '" + this.label.name() +
                 "': previous=" + StackElementUtils.stackToString(lastPropagatedLocals) +
                 ", incoming=" + StackElementUtils.stackToString(locals) +
                 ", merged=" + StackElementUtils.stackToString(mergedLocals));
@@ -265,7 +265,7 @@ public class InstructionSetAnalyser {
         // ターゲットラベルを登録
         if (!this.jumpTargets.contains(targetLabel)) {
             this.jumpTargets.add(targetLabel);
-            this.context.postDebug("Registered jump target '" + targetLabel.name() + "' from " + instructionInfo);
+            if (this.context.isDebugEnabled()) this.context.postDebug("Registered jump target '" + targetLabel.name() + "' from " + instructionInfo);
         }
     }
 
@@ -312,13 +312,13 @@ public class InstructionSetAnalyser {
 
             // return 後も解析してしまうと，maxLocals/maxStacks に加算されてしまうため，当該ブロックの線形解析を終了する。
             if (isCriticalJump) {
-                this.context.postDebug("Instruction " + instruction +
+                if (this.context.isDebugEnabled()) this.context.postDebug("Instruction " + instruction +
                         " is a critical jump; stopping linear analysis for block '" + this.label.name() + "'.");
                 break;
             }
         }
 
-        this.context.postInfo(String.format(
+        if (this.context.isInfoEnabled()) this.context.postInfo(String.format(
                 "Analysed instruction set '%s' with %d instructions, max stack size: %d, max local size: %d",
                 this.label.name(), this.instructions.size(), this.maxStackSize, this.maxLocalSize
         ));
@@ -332,7 +332,7 @@ public class InstructionSetAnalyser {
             case JumpInsnNode jumpNode -> {
                 this.analyseJumpTarget(info, jumpNode);
                 propagations.add(this.createPropagations(jumpNode.label, info));
-                this.context.postDebug("Created jump propagation(s) for " + info + ": " + propagations);
+                if (this.context.isDebugEnabled()) this.context.postDebug("Created jump propagation(s) for " + info + ": " + propagations);
             }
             case TableSwitchInsnNode tableSwitchNode -> {
                 // テーブルスイッチの場合は，すべてのターゲットラベルを登録
@@ -341,7 +341,7 @@ public class InstructionSetAnalyser {
                 // デフォルトラベルも登録
                 LabelNode defaultLabelNode = tableSwitchNode.dflt;
                 propagations.add(this.createPropagations(defaultLabelNode, info));
-                this.context.postDebug("Created tableswitch propagation(s) for " + info + ": " + propagations);
+                if (this.context.isDebugEnabled()) this.context.postDebug("Created tableswitch propagation(s) for " + info + ": " + propagations);
             }
             case LookupSwitchInsnNode lookupSwitchNode -> {
                 // ルックアップスイッチの場合は，すべてのターゲットラベルを登録
@@ -350,7 +350,7 @@ public class InstructionSetAnalyser {
                 // デフォルトラベルも登録
                 LabelNode defaultLabelNode = lookupSwitchNode.dflt;
                 propagations.add(this.createPropagations(defaultLabelNode, info));
-                this.context.postDebug("Created lookupswitch propagation(s) for " + info + ": " + propagations);
+                if (this.context.isDebugEnabled()) this.context.postDebug("Created lookupswitch propagation(s) for " + info + ": " + propagations);
             }
             default -> {
             }
@@ -381,7 +381,7 @@ public class InstructionSetAnalyser {
         for (StackOperation stackOperation : stackLocalOperations) {
             StackOperation.StackOperationType type = stackOperation.type();
             StackElement element = stackOperation.element();
-            this.context.postDebug("Applying " + type + " operation for " + instruction +
+            if (this.context.isDebugEnabled()) this.context.postDebug("Applying " + type + " operation for " + instruction +
                     ": " + element +
                     ", stack before: " + StackElementUtils.stackToString(this.stack.toArray(new StackElement[0])) +
                     ", locals before: " + StackElementUtils.stackToString(this.locals.toArray(new LocalStackElement[0])));

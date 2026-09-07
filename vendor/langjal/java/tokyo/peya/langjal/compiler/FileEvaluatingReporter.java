@@ -13,6 +13,8 @@ import java.nio.file.Path;
  */
 @AllArgsConstructor
 public class FileEvaluatingReporter {
+    public boolean isDebugEnabled() { return delegate.isDebugEnabled(); }
+    public boolean isInfoEnabled() { return delegate.isInfoEnabled(); }
     /**
      * The underlying reporter to delegate to.
      */

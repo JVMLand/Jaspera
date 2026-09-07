@@ -37,3 +37,5 @@ Bytecode-offset previews adapt Javasm InstructionOffsetCalculator and its wide/s
 Instruction completion categories reuse Javasm Japanese completion descriptions, snapshotted in `vendor/javasm/completion-ja.json`, and organize them into operation / subject / type paths. See `licenses/Javasm.txt`.
 
 The class viewer uses ASM to parse class files and adapts JALP rendering conventions from LangJAL (`jalp` ClassPrinter / CodePrinter / MethodPrinter). It does not reuse the CLI class finder or handwritten binary reader. See `licenses/LangJAL.txt`.
+
+The vendored LangJAL analyser adds opt-in reporter level checks to avoid formatting disabled debug/info messages. Existing reporters keep logging enabled by default; the browser compiler disables these levels.

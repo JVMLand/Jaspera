@@ -32,6 +32,8 @@ public final class Bridge {
         } else add("error",e.getDetailedMessage(),e.getLine(),e.getColumn(),e.getLength());
     }
     private static final CompileReporter REPORTER = new CompileReporter() {
+        public boolean isDebugEnabled() { return false; }
+        public boolean isInfoEnabled() { return false; }
         public void postInfo(String m,Path p) {}
         public void postDebug(String m,Path p) {}
         public void postWarning(String m,Path p) { add("warning",m,1,0,1); }
@@ -45,7 +47,7 @@ public final class Bridge {
         for(char c:s.toCharArray()) switch(c) {
             case '"' -> b.append("\\\""); case '\\' -> b.append("\\\\");
             case '\n' -> b.append("\\n"); case '\r' -> b.append("\\r"); case '\t' -> b.append("\\t");
-            default -> { if(c<32||c>126) b.append(String.format("\\u%04x",(int)c)); else b.append(c); }
+            default -> { if(c<32||c>126) b.append("\\u").append("0123456789abcdef".charAt(c>>>12)).append("0123456789abcdef".charAt((c>>>8)&15)).append("0123456789abcdef".charAt((c>>>4)&15)).append("0123456789abcdef".charAt(c&15)); else b.append(c); }
         }
         return b.append('"').toString();
     }
@@ -78,9 +80,11 @@ public final class Bridge {
             for(Token token:tokens.getTokens()) if(token.getType()==JALLexer.ERRCHAR)
                 add("error","Unexpected character: "+token.getText(),token.getLine(),token.getCharPositionInLine(),1);
             JALParser parser=new JALParser(tokens);
-            parser.removeErrorListeners(); parser.addErrorListener(errors); parser.root();
+            parser.removeErrorListeners(); parser.addErrorListener(errors); JALParser.RootContext tree=parser.root();
             if(diagnostics.stream().noneMatch(d->d.severity().equals("error"))) {
-                ClassNode node=JALFileCompiler.compileOnly(source,REPORTER,CompileSettings.FULL).getCompiledClass();
+                JALClassCompiler compiled=new JALClassCompiler(new FileEvaluatingReporter(REPORTER,null),null,CompileSettings.FULL);
+                compiled.compileClassAST(tree.classDefinition());
+                ClassNode node=compiled.getCompiledClass();
                 // ASM verifies stack categories, locals, returns and control-flow merges as a second pass.
                 for(MethodNode method:node.methods) {
                     if((method.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))!=0) continue;
