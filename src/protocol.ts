@@ -7,4 +7,6 @@ export interface GraphDocument {uri:string;source:string;version:number;line:num
 export interface Compilation { graphs?:MethodGraph[]; stackFrames?:StackFrame[]; classes?: {className:string;bytecode:string}[]; className: string; bytecode: string; diagnostics: Diagnostic[] }
 export interface Disassembly {className:string;source:string}
 export type RuntimeRequest = {type:'disassemble';bytecode:string} | {type:'compile';source:string} | {type:'run';compilation:Compilation;stdin:string};
-export interface RuntimeEvents {progress(loaded:number,total:number):void;output(stream:'stdout'|'stderr',text:string):void}
+export interface RuntimeEvents {analysis(progress:AnalysisProgress):void;progress(loaded:number,total:number):void;output(stream:'stdout'|'stderr',text:string):void}
+
+export interface AnalysisProgress {graph?:MethodGraph;finished?:boolean;phase:"queued"|"loading"|"parse"|"analysis"|"frames"|"layout"|"complete";owner?:string;method?:string;completed:number;total:number}

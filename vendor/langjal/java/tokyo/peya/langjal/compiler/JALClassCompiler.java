@@ -153,6 +153,12 @@ public class JALClassCompiler {
         return Collections.unmodifiableList(this.methodCompilers);
     }
 
+    private java.util.function.BiConsumer<JALParser.MethodDefinitionContext, Boolean> methodListener = (method, finished) -> {};
+
+    public void setMethodListener(java.util.function.BiConsumer<JALParser.MethodDefinitionContext, Boolean> listener) {
+        this.methodListener = java.util.Objects.requireNonNull(listener);
+    }
+
     private void visitClassBody(@NotNull ClassNode classNode, @Nullable JALParser.ClassBodyContext body) {
         if (body == null)
             return;
@@ -161,7 +167,9 @@ public class JALClassCompiler {
         for (JALParser.ClassBodyItemContext item : items) {
             if (item.methodDefinition() != null) {
                 JALMethodCompiler evaluator = new JALMethodCompiler(this.reporter, classNode, this.compileFlags);
+                this.methodListener.accept(item.methodDefinition(), false);
                 evaluator.evaluateMethod(item.methodDefinition());
+                this.methodListener.accept(item.methodDefinition(), true);
                 this.methodCompilers.add(evaluator);
             }
             if (item.fieldDefinition() != null)

@@ -60,9 +60,21 @@ public final class Bridge {
         try(InputStream in=new FileInputStream(path.toFile())) { return in.readAllBytes(); }
     }
     public static String disassemble(String encoded) { return Disassembler.disassemble(encoded); }
+    private static boolean reportProgress;
+    private static void progress(String phase, String owner, String method, int completed, int total) {
+        if (reportProgress) System.out.println("\u001eJALWEB_PROGRESS " + "{\"phase\":"+quote(phase)+",\"owner\":"+quote(owner)+",\"method\":"+quote(method)+",\"completed\":"+completed+",\"total\":"+total+"}");
+    }
+    private static void methodProgress(String phase,String owner,String method,int completed,int total,boolean finished,String graph) {
+        if(reportProgress) System.out.println("\u001eJALWEB_PROGRESS {\"phase\":"+quote(phase)+",\"owner\":"+quote(owner)+",\"method\":"+quote(method)+",\"completed\":"+completed+",\"total\":"+total+",\"finished\":"+finished+(graph==null?"":",\"graph\":"+graph)+"}");
+    }
+    public static String compileWithProgress(String encodedSource) {
+        reportProgress=true;
+        try { return compile(encodedSource); } finally { reportProgress=false; }
+    }
     public static String compile(String encodedSource) {
         String source=new String(Base64.getDecoder().decode(encodedSource),StandardCharsets.UTF_8);
         diagnostics.clear();
+        progress("parse","","",0,0);
         tokyo.peya.langjal.compiler.member.InstructionSources.clear();
         String className=""; String encoded=""; List<String> stackFrames=new ArrayList<>(); List<String> graphs=new ArrayList<>();
         try {
@@ -83,11 +95,21 @@ public final class Bridge {
             parser.removeErrorListeners(); parser.addErrorListener(errors); JALParser.RootContext tree=parser.root();
             if(diagnostics.stream().noneMatch(d->d.severity().equals("error"))) {
                 JALClassCompiler compiled=new JALClassCompiler(new FileEvaluatingReporter(REPORTER,null),null,CompileSettings.FULL);
+                String owner=tree.classDefinition().className().getText();
+                int total=(int)tree.classDefinition().classBody().classBodyItem().stream().filter(item->item.methodDefinition()!=null).count();
+                int[] completed={0};
+                compiled.setMethodListener((method,finished)->{
+                    if(finished)completed[0]++;
+                    methodProgress("analysis",owner,method.methodName().getText()+method.methodDescriptor().getText(),completed[0],total,finished,null);
+                });
                 compiled.compileClassAST(tree.classDefinition());
+                progress("analysis",owner,"",total,total);
                 ClassNode node=compiled.getCompiledClass();
                 // ASM verifies stack categories, locals, returns and control-flow merges as a second pass.
+                int frameTotal=(int)node.methods.stream().filter(m->(m.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))==0).count(),frameCompleted=0;
                 for(MethodNode method:node.methods) {
                     if((method.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))!=0) continue;
+                    progress("frames",owner,method.name+method.desc,frameCompleted++,frameTotal);
                     if(method.tryCatchBlocks==null) method.tryCatchBlocks=new ArrayList<>();
                     // ASM's tree analyzer uses the logical jump opcode; widths belong to encoding.
                     java.util.Map<JumpInsnNode,Integer> wideJumps=new java.util.IdentityHashMap<>();
@@ -98,7 +120,9 @@ public final class Bridge {
                         BasicVerifier verifier=new StackFrames.Verifier();
                         Frame<BasicValue>[] frames=new Analyzer<>(verifier).analyzeAndComputeMaxs(node.name,method);
                         StackFrames.append(stackFrames,method,frames,verifier);
-                        graphs.add(InstructionGraph.compute(node.name,method,frames));
+                        String graph=InstructionGraph.compute(node.name,method,frames);
+                        graphs.add(graph);
+                        methodProgress("frames",owner,method.name+method.desc,frameCompleted,frameTotal,true,graph);
                     }
                     catch(AnalyzerException e) {
                         int line=1;
@@ -111,6 +135,7 @@ public final class Bridge {
                     }
                     finally {wideJumps.forEach((jump,opcode)->jump.setOpcode(opcode));}
                 }
+                progress("frames",owner,"",frameTotal,frameTotal);
                 if(node.version>67) add("error","This runtime supports class file versions up to 67 (Java 23).",1,0,1);
                 if(diagnostics.stream().noneMatch(d->d.severity().equals("error"))) {
                     ClassWriter writer=new ClassWriter(0); node.accept(writer);

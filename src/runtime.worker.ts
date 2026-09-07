@@ -21,7 +21,7 @@ function flush() {
     buffers[stream] = '';
   }
 }
-function output(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
+function outputText(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
   const remaining = 256 * 1024 - outputBytes;
   if (remaining <= 0) return;
   const accepted = bytes.subarray(0, remaining);
@@ -29,6 +29,19 @@ function output(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
   buffers[stream] += decoders[stream].decode(accepted, { stream: true });
   if (outputBytes >= 256 * 1024) buffers.stderr += '\n[出力は 256 KiB で打ち切られました]\n';
   flushTimer ??= setTimeout(flush, 32);
+}
+let compiling=false,progressText='';
+const progressDecoder=new TextDecoder();
+function output(stream:'stdout'|'stderr',bytes:Uint8Array){
+ if(!compiling||stream!=='stdout'){outputText(stream,bytes);return;}
+ progressText+=progressDecoder.decode(bytes,{stream:true});
+ let end:number;
+ while((end=progressText.indexOf('\n'))>=0){
+  const line=progressText.slice(0,end);progressText=progressText.slice(end+1);
+  if(line.startsWith('\x1eJALWEB_PROGRESS ')){
+   try{const progress=JSON.parse(line.slice(17));notify(sink=>sink.analysis(progress));}catch{}
+  }else outputText(stream,new TextEncoder().encode(line+'\n'));
+ }
 }
 async function initialize(heapMiB:number) {
   if(!Number.isInteger(heapMiB)||heapMiB<16||heapMiB>128)throw new Error('JVM ヒープ容量が不正です。');
@@ -60,7 +73,8 @@ const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promi
   try {
     await initialize(heapMiB);
     if (data.type === 'compile') {
-      const compilation = JSON.parse(await bridge.compile(encodeText(data.source)));
+      compiling=true;progressText="";
+      const compilation = JSON.parse(await bridge.compileWithProgress(encodeText(data.source)));
       return compilation;
     } else if(data.type==='disassemble'){
       if(data.bytecode.length>1400000)throw new Error('class は 1 MiB 以下にしてください。');
@@ -90,7 +104,7 @@ const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promi
       if (error?.printStackTrace) await error.printStackTrace();
     } catch {}
     throw new Error(message);
-  } finally {flush();await notifications;events=undefined;scope.dispose();busy=false;}
+  } finally {if(compiling){progressText+=progressDecoder.decode();if(progressText)outputText("stdout",new TextEncoder().encode(progressText));progressText="";compiling=false;}flush();await notifications;events=undefined;scope.dispose();busy=false;}
 }};
 export type RuntimeApi=typeof api;
 expose(api);

@@ -60,3 +60,9 @@ test('background idle release preserves cache, never stops pending work, and res
  service.setBackground(false);const next=service.compile({},'two');await tick();worker.calls[1].resolve({});await next;await wait();assert.equal(worker.stopped,1);
  service.setBackground(true);service.setBackground(false);await wait();assert.equal(worker.stopped,1);service.dispose();
 });
+
+test('progress is shared with late subscribers and stops retaining callbacks after completion',async()=>{
+ const worker=backend(),original=worker.compile.bind(worker);let report;worker.compile=(source,progress)=>{report=progress;return original(source);};const service=new CompilationService(worker),doc={},first=[],late=[];
+ const pending=service.compile(doc,'source',p=>first.push(p));await tick();const graph={name:'x()V',nodes:[],edges:[]};report({phase:'frames',method:'x()V',completed:1,total:2,finished:true,graph});
+ assert.equal(service.compile(doc,'source',p=>late.push(p)),pending);assert.ok(late.some(p=>p.graph===graph));report({phase:'frames',method:'y()V',completed:1,total:2});assert.equal(late.at(-1).method,'y()V');worker.calls[0].resolve({graphs:[graph]});await pending;await tick();const count=first.length;report({phase:'complete',completed:1,total:1});assert.equal(first.length,count);service.dispose();
+});
