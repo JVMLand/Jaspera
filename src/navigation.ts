@@ -51,6 +51,7 @@ export function createNavigation(host:Host){
   return found;
  }
  return {
+  async classModel(owner:string){return (await findClass(owner))[0]?.model;},
   async completionCatalog():Promise<Catalog>{
    const current=epoch,catalog:Catalog=Object.create(null);
    const sources=host.models().filter(m=>!m.isDisposed()&&m.uri.authority==='jal');

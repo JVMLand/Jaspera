@@ -17,7 +17,7 @@ test('Folder project UI: real browser file handles, save, reopen and export',{ti
  async function disk(path,write){return page.evaluate(async({path,write})=>{let dir=await (await navigator.storage.getDirectory()).getDirectoryHandle(window.folderName);const parts=path.split('/'),name=parts.pop();for(const part of parts)dir=await dir.getDirectoryHandle(part);const h=await dir.getFileHandle(name);if(write!==undefined){const w=await h.createWritable();await w.write(write);await w.close();}return (await h.getFile()).text();},{path,write});}
  await t.test('first save creates settings-only jalprj and src/Main.jal',async()=>{
   assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(),'src/Main.jal');await page.keyboard.press('ControlOrMeta+S');await saved();
-  const config=JSON.parse(await disk('project.jalprj'));assert.deepEqual(config,{format:'jalprj',version:1,name:'Main',entryFile:'src/Main.jal'});assert.match(await disk('src/Main.jal'),/public class Main/);
+  const config=JSON.parse(await disk('project.jalprj'));assert.equal(config.editor.version,1);const {editor,...properties}=config;assert.deepEqual(properties,{format:'jalprj',version:1,name:'Main',entryFile:'src/Main.jal'});assert.match(await disk('src/Main.jal'),/public class Main/);
  });
  await t.test('save overwrites the same source, reopen restores it and Run works',async()=>{
   await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setValue(editor.getValue().replace('Hello, World!','フォルダーからこんにちは'));});

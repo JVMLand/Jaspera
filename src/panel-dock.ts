@@ -1,3 +1,4 @@
+import type {DockLayout} from './workspace-layout';
 import './panel-dock.css';
 import {holdDrag} from './tab-interactions';
 import {installGroupResize} from './group-resize';
@@ -69,5 +70,6 @@ export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>vo
  const outside=(e:PointerEvent)=>{if(!menu?.contains(e.target as Node))dismiss();};document.addEventListener('pointerdown',outside);disposals.push(()=>document.removeEventListener('pointerdown',outside));
  const key=(e:KeyboardEvent)=>{if(e.key==='Escape')dismiss();};document.addEventListener('keydown',key);disposals.push(()=>document.removeEventListener('keydown',key));
  workspace.classList.add('dock-arranged');const resize=installGroupResize(workspace,onLayout);disposals.push(()=>resize.dispose());refresh();
- return {show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){dismiss();for(const dispose of disposals)dispose();}};
+ return {snapshot:():DockLayout=>({order:{project:[...order.project],source:[...order.source],output:[...order.output]},selected:{...selected},closed:[...closed],sizes:resize.snapshot(),swapped:workspace.classList.contains('dock-swapped')}),
+ restore(layout?:DockLayout){const next:DockLayout=layout??{order:{project:['project'],source:[],output:['console','problems','instructions']},selected:{project:'project',source:null,output:'console'},closed:[],sizes:[.17,.48,.35],swapped:false};for(const side of sides){order[side]=[...next.order[side]];selected[side]=next.selected[side];}closed.clear();for(const name of next.closed)closed.add(name);workspace.classList.toggle('dock-swapped',next.swapped);resize.restore(next.sizes);refresh();},show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){dismiss();for(const dispose of disposals)dispose();}};
 }

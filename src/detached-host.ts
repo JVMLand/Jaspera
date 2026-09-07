@@ -1,13 +1,14 @@
+import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
 import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import type {DefinitionDocument} from './navigation';
-export interface EditorSnapshot {id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
+export interface EditorSnapshot {key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
 export interface ToolState {output:{text:string;stream:string}[];stdin:string;problems:{label:string;severity:string}[]}
 export interface DetachedState {tools?:ToolState;canSave:boolean;running:boolean;status:string;theme:string;files:{key:string;title:string}[]}
-export interface DetachedClient {instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
+export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
-export interface DetachedBridge {workspaceId:string;instruction:(op:string)=>void;
+export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  completionCatalog:()=>Promise<Catalog>;
  attach:(id:string,client:DetachedClient)=>EditorSnapshot|undefined;
@@ -30,7 +31,7 @@ export function replaceText(model:monaco.editor.ITextModel,text:string){
 // Monaco 0.52 TextModel exposes undo/redo; its public ITextModel declaration omits them.
 type UndoableModel=monaco.editor.ITextModel & {undo:()=>void|Promise<void>;redo:()=>void|Promise<void>};
 interface Entry extends DetachedDocument {id:string;group:string;subscriptions:monaco.IDisposable[]}
-interface Group {id:string;popup:Window;client?:DetachedClient;panels:Set<PanelName>}
+interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
 interface Options {instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  completionCatalog:()=>Promise<Catalog>;
@@ -40,7 +41,7 @@ interface Options {instruction?:(op:string)=>void;
 }
 export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:()=>void,options:Options){
  const entries=new Map<string,Entry>(),groups=new Map<string,Group>();
- const snapshot=(e:Entry):EditorSnapshot=>({id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
+ const snapshot=(e:Entry):EditorSnapshot=>({key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
  const broadcast=(e:Entry)=>{if(!e.model.isDisposed())try{groups.get(e.group)?.client?.update(snapshot(e));}catch{}};
  const remove=(id:string)=>{const e=entries.get(id);if(!e)return;entries.delete(id);for(const d of e.subscriptions)d.dispose();groups.get(e.group)?.client?.remove?.(id);onReturn(e.key);closeIfEmpty(e.group);};
  const release=(id:string)=>{const g=groups.get(id);if(!g)return;groups.delete(id);for(const name of g.panels)onReturn('panel:'+name);for(const e of [...entries.values()])if(e.group===id)remove(e.id);try{g.popup.close();}catch{}};
@@ -59,7 +60,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  };
  const closePanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(g?.panels.delete(name)){g.client?.panelRemoved?.(name);onReturn('panel:'+name);closeIfEmpty(group);}};
  const openPanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(!g)return;for(const other of groups.values())if(other.id!==group&&other.panels.delete(name)){other.client?.panelRemoved?.(name);closeIfEmpty(other.id);}g.panels.add(name);options.panelOpened?.(name);g.client?.panel?.(name);};
- window.jalwebDetached={workspaceId:crypto.randomUUID(),
+ window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
   completionCatalog:()=>options.completionCatalog(),
@@ -73,11 +74,30 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   save(){if(options.state().canSave)save();},run,stop:options.stop,check:options.check,theme:options.theme,
   classFile:async id=>{const e=entries.get(id);return e&&!e.readOnly?options.classFile(e.model):undefined;},release
  };
+ let pending:WindowLayout[]=[];
+ function restoreWindow(layout:WindowLayout){
+  const docs=layout.tabs.map(key=>options.document(key)).filter((doc):doc is DetachedDocument=>!!doc&&!doc.model.isDisposed()&&![...entries.values()].some(e=>e.key===doc.key));
+  const panels=layout.panels.filter(name=>![...groups.values()].some(g=>g.panels.has(name)));
+  if(!docs.length&&!panels.length)return true;
+  const id=crypto.randomUUID(),url=new URL('detached.html',location.href);url.searchParams.set('editor',id);
+  const width=Math.min(layout.width,screen.availWidth),height=Math.min(layout.height,screen.availHeight);
+  const display=screen as Screen & {availLeft?:number;availTop?:number};const left=Math.max(display.availLeft??0,Math.min(layout.left,(display.availLeft??0)+screen.availWidth-width)),top=Math.max(display.availTop??0,Math.min(layout.top,(display.availTop??0)+screen.availHeight-height));
+  const popup=window.open(url.href,'jalweb-'+id,`popup,width=${width},height=${height},left=${left},top=${top}`);if(!popup)return false;
+  // window.open dimensions describe the content area; persist the outer frame without growth on every reopen.
+  try{popup.resizeTo(width,height);popup.moveTo(left,top);}catch{}
+  groups.set(id,{id,popup,panels:new Set(),initial:layout});for(const doc of docs){add(id,doc);onReturn(doc.key);}for(const name of panels)openPanel(id,name);return true;
+ }
+ // Browsers may require a fresh user gesture for each popup. Keep the saved layout
+ // until that gesture; its files remain accessible in the main window meanwhile.
+ const resume=(event:Event)=>{if(!event.isTrusted||!pending.length)return;const next=pending[0];if(restoreWindow(next))pending.shift();};
+ window.addEventListener('click',resume);window.addEventListener('keydown',resume);
  let lastState='';
  const refresh=()=>{const state=options.state(),serialized=JSON.stringify(state);if(serialized===lastState)return;lastState=serialized;for(const g of groups.values())try{g.client?.state?.(state);}catch{}};
  const watcher=setInterval(()=>{for(const g of groups.values())if(g.popup.closed)release(g.id);refresh();},300);
  const observer=new MutationObserver(()=>{for(const e of entries.values())broadcast(e);refresh();});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
  return {
+  snapshot():WindowLayout[]{return [...groups.values()].filter(g=>!g.popup.closed).map(g=>{const tabs=[...entries.values()].filter(e=>e.group===g.id).map(e=>e.key);let state=g.initial?{active:g.initial.active,views:g.initial.views,wordWrap:g.initial.wordWrap}:{active:tabs[0]??'panel:'+([...g.panels][0]??''),views:{},wordWrap:false};try{state=g.client?.layout?.()??state;}catch{}return {tabs,panels:[...g.panels],...state,left:g.popup.screenX,top:g.popup.screenY,width:g.popup.outerWidth,height:g.popup.outerHeight};}).concat(pending);},
+  restore(layouts:WindowLayout[]){pending=[];for(const layout of layouts)if(!restoreWindow(layout))pending.push(layout);},
   showInstruction(op:string){const g=[...groups.values()].find(g=>g.panels.has('instructions'));if(g)g.client?.instruction?.(op);},
   hasPanel:(name:PanelName)=>[...groups.values()].some(g=>g.panels.has(name)),
   focusPanel(name:PanelName){const g=[...groups.values()].find(g=>g.panels.has(name));if(g){g.client?.panel?.(name);g.popup.focus();}},
@@ -92,7 +112,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
    const popup=window.open(url.href,'jalweb-'+id,'popup,width=900,height=680');if(!popup)return false;
    groups.set(id,{id,popup,panels:new Set()});add(id,{key,title,model,readOnly},id);return true;
   },
-  closeAll(){for(const id of [...groups.keys()])release(id);},
-  dispose(){clearInterval(watcher);observer.disconnect();this.closeAll();delete window.jalwebDetached;}
+  closeAll(){pending=[];for(const id of [...groups.keys()])release(id);},
+  dispose(){window.removeEventListener('click',resume);window.removeEventListener('keydown',resume);clearInterval(watcher);observer.disconnect();this.closeAll();delete window.jalwebDetached;}
  };
 }

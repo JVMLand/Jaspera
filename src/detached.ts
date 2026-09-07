@@ -1,3 +1,5 @@
+import type {WindowLayout} from './workspace-layout';
+import type {FileView} from './project';
 import {fileDrop} from './tab-interactions';
 import {followInstructionClicks} from './instruction-click';
 import {installDetachedTools} from './detached-tools';
@@ -28,7 +30,7 @@ import './detached.css';
 const group=new URL(location.href).searchParams.get('editor')??'';
 const bridge:DetachedBridge|undefined=window.opener?.jalwebDetached;
 const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
-interface Tab {state:EditorSnapshot;model:monaco.editor.ITextModel;view:monaco.editor.ICodeEditorViewState|null;timer?:ReturnType<typeof setTimeout>;offsets:Map<number,number>}
+interface Tab {state:EditorSnapshot;model:monaco.editor.ITextModel;view:monaco.editor.ICodeEditorViewState|null;savedView?:FileView;timer?:ReturnType<typeof setTimeout>;offsets:Map<number,number>}
 const tabs=new Map<string,Tab>();let active:string|undefined,applying=false,workspace:DetachedState={canSave:false,running:false,status:'',theme:'jal-night',files:[]};
 const worker=new WorkerRpc<OffsetsApi>(()=>new OffsetWorker()),overlays=document.createElement('div');overlays.id='editor-overlays';document.body.append(overlays);
 export const editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:overlays,automaticLayout:true,fontSize:15,lineHeight:27,minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,fixedOverflowWidgets:true,lineNumbersMinChars:10});
@@ -38,7 +40,10 @@ let toolTabs:ReturnType<typeof installDetachedTools>|undefined;
 const current=()=>!toolTabs?.active&&active?tabs.get(active):undefined;
 function inspect(tab:Tab){clearTimeout(tab.timer);publishInspections(tab.model,[]);tab.offsets.clear();if(tab===current())showOffsets();tab.timer=setTimeout(()=>{if(tab.model.isDisposed())return;const version=tab.model.getVersionId();void worker.call(api=>api.analyze(tab.model.getValue())).then(data=>{if(tab.model.isDisposed()||tabs.get(tab.state.id)!==tab||version!==tab.model.getVersionId())return;if(!tab.state.readOnly)publishInspections(tab.model,data.inspections);tab.offsets.clear();for(const i of data.offsets)if(!tab.offsets.has(i.line))tab.offsets.set(i.line,i.offset);if(current()===tab)showOffsets();}).catch(error=>{if(!tab.model.isDisposed())console.error('ソース解析に失敗しました。',error);});},80);}
 function showOffsets(){const offsets=current()?.offsets??new Map();editor.updateOptions({lineNumbers:n=>`<span class="jal-source-line">${n}</span><span class="jal-bytecode-offset">${offsets.get(n)??''}</span>`});}
-function select(id:string){toolTabs?.showSource();const next=tabs.get(id);if(!next)return;const old=current();if(old)old.view=editor.saveViewState();active=id;editor.setModel(next.model);editor.updateOptions({readOnly:next.state.readOnly});if(next.view)editor.restoreViewState(next.view);showOffsets();renderTabs();updateActions();}
+function select(id:string){const old=current();toolTabs?.showSource();const next=tabs.get(id);if(!next)return;if(old){old.view=editor.saveViewState();old.savedView=fileView();}active=id;editor.setModel(next.model);editor.updateOptions({readOnly:next.state.readOnly});if(next.view)editor.restoreViewState(next.view);else if(next.savedView){const v=next.savedView;editor.setPosition(next.model.validatePosition({lineNumber:v.line,column:v.column}));editor.setScrollPosition({scrollTop:v.scrollTop,scrollLeft:v.scrollLeft});}showOffsets();renderTabs();updateActions();}
+function fileView():FileView{const p=editor.getPosition();return {line:p?.lineNumber??1,column:p?.column??1,scrollTop:Math.round(editor.getScrollTop()),scrollLeft:Math.round(editor.getScrollLeft())};}
+function layout():Pick<WindowLayout,'active'|'views'|'wordWrap'>{const views:Record<string,FileView>=Object.create(null);for(const [id,tab] of tabs){if(id===active)tab.savedView=fileView();if(tab.savedView)views[tab.state.key]=tab.savedView;}return {active:toolTabs?.active?'panel:'+toolTabs.active:tabs.get(active??'')?.state.key??'',views,wordWrap:editor.getRawOptions().wordWrap==='on'};}
+function restoreLayout(layout:WindowLayout){for(const tab of tabs.values())tab.savedView=layout.views[tab.state.key];editor.updateOptions({wordWrap:layout.wordWrap?'on':'off'});const tab=[...tabs.values()].find(t=>t.state.key===layout.active)??tabs.get(active??'');if(tab){active=undefined;tab.view=null;select(tab.state.id);}if(layout.active.startsWith('panel:'))toolTabs?.show(layout.active.slice(6) as import('./panel-dock').PanelName);}
 function closeTab(id:string,others=false){for(const key of [...tabs.keys()])if(others?key!==id:key===id)bridge?.closeTab(group,key);if(others)select(id);}
 function renderTabs(){
  el('file-tabs').replaceChildren();for(const [id,tab] of tabs){
@@ -78,8 +83,9 @@ el<HTMLDialogElement>('open-file').addEventListener('close',()=>{if(el<HTMLDialo
 for(const theme of themes){const option=document.createElement('option');option.value=theme.id;option.textContent=theme.label;el('themes').append(option);}el<HTMLSelectElement>('themes').onchange=()=>bridge?.theme(el<HTMLSelectElement>('themes').value);
 toolTabs=installDetachedTools(bridge,group,()=>{renderTabs();updateActions();editor.layout();});
 const instructionClicks=followInstructionClicks(editor,op=>{toolTabs?.showInstruction(op);bridge?.instruction(op);});
-const initial=bridge?.attach(group,{update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files);applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(p);editor.revealPositionInCenter(p);}editor.focus();}});
+const initial=bridge?.attach(group,{layout,restoreLayout,update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files);applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(p);editor.revealPositionInCenter(p);}editor.focus();}});
 for(const snapshot of bridge?.tabs(group)??[])update(snapshot);if(initial)select(initial.id);else if(!bridge)el('status').textContent='元のワークスペースに接続できません。';updateActions();for(const name of bridge?.panels(group)??[])toolTabs?.show(name);
+bridge?.ready(group);
 const dropFiles=fileDrop(document.body,bridge?.workspaceId??'',key=>{const snapshot=bridge?.openTab(group,key);if(snapshot){update(snapshot);select(snapshot.id);editor.focus();}});
 const definitionUI=installDefinitionUI((model,offset)=>{const tab=[...tabs.values()].find(t=>t.model===model);return tab?bridge?.definitions(tab.state.id,offset)??Promise.resolve([]):Promise.resolve([]);},(uri,range)=>bridge?.openDefinition(group,uri,range)??false);
 
