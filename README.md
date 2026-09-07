@@ -1,4 +1,6 @@
-# JALWeb
+# Jaspera
+
+Through bytecode, ad astra
 
 Monaco Editor で JVM Assembly Language (JAL) を編集し，ブラウザ内の WebAssembly JVM でコンパイル・実行する環境です。初期ソースは `src/Main.jal`（クラス名 `Main`）の Hello World です。
 

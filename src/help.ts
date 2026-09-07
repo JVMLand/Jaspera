@@ -1,3 +1,4 @@
+import {APP_NAME,APP_TAGLINE} from './brand';
 import './help.css';
 
 function element<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string){
@@ -48,6 +49,6 @@ export function helpMenuItems(detached=false,canSave=()=>true){
       const labels=element('p');labels.append(element('kbd','Shift'),' を押しながらラベルをクリックすると，定義または使用箇所へ移動します。');
       openHelp('ショートカット',[table,labels,hover,tabs]);
     }},
-    {id:'help-about',label:'JALWeb について',action:()=>showHelpMessage('JALWeb','JVM Assembly Language（JAL）のコードを編集・実行できます。')}
+    {id:'help-about',label:`${APP_NAME} について`,action:()=>openHelp(APP_NAME,[element('p',APP_TAGLINE),element('p','JVM Assembly Language（JAL）のコードを編集・実行できます。')])}
   ];
 }

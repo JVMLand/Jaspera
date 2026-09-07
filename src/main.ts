@@ -1,3 +1,4 @@
+import {APP_NAME,APP_TAGLINE,APP_TITLE} from './brand';
 import {sourceMerge} from './source-merge';
 import {installEditorCommands,installWindowCommands} from './editor-commands';
 import {installSearchEverywhere} from './search-everywhere';
@@ -45,7 +46,7 @@ import { initializeThemes, openThemePicker, applyTheme, onThemeChange, selectedT
 registerLanguage(()=>navigation.completionCatalog());
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <header class="toolbar">
-  <div class="brand"><img class="brand-logo" src="./favicon.svg" alt="Javasm ロゴ" width="40" height="40"><h1>JAL<span>Web</span></h1><span class="brand-caption">JVM ASSEMBLY LAB</span></div>
+  <div class="brand"><img class="brand-logo" src="./favicon.svg" alt="Javasm ロゴ" width="40" height="40"><h1>${APP_NAME}</h1><span class="brand-caption">${APP_TAGLINE}</span></div>
   <div class="toolbar-actions"><button id="run" class="run" title="実行（Ctrl+Enter / F5）"><span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
 </header>
 <nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
@@ -225,7 +226,7 @@ const menus=installMenus(el('menus'),[
   {label:'Help',items:helpMenuItems()}
 ]);
 function status(text:string,kind:'ready'|'loading'|'error'='ready') {workspaceState.update({status:text});el('state').textContent=text;el('state-dot').className=`status-dot ${kind}`;}
-function setDirty(value=true) {if(value)changeVersion++;dirty=value;el('project-name').textContent=project.name+(dirty?' •':'');document.title=`${dirty?'• ':''}${project.name} — JALWeb`;el('summary-project-name').textContent=project.name;}
+function setDirty(value=true) {if(value)changeVersion++;dirty=value;el('project-name').textContent=project.name+(dirty?' •':'');document.title=`${dirty?'• ':''}${project.name} — ${APP_TITLE}`;el('summary-project-name').textContent=project.name;}
 function validatePath(path:string){relativePath(path);if(folder?.properties!==false&&!path.startsWith('src/'))throw new Error('ソースは src/ 以下に置いてください。');}
 function refreshOffsets(view=editor){showBytecodeOffsets(view,sourceAnalysis.offsets(view.getModel()));}
 function publishWorkspaceAvailability(){workspaceState.update({canSave:!!folder&&!storageBusy,running});}

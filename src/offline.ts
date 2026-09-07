@@ -31,7 +31,7 @@ export async function openOfflinePreparation(){
    });
    if(!await complete())throw new Error('一部のデータを保存できませんでした。回線と空き容量を確認して再試行してください。');
    await navigator.storage?.persist?.().catch(()=>false);
-   status.textContent=registration.waiting?'更新分の保存が完了しました。JALWeb のタブと小窓をすべて閉じてから，開き直してください。':'保存が完了しました。オフラインでも起動・編集・実行できます。';
+   status.textContent=registration.waiting?'更新分の保存が完了しました。Jaspera のタブと小窓をすべて閉じてから，開き直してください。':'保存が完了しました。オフラインでも起動・編集・実行できます。';
    start.textContent='もう一度確認';
   }catch(error){status.textContent=error instanceof Error?error.message:String(error);}
   finally{progress.hidden=true;start.disabled=false;}
