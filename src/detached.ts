@@ -1,3 +1,4 @@
+import {tabLabels} from './file-labels';
 import {inlayHintOptions} from './inlay-hint-style';
 import {editMenuItems} from './edit-menu';
 import {installFilePicker} from './file-opening';
@@ -44,9 +45,10 @@ function layout():Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>{const v
 function restoreLayout(layout:WindowLayout){paneOrder.splice(0,paneOrder.length,...(layout.order??[]));for(const tab of tabs.values())tab.savedView=layout.views[tab.state.key];editor.updateOptions({wordWrap:layout.wordWrap?'on':'off'});const tab=[...tabs.values()].find(t=>t.state.key===layout.active)??tabs.get(active??'');if(tab){active=undefined;tab.view=null;select(tab.state.id);}if(layout.active.startsWith('panel:'))toolTabs?.show(layout.active.slice(6) as import('./panel-dock').PanelName);}
 function closeTab(id:string,others=false){for(const key of [...tabs.keys()])if(others?key!==id:key===id)bridge?.closeTab(group,key);if(others)select(id);}
 function renderTabs(){
+ const labels=tabLabels([...tabs.values()].map(tab=>({key:tab.state.key,path:tab.state.title})));
  el('file-tabs').replaceChildren();for(const [id,tab] of tabs){
   const pane=new EditorPane(tab.state.key,tab.state.title,{select:()=>select(id),close:others=>{if(others)toolTabs?.closeOthers();closeTab(id,others);}});
-  el('file-tabs').append(paneTab(pane,bridge?.workspaceId??'',!toolTabs?.active&&active===id).wrapper);
+  el('file-tabs').append(paneTab(pane,bridge?.workspaceId??'',!toolTabs?.active&&active===id,undefined,labels.get(tab.state.key)).wrapper);
  }
  toolTabs?.renderTabs(el('file-tabs'),()=>{for(const id of [...tabs.keys()])bridge?.closeTab(group,id);});arrangePaneTabs(el('file-tabs'),paneOrder);
 }

@@ -1,3 +1,4 @@
+import {tabLabels} from './file-labels';
 import {examples,exampleSource,rememberExample,withoutExampleLayout} from './example-library';
 import {inlayHintOptions} from './inlay-hint-style';
 import {installConsoleContextMenu} from './console-panel';
@@ -245,7 +246,8 @@ function renderFiles() {
   workspaceState.update({files:[...project.files.map(f=>({key:'source:'+f.path,title:f.path})),...examples.map(f=>({key:'preview:example:'+f.path,title:f.path})),...[...classPreviews.values()].filter(p=>!p.example).map(p=>({key:'preview:'+p.key,title:previewTitle(p)}))]});
   const list=el('file-list');list.replaceChildren();document.querySelectorAll('.workspace .editor-tab').forEach(n=>n.remove());
   renderProjectTree(list,[...examples.map(f=>({path:f.path,key:'preview:example:'+f.path,active:activePreview==='example:'+f.path,open:()=>{ensureExample(f.path);selectClassPreview('example:'+f.path);}})),...project.files.map(f=>({path:f.path,key:'source:'+f.path,active:!!editor.getModel()&&!activePreview&&f.path===project.workspace.activeFile,open:()=>switchFile(f.path)})),...(folder?.classFiles??[]).map(f=>({path:f.path,key:'',active:activePreview==='folder:'+f.path,open:()=>queueClass(()=>f.handle.getFile(),'folder:'+f.path,f.path,true,f.path)}))],window.jalwebDetached!.workspaceId,collapsedFolders);
-  for(const tab of visibleTabs())renderEditorTab(tab);
+  const tabs=visibleTabs(),labels=tabLabels(tabs.map(tab=>({key:tab.key,path:tab.label})));
+  for(const tab of tabs)renderEditorTab(tab,labels.get(tab.key)!);
   panelDock?.refresh();
 }
 function attachModel(path:string,source:string) {
@@ -396,10 +398,10 @@ function closeEditorTabs(key:string,others=false){
  else{groupEditors.get(side)!.setModel(null);if(activeSide===side)activePreview=undefined;renderFiles();updateActions();}
 }
 function closeClassPreview(key:string){closeEditorTabs('preview:'+key);}
-function renderEditorTab(item:EditorTab){
+function renderEditorTab(item:EditorTab,label:string){
  const side=sourceGroups.get(item.key)??'source';const view=groupEditors.get(side)!;item.active=view.getModel()===(item.sourcePath!==undefined?models.get(item.sourcePath):classPreviews.get(item.previewKey!)?.model);
  const pane=new EditorPane(item.key,item.label,{select:()=>selectEditorTab(item),close:others=>{if(others)panelDock?.closeTools(side);closeEditorTabs(item.key,others);}});
- const {wrapper}=paneTab(pane,window.jalwebDetached!.workspaceId,item.active);(panelDock?.strips[side]??el('file-tabs')).append(wrapper);
+ const {wrapper}=paneTab(pane,window.jalwebDetached!.workspaceId,item.active,undefined,label);(panelDock?.strips[side]??el('file-tabs')).append(wrapper);
 }
 function detachEditorTab(item:EditorTab){
  const model=item.sourcePath!==undefined?models.get(item.sourcePath):classPreviews.get(item.previewKey!)?.model;

@@ -19,10 +19,10 @@ export class ToolPane extends Pane {
  readonly kind='tool' as const;
  constructor(readonly name:LayoutPanel,title:string,actions:PaneActions){super('panel:'+name,title,actions);}
 }
-export function paneTab(pane:Pane,workspace:string,selected:boolean,button?:HTMLElement){
+export function paneTab(pane:Pane,workspace:string,selected:boolean,button?:HTMLElement,label=pane.title){
  const wrapper=document.createElement('div');wrapper.className=button?'dock-tab':'editor-tab';wrapper.dataset.paneKey=pane.key;wrapper.dataset.paneKind=pane.kind;wrapper.setAttribute('role','presentation');
  if(pane.kind==='editor')wrapper.dataset.tabKey=pane.key;else wrapper.dataset.panel=pane.key.slice(6);
- const tab=button??document.createElement('button');tab.classList.add(button?'dock-tab-button':'file-tab');if(!button)tab.textContent=pane.title;tab.title=pane.title+'（ドラッグ: 移動 / Alt＋クリック: 他のタブを閉じる）';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
+ const tab=button??document.createElement('button');tab.classList.add(button?'dock-tab-button':'file-tab');if(!button)tab.textContent=label;tab.title=pane.title+'（ドラッグ: 移動 / Alt＋クリック: 他のタブを閉じる）';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
  installContextMenu(tab,()=>pane.contextItems());
  tab.onclick=e=>{e.altKey?pane.close(true):pane.select();};paneDrag(tab,workspace,pane.key);
  tab.addEventListener('keydown',e=>{if(e.key==='Delete'){e.preventDefault();pane.close();return;}if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const tabs=[...wrapper.parentElement!.querySelectorAll<HTMLElement>('[role=tab]')].filter(t=>!t.closest('[hidden]')),i=tabs.indexOf(tab),at=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[at]?.click();tabs[at]?.focus();});
