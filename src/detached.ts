@@ -11,7 +11,7 @@ import {SourceAnalysis,showBytecodeOffsets} from './source-analysis';
 import {EditorPane,paneTab,paneIdentity,beforePane,movePaneOrder,arrangePaneTabs} from './pane';
 import type {WindowLayout} from './workspace-layout';
 import type {FileView} from './project';
-import {paneDrop} from './tab-interactions';
+import {paneDrop,paneWindowExit} from './tab-interactions';
 import {followInstructionClicks} from './instruction-click';
 import {installDetachedTools} from './detached-tools';
 import {installStackHover} from './stack-hover';
@@ -94,6 +94,9 @@ const instructionClicks=followInstructionClicks(editor,op=>{toolTabs?.showInstru
 const initial=bridge?.attach(group,{layout,restoreLayout,update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files,state.graphDocument);applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(p);editor.revealPositionInCenter(p);}editor.focus();}});
 for(const snapshot of bridge?.tabs(group)??[])update(snapshot);if(initial)select(initial.id);else if(!bridge)el('status').textContent='元のワークスペースに接続できません。';updateActions();for(const name of bridge?.panels(group)??[])toolTabs?.show(name);
 bridge?.ready(group);
+const exitDrag=paneWindowExit(bridge?.workspaceId??'',key=>{
+ if(!bridge?.detach(group,key))showHelpMessage('小窓を開けませんでした','ブラウザのポップアップ設定を確認してください。');
+});
 const dropFiles=paneDrop(document.body,bridge?.workspaceId??'',(key,event)=>{
  const pane=paneIdentity(key);if(!pane)return;movePaneOrder(paneOrder,key,beforePane(el('file-tabs'),key,event.clientX));
  if(pane.kind==='tool')bridge?.openPanel(group,pane.name);
@@ -105,4 +108,4 @@ const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>{const tab=[..
 
 const editorCommands=installEditorCommands(editor,run,redo=>{if(active)bridge?.undo(active,redo);});
 const windowCommands=installWindowCommands({save,open:filePicker.open});
-window.addEventListener('pagehide',()=>{editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();filePicker.dispose();dropFiles.dispose();instructionClicks.dispose();toolTabs?.dispose();stackHover.dispose();definitionUI.dispose();bridge?.release(group);observer.disconnect();overlays.remove();sourceAnalysis.dispose();editor.dispose();for(const tab of tabs.values()){tab.model.dispose();}});
+window.addEventListener('pagehide',()=>{editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();filePicker.dispose();dropFiles.dispose();exitDrag.dispose();instructionClicks.dispose();toolTabs?.dispose();stackHover.dispose();definitionUI.dispose();bridge?.release(group);observer.disconnect();overlays.remove();sourceAnalysis.dispose();editor.dispose();for(const tab of tabs.values()){tab.model.dispose();}});

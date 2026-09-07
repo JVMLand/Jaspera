@@ -13,7 +13,7 @@ export type DetachedState=WorkspaceState;
 export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
- panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
+ detach:(group:string,key:string)=>boolean;panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
  graphCompilation:(doc:GraphDocument,onProgress?:(progress:AnalysisProgress)=>void)=>Promise<Compilation>;
  graphNavigate:(doc:GraphDocument,line:number,column:number)=>void;
@@ -82,6 +82,16 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
   searchTargets:()=>options.searchTargets(),searchDefinition:target=>options.searchDefinition(target),
   instruction:op=>options.instruction?.(op),
+  detach(group,key){
+   const source=groups.get(group);if(!source)return false;
+   const panel=key.startsWith('panel:')?key.slice(6) as PanelName:undefined;
+   if(panel?!source.panels.has(panel):![...entries.values()].some(e=>e.group===group&&e.key===key))return false;
+   const id=crypto.randomUUID(),url=new URL('detached.html',location.href);url.searchParams.set('editor',id);
+   const popup=source.popup.open(url.href,'jalweb-'+id,'popup,width=900,height=680');if(!popup)return false;
+   // Keep the main host as opener even when splitting a detached window.
+   popup.opener=window;groups.set(id,{id,popup,panels:new Set()});
+   if(panel)openPanel(id,panel);else openTab(id,key);return true;
+  },
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
   projectAction:(action,path,folder)=>options.projectAction(action,path,folder),
   graphCompilation:(doc,onProgress)=>options.graphCompilation(doc,onProgress),graphNavigate:(doc,line,column)=>options.graphNavigate(doc,line,column),

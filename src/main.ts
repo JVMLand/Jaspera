@@ -23,7 +23,7 @@ import {SourceAnalysis,showBytecodeOffsets} from './source-analysis';
 import {EditorPane,paneTab,paneIdentity,beforePane,movePaneOrder} from './pane';
 import {layoutSides,type WorkspaceLayout} from './workspace-layout';
 import {renderProjectTree} from './project-tree';
-import {paneDrop} from './tab-interactions';
+import {paneDrop,paneWindowExit} from './tab-interactions';
 import type {Side} from './panel-dock';
 import {followInstructionClicks} from './instruction-click';
 import {installPanelDock} from './panel-dock';
@@ -642,7 +642,8 @@ panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const 
 for(const side of ['project','output'] as const){const container=document.createElement('div');container.className='group-editor';container.hidden=true;panelDock.panes[side].append(container);const view=monaco.editor.create(container,{...editor.getRawOptions(),model:null,automaticLayout:true,ariaLabel:side+' グループの JAL ソースコード'});groupEditors.set(side,view);bindGroupEditor(view,side);}
 bindGroupEditor(groupEditors.get('source')!,'source');
 for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));
-groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,key=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}}));
+const detachPane=(key:string)=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}};
+groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,detachPane),paneWindowExit(window.jalwebDetached!.workspaceId,detachPane));
 function selectTab(tab:'project'|'console'|'problems'|'instructions'|'graph'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
 groupResources.push(installConsoleContextMenu(el('console-panel'),el('output'),()=>el('clear').click()),installProblemsContextMenu(el('problems-panel')));
 el('clear').onclick=()=>{workspaceState.updateTools({output:[]});el('output').textContent='';el('console-empty').hidden=false;};
