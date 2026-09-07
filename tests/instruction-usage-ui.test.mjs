@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import {chromium} from '@playwright/test';
 test('all dictionary examples compile with frames, and usage hovers share the compiler',{timeout:240000},async t=>{
  const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5218','--strictPort'],{stdio:'pipe',windowsHide:true});t.after(()=>server.kill());const base='http://127.0.0.1:5218';for(let i=0;i<100;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
- const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1400,height:1000}});page.setDefaultTimeout(60000);await page.goto(base);
+ const browser=await chromium.launch({channel:'msedge',headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1400,height:1000}});page.setDefaultTimeout(60000);if(process.env.JALWEB_DEVICE_MEMORY)await page.addInitScript(value=>Object.defineProperty(navigator,'deviceMemory',{value}),Number(process.env.JALWEB_DEVICE_MEMORY));await page.goto(base);
  await page.waitForFunction(()=>!!window.jalwebDetached);
  const failures=await page.evaluate(async()=>{
   const {instructionList}=await import('/src/instruction-guide.ts');const {instructionUsage}=await import('/src/instruction-usage.ts');const failures=[];

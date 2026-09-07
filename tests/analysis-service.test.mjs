@@ -44,3 +44,19 @@ test('queued obsolete revisions are skipped without changing results for active 
  const latest=service.compile(doc,'latest');worker.calls[0].resolve({});await active;await Promise.all(skipped);await tick();
  assert.deepEqual(worker.calls.map(c=>c.source),['blocker','latest']);worker.calls[1].resolve({className:'Latest'});assert.equal((await latest).className,'Latest');service.dispose();
 });
+
+test('compilation and disassembly share one queue, including recovery after failures',async()=>{
+ const worker=backend();worker.disassemble=bytecode=>worker.compile('class:'+bytecode);const service=new CompilationService(worker);
+ const first=service.compile({},'source'),second=service.disassemble('bytes');await tick();assert.deepEqual(worker.calls.map(c=>c.source),['source']);
+ worker.calls[0].resolve({});await first;await tick();assert.equal(worker.calls[1].source,'class:bytes');
+ const failed=assert.rejects(second,/bad class/);worker.calls[1].reject(new Error('bad class'));await failed;
+ const next=service.compile({},'after');await tick();worker.calls[2].resolve({className:'After'});assert.equal((await next).className,'After');service.dispose();
+});
+test('background idle release preserves cache, never stops pending work, and resumes on demand',async()=>{
+ const wait=()=>new Promise(r=>setTimeout(r,35)),worker=backend(),service=new CompilationService(worker,15),doc={};
+ const first=service.compile(doc,'one');await tick();service.setBackground(true);await wait();assert.equal(worker.stopped,0);
+ worker.calls[0].resolve({className:'One'});await first;await wait();assert.equal(worker.stopped,1);
+ assert.equal(service.compile(doc,'one'),first);assert.equal(worker.calls.length,1);
+ service.setBackground(false);const next=service.compile({},'two');await tick();worker.calls[1].resolve({});await next;await wait();assert.equal(worker.stopped,1);
+ service.setBackground(true);service.setBackground(false);await wait();assert.equal(worker.stopped,1);service.dispose();
+});

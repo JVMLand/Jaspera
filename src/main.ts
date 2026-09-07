@@ -1,3 +1,5 @@
+import {memoryPolicy} from './memory-policy';
+import {usageCompiler} from './usage-compilation';
 import {installInstructionGraph} from './instruction-graph';
 import type {GraphDocument} from './protocol';
 import {planPathChange} from './project-paths';
@@ -77,7 +79,7 @@ const workspaceState=new WorkspaceStateStore();
 const unsubscribeTheme=onThemeChange(theme=>workspaceState.update({theme}));
 interface ClassPreview {example?:boolean;key:string;title:string;model:monaco.editor.ITextModel;folderPath?:string;mtime:number;size:number}
 const classPreviews=new Map<string,ClassPreview>();let activePreview:string|undefined,previewEpoch=0,dropSequence=0;
-const disassembler=new Runtime();let classQueue=Promise.resolve();
+let classQueue=Promise.resolve();
 let folder:FolderBinding|undefined,storageBusy=false,changeVersion=0,watchBusy=false,applyingExternal=false;
 let dirty=false, revision=0, checkedRevision=-1, running=false, runToken=0, disposed=false;
 let models=new Map<string,monaco.editor.ITextModel>();
@@ -92,10 +94,12 @@ const sourceAnalysis=new SourceAnalysis(model=>{
 const scheduleOffsets=(model:monaco.editor.ITextModel)=>sourceAnalysis.schedule(model);
 let analysisPromise:Promise<void>|undefined;
 let analysisTimer:ReturnType<typeof setTimeout>;
-const compiler=new Runtime();
-const compilationService=new CompilationService(compiler);
-const usageDocuments=new Map<string,object>();
-const compileUsage=(source:string)=>{let document=usageDocuments.get(source);if(!document){document={};usageDocuments.set(source,document);}return compilationService.compile(document,source);};
+const memory=memoryPolicy((navigator as Navigator & {deviceMemory?:number}).deviceMemory);
+const compiler=new Runtime(memory.analysisHeapMiB);
+const compilationService=new CompilationService(compiler,memory.backgroundIdleMs);
+const visibilityChanged=()=>compilationService.setBackground(document.visibilityState==='hidden');
+document.addEventListener('visibilitychange',visibilityChanged);visibilityChanged();
+const compileUsage=usageCompiler(compilationService,memory.usageCacheEntries);
 const compileModel=(model:monaco.editor.ITextModel)=>compilationService.compile(model,model.getValue());
 function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){
  const previous=workspaceState.value.graphDocument,uri=model.uri.toString(),version=model.getVersionId();
@@ -140,7 +144,7 @@ const navigation=createNavigation({
  },
  async disassemble(bytes){
   let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
-  const work=classQueue.then(()=>disassembler.disassemble(btoa(binary)));classQueue=work.then(()=>{},()=>{});return work;
+  const work=classQueue.then(()=>compilationService.disassemble(btoa(binary)));classQueue=work.then(()=>{},()=>{});return work;
  }
 });
 const definitionUI=installDefinitionUI((model,offset)=>navigation.resolve(model,offset),openDefinition);
@@ -269,7 +273,7 @@ function invalidate() {revision++;checkedRevision=-1;updateActions();clearTimeou
 async function installProject(next:Project,binding?:FolderBinding) {
  restoringLayout=true;detached.closeAll();panelDock?.restore();navigation.reset();tabOrder=[];collapsedFolders.clear();sourceGroups.clear();for(const view of groupEditors.values())view.setModel(null);activeSide='source';editor=groupEditors.get('source')!;
 
-  previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();classPreviews.clear();activePreview=undefined;
+  previewEpoch++;for(const p of classPreviews.values())p.model.dispose();classPreviews.clear();activePreview=undefined;
   folder=binding;
   stopRun(false);clearTimeout(analysisTimer);revision++;checkedRevision=-1;
   editor.setModel(null);for(const model of models.values())model.dispose();models=new Map();
@@ -461,7 +465,7 @@ function queueClass(getFile:()=>Promise<File>,key:string,title:string,select=tru
    const bytes=new Uint8Array(await file.arrayBuffer());
    if(bytes.length<10||bytes[0]!==0xca||bytes[1]!==0xfe||bytes[2]!==0xba||bytes[3]!==0xbe)throw new Error('有効な Java class ファイルではありません。');
    let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
-   if(!silent)status(title+' を逆アセンブル中…','loading');const result=await disassembler.disassemble(btoa(binary));
+   if(!silent)status(title+' を逆アセンブル中…','loading');const result=await compilationService.disassemble(btoa(binary));
    if(epoch!==previewEpoch||old&&classPreviews.get(key)!==old||folderPath&&!folder?.classFiles?.some(f=>f.path===folderPath))return;
    if(typeof result.source!=='string'||new TextEncoder().encode(result.source).length>1024*1024)throw new Error('逆アセンブル結果が大きすぎます。');
    const model=old?.model??monaco.editor.createModel(result.source,'jal',monaco.Uri.from({scheme:'inmemory',authority:'class-preview',path:'/'+(++dropSequence)+'.jal'}));
@@ -699,7 +703,7 @@ async function run(requestedModel?:monaco.editor.ITextModel) {
     }
     if(token!==runToken)return;
     if(!entry?.bytecode)throw new Error(entry?.diagnostics.map(d=>d.message).join('\n')||'実行対象をコンパイルできませんでした。');
-    owned=new Runtime();runner=owned;owned.onOutput=(stream,text)=>{if(token===runToken)output(text,stream);};owned.onProgress=loaded=>{if(token===runToken)status(`実行用 JVM を準備中… ${(loaded/1024/1024).toFixed(1)} MB`,'loading');};
+    owned=new Runtime(memory.executionHeapMiB);runner=owned;owned.onOutput=(stream,text)=>{if(token===runToken)output(text,stream);};owned.onProgress=loaded=>{if(token===runToken)status(`実行用 JVM を準備中… ${(loaded/1024/1024).toFixed(1)} MB`,'loading');};
     await owned.run({...entry,classes:classes.map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin);
     if(token===runToken){status('実行が完了しました');el('timing').textContent=`${((performance.now()-started)/1000).toFixed(2)} s`;}
   }catch(e){if(token===runToken){output(`${e instanceof Error?e.message:String(e)}\n`,'stderr');status('実行に失敗しました','error');}}
@@ -709,5 +713,5 @@ el('run').onclick=()=>void run();
 editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
 window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);
