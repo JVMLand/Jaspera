@@ -18,7 +18,7 @@ export function currentInspections(model:monaco.editor.ITextModel){
 }
 monaco.languages.registerCodeActionProvider('jal',{
  provideCodeActions(model,selection){
-  if(model.uri.authority!=='jal')return {actions:[],dispose(){}};
+  if(!['jal','example'].includes(model.uri.authority))return {actions:[],dispose(){}};
   const actions:monaco.languages.CodeAction[]=currentInspections(model).filter(i=>i.edits&&i.title&&monaco.Range.areIntersectingOrTouching(range(model,i.start,i.end),selection)).map(i=>({
    title:i.title!,kind:'quickfix',isPreferred:true,
    diagnostics:monaco.editor.getModelMarkers({owner:'jal-inspections',resource:model.uri}).filter(m=>m.code===i.code&&m.startLineNumber===model.getPositionAt(i.start).lineNumber&&m.startColumn===model.getPositionAt(i.start).column),

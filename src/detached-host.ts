@@ -20,7 +20,7 @@ export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;inst
  tabs:(id:string)=>EditorSnapshot[];openTab:(group:string,key:string)=>EditorSnapshot|undefined;closeTab:(group:string,id:string)=>void;
  edit:(id:string,version:number,source:string)=>EditorSnapshot|undefined;undo:(id:string,redo:boolean)=>void;
  definitions:(id:string,offset:number)=>Promise<DefinitionDocument[]>;openDefinition:(group:string,uri:string,range?:monaco.IRange|monaco.IPosition)=>Promise<boolean>;
- save:()=>void;run:()=>void;stop:()=>void;check:()=>void;theme:(id:string)=>void;
+ save:()=>void;run:(id?:string)=>void;stop:()=>void;check:(id?:string)=>void;theme:(id:string)=>void;
  classFile:(id:string)=>Promise<{name:string;bytecode:string}|undefined>;release:(id:string)=>void;
 }
 declare global {interface Window {jalwebDetached?:DetachedBridge}}
@@ -45,9 +45,9 @@ interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:strin
  subscribe:(listener:()=>void)=>()=>void;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
  resolve:(model:monaco.editor.ITextModel,offset:number)=>Promise<DefinitionDocument[]>;
- stop:()=>void;check:()=>void;theme:(id:string)=>void;classFile:(model:monaco.editor.ITextModel)=>Promise<{name:string;bytecode:string}|undefined>;
+ stop:()=>void;check:(model?:monaco.editor.ITextModel)=>void;theme:(id:string)=>void;classFile:(model:monaco.editor.ITextModel)=>Promise<{name:string;bytecode:string}|undefined>;
 }
-export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:()=>void,options:Options){
+export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:(model?:monaco.editor.ITextModel)=>void,options:Options){
  const entries=new Map<string,Entry>(),groups=new Map<string,Group>();
  const snapshot=(e:Entry):EditorSnapshot=>({view:e.view,key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:options.state().theme,diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
  const broadcast=(e:Entry)=>{if(!e.model.isDisposed())try{groups.get(e.group)?.client?.update(snapshot(e));}catch{}};
@@ -85,7 +85,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   undo(id,redo){const e=entries.get(id);if(e&&!e.readOnly&&!e.model.isDisposed()){e.model.pushStackElement();const history=e.model as UndoableModel;if(redo)void history.redo();else void history.undo();}},
   definitions(id,offset){const e=entries.get(id);return e?options.resolve(e.model,offset):Promise.resolve([]);},
   async openDefinition(group,uri,range){const state=openTab(group,uri);if(!state)return false;groups.get(group)?.client?.reveal?.(range,state.id);return true;},
-  save(){if(options.state().canSave)save();},run,stop:options.stop,check:options.check,theme:options.theme,
+  save(){if(options.state().canSave)save();},run(id){run(id?entries.get(id)?.model:undefined);},stop:options.stop,check(id){options.check(id?entries.get(id)?.model:undefined);},theme:options.theme,
   classFile:async id=>{const e=entries.get(id);return e&&!e.readOnly?options.classFile(e.model):undefined;},release
  };
  let pending:WindowLayout[]=[];

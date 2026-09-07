@@ -1,3 +1,4 @@
+import {examples,exampleSource,rememberExample,withoutExampleLayout} from './example-library';
 import {inlayHintOptions} from './inlay-hint-style';
 import {installConsoleContextMenu} from './console-panel';
 import {installProblemsContextMenu} from './problems-panel';
@@ -70,7 +71,7 @@ const el = <T extends HTMLElement = HTMLElement>(id:string) => document.getEleme
 let project=defaultProject();
 const workspaceState=new WorkspaceStateStore();
 const unsubscribeTheme=onThemeChange(theme=>workspaceState.update({theme}));
-interface ClassPreview {key:string;title:string;model:monaco.editor.ITextModel;folderPath?:string;mtime:number;size:number}
+interface ClassPreview {example?:boolean;key:string;title:string;model:monaco.editor.ITextModel;folderPath?:string;mtime:number;size:number}
 const classPreviews=new Map<string,ClassPreview>();let activePreview:string|undefined,previewEpoch=0,dropSequence=0;
 const disassembler=new Runtime();let classQueue=Promise.resolve();
 let folder:FolderBinding|undefined,storageBusy=false,changeVersion=0,watchBusy=false,applyingExternal=false;
@@ -83,7 +84,7 @@ let problemTargets:{path:string;line:number;column:number}[]=[];
 const sourceAnalysis=new SourceAnalysis(model=>{
  if([...models.values()].includes(model))showDiagnostics();
  for(const view of groupEditors.values())if(view.getModel()===model)refreshOffsets(view);
-},model=>[...models.values()].includes(model));
+},model=>[...models.values()].includes(model)||model.uri.authority==='example');
 const scheduleOffsets=(model:monaco.editor.ITextModel)=>sourceAnalysis.schedule(model);
 let analysisPromise:Promise<void>|undefined;
 let analysisTimer:ReturnType<typeof setTimeout>;
@@ -108,13 +109,13 @@ const syncOverlayTheme=()=>{editorOverlays.className=editor.getDomNode()!.classN
 const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeObserver.observe(editor.getDomNode()!,{attributes:true,attributeFilter:['class']});syncOverlayTheme();
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
-if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),()=>void run(),{
+if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
  compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:setStdin,clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
- stop:()=>stopRun(),check:()=>{clearTimeout(analysisTimer);void analyze();},theme:id=>applyTheme(id),
- async classFile(model){await analyze();const path=[...models].find(([,m])=>m===model)?.[0],c=path?results.get(path):undefined;if(checkedRevision===revision&&c?.bytecode)return {name:c.className.split('/').pop()+'.class',bytecode:c.bytecode};}
+ stop:()=>stopRun(),check:model=>void checkDocument(model),theme:id=>applyTheme(id),
+ async classFile(model){if(model.uri.authority==='example'){const c=await compileExample(model);return c.bytecode?{name:c.className.split('/').pop()+'.class',bytecode:c.bytecode}:undefined;}await analyze();const path=[...models].find(([,m])=>m===model)?.[0],c=path?results.get(path):undefined;if(checkedRevision===revision&&c?.bytecode)return {name:c.className.split('/').pop()+'.class',bytecode:c.bytecode};}
 });
 
 const navigation=createNavigation({
@@ -129,12 +130,31 @@ const navigation=createNavigation({
  }
 });
 const definitionUI=installDefinitionUI((model,offset)=>navigation.resolve(model,offset),openDefinition);
+function previewTitle(p:ClassPreview){return p.example?p.title:p.title+' (JAL)';}
+function ensureExample(path:string){
+ const key='example:'+path;if(classPreviews.has(key))return classPreviews.get(key);
+ const source=exampleSource(path);if(source===undefined)return;
+ const model=monaco.editor.createModel(source,'jal',monaco.Uri.from({scheme:'inmemory',authority:'example',path:'/'+path}));
+ const preview:ClassPreview={key,title:path,model,example:true,mtime:0,size:0};classPreviews.set(key,preview);
+ model.onDidChangeContent(()=>{rememberExample(path,model.getValue());scheduleOffsets(model);monaco.editor.setModelMarkers(model,'jal',[]);});scheduleOffsets(model);return preview;
+}
+async function checkDocument(model:monaco.editor.ITextModel|null=editor.getModel()){
+ if(model?.uri.authority!=='example'){clearTimeout(analysisTimer);await analyze();return;}
+ try{const result=await compileExample(model);status(result.diagnostics.some(d=>d.severity==='error')?'コンパイルエラー':'実行できます',result.diagnostics.some(d=>d.severity==='error')?'error':'ready');}catch(error){status(String(error),'error');}
+}
+async function compileExample(model:monaco.editor.ITextModel){
+ const version=model.getVersionId(),result=await compileModel(model);
+ if(!model.isDisposed()&&model.getVersionId()===version)monaco.editor.setModelMarkers(model,'jal',result.diagnostics.map(d=>{
+  const p=model.validatePosition({lineNumber:d.line,column:d.column});return {severity:d.severity==='error'?monaco.MarkerSeverity.Error:monaco.MarkerSeverity.Warning,message:d.message,startLineNumber:p.lineNumber,startColumn:p.column,endLineNumber:p.lineNumber,endColumn:Math.min(model.getLineMaxColumn(p.lineNumber),p.column+Math.max(1,d.length)),source:'JAL'};
+ }));return result;
+}
 function detachableDocument(keyOrUri:string){
+ if(keyOrUri.startsWith('preview:example:'))ensureExample(keyOrUri.slice('preview:example:'.length));
  const source=[...models].find(([path,m])=>'source:'+path===keyOrUri||m.uri.toString()===keyOrUri);
  if(source)return {key:'source:'+source[0],title:source[0],model:source[1],readOnly:false};
  let preview=[...classPreviews.values()].find(p=>'preview:'+p.key===keyOrUri||p.model.uri.toString()===keyOrUri);
  if(!preview){const model=monaco.editor.getModels().find(m=>m.uri.toString()===keyOrUri&&m.uri.authority==='definition');if(!model||model.isDisposed())return;const name=model.uri.path.slice(1).replace(/\.jal$/,'.class');preview={key:'definition:'+name,title:name,model,mtime:0,size:0};classPreviews.set(preview.key,preview);scheduleOffsets(model);}
- return {key:'preview:'+preview.key,title:preview.title+' (JAL)',model:preview.model,readOnly:true};
+ return {key:'preview:'+preview.key,title:previewTitle(preview),model:preview.model,readOnly:!preview.example};
 }
 async function openDefinition(uri:string,selection?:monaco.IRange|monaco.IPosition){
  const model=monaco.editor.getModel(monaco.Uri.parse(uri));if(!model||model.isDisposed())return false;
@@ -163,7 +183,7 @@ const menus=installMenus(el('menus'),[
     {id:'save-project',label:'保存',shortcut:'Ctrl+S',action:()=>void saveProject()},
     {id:'save-project-as',label:'別の場所に保存…',action:()=>void saveProject(true)},
     {id:'export-project',label:'ZIP に書き出す…',action:()=>void exportProject()},
-    {id:'save-class-source',label:'JAL に書き出す…',action:()=>{const p=activePreview?classPreviews.get(activePreview):undefined;if(p)download(new Blob([p.model.getValue()],{type:'text/plain;charset=utf-8'}),p.title.replace(/\.class$/i,'.jal'));}},
+    {id:'save-class-source',label:'JAL に書き出す…',action:()=>{const p=activePreview?classPreviews.get(activePreview):undefined;if(p)download(new Blob([p.model.getValue()],{type:'text/plain;charset=utf-8'}),p.title.replace(/\.class$/i,'.jal').split('/').pop()!);}},
     null,
     {id:'close-tab',label:'ファイルを閉じる',action:()=>{const tab=visibleTabs().find(t=>t.active);if(tab)closeEditorTabs(tab.key);}},
     {id:'rename-file',label:'名前を変更…',action:()=>void renameFile()},
@@ -174,7 +194,7 @@ const menus=installMenus(el('menus'),[
   {label:'Edit',items:editMenuItems(editAction)},
   {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
   {label:'Build',items:[
-    {id:'check-project',label:'検査',action:()=>{clearTimeout(analysisTimer);void analyze();}},
+    {id:'check-project',label:'検査',action:()=>void checkDocument()},
     {id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:()=>void run()},
     {id:'download',label:'class に書き出す…',action:downloadClass}
   ]},
@@ -198,7 +218,7 @@ function updateActions() {
   runButton.title=(running?'停止':'実行')+'（Ctrl+Enter / F5）';
   runButton.setAttribute('aria-label',running?'停止':'実行');
   menus.label('menu-run',running?'停止':'実行');
-  menus.disabled('download',!!activePreview||!editor.getModel()||checkedRevision!==revision || !results.get(project.workspace.activeFile)?.bytecode);
+  menus.disabled('download',editor.getModel()?.uri.authority!=='example'&&(!!activePreview||!editor.getModel()||checkedRevision!==revision || !results.get(project.workspace.activeFile)?.bytecode));
   menus.disabled('remove-file',!!activePreview||!editor.getModel()||project.files.length<=1);
 }
 function editAction(id:string) {editor.focus();editor.trigger('menu',id,undefined);}
@@ -220,9 +240,9 @@ function switchFile(path:string,saveView=true) {
 }
 const collapsedFolders=new Set<string>();
 function renderFiles() {
-  workspaceState.update({files:[...project.files.map(f=>({key:'source:'+f.path,title:f.path})),...[...classPreviews.values()].map(p=>({key:'preview:'+p.key,title:p.title+' (JAL)'}))]});
+  workspaceState.update({files:[...project.files.map(f=>({key:'source:'+f.path,title:f.path})),...examples.map(f=>({key:'preview:example:'+f.path,title:f.path})),...[...classPreviews.values()].filter(p=>!p.example).map(p=>({key:'preview:'+p.key,title:previewTitle(p)}))]});
   const list=el('file-list');list.replaceChildren();document.querySelectorAll('.workspace .editor-tab').forEach(n=>n.remove());
-  renderProjectTree(list,[...project.files.map(f=>({path:f.path,key:'source:'+f.path,active:!!editor.getModel()&&!activePreview&&f.path===project.workspace.activeFile,open:()=>switchFile(f.path)})),...(folder?.classFiles??[]).map(f=>({path:f.path,key:'',active:activePreview==='folder:'+f.path,open:()=>queueClass(()=>f.handle.getFile(),'folder:'+f.path,f.path,true,f.path)}))],window.jalwebDetached!.workspaceId,collapsedFolders);
+  renderProjectTree(list,[...examples.map(f=>({path:f.path,key:'preview:example:'+f.path,active:activePreview==='example:'+f.path,open:()=>{ensureExample(f.path);selectClassPreview('example:'+f.path);}})),...project.files.map(f=>({path:f.path,key:'source:'+f.path,active:!!editor.getModel()&&!activePreview&&f.path===project.workspace.activeFile,open:()=>switchFile(f.path)})),...(folder?.classFiles??[]).map(f=>({path:f.path,key:'',active:activePreview==='folder:'+f.path,open:()=>queueClass(()=>f.handle.getFile(),'folder:'+f.path,f.path,true,f.path)}))],window.jalwebDetached!.workspaceId,collapsedFolders);
   for(const tab of visibleTabs())renderEditorTab(tab);
   panelDock?.refresh();
 }
@@ -272,7 +292,7 @@ function restoreWorkspace(layout:WorkspaceLayout){
  renderFiles();updateActions();
 }
 function snapshot():Project {
-  const layout=captureWorkspace();return {...project,files:project.files.map(f=>({path:f.path,source:models.get(f.path)!.getValue()})),workspace:{...project.workspace,layout}};
+  const layout=withoutExampleLayout(captureWorkspace());return {...project,files:project.files.map(f=>({path:f.path,source:models.get(f.path)!.getValue()})),workspace:{...project.workspace,layout}};
 }
 function download(blob:Blob,name:string) {const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function storageState(busy:boolean){storageBusy=busy;publishWorkspaceAvailability();if(busy)status('ファイルを処理中…','loading');for(const id of ['new-project','open-project','open-files','save-project','save-project-as','export-project'])menus.disabled(id,busy);}
@@ -348,13 +368,13 @@ const folderWatch=setInterval(()=>void pollFolder(),1000);
 function selectClassPreview(key:string){
  if(detached.has('preview:'+key)){detached.focus('preview:'+key);return;}
 
- captureView();activeSide=sourceGroups.get('preview:'+key)??'source';editor=groupEditors.get(activeSide)!;panelDock?.showSource(activeSide);const preview=classPreviews.get(key);if(!preview)return;activePreview=key;editor.setModel(preview.model);editor.updateOptions({readOnly:true});renderFiles();updateActions();
+ captureView();activeSide=sourceGroups.get('preview:'+key)??'source';editor=groupEditors.get(activeSide)!;panelDock?.showSource(activeSide);const preview=classPreviews.get(key);if(!preview)return;activePreview=key;editor.setModel(preview.model);editor.updateOptions({readOnly:!preview.example});renderFiles();updateActions();
 }
 interface EditorTab {key:string;label:string;active:boolean;sourcePath?:string;previewKey?:string}
 function visibleTabs():EditorTab[]{
  const tabs:EditorTab[]=[
   ...project.files.filter(f=>!closedSourceTabs.has(f.path)).map(f=>({key:'source:'+f.path,label:f.path,sourcePath:f.path,active:!activePreview&&editor.getModel()===models.get(f.path)})),
-  ...[...classPreviews.values()].map(p=>({key:'preview:'+p.key,label:p.title+' (JAL)',previewKey:p.key,active:activePreview===p.key}))
+  ...[...classPreviews.values()].map(p=>({key:'preview:'+p.key,label:previewTitle(p),previewKey:p.key,active:activePreview===p.key}))
  ];
  for(const tab of tabs)if(!tabOrder.includes(tab.key))tabOrder.push(tab.key);
  return tabs.filter(t=>!detached.has(t.key)).sort((a,b)=>tabOrder.indexOf(a.key)-tabOrder.indexOf(b.key));
@@ -382,7 +402,7 @@ function renderEditorTab(item:EditorTab){
 function detachEditorTab(item:EditorTab){
  const model=item.sourcePath!==undefined?models.get(item.sourcePath):classPreviews.get(item.previewKey!)?.model;
  if(!model||model.isDisposed())return;
- if(!detached.open(item.key,item.label,model,item.previewKey!==undefined)){
+ if(!detached.open(item.key,item.label,model,item.previewKey!==undefined&&!classPreviews.get(item.previewKey)?.example)){
   status('小窓がブロックされました。「小窓で開く」をクリックしてください。','error');
   document.getElementById('detach-retry')?.remove();const retry=document.createElement('button');retry.id='detach-retry';retry.textContent='小窓で開く';retry.onclick=()=>{retry.remove();detachEditorTab(item);};document.querySelector('.source-header')!.append(retry);return;
  }
@@ -485,8 +505,9 @@ async function openFiles(files:File[]):Promise<string[]>{
 window.addEventListener('dragover',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';}});
 window.addEventListener('drop',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();void openFiles([...e.dataTransfer.files]);}});
 
-function downloadClass() {
-  const c=results.get(project.workspace.activeFile);if(checkedRevision!==revision || !c?.bytecode)return;
+async function downloadClass() {
+  const model=editor.getModel(),example=model?.uri.authority==='example';
+  const c=example?await compileExample(model!):results.get(project.workspace.activeFile);if((!example&&checkedRevision!==revision) || !c?.bytecode)return;
   download(new Blob([Uint8Array.from(atob(c.bytecode),x=>x.charCodeAt(0))],{type:'application/java-vm'}),c.className.split('/').pop()+'.class');
 }
 function dialog(title:string,message:string,input?:string,confirm=false,confirmLabel='変更を破棄して続ける'):Promise<string|null> {
@@ -617,16 +638,22 @@ editor.onDidChangeCursorPosition(({position})=>{
   el('instruction-hint').textContent='命令ホバーでスタックの変化を表示';
 });
 function stopRun(show=true) {runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
-async function run() {
+async function run(requestedModel?:monaco.editor.ITextModel) {
+  const model=requestedModel??editor.getModel(),example=model?.uri.authority==='example';
   if(running){stopRun();return;}running=true;const token=++runToken;updateActions();let owned:Runtime|undefined;const started=performance.now();
   el('clear').click();el('console-empty').hidden=true;selectTab('console');status('コンパイル中…','loading');
   try {
-    clearTimeout(analysisTimer);await analyze();if(token!==runToken)return;
-    if(checkedRevision!==revision)throw new Error('コンパイルを完了できませんでした。再度 Run を押してください。');
-    if(hasErrors()){selectTab('problems');status('コンパイルエラー','error');return;}
-    const entry=results.get(project.workspace.entryFile);if(!entry?.bytecode)throw new Error('実行対象をコンパイルできませんでした。');
+    let entry:Compilation|undefined,classes:Compilation[];
+    if(example){entry=await compileExample(model!);classes=entry.bytecode?[entry]:[];}
+    else{clearTimeout(analysisTimer);await analyze();if(token!==runToken)return;
+      if(checkedRevision!==revision)throw new Error('コンパイルを完了できませんでした。再度 Run を押してください。');
+      if(hasErrors()){selectTab('problems');status('コンパイルエラー','error');return;}
+      entry=results.get(project.workspace.entryFile);classes=[...results.values()];
+    }
+    if(token!==runToken)return;
+    if(!entry?.bytecode)throw new Error(entry?.diagnostics.map(d=>d.message).join('\n')||'実行対象をコンパイルできませんでした。');
     owned=new Runtime();runner=owned;owned.onOutput=(stream,text)=>{if(token===runToken)output(text,stream);};owned.onProgress=loaded=>{if(token===runToken)status(`実行用 JVM を準備中… ${(loaded/1024/1024).toFixed(1)} MB`,'loading');};
-    await owned.run({...entry,classes:[...results.values()].map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin);
+    await owned.run({...entry,classes:classes.map(c=>({className:c.className,bytecode:c.bytecode}))},project.workspace.stdin);
     if(token===runToken){status('実行が完了しました');el('timing').textContent=`${((performance.now()-started)/1000).toFixed(2)} s`;}
   }catch(e){if(token===runToken){output(`${e instanceof Error?e.message:String(e)}\n`,'stderr');status('実行に失敗しました','error');}}
   finally {owned?.stop();if(token===runToken){runner=undefined;running=false;updateActions();}}
