@@ -1,9 +1,10 @@
+import {readWorkspaceLayout,type WorkspaceLayout} from './workspace-layout';
 import { hello } from './examples';
 export interface FileView { line:number; column:number; scrollTop:number; scrollLeft:number }
 export interface Project {
   name:string;
   files:{path:string;source:string}[];
-  workspace:{activeFile:string;entryFile:string;stdin:string;panel:'project'|'console'|'problems'|'instructions';wordWrap:boolean;views:Record<string,FileView>};
+  workspace:{layout?:WorkspaceLayout;activeFile:string;entryFile:string;stdin:string;panel:'project'|'console'|'problems'|'instructions';wordWrap:boolean;views:Record<string,FileView>};
 }
 const bytes=(s:string)=>new TextEncoder().encode(s).length;
 function requireValue(value:unknown,message:string):asserts value { if(!value)throw new Error(message); }
@@ -39,6 +40,6 @@ export function validateProject(project:Project):Project {
     requireValue((['line','column','scrollTop','scrollLeft'] as const).every(k=>Number.isSafeInteger(v[k]) && v[k]>=(k==='line'||k==='column'?1:0)),'カーソル位置が不正です。');
     views[f.path]={line:v.line,column:v.column,scrollTop:v.scrollTop,scrollLeft:v.scrollLeft};
   }
-  return {name:data.name.trim(),files,workspace:{activeFile,entryFile,stdin,panel,wordWrap,views}};
+  return {name:data.name.trim(),files,workspace:{activeFile,entryFile,stdin,panel,wordWrap,views,...(w.layout?{layout:readWorkspaceLayout(w.layout)}:{})}};
 }
 export function defaultProject():Project { return {name:'Main',files:[{path:'src/Main.jal',source:hello}],workspace:{activeFile:'src/Main.jal',entryFile:'src/Main.jal',stdin:'',panel:'console',wordWrap:false,views:{}}}; }

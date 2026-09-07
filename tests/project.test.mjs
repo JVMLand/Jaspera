@@ -62,3 +62,14 @@ test('plain folders and timestamp polling share loading, including empty folders
  state.project.files[0].source+='// browser';await saveFolder(state.binding,state.project);assert.equal(root.children.has('project.jalprj'),false);
  await root.removeEntry('Main.jal');state=await openFolder(root,false,state.binding);assert.equal(state.project.files.length,0);
 });
+
+const layout={version:1,tabs:[{key:'source:src/Main.jal',side:'output'}],selected:{output:'source:src/Main.jal'},activeSide:'output',collapsedFolders:['src'],dock:{order:{project:['project'],source:['instructions'],output:['console','problems']},selected:{project:'project',source:'instructions',output:null},closed:['problems'],sizes:[.2,.3,.5],swapped:true},windows:[{tabs:[],panels:['problems'],active:'panel:problems',views:{},left:80,top:120,width:720,height:560,wordWrap:false}],views:{'src/Main.jal':{line:4,column:8,scrollTop:27,scrollLeft:0}},wordWrap:true};
+test('editor metadata roundtrips through folder and ZIP without embedding source',async()=>{
+ const p=defaultProject();p.workspace.layout=layout;const root=new Directory();await saveFolder(newBinding(root),p);const loaded=await openFolder(root);assert.deepEqual(JSON.parse(JSON.stringify(loaded.project.workspace.layout)),layout);assert.equal(loaded.project.workspace.wordWrap,true);assert.equal(loaded.project.workspace.views['src/Main.jal'].line,4);
+ const config=JSON.parse(strFromU8(unzipSync(await projectArchive(p))['project.jalprj']));assert.deepEqual(config.editor,layout);assert.equal(JSON.stringify(config).includes('Hello, World!'),false);
+});
+test('malformed layout is isolated, duplicate tabs and windows are sanitized',()=>{
+ const p=defaultProject(),props=JSON.parse(serializeProperties(p));assert.equal(parseProperties(JSON.stringify({...props,editor:{version:99}})).editor,undefined);
+ const bad=structuredClone(layout);bad.tabs.push(...bad.tabs);bad.windows.push(...bad.windows);bad.dock.sizes=[0,-1,'huge'];bad.views['src/Main.jal'].line=-1;bad.windows[0].width=-900;
+ const result=parseProperties(JSON.stringify({...props,editor:bad})).editor;assert.equal(result.tabs.length,1);assert.equal(result.windows.length,1);assert.equal(result.views['src/Main.jal'].line,1);assert.equal(result.windows[0].width,320);assert.ok(result.dock.sizes.every(n=>n>0));
+});

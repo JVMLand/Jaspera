@@ -1,6 +1,7 @@
+import {readWorkspaceLayout,type WorkspaceLayout} from './workspace-layout';
 import { validateProject, validatePath, type Project } from './project';
 export const CONFIG_NAME='project.jalprj';
-export interface Properties {format:'jalprj';version:1;name:string;entryFile:string}
+export interface Properties {format:'jalprj';version:1;name:string;entryFile:string;editor?:WorkspaceLayout}
 export interface FileHandle {kind:'file';name:string;getFile():Promise<File>;createWritable():Promise<{write(data:string):Promise<void>;close():Promise<void>;abort():Promise<void>}>}
 export interface DirectoryHandle {kind:'directory';name:string;entries():AsyncIterableIterator<[string,FileHandle|DirectoryHandle]>;getFileHandle(name:string,options?:{create?:boolean}):Promise<FileHandle>;getDirectoryHandle(name:string,options?:{create?:boolean}):Promise<DirectoryHandle>;removeEntry(name:string):Promise<void>;queryPermission?(options:{mode:'readwrite'}):Promise<string>;requestPermission?(options:{mode:'readwrite'}):Promise<string>}
 export interface ClassFileEntry {path:string;handle:FileHandle;mtime:number;size:number}
@@ -15,11 +16,12 @@ export function parseProperties(text:string):Properties {
  if(typeof p.name!=='string'||!p.name.trim()||p.name.length>128)throw new Error('プロジェクト名は 1〜128 文字にしてください。');
  const entryFile=p.entryFile??'src/Main.jal';if(typeof entryFile!=='string')throw new Error('実行ファイルが不正です。');sourcePath(entryFile);
  if('files' in p||'source' in p)throw new Error('jalprj にはソースを含められません。src/ 以下に .jal ファイルを置いてください。');
- return {format:'jalprj',version:1,name:p.name.trim(),entryFile};
+ const editor=readWorkspaceLayout(p.editor);
+ return {format:'jalprj',version:1,name:p.name.trim(),entryFile,...(editor?{editor}:{})};
 }
 export function serializeProperties(project:Project){
  validateProject(project);for(const f of project.files)sourcePath(f.path);
- return JSON.stringify(parseProperties(JSON.stringify({format:'jalprj',version:1,name:project.name,entryFile:project.workspace.entryFile})),null,2)+'\n';
+ return JSON.stringify(parseProperties(JSON.stringify({format:'jalprj',version:1,name:project.name,entryFile:project.workspace.entryFile,...(project.workspace.layout?{editor:project.workspace.layout}:{})})),null,2)+'\n';
 }
 async function readText(handle:FileHandle,max=1024*1024){const file=await handle.getFile();if(file.size>max)throw new Error(`${handle.name}: ファイルが大きすぎます。`);return file.text();}
 async function resolve(root:DirectoryHandle,path:string,create=false){
@@ -61,7 +63,7 @@ export async function openFolder(root:DirectoryHandle,requireProperties=true,pre
  files.sort((a,b)=>a.path.localeCompare(b.path));
  const entry=props?.entryFile??files.find(f=>f.path==='src/Main.jal')?.path??files.find(f=>f.path==='Main.jal')?.path??files[0]?.path??'';
  if(!previous&&props&&!files.some(f=>f.path===entry))throw new Error('実行対象が見つかりません。');
- const project:Project={name:props?.name??root.name,files,workspace:{entryFile:entry,activeFile:files.some(f=>f.path===entry)?entry:files[0]?.path??'',stdin:'',wordWrap:false,panel:'console',views:{}}};
+ const project:Project={name:props?.name??root.name,files,workspace:{entryFile:entry,activeFile:files.some(f=>f.path===entry)?entry:files[0]?.path??'',stdin:'',wordWrap:props?.editor?.wordWrap??false,panel:'console',views:props?.editor?.views??{},layout:props?.editor}};
  // Validate source limits and duplicate paths even when the configured entry was removed externally.
  validateProject({...project,workspace:{...project.workspace,entryFile:project.workspace.activeFile}});
  return {project,binding:{root,configName,baseline,properties:!!props,cache,classFiles}};
