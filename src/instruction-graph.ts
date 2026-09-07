@@ -38,7 +38,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
   method.group.append(ns('rect',{width:w,height:108,rx:8,class:'graph-block'}),ns('rect',{width:w*percent/100,height:108,rx:8,class:'graph-method-progress',role:'progressbar','aria-label':method.name,'aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':percent}),ns('text',{x:12,y:21,class:'graph-method'},method.name),ns('text',{x:12,y:65,class:'graph-method-state'},`${method.phase} · ${percent}%`));
  }
  function reflow(){let top=0;width=420;for(const method of methods){method.group.setAttribute('transform',`translate(0,${top})`);const w=method.layout?.width??Math.max(420,Math.min(1000,method.name.length*7+32));width=Math.max(width,w);top+=(method.layout?.height??108)+24;}height=Math.max(0,top-24);if(autoFit)fitWidth();summary();}
- function addMethod(name:string){const method:MethodView={name,step:0,phase:'待機中',group:ns('g',{class:'graph-method-group'})};methods.push(method);scene.append(method.group);placeholder(method);return method;}
+ function addMethod(name:string){const method:MethodView={name,step:0,phase:'解析の開始待ち',group:ns('g',{class:'graph-method-group'})};methods.push(method);scene.append(method.group);placeholder(method);return method;}
  function render(method:MethodView,placed:Layout){
   const index=methods.indexOf(method),prefix=(id:string)=>id.replace(/^m0:/,'m'+index+':');
   const result={...placed,nodes:placed.nodes.map(n=>({...n,id:prefix(n.id)})),edges:placed.edges.map(e=>({...e,from:prefix(e.from),to:prefix(e.to)}))};
@@ -67,10 +67,15 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  }
  function progress(value:AnalysisProgress){
   const labels={queued:'解析待ち',loading:'JVM を読み込み中',parse:'構文解析',analysis:'型・フロー解析',frames:'フレーム解析',layout:'配置中',complete:'解析完了'};
-  stage=labels[value.phase];if(value.phase==='loading'&&value.total>0)stage+=` ${Math.floor(value.completed/value.total*100)}%`;
+  stage=value.phase==='queued'?(value.waitingFor??'先行する解析の完了待ち'):value.phase==='loading'&&value.total===0?'JVM を準備中':labels[value.phase];
+  if(value.phase==='loading'&&value.total>0)stage+=` ${Math.floor(value.completed/value.total*100)}%`;
+  if(value.method)stage+=` · ${value.method}`;
+  const currentName=value.method?.split('(')[0];
+  const waiting=value.phase==='analysis'?(currentName?`${currentName} の型・フロー解析待ち`:'クラスの型・フロー解析待ち'):value.phase==='frames'?(currentName?`${currentName} のフレーム解析待ち`:'フレーム解析の開始待ち'):stage;
+  for(const pending of methods)if(!pending.graph&&!pending.layout&&pending.name!==value.method){pending.phase=waiting;placeholder(pending);}
   if(value.owner)owner=value.owner;
   const method=methods.find(m=>m.name===value.method);
-  if(method&&!method.layout&&!method.graph){method.phase=labels[value.phase];if(value.phase==='analysis'&&value.finished){method.step=1;method.phase='フレーム解析待ち';}if(value.phase==='frames')method.step=1;placeholder(method);}
+  if(method&&!method.layout&&!method.graph){method.phase=labels[value.phase];if(value.phase==='analysis'&&value.finished){method.step=1;method.phase='クラス全体の型解析の完了待ち';}if(value.phase==='frames')method.step=1;placeholder(method);}
   if(value.graph)acceptGraph(value.graph);summary();
  }
  function relayout(){if(!methods.some(m=>m.graph))return;++layoutTicket;worker.stop();layoutQueue=Promise.resolve();for(const method of methods)if(method.graph){method.layout=undefined;enqueueLayout(method);}reflow();}

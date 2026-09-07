@@ -54,13 +54,15 @@ export class CompilationService {
     const promise=this.enqueue(()=>{
       if(this.cache.get(document)!==entry){const error=new Error('新しい編集内容に置き換えられたため解析を省略しました。');error.name='AbortError';throw error;}
       entry.started=true;
+      entry.progress={phase:'loading',completed:0,total:0};
+      for(const listener of entry.listeners)try{listener(entry.progress);}catch{}
       return this.compiler.compile(source,progress=>{
         if(entry.settled)return;
         entry.progress=progress;if(progress.graph)entry.partials.push(progress);
         for(const listener of entry.listeners)try{listener(progress);}catch{}
       },entry.options);
     });
-    const entry:Entry={source,promise,progress:{phase:"queued",completed:0,total:0},partials:[],listeners:new Set(),settled:false,started:false,options:{...options}};
+    const entry:Entry={source,promise,progress:{phase:"queued",completed:0,total:0,waitingFor:this.pending>1?(cached?.source===source&&cached.started&&!cached.settled?'同じ文書の先行解析の完了待ち':'先行する解析・逆アセンブルの完了待ち'):'解析の開始待ち'},partials:[],listeners:new Set(),settled:false,started:false,options:{...options}};
     this.cache.set(document,entry);this.subscribe(entry,onProgress);
     const finish=()=>{entry.settled=true;entry.listeners.clear();entry.partials=[];entry.progress={phase:"complete",completed:1,total:1};};
     void promise.then(result=>{

@@ -83,3 +83,11 @@ test('completed compilation cache is bounded and recently used documents survive
  await service.compile(documents[0],'same');await service.compile(documents[64],'same');await service.compile(documents[0],'same');assert.equal(calls,65);
  await service.compile(documents[1],'same');assert.equal(calls,66);service.dispose();
 });
+
+test('queued graph requests explain the preceding analysis and clear the reason when work starts',async()=>{
+ const worker=backend(),service=new CompilationService(worker),doc={},seen=[];
+ const first=service.compile(doc,'source',undefined,{});await tick();
+ const graph=service.compile(doc,'source',p=>seen.push(p),{graphs:true});assert.equal(seen.at(-1).phase,'queued');assert.match(seen.at(-1).waitingFor,/同じ文書/);
+ worker.calls[0].resolve({});await first;await tick();assert.equal(seen.at(-1).phase,'loading');assert.equal(seen.at(-1).waitingFor,undefined);
+ worker.calls[1].resolve({});await graph;service.dispose();
+});
