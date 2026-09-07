@@ -21,6 +21,7 @@ export class CompilationService {
     if(cached?.source===source)return cached.promise;
     const promise=this.queue.then(()=>{
       if(this.disposed)throw new Error('解析サービスは終了しています。');
+      if(this.cache.get(document)!==entry){const error=new Error('新しい編集内容に置き換えられたため解析を省略しました。');error.name='AbortError';throw error;}
       return this.compiler.compile(source);
     });
     const entry={source,promise};

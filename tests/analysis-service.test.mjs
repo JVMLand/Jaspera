@@ -11,14 +11,14 @@ function backend(){
 test('views share compilation in flight and serialize different document revisions',async()=>{
  const worker=backend(),service=new CompilationService(worker),document={};
  const first=service.compile(document,'old');assert.equal(service.compile(document,'old'),first);
- const second=service.compile(document,'new');await tick();assert.deepEqual(worker.calls.map(c=>c.source),['old']);
+ await tick();const second=service.compile(document,'new');await tick();assert.deepEqual(worker.calls.map(c=>c.source),['old']);
  worker.calls[0].resolve({className:'Old'});assert.equal((await first).className,'Old');await tick();assert.deepEqual(worker.calls.map(c=>c.source),['old','new']);
  worker.calls[1].resolve({className:'New'});assert.equal((await second).className,'New');assert.equal(service.compile(document,'new'),second);
  const reopened=service.compile({},'new');await tick();assert.equal(worker.calls.length,3);worker.calls[2].resolve({className:'Reopened'});await reopened;service.dispose();
 });
 test('failed old revisions do not discard newer work; failures can be retried',async()=>{
  const worker=backend(),service=new CompilationService(worker),document={};
- const old=service.compile(document,'old'),failure=assert.rejects(old,/failed/),next=service.compile(document,'new');
+ const old=service.compile(document,'old'),failure=assert.rejects(old,/failed/);await tick();const next=service.compile(document,'new');
  await tick();worker.calls[0].reject(new Error('failed'));await failure;await tick();assert.equal(service.compile(document,'new'),next);
  const nextFailure=assert.rejects(next,/again/);worker.calls[1].reject(new Error('again'));await nextFailure;
  const retry=service.compile(document,'new');await tick();assert.equal(worker.calls.length,3);worker.calls[2].resolve({});await retry;service.dispose();
@@ -35,4 +35,12 @@ test('state notifications deliver complete changes and stop after unsubscribe',a
  assert.equal(seen.length,0);await tick();assert.equal(seen.length,1);assert.equal(seen[0].status,'running');assert.equal(seen[0].tools.output[0].text,'hello');
  store.updateTools({stdin:'input'});await tick();assert.equal(seen[0].tools.stdin,'');assert.equal(seen[1].tools.stdin,'input');
  unsubscribe();store.update({running:false});await tick();assert.equal(seen.length,2);
+});
+
+test('queued obsolete revisions are skipped without changing results for active work',async()=>{
+ const worker=backend(),service=new CompilationService(worker),doc={};
+ const active=service.compile({},'blocker');await tick();
+ const skipped=[];for(let i=0;i<5;i++)skipped.push(assert.rejects(service.compile(doc,'version'+i),{name:'AbortError'}));
+ const latest=service.compile(doc,'latest');worker.calls[0].resolve({});await active;await Promise.all(skipped);await tick();
+ assert.deepEqual(worker.calls.map(c=>c.source),['blocker','latest']);worker.calls[1].resolve({className:'Latest'});assert.equal((await latest).className,'Latest');service.dispose();
 });
