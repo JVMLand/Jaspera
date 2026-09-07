@@ -7,10 +7,10 @@ public class examples/Branches {
     getstatic java/lang/System->out:Ljava/io/PrintStream;
     ldc "10 or less"
     goto Print
-    Large:
+  Large:
     getstatic java/lang/System->out:Ljava/io/PrintStream;
     ldc "greater than 10"
-    Print:
+  Print:
     invokevirtual java/io/PrintStream->println(Ljava/lang/String;)V
     return
   }

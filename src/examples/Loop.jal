@@ -3,7 +3,7 @@ public class examples/Loop {
   public static main([Ljava/lang/String;)V {
     iconst_1
     istore_1
-    Loop:
+  Loop:
     iload_1
     iconst_5
     if_icmpgt Done
@@ -12,7 +12,7 @@ public class examples/Loop {
     invokevirtual java/io/PrintStream->println(I)V
     iinc 1 1
     goto Loop
-    Done:
+  Done:
     return
   }
 }
