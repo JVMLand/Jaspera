@@ -159,6 +159,16 @@ public class JALClassCompiler {
         this.methodListener = java.util.Objects.requireNonNull(listener);
     }
 
+    private java.util.function.Predicate<JALParser.MethodDefinitionContext> methodFilter = method -> true;
+    private java.util.function.BiConsumer<JALParser.MethodDefinitionContext, RuntimeException> methodError = (method, error) -> {throw error;};
+
+    /** Editor clients may recover per method; ordinary compiler clients still fail fast. */
+    public void setMethodRecovery(java.util.function.Predicate<JALParser.MethodDefinitionContext> filter,
+                                  java.util.function.BiConsumer<JALParser.MethodDefinitionContext, RuntimeException> error) {
+        this.methodFilter = filter;
+        this.methodError = error;
+    }
+
     private void visitClassBody(@NotNull ClassNode classNode, @Nullable JALParser.ClassBodyContext body) {
         if (body == null)
             return;
@@ -168,9 +178,16 @@ public class JALClassCompiler {
             if (item.methodDefinition() != null) {
                 JALMethodCompiler evaluator = new JALMethodCompiler(this.reporter, classNode, this.compileFlags);
                 this.methodListener.accept(item.methodDefinition(), false);
-                evaluator.evaluateMethod(item.methodDefinition());
-                this.methodListener.accept(item.methodDefinition(), true);
-                this.methodCompilers.add(evaluator);
+                int before = classNode.methods.size();
+                try {
+                    if (this.methodFilter.test(item.methodDefinition())) {
+                        evaluator.evaluateMethod(item.methodDefinition());
+                        this.methodCompilers.add(evaluator);
+                    }
+                } catch (RuntimeException error) {
+                    classNode.methods.subList(before, classNode.methods.size()).clear();
+                    this.methodError.accept(item.methodDefinition(), error);
+                } finally { this.methodListener.accept(item.methodDefinition(), true); }
             }
             if (item.fieldDefinition() != null)
                 visitField(classNode, item.fieldDefinition());

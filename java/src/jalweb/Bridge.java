@@ -99,7 +99,9 @@ public final class Bridge {
                 add("error","Unexpected character: "+token.getText(),token.getLine(),token.getCharPositionInLine(),1);
             JALParser parser=new JALParser(tokens);
             parser.removeErrorListeners(); parser.addErrorListener(errors); JALParser.RootContext tree=parser.root();
-            if(diagnostics.stream().noneMatch(d->d.severity().equals("error"))) {
+            if(tree.classDefinition()==null || tree.classDefinition().className()==null) add("error","クラス宣言が必要です。",1,0,1);
+            else {
+                List<Diagnostic> syntaxErrors = List.copyOf(diagnostics);
                 JALClassCompiler compiled=new JALClassCompiler(new FileEvaluatingReporter(REPORTER,null),null,CompileSettings.FULL);
                 String owner=tree.classDefinition().className().getText();
                 int total=(int)tree.classDefinition().classBody().classBodyItem().stream().filter(item->item.methodDefinition()!=null).count();
@@ -108,9 +110,15 @@ public final class Bridge {
                     if(finished)completed[0]++;
                     methodProgress("analysis",owner,method.methodName().getText()+method.methodDescriptor().getText(),completed[0],total,finished,null);
                 });
+                compiled.setMethodRecovery(method -> method.stop != null && syntaxErrors.stream().noneMatch(d ->
+                        d.line() >= method.start.getLine() && d.line() <= method.stop.getLine()), (method, error) -> {
+                    if (error instanceof CompileErrorException compile) compileError(compile);
+                    else add("error",error.getMessage()==null?error.toString():error.getMessage(),method.start.getLine(),method.start.getCharPositionInLine(),1);
+                });
                 compiled.compileClassAST(tree.classDefinition());
                 progress("analysis",owner,"",total,total);
                 ClassNode node=compiled.getCompiledClass();
+                if(tree.classDefinition().classMeta()==null || tree.classDefinition().classMeta().classMetaItem().stream().noneMatch(item->item.classPropMajor()!=null)) node.version=67;
                 // ASM verifies stack categories, locals, returns and control-flow merges as a second pass.
                 int frameTotal=(int)node.methods.stream().filter(m->(m.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))==0).count(),frameCompleted=0;
                 for(MethodNode method:node.methods) {
