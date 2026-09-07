@@ -47,6 +47,7 @@ registerLanguage(()=>navigation.completionCatalog());
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <header class="toolbar">
   <div class="brand"><img class="brand-logo" src="./favicon.svg" alt="Javasm ロゴ" width="40" height="40"><h1>${APP_NAME}</h1><span class="brand-caption">${APP_TAGLINE}</span></div>
+  <button id="header-search" class="header-search" type="button" aria-haspopup="dialog" title="どこでも検索（Shift を2回）"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="m12 12 5 5"/></svg><span>ファイル・クラス・メソッドを検索</span><kbd>Shift ×2</kbd></button>
   <div class="toolbar-actions"><button id="run" class="run" title="実行（Ctrl+Enter / F5）"><span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
 </header>
 <nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
@@ -154,6 +155,7 @@ const navigation=createNavigation({
  }
 });
 const searchEverywhere=installSearchEverywhere(()=>navigation.searchTargets(),async target=>{const result=await navigation.searchDefinition(target);if(!result)throw new Error('定義が見つかりません。');return async()=>{await openDefinition(result.uri,result.range);};});
+el('header-search').onclick=()=>{void searchEverywhere.show();};
 const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),openDefinition);
 function previewTitle(p:ClassPreview){return p.example?p.title:p.title+' (JAL)';}
 function ensureExample(path:string){

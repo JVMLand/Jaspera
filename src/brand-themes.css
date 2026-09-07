@@ -95,35 +95,51 @@
 :root[data-theme-family="googol"] :is(dialog input,dialog select,textarea){border-radius:8px}
 :root[data-theme-family="googol"] .runtime-dot{background:#34a853}
 
-/* Entrance: dark service bar, compact commands, square blades and blue active rails. */
-:root[data-theme-family="entrance"]{--pane-radius:0px;--pane-header-height:36px;--theme-canvas:var(--theme-bg)}
+/* Entrance: service header, navigation rail and flat content blades. */
+.header-search{display:none}
+:root[data-theme-family="entrance"]{--pane-radius:2px;--pane-header-height:38px;--theme-canvas:var(--theme-bg)}
 :root[data-theme-family="entrance"] #app{font-family:"Segoe UI","Yu Gothic UI",sans-serif;font-size:12px;grid-template-rows:40px 34px minmax(0,1fr) 24px}
-:root[data-theme-family="entrance"] .toolbar{background:#1b1b1b;color:#fff;padding:0 16px;border:0}
-:root[data-theme-family="entrance"] .brand{gap:10px}
-:root[data-theme-family="entrance"] .brand-logo{width:24px;height:24px}
-:root[data-theme-family="entrance"] .brand h1{font-size:16px;letter-spacing:0;font-weight:600}
-:root[data-theme-family="entrance"] .brand h1 span{color:#fff}
-:root[data-theme-family="entrance"] .menubar{padding:0 8px;background:var(--theme-surface)}
-:root[data-theme-family="entrance"] .menu>button{padding:0 14px;border-radius:0;font-size:12px}
+:root[data-theme-family="entrance"] .toolbar{position:relative;background:#1b1b1b;color:#fff;padding:0 18px;border:0}
+:root[data-theme-family="entrance"] .brand{gap:12px;min-width:180px}
+:root[data-theme-family="entrance"] .brand-logo{width:22px;height:22px}
+:root[data-theme-family="entrance"] .brand h1{color:#fff;font-family:"Segoe UI",sans-serif;font-size:14px;letter-spacing:0;font-weight:600}
+:root[data-theme-family="entrance"] .header-search{display:flex;align-items:center;gap:10px;position:absolute;left:50%;transform:translateX(-50%);width:36%;max-width:540px;height:30px;padding:0 10px;border:1px solid #d2d0ce;border-radius:3px;background:#fafafa;color:#605e5c;font:12px "Segoe UI",sans-serif;text-align:left;overflow:hidden}
+:root[data-theme-family="entrance"] .header-search svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.2;flex-shrink:0}
+:root[data-theme-family="entrance"] .header-search span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-theme-family="entrance"] .header-search kbd{margin-left:auto;white-space:nowrap;font:10px "Segoe UI",sans-serif;color:#797775}
+:root[data-theme-family="entrance"] .toolbar-actions .run{height:28px;min-height:0;padding:0 13px;border-radius:2px;font-size:12px}
+:root[data-theme-family="entrance"] .menubar{padding:0 12px;background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
+:root[data-theme-family="entrance"] .menu>button{padding:0 14px;border-radius:0;font-size:12px;color:var(--theme-accent)}
 :root[data-theme-family="entrance"] .workspace{padding:0}
-:root[data-theme-family="entrance"] .workspace-summary{min-height:83px;margin:0;padding:16px 22px;border-bottom:1px solid var(--theme-border);background:var(--theme-bg)}
-:root[data-theme-family="entrance"] .workspace-summary h2{font-size:24px;font-weight:600;margin:0 0 5px;letter-spacing:0}
-:root[data-theme-family="entrance"] .workspace-summary p{color:var(--theme-muted);font-size:11px}
-:root[data-theme-family="entrance"] .workspace-summary button{border:0;border-left:1px solid var(--theme-border);border-radius:0;background:transparent;color:var(--theme-accent);padding:8px 16px}
-:root[data-theme-family="entrance"] .workspace .dock-pane{margin:0;border:0;border-right:1px solid var(--theme-border);box-shadow:none}
-:root[data-theme-family="entrance"] .workspace .project-pane,:root[data-theme-family="entrance"] .workspace .project-heading{background:var(--theme-surface)}
-:root[data-theme-family="entrance"] .group-separator{background:var(--theme-surface)}
+:root[data-theme-family="entrance"] .workspace-summary{min-height:104px;margin:0;padding:18px 24px;border:0;background:var(--theme-bg);align-items:center}
+:root[data-theme-family="entrance"] .summary-eyebrow{display:block;font-size:12px;letter-spacing:0;color:var(--theme-muted);margin-bottom:12px}
+:root[data-theme-family="entrance"] .workspace-summary h2{display:flex;align-items:center;gap:10px;font-family:"Segoe UI",sans-serif;font-size:24px;font-weight:600;margin:0;letter-spacing:0}
+:root[data-theme-family="entrance"] .workspace-summary h2::before{content:"";width:22px;height:22px;flex-shrink:0;background:linear-gradient(135deg,#50c7d4,#0078d4);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%,22% 50%,50% 78%,78% 50%,50% 22%,22% 50%,0 50%)}
+:root[data-theme-family="entrance"] .workspace-summary p{display:none}
+:root[data-theme-family="entrance"] .workspace-summary button{border:1px solid var(--theme-border);border-radius:2px;background:var(--theme-bg);color:var(--theme-accent);padding:7px 12px;font-size:12px}
+:root[data-theme-family="entrance"] .workspace .dock-pane{margin:0;border:0;border-right:1px solid var(--theme-border);box-shadow:none;border-radius:0}
+:root[data-theme-family="entrance"] .workspace :is(.project-pane,.project-heading){background:var(--theme-surface)}
+:root[data-theme-family="entrance"] .workspace :is(.source-header,.output-header){background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
+:root[data-theme-family="entrance"] .group-separator{background:var(--theme-bg)}
 :root[data-theme-family="entrance"] .group-separator::before{inset:0 2px;background:var(--theme-border);border-radius:0}
-:root[data-theme-family="entrance"] .workspace [data-pane-key],:root[data-theme-family="entrance"] .detached-window [data-pane-key]{border:0;border-right:1px solid var(--theme-border);background:transparent}
-:root[data-theme-family="entrance"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 3px 0 var(--theme-accent)!important}
-:root[data-theme-family="entrance"] #file-list{padding:3px 0!important}
-:root[data-theme-family="entrance"] #file-list button{border-radius:0;padding:8px 14px;font-size:12px;margin:0;border-bottom:1px solid color-mix(in srgb,var(--theme-border) 45%,transparent)}
-:root[data-theme-family="entrance"] #file-list button.selected{box-shadow:inset 3px 0 var(--theme-accent)}
-:root[data-theme-family="entrance"] :is(dialog,input,textarea,select,.menu-popup,.dock-menu){border-radius:0}
-:root[data-theme-family="entrance"] .menu-popup{box-shadow:0 4px 10px #0003}
+:root[data-theme-family="entrance"] :is(.workspace,.detached-window) [data-pane-key]{border:0;background:transparent;box-shadow:none}
+:root[data-theme-family="entrance"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-bg)!important;box-shadow:inset 0 -2px var(--theme-accent)!important}
+:root[data-theme-family="entrance"] .project-heading [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 3px 0 var(--theme-accent)!important}
+:root[data-theme-family="entrance"] #file-list{padding:4px 0!important}
+:root[data-theme-family="entrance"] #file-list .folder-children{border-left:0;margin-left:0;padding-left:0}
+:root[data-theme-family="entrance"] #file-list .file-folder>summary{padding:13px 16px;margin:6px 0 3px;border-top:1px solid var(--theme-border);font-size:13px;font-weight:600;color:var(--theme-text)}
+:root[data-theme-family="entrance"] #file-list button{border-radius:0;padding:11px 18px;font-family:inherit;font-size:12px;margin:0;border:0;line-height:18px}
+:root[data-theme-family="entrance"] #file-list button::before{content:"◇";display:inline-block;width:24px;color:var(--theme-accent);font-size:16px;vertical-align:-1px}
+:root[data-theme-family="entrance"] #file-list button.selected{box-shadow:inset 3px 0 var(--theme-accent);background:var(--theme-selection);color:var(--theme-text)}
+:root[data-theme-family="entrance"] :is(dialog,input,textarea,select,.menu-popup,.dock-menu){border-radius:2px}
+:root[data-theme-family="entrance"] .menu-popup{box-shadow:0 3px 8px #0003}
+:root[data-theme-family="entrance"] .stdin-section{margin:0 14px 12px;padding:12px!important;border:1px solid var(--theme-border);border-radius:3px;background:var(--theme-bg)}
+:root[data-theme-family="entrance"] .runtime-card{margin:0 14px 12px;border:1px solid var(--theme-border);border-radius:3px;background:var(--theme-bg);box-shadow:0 1px 2px #0001}
 :root[data-theme-family="entrance"] .detached-window .menubar{background:#1b1b1b;color:#fff}
 :root[data-theme-family="entrance"] .detached-window .menu>button{color:#fff}
 :root[data-theme-family="entrance"] .detached-window :is(#editor,.detached-tools){margin:0;border-width:0}
+@media(max-width:800px){:root[data-theme-family="entrance"] .header-search{position:static;transform:none;width:auto;flex:1;margin:0 12px}:root[data-theme-family="entrance"] .header-search kbd{display:none}:root[data-theme-family="entrance"] .brand{min-width:0}}
+@media(max-width:500px){:root[data-theme-family="entrance"] .header-search span{display:none}:root[data-theme-family="entrance"] .header-search{flex:0 0 34px;margin-left:auto}:root[data-theme-family="entrance"] .header-search svg{width:14px}}
 
 @media(max-width:800px){
  :root[data-theme-family] #app{height:100dvh;min-height:680px;grid-template-rows:52px 36px minmax(0,1fr) 26px}

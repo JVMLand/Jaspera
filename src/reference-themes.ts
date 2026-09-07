@@ -16,8 +16,8 @@ export const referenceThemes=[
  {id:'denden-light',label:'DenDen Light',dark:false,palette:['#ffffff','#f5f8fc','#dde5ef','#172f50','#526886','#0757ad','#eaf1fb','#0757ad','#ffffff','#b32242','#805a00'],syntax:['#0056b3','#28663e','#8e4d13','#637792','#086d83','#7747a6']},
  {id:'googol-night',label:'Googol Night',dark:true,palette:['#202124','#292a2d','#45474b','#e8eaed','#b0b5be','#a8c7fa','#334567','#a8c7fa','#162a49','#f28b82','#fdd663'],syntax:['#8ab4f8','#81c995','#fdd663','#a1a7af','#78d9ec','#c58af9']},
  {id:'googol-light',label:'Googol Light',dark:false,palette:['#ffffff','#f5f7fc','#dce1e8','#202124','#5f6368','#1967d2','#e8f0fe','#1967d2','#ffffff','#b3261e','#795500'],syntax:['#185abc','#188038','#915500','#6c737d','#087c86','#8430aa']},
- {id:'entrance-night',label:'Entrance Night',dark:true,palette:['#1b1b1b','#252525','#484848','#f3f2f1','#b3b1af','#6cb8f6','#213d50','#0078d4','#ffffff','#ff9999','#efcd80'],syntax:['#79c4f5','#a7d19a','#e6b57d','#a3a19f','#74d3db','#ceaae8']},
- {id:'entrance-light',label:'Entrance Light',dark:false,palette:['#ffffff','#f3f2f1','#d2d0ce','#242424','#605e5c','#006cbe','#e4f2fb','#0078d4','#ffffff','#a4262c','#835b00'],syntax:['#0068b8','#39712f','#965715','#77736f','#007c86','#8250a2']}
+ {id:'entrance-night',label:'Entrance Night',dark:true,palette:['#202020','#292929','#454545','#f3f2f1','#b6b4b2','#60baff','#163c55','#0078d4','#ffffff','#ff9999','#efcd80'],syntax:['#79c4f5','#a7d19a','#e6b57d','#a3a19f','#74d3db','#ceaae8']},
+ {id:'entrance-light',label:'Entrance Light',dark:false,palette:['#ffffff','#eae9e8','#d2d0ce','#242424','#605e5c','#006cbe','#e4f2fb','#0078d4','#ffffff','#a4262c','#835b00'],syntax:['#0068b8','#39712f','#965715','#77736f','#007c86','#8250a2']}
 
 ];
 export function editorTheme(t:typeof referenceThemes[number]):editor.IStandaloneThemeData {
