@@ -4,6 +4,7 @@ import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import NavigationWorker from './navigation.worker?worker';
 import type {SymbolIndex,SymbolReference,ClassSymbol,Span} from './symbols.js';
+export interface SearchTarget {label:string;detail:string;kind:'file'|'class'|'method'|'field';uri?:string;offset?:number;owner?:string;name?:string;descriptor?:string}
 export interface DefinitionDocument {uri:string;source:string;range:monaco.IRange;origin:monaco.IRange;label?:boolean}
 export function installDefinitionUI(resolve:(model:monaco.editor.ITextModel,offset:number,labelsOnly?:boolean)=>Promise<DefinitionDocument[]>,open:(uri:string,range?:monaco.IRange|monaco.IPosition)=>boolean|Promise<boolean>){
  const provider=monaco.languages.registerDefinitionProvider('jal',{async provideDefinition(model,position,token){
@@ -70,6 +71,26 @@ export function createNavigation(host:Host){
   return found;
  }
  return {
+  async searchTargets():Promise<SearchTarget[]>{
+   const current=epoch,targets:SearchTarget[]=[];
+   for(const model of host.models()){
+    if(model.isDisposed())continue;
+    const uri=model.uri.toString(),detail=model.uri.path.slice(1);
+    targets.push({kind:'file',label:detail.split('/').pop()!,detail,uri,offset:0});
+    const symbols=await index(model);if(current!==epoch)return [];
+    for(const c of symbols.classes){
+     targets.push({kind:'class',label:c.owner.split('/').pop()!,detail:c.owner.replaceAll('/','.'),uri,offset:c.start});
+     for(const m of c.members)targets.push({kind:m.kind,label:m.name+(m.kind==='field'?':':'')+m.descriptor,detail:c.owner.replaceAll('/','.'),uri,offset:m.start});
+    }
+   }
+   return targets;
+  },
+  async searchDefinition(target:SearchTarget){
+   if(target.uri){const model=monaco.editor.getModel(monaco.Uri.parse(target.uri));return model&&!model.isDisposed()?{uri:target.uri,range:range(model,{start:target.offset??0,end:target.offset??0})}:undefined;}
+   if(!target.owner)return;
+   const results=await lookup({kind:target.kind==='file'?'class':target.kind,owner:target.owner,name:target.name,descriptor:target.descriptor,start:0,end:0});
+   const result=results[0];return result?{uri:result.model.uri.toString(),range:range(result.model,result.span)}:undefined;
+  },
   async classModel(owner:string){return (await findClass(owner))[0]?.model;},
   async completionCatalog():Promise<Catalog>{
    const current=epoch,catalog:Catalog=Object.create(null);

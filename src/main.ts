@@ -1,3 +1,4 @@
+import {installSearchEverywhere} from './search-everywhere';
 import type {AnalysisProgress} from './protocol';
 import {memoryPolicy} from './memory-policy';
 import {usageCompiler} from './usage-compilation';
@@ -129,6 +130,7 @@ const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeOb
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions'|'graph');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
+ searchTargets:()=>navigation.searchTargets(),searchDefinition:target=>navigation.searchDefinition(target),
  graphFocus,graphCompilation,graphNavigate,projectAction,compileUsage,compile:compileModel,resolve:(model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
@@ -148,6 +150,7 @@ const navigation=createNavigation({
   const work=classQueue.then(()=>compilationService.disassemble(btoa(binary)));classQueue=work.then(()=>{},()=>{});return work;
  }
 });
+const searchEverywhere=installSearchEverywhere(()=>navigation.searchTargets(),async target=>{const result=await navigation.searchDefinition(target);if(!result)throw new Error('定義が見つかりません。');return async()=>{await openDefinition(result.uri,result.range);};});
 const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>navigation.resolve(model,offset,labelsOnly),openDefinition);
 function previewTitle(p:ClassPreview){return p.example?p.title:p.title+' (JAL)';}
 function ensureExample(path:string){
@@ -714,5 +717,5 @@ el('run').onclick=()=>void run();
 editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
 window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);

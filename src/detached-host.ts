@@ -7,7 +7,7 @@ import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
 import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import type {DefinitionDocument} from './navigation';
+import type {DefinitionDocument,SearchTarget} from './navigation';
 export interface EditorSnapshot {view?:FileView;key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
 export type DetachedState=WorkspaceState;
 export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
@@ -20,6 +20,7 @@ export interface DetachedBridge {graphFocus:(id:string,line:number,column:number
  compileUsage:(source:string)=>Promise<Compilation>;
  compilation:(id:string,version:number)=>Promise<Compilation>;
  openFiles:(files:File[],group:string)=>Promise<void>;
+ searchTargets:()=>Promise<SearchTarget[]>;searchDefinition:(target:SearchTarget)=>Promise<{uri:string;range:monaco.IRange}|undefined>;
  completionCatalog:()=>Promise<Catalog>;
  attach:(id:string,client:DetachedClient)=>EditorSnapshot|undefined;
  tabs:(id:string)=>EditorSnapshot[];openTab:(group:string,key:string)=>EditorSnapshot|undefined;closeTab:(group:string,id:string)=>void;
@@ -50,6 +51,7 @@ interface Options {graphFocus:(model:monaco.editor.ITextModel,line:number,column
  compileUsage:(source:string)=>Promise<Compilation>;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
  openFiles:(files:File[])=>Promise<string[]>;
+ searchTargets:()=>Promise<SearchTarget[]>;searchDefinition:(target:SearchTarget)=>Promise<{uri:string;range:monaco.IRange}|undefined>;
  completionCatalog:()=>Promise<Catalog>;
  subscribe:(listener:()=>void)=>()=>void;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
@@ -78,6 +80,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  const closePanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(g?.panels.delete(name)){g.client?.panelRemoved?.(name);onReturn('panel:'+name);closeIfEmpty(group);}};
  const openPanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(!g)return;for(const other of groups.values())if(other.id!==group&&other.panels.delete(name)){other.client?.panelRemoved?.(name);closeIfEmpty(other.id);}g.panels.add(name);options.panelOpened?.(name);g.client?.panel?.(name);};
  window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
+  searchTargets:()=>options.searchTargets(),searchDefinition:target=>options.searchDefinition(target),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
   projectAction:(action,path,folder)=>options.projectAction(action,path,folder),
