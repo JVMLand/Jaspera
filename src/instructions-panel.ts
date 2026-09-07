@@ -1,3 +1,4 @@
+import {observePanelVisibility} from './panel-visibility';
 import {installInstructionUsage} from './instruction-usage-view';
 import type {Compilation} from './protocol';
 import {installContextMenu,copyText,selectedText} from './context-menu';
@@ -15,7 +16,7 @@ export function installInstructionsPanel(host:HTMLElement,analyze:(source:string
  function toggle(open:boolean){chooser.style.maxHeight=Math.max(80,Math.min(400,host.clientHeight-toolbar.offsetHeight-8))+'px';chooser.hidden=!open;search.setAttribute('aria-expanded',String(open));}
  const outside=(e:PointerEvent)=>{if(!toolbar.contains(e.target as Node))toggle(false);};document.addEventListener('pointerdown',outside,true);search.onclick=()=>toggle(true);search.onkeydown=e=>{if(e.key==='Escape')toggle(false);if(e.key==='ArrowDown'){toggle(true);list.querySelector<HTMLButtonElement>('button')?.focus();e.preventDefault();}};
  let usage:ReturnType<typeof installInstructionUsage>|undefined;
- const entries=instructionList.map(guide);let selected='iadd',markdown:ReturnType<typeof renderMarkdown>|undefined;
+ let visible=false,rendered:string|undefined;let entries:ReturnType<typeof guide>[]=[];let selected='iadd',markdown:ReturnType<typeof renderMarkdown>|undefined;
  function comparison(form:Diagram){
   const terminal=form.after.includes('メソッド終了')?'メソッド終了':undefined;
   const labels=form.locals?.before.map(v=>v.match(/^(#[^:]+):/)?.[1]??'');
@@ -25,8 +26,10 @@ export function installInstructionsPanel(host:HTMLElement,analyze:(source:string
  }
 
  function show(op:string){
-  usage?.dispose();usage=undefined;selected=op;detail.style.setProperty('--instruction-color',`var(--instruction-${instructionHighlightGroup(op)})`);markdown?.dispose();detail.replaceChildren();const entry=entries.find(e=>e.op===op)!;
+  if(!visible){selected=op;return;}
   for(const button of list.querySelectorAll<HTMLButtonElement>('button'))button.setAttribute('aria-pressed',String(button.dataset.op===op));
+  if(rendered===op)return;rendered=op;
+  usage?.dispose();usage=undefined;selected=op;detail.style.setProperty('--instruction-color',`var(--instruction-${instructionHighlightGroup(op)})`);markdown?.dispose();detail.replaceChildren();const entry=entries.find(e=>e.op===op)!;
   const header=el('header');header.append(el('span',entry.category,'instruction-eyebrow'),el('h2',op),el('p',entry.title,'instruction-title'));detail.append(header,el('p',entry.summary,'instruction-summary'));
   if(entry.forms.some(f=>/long|double|カテゴリ2/.test([...f.before,...f.after,f.note??''].join(' '))))detail.append(el('p','カテゴリ2の long / double は1つの値で2スロットを使います。カテゴリ1の int / float / 参照は1スロットです。','instruction-category-note'));
   detail.append(el('h3',entry.example===op?'命令':'書き方の例'),el('pre',entry.example,'instruction-example'));
@@ -52,17 +55,18 @@ export function installInstructionsPanel(host:HTMLElement,analyze:(source:string
   const link=document.createElement('a');link.textContent='JVM 仕様書で命令を確認 ↗';link.href='https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.'+op.replace(/^([ilfd])const_(?:m1|[0-5])$/, '$1const_$1').replace(/_([0-3])$/, '_n').replace(/^([fd])cmp[lg]$/, '$1cmp_op').replace(/^if_([ai])cmp(?:eq|ne|lt|ge|gt|le)$/, 'if_$1cmp_cond').replace(/^if(?:eq|ne|lt|ge|gt|le)$/, 'if_cond');link.target='_blank';link.rel='noopener noreferrer';detail.append(link);detail.scrollTop=0;
  }
  function filter(){
+  if(!visible)return;if(!entries.length)entries=instructionList.map(guide);
   const query=search.value.toLocaleLowerCase().trim(),found=entries.filter(e=>(!category.value||e.category===category.value)&&(!query||(e.op+' '+e.title+' '+e.summary).toLocaleLowerCase().includes(query)));list.replaceChildren();count.textContent=found.length+' / '+entries.length+' 命令';
   if(!found.length){list.append(el('p','該当する命令がありません。検索語やカテゴリを変えてください。'));detail.hidden=true;return;}detail.hidden=false;
   for(const name of categories){const group=found.filter(e=>e.category===name);if(!group.length)continue;const folder=document.createElement('details');folder.open=!!query||!!category.value||group.some(e=>e.op===selected);folder.append(el('summary',name+' · '+group.length));const buttons=el('div',undefined,'instruction-buttons');for(const entry of group){const b=document.createElement('button');b.type='button';b.dataset.op=entry.op;b.style.color=`var(--instruction-${instructionHighlightGroup(entry.op)})`;b.textContent=entry.op;b.title=entry.title;b.onclick=()=>{show(entry.op);toggle(false);detail.focus({preventScroll:true});};buttons.append(b);}folder.append(buttons);list.append(folder);}
   show(found.some(e=>e.op===selected)?selected:found[0].op);
  }
- const context=installContextMenu(host,target=>{const op=target.closest<HTMLElement>('[data-op]')?.dataset.op??selected,entry=entries.find(e=>e.op===op)!;const selection=selectedText(detail);return [
+ const context=installContextMenu(host,target=>{const op=target.closest<HTMLElement>('[data-op]')?.dataset.op??selected,entry=entries.find(e=>e.op===op)??guide(op);const selection=selectedText(detail);return [
   {label:'命令名をコピー',action:()=>copyText(op)},
   {label:'書き方の例をコピー',action:()=>copyText(entry.example)},
   {label:'選択範囲をコピー',disabled:!selection,action:()=>copyText(selection)},null,
   {label:'命令を検索',action:()=>{search.focus();toggle(true);}}
  ];});
  function navigate(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);}
- search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction:navigate,dispose(){usage?.dispose();context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
+ search.oninput=()=>{toggle(true);filter();};category.onchange=filter;const visibility=observePanelVisibility(host,value=>{visible=value;if(value)filter();});return {showInstruction:navigate,dispose(){visibility.dispose();usage?.dispose();context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
 }

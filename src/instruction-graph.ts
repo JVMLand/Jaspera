@@ -1,3 +1,4 @@
+import {observePanelVisibility} from './panel-visibility';
 import type {Compilation,GraphDocument,MethodGraph} from './protocol';
 import {WorkerRpc} from './worker-rpc';
 import type {GraphLayoutApi} from './graph-layout.worker';
@@ -38,7 +39,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  svg.onpointerdown=e=>{if(e.button!==0||(e.target as Element).closest('.graph-node'))return;drag={x:e.clientX,y:e.clientY,left:x,top:y};svg.setPointerCapture(e.pointerId);};svg.onpointermove=e=>{if(drag){x=drag.left+e.clientX-drag.x;y=drag.top+e.clientY-drag.y;transform();}};svg.onpointerup=svg.onpointercancel=()=>{drag=undefined;};
  const resize=new ResizeObserver(()=>{if(svg.clientWidth&&svg.clientHeight)fitWidth();});resize.observe(svg);
  const context=installContextMenu(host,()=>[{label:'全体表示',action:fit},{label:'再解析',action:()=>{const previous=doc;doc=undefined;update(previous);}}]);
- function update(next?:GraphDocument){
+ function refresh(next?:GraphDocument){
   const same=next?.uri===doc?.uri&&next?.version===doc?.version;doc=next;
   if(same&&next){highlight();return;}
   clearTimeout(timer);const id=++ticket;++layoutTicket;scene.replaceChildren();graphs=[];
@@ -49,5 +50,8 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
    void draw();
   }).catch(error=>{if(!disposed&&id===ticket)status.textContent=String(error);});},180);
  }
- update();return {update,dispose(){disposed=true;ticket++;layoutTicket++;clearTimeout(timer);resize.disconnect();context.dispose();worker.dispose();host.replaceChildren();}};
+ let visible=false,pending:GraphDocument|undefined;
+ function update(next?:GraphDocument){pending=next;if(visible)refresh(next);}
+ const visibility=observePanelVisibility(host,value=>{visible=value;if(value)refresh(pending);});
+ return {update,dispose(){visibility.dispose();disposed=true;ticket++;layoutTicket++;clearTimeout(timer);resize.disconnect();context.dispose();worker.dispose();host.replaceChildren();}};
 }

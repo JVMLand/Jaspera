@@ -6,6 +6,8 @@ test('Instructions dictionary works without JVM and across themes',{timeout:9000
  const headingSizes=await panel.evaluate(p=>['.instruction-detail>header h2','.instruction-advanced h3','.instruction-advanced h4'].map(q=>parseFloat(getComputedStyle(p.querySelector(q)).fontSize)));assert.ok(headingSizes[0]>headingSizes[1]&&headingSizes[1]>headingSizes[2],JSON.stringify(headingSizes));assert.doesNotMatch(await panel.locator('.instruction-summary').textContent(),/先に積んだ|左側|右側/);
  const original=await page.evaluate(async()=>(await import('/src/main.ts')).editor.getValue());
  const search=panel.getByRole('searchbox',{name:'命令を検索'}),category=panel.getByLabel('命令カテゴリ');
+ const usageNode=await panel.locator('.instruction-usage').elementHandle();
+ await search.fill('iad');assert.equal(await usageNode.evaluate(el=>el.isConnected),true);assert.equal(await panel.locator('.instruction-index [data-op="iadd"]').getAttribute('aria-pressed'),'true');
  await search.fill('invoke');
  await panel.locator('.instruction-index [data-op="invokevirtual"]').click();
  assert.equal(await panel.locator('.instruction-chooser').isVisible(),false);
@@ -38,6 +40,6 @@ test('Instructions dictionary works without JVM and across themes',{timeout:9000
   await page.evaluate(async id=>(await import('/src/themes.ts')).applyTheme(id,false),theme);await page.waitForTimeout(80);
   const bounds=await panel.locator('.instruction-detail').boundingBox();assert.ok(bounds.height>100,theme+JSON.stringify(bounds));assert.ok(bounds.width>200,theme);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),theme);await page.screenshot({path:'.cache/instructions-'+theme+'.png'});
  }
- await tab.focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#console-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#console-panel').isVisible(),true);await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#problems-panel').isVisible(),true);await page.keyboard.press('ArrowRight');assert.equal(await panel.isVisible(),true);
+ await tab.focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#graph-tab').getAttribute('aria-selected'),'true');await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#console-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#console-panel').isVisible(),true);await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#problems-panel').isVisible(),true);await page.keyboard.press('ArrowRight');assert.equal(await panel.isVisible(),true);
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await panel.scrollIntoViewIfNeeded();await page.screenshot({path:'.cache/instructions-mobile.png'});assert.equal(await page.evaluate(async()=>(await import('/src/main.ts')).editor.getValue()),original);assert.deepEqual(errors,[]);
 });

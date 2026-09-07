@@ -8,7 +8,7 @@ test('all dictionary examples compile with frames, and usage hovers share the co
   for(const op of instructionList){const {source}=instructionUsage(op);try{const c=await window.jalwebDetached.compileUsage(source);const errors=c.diagnostics.filter(d=>d.severity==='error');const targetLines=source.split('\n').flatMap((line,i)=>line.trim().split(/\s/)[0]===op?[i+1]:[]);const missing=targetLines.filter(line=>!c.stackFrames?.some(f=>f.line===line&&!f.unreachable));if(errors.length||!targetLines.length||missing.length)failures.push({op,errors,missing,frames:c.stackFrames?.length});}catch(e){failures.push({op,error:String(e)});}}
   return failures;
  });assert.deepEqual(failures,[]);
- await page.locator('#instructions-tab').click();const panel=page.locator('#instructions-panel');
+ await page.locator('#instructions-tab').click();const panel=page.locator('#instructions-panel');await panel.locator('.instruction-detail h2').waitFor();
  assert.equal(await panel.getByLabel('スタックの形式').count(),0);
  assert.deepEqual(await panel.locator('.frame-transition').first().locator('.frame-value code').allTextContents(),['b : int','a : int','a + b : int']);
  await panel.locator('.instruction-usage').scrollIntoViewIfNeeded();await panel.locator('.instruction-usage .view-line span').filter({hasText:/^iadd$/}).hover();

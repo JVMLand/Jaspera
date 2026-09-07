@@ -97,7 +97,11 @@ const compilationService=new CompilationService(compiler);
 const usageDocuments=new Map<string,object>();
 const compileUsage=(source:string)=>{let document=usageDocuments.get(source);if(!document){document={};usageDocuments.set(source,document);}return compilationService.compile(document,source);};
 const compileModel=(model:monaco.editor.ITextModel)=>compilationService.compile(model,model.getValue());
-function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){workspaceState.update({graphDocument:{uri:model.uri.toString(),source:model.getValue(),version:model.getVersionId(),line,column}});}
+function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){
+ const previous=workspaceState.value.graphDocument,uri=model.uri.toString(),version=model.getVersionId();
+ const same=previous?.uri===uri&&previous.version===version;if(same&&previous.line===line&&previous.column===column)return;
+ workspaceState.update({graphDocument:{uri,version,line,column,source:same?previous.source:model.getValue()}});
+}
 function graphModel(doc:GraphDocument){const model=monaco.editor.getModel(monaco.Uri.parse(doc.uri));return model&&!model.isDisposed()&&model.getVersionId()===doc.version&&model.getValue()===doc.source?model:undefined;}
 const graphCompilation=(doc:GraphDocument)=>{const model=graphModel(doc);return model?compileModel(model):Promise.reject(new Error('文書の版が変更されています。'));};
 const graphNavigate=(doc:GraphDocument,line:number,column:number)=>{if(graphModel(doc))void openDefinition(doc.uri,{lineNumber:line,column});};

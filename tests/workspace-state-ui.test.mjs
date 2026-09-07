@@ -11,9 +11,11 @@ test('detached console receives output, input, diagnostics and theme changes fro
  const event=page.waitForEvent('popup');await page.locator('#console-tab').click({button:'right'});await page.getByRole('menuitem',{name:'小窓で開く',exact:true}).click();const popup=await event;await popup.locator('#popup-stdin').waitFor();assert.equal(await popup.locator('#popup-stdin').inputValue(),'from main');
  await popup.locator('#popup-stdin').fill('from popup');assert.equal(await page.locator('#stdin').inputValue(),'from popup');
  await popup.locator('#menu-build').click();await popup.locator('#menu-run').click();await popup.waitForFunction(()=>document.querySelector('#popup-output')?.textContent==='Hello, World!\n',null,{timeout:30000});await popup.waitForFunction(()=>document.querySelector('#status')?.textContent==='実行が完了しました');
+ const outputNode=await popup.locator('#popup-output span').first().elementHandle();await popup.locator('#popup-stdin').fill('keep output');assert.equal(await outputNode.evaluate(el=>el.isConnected),true);
  assert.equal(await page.locator('#output').textContent(),'Hello, World!\n');await popup.locator('#popup-clear').click();await page.waitForFunction(()=>document.querySelector('#output')?.textContent==='');assert.equal(await popup.locator('#popup-output').textContent(),'');
  await page.evaluate(async()=>{const {applyTheme}=await import('/src/themes.ts');applyTheme('googol-light');});await popup.waitForFunction(()=>document.documentElement.dataset.theme==='googol-light');
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setValue('public class Main {\n public static main([Ljava/lang/String;)V {\n bipush 1\n pop\n return\n }\n}');});
  await popup.locator('#menu-view').click();await popup.locator('#show-problems').click();await popup.getByRole('button').filter({hasText:'iconst_1'}).waitFor();
+ const problemNode=await popup.locator('#problems li').first().elementHandle();await popup.getByRole('tab',{name:'Console',exact:true}).click();await popup.locator('#popup-stdin').fill('keep problems');await popup.waitForFunction(()=>document.querySelector('#popup-stdin').value==='keep problems');assert.equal(await problemNode.evaluate(el=>el.isConnected),true);
  await popup.close();assert.deepEqual(errors,[]);
 });
