@@ -1,0 +1,6 @@
+{
+  "format": "jalprj",
+  "version": 1,
+  "name": "Hello Project",
+  "entryFile": "src/Main.jal"
+}

@@ -1,0 +1,6 @@
+public class demo/Message {
+  public static text()Ljava/lang/String; {
+    ldc "こんにちは、JAL プロジェクト！"
+    areturn
+  }
+}

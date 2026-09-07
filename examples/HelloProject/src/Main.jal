@@ -1,0 +1,8 @@
+public class demo/Main {
+  public static main([Ljava/lang/String;)V {
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    invokestatic demo/Message->text()Ljava/lang/String;
+    invokevirtual java/io/PrintStream->println(Ljava/lang/String;)V
+    return
+  }
+}
