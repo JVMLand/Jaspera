@@ -30,7 +30,8 @@ function output(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
   if (outputBytes >= 256 * 1024) buffers.stderr += '\n[出力は 256 KiB で打ち切られました]\n';
   flushTimer ??= setTimeout(flush, 32);
 }
-async function initialize() {
+async function initialize(heapMiB:number) {
+  if(!Number.isInteger(heapMiB)||heapMiB<16||heapMiB>128)throw new Error('JVM ヒープ容量が不正です。');
   if (initialization) return initialization;
   initialization = (async () => {
     const moduleUrl = new URL('bovine.js', root).href;
@@ -39,7 +40,7 @@ async function initialize() {
       additionalRuntimeFiles: ['jalweb-compiler.jar','jdk23/lib/tzdb.dat','jdk23/conf/logging.properties'], fetchParams: { cache: 'default' },
       progress: (loaded: number,total: number) => notify(sink=>sink.progress(loaded,total)),
       stdout: (bytes: Uint8Array) => output('stdout',bytes), stderr: (bytes: Uint8Array) => output('stderr',bytes) });
-    vm = os.makeVM({ classpath: 'jalweb-compiler.jar', heapSize: 128 * 1024 * 1024 });
+    vm = os.makeVM({ classpath: 'jalweb-compiler.jar', heapSize: heapMiB * 1024 * 1024 });
     vm.setPreemptionFrequencyUs(5000);
     bridge = vm.loadClass('jalweb/Bridge');
   })();
@@ -53,11 +54,11 @@ function encodeText(text: string) {
   return btoa(binary);
 }
 let busy = false;
-const api={async execute(data:RuntimeRequest,port:MessagePort):Promise<Compilation|Disassembly|void>{
+const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promise<Compilation|Disassembly|void>{
   if(busy){port.close();throw new Error('JVM は処理中です。');}
   busy=true;const scope=scopedEndpoint(port);events=wrap<RuntimeEvents>(scope.endpoint);notifications=Promise.resolve();
   try {
-    await initialize();
+    await initialize(heapMiB);
     if (data.type === 'compile') {
       const compilation = JSON.parse(await bridge.compile(encodeText(data.source)));
       return compilation;
