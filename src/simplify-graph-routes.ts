@@ -10,6 +10,19 @@ function hits(a:Point,b:Point,box:Box){
 }
 function clean(points:Point[]){const out:Point[]=[];for(const point of points){if(out.length&&length(out.at(-1)!,point)<epsilon)continue;out.push(point);while(out.length>2){const a=out.at(-3)!,b=out.at(-2)!,c=out.at(-1)!;if((Math.abs(a.x-b.x)<epsilon&&Math.abs(b.x-c.x)<epsilon||Math.abs(a.y-b.y)<epsilon&&Math.abs(b.y-c.y)<epsilon)&&length(a,c)>=length(a,b)+length(b,c)-epsilon)out.splice(out.length-2,1);else break;}}return out;}
 
+/** Find open vertical corridors across the shared width, rather than trying only its center. */
+function straightLanes(left:number,right:number,top:number,bottom:number,obstacles:Box[],edge:Route,edges:Route[]){
+ let lanes=[[left,right]];
+ const exclude=(start:number,end:number)=>{lanes=lanes.flatMap(([a,b])=>end<=a||start>=b?[[a,b]]:[[a,Math.min(b,start)],[Math.max(a,end),b]].filter(([x,y])=>y-x>epsilon));};
+ for(const box of obstacles)if(box.y<bottom&&box.y+box.height>top)exclude(box.x-gap,box.x+box.width+gap);
+ for(const other of edges)if(other!==edge)for(let i=1;i<other.points.length;i++){
+  const a=other.points[i-1],b=other.points[i];
+  if(Math.abs(a.x-b.x)<epsilon&&Math.max(a.y,b.y)>top&&Math.min(a.y,b.y)<bottom)exclude(a.x-gap,b.x+gap);
+ }
+ const center=(left+right)/2;
+ return lanes.map(([a,b])=>(a+b)/2).sort((a,b)=>Math.abs(a-center)-Math.abs(b-center));
+}
+
 /** Keep the downward ELK placement; only replace a route with fewer elbows.
  * Loop edges keep their return path, but can leave the source from a side. */
 export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string,string>,bounds:{x:number;y:number;width:number;height:number}){
@@ -17,6 +30,8 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
  for(const edge of edges){
   if(edge.points.length<3||edge.from===edge.to)continue;
   const source=byId.get(edge.from),target=byId.get(edge.to);if(!source||!target)continue;
+  const otherLabels=edges.filter(e=>e!==edge&&e.label&&e.x!==undefined).map(e=>({id:'',x:e.x!-Math.max(...e.label.split('\n').map(line=>line.length*6))/2,y:e.y!-10,width:Math.max(...e.label.split('\n').map(line=>line.length*6)),height:e.label.split('\n').length*14}));
+  const obstacles=boxes.filter(box=>box.id!==edge.from&&box.id!==edge.to&&box.id!==parents.get(edge.from)&&box.id!==parents.get(edge.to)).concat(otherLabels);
   // A second pass combines an interior shortcut with a shorter side departure.
   for(let pass=0;pass<2;pass++){
   const old=edge.points,first=old[0],north=Math.abs(first.y-source.y)<epsilon;
@@ -24,7 +39,7 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
   const sx=source.x+source.width/2,sy=source.y+source.height/2,tx=target.x+target.width/2,ty=target.y+target.height/2,bottom=source.y+source.height;
   if(target.y>=source.y){
    const left=Math.max(source.x,target.x)+gap,right=Math.min(source.x+source.width,target.x+target.width)-gap;
-   if(left<=right&&target.y>=bottom)candidates.push([{x:(left+right)/2,y:bottom},{x:(left+right)/2,y:target.y}]);
+   if(left<=right&&target.y>=bottom)for(const x of straightLanes(left,right,bottom,target.y,obstacles,edge,edges))candidates.push([{x,y:bottom},{x,y:target.y}]);
    // Existing lane coordinates also make good landing points on a wide target.
    // Slide the destination along its top border instead of returning to a fixed port.
    const landingXs=new Set([tx,...old.map(p=>Math.max(target.x+gap,Math.min(p.x,target.x+target.width-gap)))]);
@@ -53,8 +68,6 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
     candidates.push(points);
    }
   }
-  const otherLabels=edges.filter(e=>e!==edge&&e.label&&e.x!==undefined).map(e=>({id:'',x:e.x!-Math.max(...e.label.split('\n').map(line=>line.length*6))/2,y:e.y!-10,width:Math.max(...e.label.split('\n').map(line=>line.length*6)),height:e.label.split('\n').length*14}));
-  const obstacles=boxes.filter(box=>box.id!==edge.from&&box.id!==edge.to&&box.id!==parents.get(edge.from)&&box.id!==parents.get(edge.to)).concat(otherLabels);
   const viable=candidates.map(clean).filter(points=>points.length<old.length||north&&points.length===old.length).sort((a,b)=>a.length-b.length||Number(Math.abs(a.at(-1)!.y-target.y)>epsilon)-Number(Math.abs(b.at(-1)!.y-target.y)>epsilon)||a.reduce((sum,p,i)=>sum+(i?length(a[i-1],p):0),0)-b.reduce((sum,p,i)=>sum+(i?length(b[i-1],p):0),0));
   for(const points of viable){
    if(points.some(p=>p.x<bounds.x||p.x>bounds.x+bounds.width||p.y<bounds.y||p.y>bounds.y+bounds.height))continue;

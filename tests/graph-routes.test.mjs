@@ -49,3 +49,17 @@ for(const blocked of [false,true])test('inter-block stack routes remove intermed
  if(blocked)assert.deepEqual(edge.points,old);
  else {assert.equal(edge.points.length,5);assert.deepEqual(edge.points[0],old[0]);assert.deepEqual(edge.points.at(-1),old.at(-1));assert.ok(edge.points.every(p=>p.x>=370.57));}
 });
+
+for(const mirrored of [false,true])test('parallel stack and control routes use separate straight lanes beside an exception '+mirrored,()=>{
+ const boxes=[{id:'call',x:31,y:105,width:480,height:32},{id:'return',x:215,y:281,width:115,height:32},
+  {id:'try',x:13,y:14,width:518,height:173},{id:'end',x:23,y:231,width:325,height:100},{id:'handler',x:350,y:380,width:150,height:100}];
+ const control={from:'call',to:'return',label:'',points:[{x:272,y:137},{x:272,y:281}]};
+ const stack={from:'call',to:'return',label:'',points:[{x:36,y:137},{x:36,y:296},{x:215,y:296}]};
+ const exception={from:'try',to:'handler',label:'',points:[{x:63,y:187},{x:63,y:203},{x:373,y:203},{x:373,y:380}]};
+ const edges=[control,stack,exception];
+ if(mirrored){for(const box of boxes)box.x=600-box.x-box.width;for(const edge of edges)edge.points=edge.points.map(p=>({x:600-p.x,y:p.y}));}
+ simplifyGraphRoutes(boxes,edges,new Map([['call','try'],['return','end']]),{x:0,y:0,width:600,height:500});
+ for(const edge of edges){assert.equal(edge.points.length,2);assert.equal(edge.points[0].x,edge.points[1].x);}
+ assert.ok(Math.abs(stack.points[0].x-control.points[0].x)>=4);
+ assert.ok(Math.abs(stack.points[0].x-exception.points[0].x)>=4);
+});
