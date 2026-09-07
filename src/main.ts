@@ -67,7 +67,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="runtime-card"><span class="runtime-dot"></span><div><strong>WebAssembly JVM</strong><span>OpenJDK 23 · ブラウザ内で実行</span></div><span class="runtime-label">LOCAL</span></div>
   </section>
 </main>
-<footer class="statusbar"><div><span id="state-dot" class="status-dot loading"></span><span id="state" role="status" aria-live="polite">JVM を読み込み中…</span></div><span id="instruction-hint">Alt＋ホバーでスタックの変化を表示</span><span id="timing"></span></footer>`;
+<footer class="statusbar"><div><span id="state-dot" class="status-dot loading"></span><span id="state" role="status" aria-live="polite">JVM を読み込み中…</span></div><span id="instruction-hint">命令ホバーでスタックの変化を表示</span><span id="timing"></span></footer>`;
 const el = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
 let project=defaultProject();
 interface ClassPreview {key:string;title:string;model:monaco.editor.ITextModel;folderPath?:string;mtime:number;size:number}
@@ -187,7 +187,7 @@ const menus=installMenus(el('menus'),[
   ]},
   {label:'Help',items:[
     {id:'help-project',label:'プロジェクトについて',action:()=>void dialog('プロジェクトについて','File → フォルダーを開くは設定の有無を自動判別し、プロジェクトを開くは .jalprj があるフォルダーを読み込みます。設定なしの場合はソースだけを保存します。約 1 秒ごとに外部の追加・削除・変更を反映します。Ctrl+S で同じフォルダーへ保存します。project.jalprj は名前と実行ファイルの設定だけを持ちます。初期の実行ファイルは src/Main.jal です。対応していないブラウザでは ZIP にエクスポートできます。')},
-    {id:'help-shortcuts',label:'操作とショートカット',action:()=>void dialog('操作とショートカット','Ctrl+S: 保存 / Ctrl+O: 開く / Ctrl+Enter・F5: 実行 / Ctrl+Space: 補完 / Ctrl+.: Quick Fix / Alt＋ホバー: スタックの実行前→実行後 / Ctrl+クリック・F12: クラス／メンバー／ラベルの定義へ移動。メニューは矢印キーと Escape でも操作できます。')},
+    {id:'help-shortcuts',label:'操作とショートカット',action:()=>void dialog('操作とショートカット','Ctrl+S: 保存 / Ctrl+O: 開く / Ctrl+Enter・F5: 実行 / Ctrl+Space: 補完 / Ctrl+.: Quick Fix / 命令ホバー: スタックの実行前→実行後 / Ctrl+クリック・F12: クラス／メンバー／ラベルの定義へ移動。メニューは矢印キーと Escape でも操作できます。')},
     {id:'help-about',label:'JALWeb について',action:()=>void dialog('JALWeb','JVM Assembly Language の Web エディタ。Monaco Editor・ANTLR・ASM・Bovine WASM JVM・OpenJDK を使用しています。コードのコンパイルと実行はブラウザ内で行います。')}
   ]}
 ]);
@@ -564,7 +564,7 @@ async function analyze():Promise<void> {
 }
 editor.onDidChangeCursorPosition(({position})=>{
   el('cursor').textContent=`Ln ${position.lineNumber}, Col ${position.column}`;
-  el('instruction-hint').textContent='Alt＋ホバーでスタックの変化を表示';
+  el('instruction-hint').textContent='命令ホバーでスタックの変化を表示';
 });
 function stopRun(show=true) {runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
 async function run() {
