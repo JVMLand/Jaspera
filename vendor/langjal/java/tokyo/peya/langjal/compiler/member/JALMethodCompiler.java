@@ -123,6 +123,11 @@ public class JALMethodCompiler {
         this.clazz.methods.add(this.method);
 
         this.evaluateMethodMetadata(method);
+        if ((this.method.access & (EOpcodes.ACC_NATIVE | EOpcodes.ACC_ABSTRACT)) != 0) {
+            if (!method.methodBody().instructionSet().isEmpty())
+                throw new IllegalValueException("Native and abstract methods cannot contain instructions.", method.methodBody());
+            return; // These declarations have no Code attribute or stack frames.
+        }
         this.evaluateMethodParameters(method);
         this.evaluateMethodBody(method.methodBody());
         if ((this.compileFlags & CompileSettings.COMPUTE_STACK_FRAME_MAP) != 0 && (this.clazz.version & 0xffff) >= 50)
