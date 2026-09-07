@@ -97,7 +97,9 @@ let analysisPromise:Promise<void>|undefined;
 let analysisTimer:ReturnType<typeof setTimeout>;
 const compiler=new Runtime();let runner:Runtime|undefined;
 const editorOverlays=document.createElement('div');editorOverlays.id='editor-overlays';document.body.append(editorOverlays);
-export let editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:editorOverlays,fixedOverflowWidgets:true,theme:'jal-night',automaticLayout:true,fontSize:15,lineHeight:27,
+// Theme is global to Monaco; editor options must not override it when groups are created.
+initializeThemes();
+export let editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:editorOverlays,fixedOverflowWidgets:true,automaticLayout:true,fontSize:15,lineHeight:27,
   fontFamily:'"Cascadia Code", "JetBrains Mono", Consolas, monospace',fontLigatures:true,minimap:{enabled:false},
   padding:{top:24,bottom:24},scrollBeyondLastLine:false,tabSize:2,insertSpaces:true,renderLineHighlight:'line',
   overviewRulerBorder:false,hideCursorInOverviewRuler:true,lineNumbersMinChars:10,folding:true,glyphMargin:false,
@@ -108,7 +110,6 @@ el('editor').classList.add('group-editor');
 const groupResources:monaco.IDisposable[]=[];
 const syncOverlayTheme=()=>{editorOverlays.className=editor.getDomNode()!.className;};
 const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeObserver.observe(editor.getDomNode()!,{attributes:true,attributeFilter:['class']});syncOverlayTheme();
-initializeThemes();
 const stackHover=installStackHover(editor,model=>{const path=[...models].find(([,m])=>m===model)?.[0],cached=path?compilationCache.get(path):undefined;return cached?.source===model.getValue()?cached.compilation:undefined;});
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),()=>void run(),{
