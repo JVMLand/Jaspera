@@ -1,7 +1,7 @@
 import {chromium} from '@playwright/test';
 import {spawn,execFileSync} from 'node:child_process';
 import {mkdir,writeFile} from 'node:fs/promises';
-// Windows/Edge audit. Run after npm run build, without concurrent browser tests.
+// Windows/Edge audit. Run after pnpm run build, without concurrent browser tests.
 // Heap samples force JS GC; WASM buffer capacity is not physical resident RAM.
 await mkdir('.cache',{recursive:true});
 const base='http://127.0.0.1:5223';const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port','5223','--strictPort'],{stdio:'pipe',windowsHide:true});let browser;

@@ -1,7 +1,7 @@
 import {chromium} from '@playwright/test';
 import {spawn} from 'node:child_process';
 import {mkdir,writeFile,readdir,stat} from 'node:fs/promises';
-// Run after npm run build, without other tests or builds running.
+// Run after pnpm run build, without other tests or builds running.
 await mkdir('.cache',{recursive:true});
 const reportPath=process.argv[2]??'.cache/performance-report.json';
 const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port','5222','--strictPort'],{stdio:'pipe',windowsHide:true});let browser;

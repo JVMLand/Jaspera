@@ -9,9 +9,9 @@ Monaco Editor で JVM Assembly Language (JAL) を編集し，ブラウザ内の 
 ビルドには Node.js 22 以降と JDK 21 以降が必要です。利用者のブラウザには Java のインストールは不要です。
 
 ```sh
-npm ci
-npm run setup
-npm run dev
+pnpm install --frozen-lockfile
+pnpm run setup
+pnpm run dev
 ```
 
 表示されたローカル URL を開き，**Run** または **Ctrl+Enter / F5** で実行します。**Stop** は実行用 Worker を破棄するため，無限ループも停止できます。macOS では Cmd+Enter も使用できます。
@@ -83,13 +83,13 @@ MyProject/
 ## ビルドとテスト
 
 ```sh
-npm run build
-npm test
+pnpm run build
+pnpm test
 ```
 
-`npm test` は専用のローカルサーバーを起動・終了します。Windows ではインストール済み Microsoft Edge，その他の環境では Playwright Chromium を使用します。Chromium は `npx playwright install chromium` で取得できます。`JALWEB_BROWSER=chromium` で選択を変更できます。
+`pnpm test` は専用のローカルサーバーを起動・終了します。Windows ではインストール済み Microsoft Edge，その他の環境では Playwright Chromium を使用します。Chromium は `pnpm exec playwright install chromium` で取得できます。`JALWEB_BROWSER=chromium` で選択を変更できます。
 
-`dist/` は静的サイトです。`npm run preview` で本番ビルドを確認できます。`dist/runtime/` を含むすべてのファイルを HTTP(S) サーバーで配信してください。WASM は `application/wasm` で配信します。サブディレクトリへの配置に対応します。実行にサーバー側 Java や外部実行 API は使いません。
+`dist/` は静的サイトです。`pnpm run preview` で本番ビルドを確認できます。`dist/runtime/` を含むすべてのファイルを HTTP(S) サーバーで配信してください。WASM は `application/wasm` で配信します。サブディレクトリへの配置に対応します。実行にサーバー側 Java や外部実行 API は使いません。
 
 初回は OpenJDK と JVM を約 55 MB 読み込みます。以後はブラウザの HTTP キャッシュを利用します。2 回目以降を高速化するため，配信サーバーでバージョン付きリリースと適切な Cache-Control を設定できます。
 
@@ -105,10 +105,10 @@ npm test
 - `vendor/langjal/`: 作業開始時の JavaAssemblyLanguage のソースと ANTLR 文法のスナップショット。スタック診断用に命令の構文範囲と消費オペランド位置を保持する変更を含みます。
 - `vendor/javasm/`: 既存プラグインの命令ドキュメント。
 - `java/patches/java/util/zip/`: JZlib を標準 ZIP API に接続するアダプター。圧縮アルゴリズム自体は再実装していません。
-- `vendor/*-lock.json`: 取得 URL・SHA-256。`npm run setup` は整合性を検証します。
+- `vendor/*-lock.json`: 取得 URL・SHA-256。`pnpm run setup` は整合性を検証します。
 - `vendor/provenance.json`: 参照したローカルリポジトリのコミットとスナップショットの説明。
 
-`npm run build:compiler` は文法から Java パーサーを再生成し，コンパイラ JAR とパッチ済み JDK JAR を作成します。原本 JDK は `.cache/runtime/jdk23.jar` に保存します。`PatchRuntime.java` は仮想ファイルシステムで扱えない `FileInputStream.available0` を，閉じたストリームの検査と仕様上有効な 0 の推定値に置き換えます。日時・ZIP 用のタイムゾーンデータは Temurin 23.0.2+7 から取得します。Bovine の上流コードは改変せず保持し，JS の UTF-8 バッファサイズとダウンロード処理の修正をセットアップ時に適用します。
+`pnpm run build:compiler` は文法から Java パーサーを再生成し，コンパイラ JAR とパッチ済み JDK JAR を作成します。原本 JDK は `.cache/runtime/jdk23.jar` に保存します。`PatchRuntime.java` は仮想ファイルシステムで扱えない `FileInputStream.available0` を，閉じたストリームの検査と仕様上有効な 0 の推定値に置き換えます。日時・ZIP 用のタイムゾーンデータは Temurin 23.0.2+7 から取得します。Bovine の上流コードは改変せず保持し，JS の UTF-8 バッファサイズとダウンロード処理の修正をセットアップ時に適用します。
 
 ## 実行範囲
 
