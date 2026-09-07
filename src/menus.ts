@@ -1,5 +1,5 @@
-interface Item {id:string;label:string;shortcut?:string;action:()=>void}
-interface Menu {label:string;items:Item[]}
+export interface Item {id:string;label:string;shortcut?:string;action:()=>void}
+interface Menu {label:string;items:(Item|null)[]}
 export function installMenus(container:HTMLElement,definitions:Menu[]) {
   const buttons:HTMLButtonElement[]=[],panels:HTMLDivElement[]=[],items=new Map<string,HTMLButtonElement>();let open=-1;
   const enabled=(i:number)=>Array.from(panels[i].querySelectorAll<HTMLButtonElement>('button:not(:disabled):not([hidden])'));
@@ -15,7 +15,7 @@ export function installMenus(container:HTMLElement,definitions:Menu[]) {
       if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();show(i,true,e.key==='ArrowUp');}
       if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='Home'||e.key==='End'){e.preventDefault();const n=buttons.length;const next=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:n-1))%n;if(open>=0)show(next,true);else{buttons.forEach((b,j)=>b.tabIndex=j===next?0:-1);buttons[next].focus();}}
     };
-    for(const item of menu.items){const b=document.createElement('button');b.id=item.id;b.type='button';b.setAttribute('role','menuitem');b.tabIndex=-1;const label=document.createElement('span');label.textContent=item.label;b.append(label);if(item.shortcut){const k=document.createElement('kbd');k.textContent=item.shortcut;b.append(k);}b.onclick=()=>{close();item.action();};panel.append(b);items.set(item.id,b);}
+    for(const item of menu.items){if(!item){const separator=document.createElement('hr');separator.setAttribute('role','separator');panel.append(separator);continue;}const b=document.createElement('button');b.id=item.id;b.type='button';b.setAttribute('role','menuitem');b.tabIndex=-1;const label=document.createElement('span');label.textContent=item.label;b.append(label);if(item.shortcut){const k=document.createElement('kbd');k.textContent=item.shortcut;b.append(k);}b.onclick=()=>{close();item.action();};panel.append(b);items.set(item.id,b);}
     panel.onkeydown=e=>{
       const rows=enabled(i),at=rows.indexOf(document.activeElement as HTMLButtonElement);
       if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();rows[e.key==='Home'?0:e.key==='End'?rows.length-1:(at+(e.key==='ArrowDown'?1:rows.length-1))%rows.length]?.focus();}
