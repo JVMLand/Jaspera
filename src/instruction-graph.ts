@@ -62,7 +62,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  function acceptGraph(graph:MethodGraph){
   if(!graph.nodes.length)return;
   let method=methods.find(m=>m.name===graph.name);if(method?.graph)return;
-  if(graph.nodes.length>600||methods.reduce((sum,m)=>sum+(m.graph?.nodes.length??0),0)+graph.nodes.length>2000){failure='表示の上限を超えています（1メソッド600命令、クラス全体2,000命令）。';summary();return;}
+  if(graph.nodes.length>600||methods.reduce((sum,m)=>sum+(m.graph?.nodes.length??0),0)+graph.nodes.length>2000){failure='表示の上限を超えています（1メソッド600命令，クラス全体2,000命令）。';summary();return;}
   method??=addMethod(graph.name);method.graph=graph;const cached=methodLayouts.get({...graph,edges:graph.edges.filter(edge=>enabled.has(edge.kind))});if(cached)render(method,cached);else enqueueLayout(method);
  }
  function progress(value:AnalysisProgress){

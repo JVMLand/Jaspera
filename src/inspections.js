@@ -49,7 +49,7 @@ export function inspectSource(source){
     if(/^(?:[ilfda](?:load|store)|ret|iinc)$/.test(name)&&value!==undefined){
      const increment=name==='iinc'?integer(ts[wide?3:2]?.text):0;
      if(value<0||value>65534||(/^[ld]/.test(name)&&value>65533)){
-      report('local-range','ローカル変数番号が範囲外です（2 スロット型は 0〜65533、その他は 0〜65534）。','error');continue;
+      report('local-range','ローカル変数番号が範囲外です（2 スロット型は 0〜65533，その他は 0〜65534）。','error');continue;
      }
      if(increment===undefined)continue;
      if(increment< -32768||increment>32767){report('increment-range','iinc の増分は -32768〜32767 にしてください。','error');continue;}

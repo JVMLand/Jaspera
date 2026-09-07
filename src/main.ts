@@ -55,9 +55,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <p class="properties-hint">初期設定は src/Main.jal です。main メソッドを持つファイルを選択してください。</p>
   <div class="dialog-actions"><button type="button" id="properties-cancel">キャンセル</button><button type="submit" id="properties-save">適用</button></div>
 </form></dialog>
-<dialog id="theme-dialog" aria-labelledby="theme-title"><form method="dialog"><h2 id="theme-title">テーマとレイアウト</h2><label for="theme-select">テーマ</label><select id="theme-select"></select><p>変更はすぐに反映され、このブラウザに保存されます。</p><div class="dialog-actions"><button>閉じる</button></div></form></dialog>
+<dialog id="theme-dialog" aria-labelledby="theme-title"><form method="dialog"><h2 id="theme-title">テーマとレイアウト</h2><label for="theme-select">テーマ</label><select id="theme-select"></select><p>変更はすぐに反映され，このブラウザに保存されます。</p><div class="dialog-actions"><button>閉じる</button></div></form></dialog>
 <main class="workspace">
-  <section class="workspace-summary" aria-label="ワークスペース概要"><div><span class="summary-eyebrow"></span><h2 id="summary-project-name">Main</h2><p>ソースを編集し、ブラウザでビルド・実行。</p></div><button id="summary-properties">プロジェクト設定 ↗</button></section>
+  <section class="workspace-summary" aria-label="ワークスペース概要"><div><span class="summary-eyebrow"></span><h2 id="summary-project-name">Main</h2><p>ソースを編集し，ブラウザでビルド・実行。</p></div><button id="summary-properties">プロジェクト設定 ↗</button></section>
   <aside class="project-pane" aria-label="プロジェクト"><div class="project-heading">PROJECT <button id="add-file" class="icon-button" title="ファイルを追加" aria-label="ファイルを追加">+</button></div><div id="file-list" aria-label="ファイル一覧"></div></aside>
   <section class="source-pane" aria-label="JAL ソースエディタ">
     <div class="pane-header source-header"><div id="file-tabs" role="tablist" aria-label="ソースファイル"></div></div>
@@ -66,7 +66,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </section>
   <section class="output-pane" aria-label="実行結果">
     <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button><button role="tab" id="graph-tab" aria-controls="graph-panel" aria-selected="false" tabindex="-1">Graph</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
-    <div id="console-panel" role="tabpanel" aria-labelledby="console-tab"><div id="console-empty"><span class="terminal-symbol" aria-hidden="true">&gt;_</span><p>コードを書いて、実行しよう。</p><span>Run または Ctrl + Enter</span></div><pre id="output" aria-label="標準出力と標準エラー" tabindex="0"></pre></div>
+    <div id="console-panel" role="tabpanel" aria-labelledby="console-tab"><div id="console-empty"><span class="terminal-symbol" aria-hidden="true">&gt;_</span><p>コードを書いて，実行しよう。</p><span>Run または Ctrl + Enter</span></div><pre id="output" aria-label="標準出力と標準エラー" tabindex="0"></pre></div>
     <div id="problems-panel" role="tabpanel" aria-labelledby="problems-tab" hidden><p class="empty-problems">文法とスタックを検査しています…</p><ul id="problems"></ul></div>
     <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div><div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div>
     <div class="stdin-section"><label for="stdin">STANDARD INPUT <span>実行開始時に読み込み</span></label><textarea id="stdin" spellcheck="false" placeholder="標準入力（任意）" aria-label="標準入力"></textarea></div>
@@ -490,7 +490,7 @@ async function openFiles(files:File[]):Promise<string[]>{
   try{
    if(file.size>65536)throw new Error('プロジェクト設定は64 KiB以下にしてください。');
    const text=await file.text();parseProperties(text);
-   if(await dialog('プロジェクトを開く','ソースも読み込むため、'+file.name+' があるフォルダーを選んでください。',undefined,true,'フォルダーを選ぶ')===null)return [];
+   if(await dialog('プロジェクトを開く','ソースも読み込むため，'+file.name+' があるフォルダーを選んでください。',undefined,true,'フォルダーを選ぶ')===null)return [];
    storageState(true);
    const root=await pickFolder(),loaded=await openFolder(root,true);
    if(loaded.binding.configName!==file.name||loaded.binding.baseline.get(file.name)!==text)throw new Error('選んだプロジェクトのフォルダーではありません。');
@@ -520,7 +520,7 @@ async function openFiles(files:File[]):Promise<string[]>{
     const copy=snapshot();copy.files.push({path,source});if(copy.files.length===1)copy.workspace={...copy.workspace,activeFile:path,entryFile:path};validateProject(copy);
     project.files.push({path,source});if(project.files.length===1)project.workspace.entryFile=path;
     attachModel(path,source);switchFile(path);invalidate();setDirty();opened.push('source:'+path);
-   }else throw new Error('開けるファイルは .jal、.class、.jalprj です。');
+   }else throw new Error('開けるファイルは .jal，.class，.jalprj です。');
   }catch(e){await dialog(file.name+' を開けませんでした',e instanceof Error?e.message:String(e));}
  }
  return opened;
@@ -544,7 +544,7 @@ function dialog(title:string,message:string,input?:string,confirm=false,confirmL
   if(input!==undefined){field.focus();field.select();}else el(confirm?'dialog-cancel':'dialog-ok').focus();
   return new Promise(resolve=>d.addEventListener('close',()=>resolve(d.returnValue==='ok'?field.value:null),{once:true}));
 }
-async function allowReplace() {return !dirty || await dialog('未保存の変更があります','現在の変更を破棄して続けますか？ 保存する場合はキャンセルし、File → 保存を選んでください。',undefined,true)!==null;}
+async function allowReplace() {return !dirty || await dialog('未保存の変更があります','現在の変更を破棄して続けますか？ 保存する場合はキャンセルし，File → 保存を選んでください。',undefined,true)!==null;}
 async function newProject() {if(!storageBusy&&await allowReplace())await installProject(defaultProject());}
 function openProperties() {
   const d=el<HTMLDialogElement>('project-properties');if(d.open)return;

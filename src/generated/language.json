@@ -1030,19 +1030,19 @@
     },
     "arraylength": {
       "title": "配列の長さ",
-      "markdown": "## 配列の長さ\n\n配列参照を取り出し、その要素数を int としてスタックに積みます。\n\n`..., arrayref → ..., length`\n\n配列参照が null の場合は NullPointerException。"
+      "markdown": "## 配列の長さ\n\n配列参照を取り出し，その要素数を int としてスタックに積みます。\n\n`..., arrayref → ..., length`\n\n配列参照が null の場合は NullPointerException。"
     },
     "iushr": {
       "title": "int の論理右シフト",
-      "markdown": "## int の論理右シフト\n\nint 値を指定ビット数だけ右にシフトし、上位ビットを 0 で埋めます。シフト量は下位 5 ビットです。\n\n`..., value, shift → ..., result`"
+      "markdown": "## int の論理右シフト\n\nint 値を指定ビット数だけ右にシフトし，上位ビットを 0 で埋めます。シフト量は下位 5 ビットです。\n\n`..., value, shift → ..., result`"
     },
     "lushr": {
       "title": "long の論理右シフト",
-      "markdown": "## long の論理右シフト\n\nlong 値を指定ビット数だけ右にシフトし、上位ビットを 0 で埋めます。シフト量は int の下位 6 ビットです。\n\n`..., value, shift → ..., result`"
+      "markdown": "## long の論理右シフト\n\nlong 値を指定ビット数だけ右にシフトし，上位ビットを 0 で埋めます。シフト量は int の下位 6 ビットです。\n\n`..., value, shift → ..., result`"
     },
     "lcmp": {
       "title": "long の比較",
-      "markdown": "## long の比較\n\n2 つの long 値を比較し、value1 が value2 より小さい・等しい・大きい場合に int の -1・0・1 を積みます。\n\n`..., value1, value2 → ..., result`"
+      "markdown": "## long の比較\n\n2 つの long 値を比較し，value1 が value2 より小さい・等しい・大きい場合に int の -1・0・1 を積みます。\n\n`..., value1, value2 → ..., result`"
     },
     "aload_4": {
       "title": "ローカル参照の読み込み",

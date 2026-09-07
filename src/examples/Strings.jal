@@ -1,4 +1,4 @@
-// StringBuilder に文字列と数値を追加し、1 本の文字列にする。
+// StringBuilder に文字列と数値を追加し，1 本の文字列にする。
 public class examples/Strings {
   public static main([Ljava/lang/String;)V {
     new java/lang/StringBuilder

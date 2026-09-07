@@ -22,7 +22,7 @@ export function validateProject(project:Project):Project {
     validatePath(f.path);
     requireValue(!names.has(f.path.toLowerCase()),'同じファイル名が重複しています。'); names.add(f.path.toLowerCase());
     const size=bytes(f.source);total+=size;
-    requireValue(size<=1024*1024 && total<=6*1024*1024,'ソースは各 1 MiB、合計 6 MiB 以下にしてください。');
+    requireValue(size<=1024*1024 && total<=6*1024*1024,'ソースは各 1 MiB，合計 6 MiB 以下にしてください。');
     return {path:f.path as string,source:f.source as string};
   });
   const w=data.workspace??{};

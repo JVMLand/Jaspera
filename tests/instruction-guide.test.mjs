@@ -8,7 +8,7 @@ test('stack manipulation variants keep ordering and category restrictions',()=>{
 
 test('editorial summaries keep operand order only where it matters',()=>{
  for(const op of ['iadd','lmul','iand','ior','ixor','if_icmpeq','if_acmpne'])assert.doesNotMatch(guide(op).summary,/先に積んだ|左側|右側|TOP の下/);
- assert.match(guide('isub').summary,/TOP の値を、その下の値から引き/);assert.match(guide('idiv').summary,/TOP の値で、その下の値を割り/);
+ assert.match(guide('isub').summary,/TOP の値を，その下の値から引き/);assert.match(guide('idiv').summary,/TOP の値で，その下の値を割り/);
  assert.match(guide('ishl').summary,/ビット数/);assert.match(guide('iand').forms[0].note,/両方のビット/);
  assert.match(guide('iadd').markdown,/オーバーフロー/);assert.doesNotMatch(guide('iadd').markdown,/IEEE|NaN|形式|スタック効果|先に積んだ/);
  assert.match(guide('idiv').markdown,/ArithmeticException/);assert.match(guide('fdiv').markdown,/NaN/);

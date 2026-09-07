@@ -19,8 +19,8 @@ export function helpMenuItems(detached=false,canSave=()=>true){
   return [
     {id:'help-offline',label:'オフラインの準備…',action:()=>{void import('./offline').then(m=>m.openOfflinePreparation());}},
     ...(!detached?[{id:'help-project',label:'プロジェクト',action:()=>openHelp('プロジェクト',[
-      element('p','プロジェクトは、設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → フォルダーを開くから選んでください。'),
-      element('p','実行するファイルは、File → プロジェクトのプロパティで変更できます。初期設定は src/Main.jal です。')
+      element('p','プロジェクトは，設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → フォルダーを開くから選んでください。'),
+      element('p','実行するファイルは，File → プロジェクトのプロパティで変更できます。初期設定は src/Main.jal です。')
     ])}]:[]),
     {id:'help-shortcuts',label:'ショートカット',action:()=>{
       const mod=/Mac|iPhone|iPad/.test(navigator.platform)?'⌘':'Ctrl';
@@ -42,9 +42,9 @@ export function helpMenuItems(detached=false,canSave=()=>true){
       row('クイックフィックス',[mod,'.']);
       row('検索',[mod,'F']);
       row('定義へ移動',['F12']);
-      const hover=element('p','命令にマウスを重ねると、実行前後のスタックが表示されます。');
-      const tabs=element('p');tabs.append(element('kbd','Alt'),' を押しながらタブをクリックすると、同じグループのほかのタブを閉じます。');
-      const labels=element('p');labels.append(element('kbd','Shift'),' を押しながらラベルをクリックすると、定義または使用箇所へ移動します。');
+      const hover=element('p','命令にマウスを重ねると，実行前後のスタックが表示されます。');
+      const tabs=element('p');tabs.append(element('kbd','Alt'),' を押しながらタブをクリックすると，同じグループのほかのタブを閉じます。');
+      const labels=element('p');labels.append(element('kbd','Shift'),' を押しながらラベルをクリックすると，定義または使用箇所へ移動します。');
       openHelp('ショートカット',[table,labels,hover,tabs]);
     }},
     {id:'help-about',label:'JALWeb について',action:()=>showHelpMessage('JALWeb','JVM Assembly Language（JAL）のコードを編集・実行できます。')}

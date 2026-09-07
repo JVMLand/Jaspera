@@ -1,4 +1,4 @@
-// int 配列を作り、要素を書き込んで読み出す。配列の添字は 0 から。
+// int 配列を作り，要素を書き込んで読み出す。配列の添字は 0 から。
 public class examples/Arrays {
   public static main([Ljava/lang/String;)V {
     iconst_3

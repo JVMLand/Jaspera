@@ -1,4 +1,4 @@
-// 文字列を表示する。getstatic で出力先を積み、println に文字列を渡す。
+// 文字列を表示する。getstatic で出力先を積み，println に文字列を渡す。
 public class examples/HelloWorld {
   public static main([Ljava/lang/String;)V {
     getstatic java/lang/System->out:Ljava/io/PrintStream;

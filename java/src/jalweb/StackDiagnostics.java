@@ -71,7 +71,7 @@ final class StackDiagnostics {
         }
         String message=expected==null?error.getDetailedMessage():error.actual==null?
             subject+"に必要な "+expected+" の値がスタックにありません。":
-            subject+"には "+expected+" が必要ですが、スタック上の値は "+typeName(error.actual)+" です。";
+            subject+"には "+expected+" が必要ですが，スタック上の値は "+typeName(error.actual)+" です。";
         return new Problem(message,range);
     }
 }

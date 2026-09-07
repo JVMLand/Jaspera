@@ -1,4 +1,4 @@
-// 数値を比較し、条件に応じてジャンプする。最初の値を変えて試そう。
+// 数値を比較し，条件に応じてジャンプする。最初の値を変えて試そう。
 public class examples/Branches {
   public static main([Ljava/lang/String;)V {
     bipush 12
