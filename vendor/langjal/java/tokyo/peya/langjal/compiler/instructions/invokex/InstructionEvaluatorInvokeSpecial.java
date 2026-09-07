@@ -40,8 +40,7 @@ public class InstructionEvaluatorInvokeSpecial
         String methodName = ref.methodName().getText();
 
         // Owner が指定されていない場合は，命令を持つメソッドのクラスが所有者となる
-        JALParser.FullQualifiedClassNameContext ownerType = ref.fullQualifiedClassName();
-        String ownerName = ownerType == null ? clazz.name : ownerType.getText();
+        String ownerName = InstructionEvaluateHelperInvocation.methodOwner(ref, clazz.name);
 
         return InstructionEvaluateHelperInvocation.evaluate(
                 this,

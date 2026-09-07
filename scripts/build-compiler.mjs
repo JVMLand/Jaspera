@@ -75,3 +75,7 @@ for(const [path,bytes] of Object.entries(unzipSync(await readFile('.cache/java/j
 for(const path of await walk('java/build/patches'))runtime[path.slice('java/build/patches/'.length)]=new Uint8Array(await readFile(path));
 await writeFile('public/runtime/jdk23.jar',zipSync(runtime,{level:6}));
 run("java",["-cp","public/runtime/jalweb-compiler.jar","jalweb.Catalog","public/runtime/jdk23.jar","src/generated/jdk.json"]);
+
+run('java',['-cp','public/runtime/jalweb-compiler.jar','tokyo.peya.langjal.analyser.ClassHierarchy','public/runtime/jdk23.jar','java/build/hierarchy.tsv']);
+jar['langjal/hierarchy.tsv']=new Uint8Array(await readFile('java/build/hierarchy.tsv'));
+await writeFile('public/runtime/jalweb-compiler.jar',zipSync(jar,{level:6}));

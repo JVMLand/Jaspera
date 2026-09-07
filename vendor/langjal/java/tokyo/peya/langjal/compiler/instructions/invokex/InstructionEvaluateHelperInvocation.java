@@ -19,16 +19,20 @@ public class InstructionEvaluateHelperInvocation {
     public static EvaluatedInstruction evaluate(@NotNull AbstractInstructionEvaluator<?> evaluator,
                                                 @NotNull ClassNode ownerClazz,
                                                 @NotNull JALParser.JvmInsArgMethodRefContext ref, int opcode) {
-        JALParser.FullQualifiedClassNameContext methodOwner = ref.fullQualifiedClassName();
         JALParser.MethodNameContext methodName = ref.methodName();
         JALParser.MethodDescriptorContext methodDescriptor = ref.methodDescriptor();
         return evaluate(
                 evaluator,
-                methodOwner == null ? ownerClazz.name : methodOwner.getText(),
+                methodOwner(ref, ownerClazz.name),
                 methodName.getText(),
                 methodDescriptor.getText(),
                 opcode
         );
+    }
+
+    public static String methodOwner(JALParser.JvmInsArgMethodRefContext ref, String defaultOwner) {
+        if (ref.arrayTypeDescriptor() != null) return ref.arrayTypeDescriptor().getText();
+        return ref.fullQualifiedClassName() == null ? defaultOwner : ref.fullQualifiedClassName().getText();
     }
 
     public static FrameDifferenceInfo getFrameNormalDifferenceInfo(@NotNull InstructionInfo instruction) {
@@ -41,7 +45,7 @@ public class InstructionEvaluateHelperInvocation {
         opArguments(builder, instruction, parameterTypes);
         if (!(method.getOpcode() == EOpcodes.INVOKESTATIC || method.getOpcode() == EOpcodes.INVOKEDYNAMIC)) {
             // インスタンスメソッドの場合は，所有者クラスのインスタンスをスタックからポップする
-            builder.popObjectRef(TypeDescriptor.className(method.owner));
+            builder.popObjectRef(method.owner.startsWith("[") ? TypeDescriptor.parse(method.owner) : TypeDescriptor.className(method.owner));
         }
 
         opReturnType(builder, instruction, returnType);

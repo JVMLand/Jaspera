@@ -61,7 +61,7 @@ final class StackDiagnostics {
                     if(desc!=null)range=new Range(desc.start.getLine(),desc.start.getCharPositionInLine()+offset,arguments[argument].getDescriptor().length());
                     expected=arguments[argument].getClassName();subject="第"+(argument+1)+"引数";
                 } else if(instruction instanceof MethodInsnNode method&&method.getOpcode()!=org.objectweb.asm.Opcodes.INVOKESTATIC){
-                    range=span(find(source,"fullQualifiedClassName"),range);expected=Type.getObjectType(method.owner).getClassName();subject="呼び出し先のオブジェクト";
+                    range=span(find(source,"arrayTypeDescriptor")!=null?find(source,"arrayTypeDescriptor"):find(source,"fullQualifiedClassName"),range);expected=Type.getObjectType(method.owner).getClassName();subject="呼び出し先のオブジェクト";
                 }
             } else if(instruction instanceof FieldInsnNode field){
                 boolean value=(field.getOpcode()==org.objectweb.asm.Opcodes.PUTSTATIC||field.getOpcode()==org.objectweb.asm.Opcodes.PUTFIELD)&&error.consumedSlots<Type.getType(field.desc).getSize();

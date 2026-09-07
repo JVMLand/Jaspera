@@ -138,6 +138,12 @@ public class StackElementUtils {
             StackElement existingElement = existingLocalElement.stackElement();
             StackElement newElement = newLocalElement.stackElement();
             // 既存のスタック要素と新しいスタック要素の型が一致しない場合は例外を投げる
+            // Stack-map locals with incompatible types become unusable (TOP).
+            // Live reads are still checked by the data-flow analyser and ASM verifier.
+            if (existingElement.type() != newElement.type()) {
+                mergedLocals[i] = toTopLocal(existingLocalElement, i);
+                continue;
+            }
             checkSameType(existingElement, newElement);
             // ローカル要素をマージする
             mergedLocals[i] = new LocalStackElement(
@@ -396,6 +402,8 @@ public class StackElementUtils {
 
     private static @NotNull TypeDescriptor getCommonReferenceType(@NotNull TypeDescriptor existingType,
                                                                   @NotNull TypeDescriptor newType) {
+        if (existingType.isArray() || newType.isArray())
+            return getCommonArrayType(existingType, newType);
         if (existingType.getBaseType().equals(ClassReferenceType.OBJECT)
                 || newType.getBaseType().equals(ClassReferenceType.OBJECT))
             return TypeDescriptor.OBJECT;
@@ -448,32 +456,7 @@ public class StackElementUtils {
      */
     public static ClassReferenceType getCommonSuperType(@NotNull ClassReferenceType type1,
                                                         @NotNull ClassReferenceType type2) {
-        ClassLoader classLoader = ClassReferenceType.class.getClassLoader();
-        Class<?> class1, class2;
-        try {
-            class1 = Class.forName(type1.getDottedName(), false, classLoader);
-            class2 = Class.forName(type2.getDottedName(), false, classLoader);
-        } catch (ClassNotFoundException e) {
-            return type1;  // クラスが見つからない場合は，片方の型をそのまま返す
-        }
-
-        if (class1.isAssignableFrom(class2))
-            return type1;  // type1 が type2 のスーパークラスなら type1 を返す
-        else if (class2.isAssignableFrom(class1))
-            return type2;  // type2 が type1 のスーパークラスなら type2 を返す
-
-        if (class1.isInterface() || class2.isInterface())
-            return ClassReferenceType.parse(Object.class.getName());  // インターフェースの場合は Object を返す
-
-        while (!class1.isAssignableFrom(class2)) {
-            Class<?> newClass1 = class1.getSuperclass();
-            if (newClass1 == null)
-                return ClassReferenceType.OBJECT;
-            class1 = newClass1;
-        }
-
-        // 共通のスーパークラスを返す。 Object まで到達するので，その時は Object を返す
-        return ClassReferenceType.parse(class1.getName());
+        return ClassReferenceType.parse(ClassHierarchy.common(type1.getDottedName().replace('.', '/'), type2.getDottedName().replace('.', '/')));
     }
 
     static String stackToString(@NotNull Collection<? extends StackElement> stack) {

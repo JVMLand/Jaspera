@@ -24,7 +24,7 @@ export function analyzeSymbols(source){
     for(const label of collect(m,'labelName')){const name=label.getText(),targets=labels.filter(l=>l.labelName().getText()===name);if(targets.length===1)add(label,{kind:'label',owner,name,target:span(targets[0].labelName())});}
    }
    for(const ref of collect(c,'jvmInsArgFieldRef'))if(valid(ref.typeDescriptor()))add(ref.fieldName(),{kind:'field',owner:ref.fullQualifiedClassName().getText(),name:ref.fieldName().getText(),descriptor:ref.typeDescriptor().getText()});
-   for(const ref of collect(c,'jvmInsArgMethodRef'))if(valid(ref.methodDescriptor()))add(ref.methodName(),{kind:'method',owner:ref.fullQualifiedClassName()?.getText()??owner,name:ref.methodName().getText(),descriptor:ref.methodDescriptor().getText()});
+   for(const ref of collect(c,'jvmInsArgMethodRef'))if(valid(ref.methodDescriptor()))add(ref.methodName(),{kind:'method',owner:ref.arrayTypeDescriptor()?.getText()??ref.fullQualifiedClassName()?.getText()??owner,name:ref.methodName().getText(),descriptor:ref.methodDescriptor().getText()});
    for(const ref of collect(c,'fullQualifiedClassName'))if(ref.start.start!==classNode.start.start)add(ref,{kind:'class',owner:ref.getText()});
   }
   // Object types may be embedded in a single METHOD_DESCRIPTOR lexer token.

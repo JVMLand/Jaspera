@@ -197,6 +197,13 @@ public class MethodAnalyser {
         }
     }
 
+    private static boolean sameVerificationFrame(StackElement[] left, StackElement[] right) {
+        if (left.length != right.length) return false;
+        for (int i = 0; i < left.length; i++)
+            if (!java.util.Objects.equals(left[i].toASMStackElement(), right[i].toASMStackElement())) return false;
+        return true;
+    }
+
     private boolean checkConfirmedPropagation(@NotNull FramePropagation propagation) {
         Iterator<FramePropagation> iterator = this.confirmedAnalysisResults.keySet().iterator();
         while (iterator.hasNext()) {
@@ -204,8 +211,8 @@ public class MethodAnalyser {
             if (confirmed.sender().equals(propagation.sender()) &&
                     confirmed.receiver().equals(propagation.receiver())) {
                 // 既に同じ送信元と受信先の伝播が存在する場合、スタックとローカル変数を比較
-                if (Arrays.equals(confirmed.stack(), propagation.stack()) &&
-                        Arrays.equals(confirmed.locals(), propagation.locals()))
+                if (sameVerificationFrame(confirmed.stack(), propagation.stack()) &&
+                        sameVerificationFrame(confirmed.locals(), propagation.locals()))
                     return false;  // 同じスタックとローカル変数の組み合わせが既に存在する
                 else {
                     if (this.context.isDebugEnabled()) this.context.postDebug("Found existing propagation with different stack/locals: " + confirmed +
@@ -417,6 +424,7 @@ public class MethodAnalyser {
                 liveLocals.clear();
             }
             this.applyInstructionLiveness(instruction, liveLocals);
+            addExceptionLiveness(analyser.getLabel(), liveLocals);
             if (!before.equals(liveLocals))
                 if (this.context.isDebugEnabled()) this.context.postDebug("Liveness after walking " + instructions.get(i) +
                         " backwards: " + before + " -> " + liveLocals);
@@ -438,7 +446,16 @@ public class MethodAnalyser {
                 liveLocals.or(successorLive);
         }
         if (this.context.isDebugEnabled()) this.context.postDebug("Computed live locals at exit of " + label.name() + ": " + liveLocals);
+        addExceptionLiveness(label, liveLocals);
         return liveLocals;
+    }
+
+    private void addExceptionLiveness(LabelInfo label, BitSet live) {
+        if (method.tryCatchBlocks == null) return;
+        for (TryCatchBlockNode block : method.tryCatchBlocks) {
+            LabelInfo start = labels.getLabelByNode(block.start), end = labels.getLabelByNode(block.end);
+            if (start != null && end != null && LabelsHolder.isInScope(start, end, label)) addLiveSuccessor(live, block.handler);
+        }
     }
 
     private @NotNull List<LabelInfo> getSuccessors(@NotNull LabelInfo label) {

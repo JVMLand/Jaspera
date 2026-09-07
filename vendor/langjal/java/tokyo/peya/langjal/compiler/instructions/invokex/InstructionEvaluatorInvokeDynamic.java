@@ -54,7 +54,8 @@ public class InstructionEvaluatorInvokeDynamic
 
     private static Handle toHandle(JALParser.JvmInsArgInvokeDynamicMethodHandleContext handle) {
         JALParser.JvmInsArgMethodRefContext ref = handle.jvmInsArgMethodRef();
-        String ownerType = ref.fullQualifiedClassName().getText();
+        String ownerType = InstructionEvaluateHelperInvocation.methodOwner(ref, null);
+        if (ownerType == null) throw new IllegalInstructionException("Method handles require an explicit owner.", ref);
         String methodName = ref.methodName().getText();
         String methodDesc = ref.methodDescriptor().getText();
         int tag = toTag(handle.jvmInsArgInvokeDynamicMethodHandleType());

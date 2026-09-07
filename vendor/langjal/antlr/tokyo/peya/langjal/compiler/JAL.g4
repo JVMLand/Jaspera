@@ -627,8 +627,10 @@ jvmInsArgFieldRef
    typeDescriptor
  ;
 
+arrayTypeDescriptor: arrayPrefix+ nonArrayTypeDescriptor;
+
 jvmInsArgMethodRef
- : (fullQualifiedClassName REF)?
+ : ((fullQualifiedClassName | arrayTypeDescriptor) REF)?
    methodName
    methodDescriptor
  ;
