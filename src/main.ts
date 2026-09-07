@@ -1,3 +1,5 @@
+import {installInstructionGraph} from './instruction-graph';
+import type {GraphDocument} from './protocol';
 import {planPathChange} from './project-paths';
 import {tabLabels} from './file-labels';
 import {examples,exampleSource,rememberExample,withoutExampleLayout} from './example-library';
@@ -60,10 +62,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="editor-footer"><span id="cursor">Ln 1, Col 1</span><span>UTF-8 <span class="separator">/</span> JAL</span></div>
   </section>
   <section class="output-pane" aria-label="実行結果">
-    <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
+    <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button><button role="tab" id="graph-tab" aria-controls="graph-panel" aria-selected="false" tabindex="-1">Graph</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
     <div id="console-panel" role="tabpanel" aria-labelledby="console-tab"><div id="console-empty"><span class="terminal-symbol" aria-hidden="true">&gt;_</span><p>コードを書いて、実行しよう。</p><span>Run または Ctrl + Enter</span></div><pre id="output" aria-label="標準出力と標準エラー" tabindex="0"></pre></div>
     <div id="problems-panel" role="tabpanel" aria-labelledby="problems-tab" hidden><p class="empty-problems">文法とスタックを検査しています…</p><ul id="problems"></ul></div>
-    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div>
+    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div><div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div>
     <div class="stdin-section"><label for="stdin">STANDARD INPUT <span>実行開始時に読み込み</span></label><textarea id="stdin" spellcheck="false" placeholder="標準入力（任意）" aria-label="標準入力"></textarea></div>
     <div class="runtime-card"><span class="runtime-dot"></span><div><strong>WebAssembly JVM</strong><span>OpenJDK 23 · ブラウザ内で実行</span></div><span class="runtime-label">LOCAL</span></div>
   </section>
@@ -95,6 +97,10 @@ const compilationService=new CompilationService(compiler);
 const usageDocuments=new Map<string,object>();
 const compileUsage=(source:string)=>{let document=usageDocuments.get(source);if(!document){document={};usageDocuments.set(source,document);}return compilationService.compile(document,source);};
 const compileModel=(model:monaco.editor.ITextModel)=>compilationService.compile(model,model.getValue());
+function graphFocus(model:monaco.editor.ITextModel,line=1,column=1){workspaceState.update({graphDocument:{uri:model.uri.toString(),source:model.getValue(),version:model.getVersionId(),line,column}});}
+function graphModel(doc:GraphDocument){const model=monaco.editor.getModel(monaco.Uri.parse(doc.uri));return model&&!model.isDisposed()&&model.getVersionId()===doc.version&&model.getValue()===doc.source?model:undefined;}
+const graphCompilation=(doc:GraphDocument)=>{const model=graphModel(doc);return model?compileModel(model):Promise.reject(new Error('文書の版が変更されています。'));};
+const graphNavigate=(doc:GraphDocument,line:number,column:number)=>{if(graphModel(doc))void openDefinition(doc.uri,{lineNumber:line,column});};
 let runner:Runtime|undefined;
 const editorOverlays=document.createElement('div');editorOverlays.id='editor-overlays';document.body.append(editorOverlays);
 // Theme is global to Monaco; editor options must not override it when groups are created.
@@ -113,8 +119,8 @@ const syncOverlayTheme=()=>{editorOverlays.className=editor.getDomNode()!.classN
 const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeObserver.observe(editor.getDomNode()!,{attributes:true,attributeFilter:['class']});syncOverlayTheme();
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
-if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
- projectAction,compileUsage,compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
+if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions'|'graph');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
+ graphFocus,graphCompilation,graphNavigate,projectAction,compileUsage,compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:setStdin,clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
@@ -196,7 +202,7 @@ const menus=installMenus(el('menus'),[
     {id:'project-properties-menu',label:'プロジェクトのプロパティ…',action:openProperties}
   ]},
   {label:'Edit',items:editMenuItems(editAction)},
-  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
+  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions','graph'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
   {label:'Build',items:[
     {id:'check-project',label:'検査',action:()=>void checkDocument()},
     {id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:()=>void run()},
@@ -429,6 +435,9 @@ function moveSource(key:string,side:Side){
  editor.focus();
 }
 function bindGroupEditor(view:monaco.editor.IStandaloneCodeEditor,side:Side){
+ const follow=()=>{const model=view.getModel(),p=view.getPosition();if(model)graphFocus(model,p?.lineNumber,p?.column);};
+ groupResources.push(view.onDidChangeModel(follow),view.onDidFocusEditorText(follow),view.onDidChangeCursorPosition(follow),view.onDidChangeModelContent(follow));
+
  view.onDidFocusEditorText(()=>{if(editor===view)return;captureView();editor=view;activeSide=side;const model=view.getModel(),path=[...models].find(([,m])=>m===model)?.[0];if(path){project.workspace.activeFile=path;activePreview=undefined;}else activePreview=[...classPreviews.values()].find(p=>p.model===model)?.key;renderFiles();updateActions();});
  view.onDidChangeModel(()=>refreshOffsets(view));
  if(side==='source')return;
@@ -608,13 +617,16 @@ function setStdin(text:string,edited=true){
 el<HTMLTextAreaElement>('stdin').oninput=()=>setStdin(el<HTMLTextAreaElement>('stdin').value);
 function output(text:string,stream='stdout') {workspaceState.updateTools({output:[...workspaceState.value.tools.output,{text,stream}]});el('console-empty').hidden=true;const span=document.createElement('span');span.className=stream;span.textContent=text;el('output').append(span);const scroller=document.querySelector<HTMLElement>('.dock-console-body')??el('console-panel');scroller.scrollTop=scroller.scrollHeight;}
 const instructionPanel=installInstructionsPanel(el('instructions-panel'),compileUsage);
+const graphPanel=installInstructionGraph(el('graph-panel'),graphCompilation,graphNavigate);
+const unsubscribeGraph=workspaceState.subscribe(()=>graphPanel.update(workspaceState.value.graphDocument));
+if(editor.getModel())graphFocus(editor.getModel()!,editor.getPosition()?.lineNumber,editor.getPosition()?.column);
 const instructionClicks=followInstructionClicks(editor,op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);});
 panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const view of groupEditors.values())view.layout();},side=>{for(const tab of visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side))closeEditorTabs(tab.key);},name=>{if(!detached.openPanel(name))status('小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。','error');},window.jalwebDetached!.workspaceId,()=>tabOrder,name=>name==='project'?[{label:'新規 JAL ファイル…',action:()=>void addFile()},null]:[]);
 for(const side of ['project','output'] as const){const container=document.createElement('div');container.className='group-editor';container.hidden=true;panelDock.panes[side].append(container);const view=monaco.editor.create(container,{...editor.getRawOptions(),model:null,automaticLayout:true,ariaLabel:side+' グループの JAL ソースコード'});groupEditors.set(side,view);bindGroupEditor(view,side);}
 bindGroupEditor(groupEditors.get('source')!,'source');
 for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));
 groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,key=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}}));
-function selectTab(tab:'project'|'console'|'problems'|'instructions'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
+function selectTab(tab:'project'|'console'|'problems'|'instructions'|'graph'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
 groupResources.push(installConsoleContextMenu(el('console-panel'),el('output'),()=>el('clear').click()),installProblemsContextMenu(el('problems-panel')));
 el('clear').onclick=()=>{workspaceState.updateTools({output:[]});el('output').textContent='';el('console-empty').hidden=false;};
 function showDiagnostics() {
@@ -693,5 +705,5 @@ el('run').onclick=()=>void run();
 editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
 window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;filePicker.dispose();unsubscribeTheme();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);

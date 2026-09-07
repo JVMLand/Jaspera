@@ -1,6 +1,6 @@
 import type {WorkspaceState} from './workspace-state';
 export type {ToolState} from './workspace-state';
-import type {Compilation} from './protocol';
+import type {Compilation,GraphDocument} from './protocol';
 import type {FileView} from './project';
 import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
@@ -11,9 +11,11 @@ export interface EditorSnapshot {view?:FileView;key:string;id:string;source:stri
 export type DetachedState=WorkspaceState;
 export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
-export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
+export interface DetachedBridge {graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
+ graphCompilation:(doc:GraphDocument)=>Promise<Compilation>;
+ graphNavigate:(doc:GraphDocument,line:number,column:number)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compilation:(id:string,version:number)=>Promise<Compilation>;
  openFiles:(files:File[],group:string)=>Promise<void>;
@@ -39,9 +41,11 @@ export function replaceText(model:monaco.editor.ITextModel,text:string){
 type UndoableModel=monaco.editor.ITextModel & {undo:()=>void|Promise<void>;redo:()=>void|Promise<void>};
 interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;subscriptions:monaco.IDisposable[]}
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
-interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
+interface Options {graphFocus:(model:monaco.editor.ITextModel,line:number,column:number)=>void;view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
+ graphCompilation:(doc:GraphDocument)=>Promise<Compilation>;
+ graphNavigate:(doc:GraphDocument,line:number,column:number)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
  openFiles:(files:File[])=>Promise<string[]>;
@@ -76,6 +80,8 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
   projectAction:(action,path,folder)=>options.projectAction(action,path,folder),
+  graphCompilation:doc=>options.graphCompilation(doc),graphNavigate:(doc,line,column)=>options.graphNavigate(doc,line,column),
+  graphFocus(id,line,column){const e=entries.get(id);if(e&&!e.model.isDisposed())options.graphFocus(e.model,line,column);},
   compileUsage:source=>options.compileUsage(source),
   compilation(id,version){
    const entry=entries.get(id);

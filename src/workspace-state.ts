@@ -1,9 +1,11 @@
+import type {GraphDocument} from './protocol';
 export interface ToolState {
   output:{text:string;stream:string}[];
   stdin:string;
   problems:{label:string;severity:string}[];
 }
 export interface WorkspaceState {
+  graphDocument?:GraphDocument;
   tools:ToolState;
   canSave:boolean;
   running:boolean;

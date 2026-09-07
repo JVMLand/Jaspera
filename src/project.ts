@@ -4,7 +4,7 @@ export interface FileView { line:number; column:number; scrollTop:number; scroll
 export interface Project {
   name:string;
   files:{path:string;source:string}[];
-  workspace:{layout?:WorkspaceLayout;activeFile:string;entryFile:string;stdin:string;panel:'project'|'console'|'problems'|'instructions';wordWrap:boolean;views:Record<string,FileView>};
+  workspace:{layout?:WorkspaceLayout;activeFile:string;entryFile:string;stdin:string;panel:'project'|'console'|'problems'|'instructions'|'graph';wordWrap:boolean;views:Record<string,FileView>};
 }
 const bytes=(s:string)=>new TextEncoder().encode(s).length;
 function requireValue(value:unknown,message:string):asserts value { if(!value)throw new Error(message); }
@@ -31,7 +31,7 @@ export function validateProject(project:Project):Project {
   requireValue(!files.length || files.some((f:{path:string})=>f.path===activeFile) && files.some((f:{path:string})=>f.path===entryFile),'開いているファイルまたは実行対象が見つかりません。');
   const stdin=w.stdin??'',panel=w.panel??'console',wordWrap=w.wordWrap??false;
   requireValue(typeof stdin==='string' && bytes(stdin)<=1024*1024,'標準入力は 1 MiB 以下にしてください。');
-  requireValue(panel==='project'||panel==='console'||panel==='problems'||panel==='instructions','表示パネルが不正です。');
+  requireValue(panel==='project'||panel==='console'||panel==='problems'||panel==='instructions'||panel==='graph','表示パネルが不正です。');
   requireValue(typeof wordWrap==='boolean','折り返し設定が不正です。');
   const views:Record<string,FileView>=Object.create(null);
   requireValue(!w.views || (typeof w.views==='object' && !Array.isArray(w.views)),'カーソル位置が不正です。');
