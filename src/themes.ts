@@ -4,6 +4,10 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import darcula from './darcula.json';
 import { referenceThemes, editorTheme } from './reference-themes';
 const key='jalweb.theme';
+let currentTheme='jal-night';
+const themeListeners=new Set<(id:string)=>void>();
+export const selectedTheme=()=>currentTheme;
+export function onThemeChange(listener:(id:string)=>void){themeListeners.add(listener);return ()=>themeListeners.delete(listener);}
 export const themes=[{id:'jal-night',label:'JAL Night'},{id:'darcula',label:'Darcula'},{id:'vs-dark',label:'Visual Studio Dark'},{id:'vs',label:'Visual Studio Light'},{id:'hc-black',label:'High Contrast Dark'},{id:'hc-light',label:'High Contrast Light'},...referenceThemes.map(({id,label})=>({id,label}))];
 monaco.editor.defineTheme('darcula',{...darcula,rules:[...darcula.rules,...instructionColorRules('darcula')]} as monaco.editor.IStandaloneThemeData);
 const palettes:Record<string,string[]>={
@@ -23,12 +27,13 @@ export function applyTheme(id:string,save=true) {
  for(const [group,color] of Object.entries(instructionColors(id)))root.style.setProperty('--instruction-'+group,'#'+color);
  monaco.editor.setTheme(['vs','vs-dark','hc-black','hc-light'].includes(id)?'jal-'+id:id);
  if(save)try{localStorage.setItem(key,id);}catch{/* Theme remains usable when storage is unavailable. */}
+ if(currentTheme!==id){currentTheme=id;for(const listener of themeListeners)listener(id);}
  return id;
 }
 export function restoreTheme(){let id='jal-night';try{id=localStorage.getItem(key)??id;}catch{}return applyTheme(id,false);}
 export function openThemePicker(){
  const dialog=document.getElementById('theme-dialog') as HTMLDialogElement;
- (document.getElementById('theme-select') as HTMLSelectElement).value=document.documentElement.dataset.theme??'jal-night';
+ (document.getElementById('theme-select') as HTMLSelectElement).value=currentTheme;
  dialog.showModal();document.getElementById('theme-select')!.focus();
 }
 export function initializeThemes(){

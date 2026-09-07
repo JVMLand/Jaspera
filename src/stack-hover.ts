@@ -1,13 +1,12 @@
 import {renderFrameTransition} from './frame-transition';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import {instructionNames} from './language';
-import {Runtime} from './runtime';
 import type {Compilation,StackFrame} from './protocol';
 import './stack-hover.css';
 
-export function installStackHover(editor:monaco.editor.IStandaloneCodeEditor,known?:(model:monaco.editor.ITextModel)=>Compilation|undefined){
+export function installStackHover(editor:monaco.editor.IStandaloneCodeEditor,analyze:(model:monaco.editor.ITextModel)=>Promise<Compilation>){
  const panel=document.createElement('div');panel.className='stack-hover';panel.hidden=true;panel.setAttribute('role','tooltip');panel.setAttribute('aria-label','命令実行前後のスタック');document.body.append(panel);
- const runtime=new Runtime(),cache=new WeakMap<monaco.editor.ITextModel,{version:number;promise:Promise<Compilation>}>();let queue=Promise.resolve<unknown>(undefined),serial=0,disposed=false,last:monaco.Position|null=null,shown='';let anchor:monaco.IPosition|undefined;let timer:ReturnType<typeof setTimeout>|undefined,leaveTimer:ReturnType<typeof setTimeout>|undefined;
+ let serial=0,disposed=false,last:monaco.Position|null=null,shown='';let anchor:monaco.IPosition|undefined;let timer:ReturnType<typeof setTimeout>|undefined,leaveTimer:ReturnType<typeof setTimeout>|undefined;
  const hover=editor.getRawOptions().hover;
  const node=(tag:string,text?:string,className?:string)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;};
  function hide(){clearTimeout(timer);clearTimeout(leaveTimer);if(!shown&&panel.hidden)return;serial++;shown='';panel.hidden=true;editor.updateOptions({hover:{...hover,enabled:hover?.enabled??true}});}
@@ -35,14 +34,13 @@ export function installStackHover(editor:monaco.editor.IStandaloneCodeEditor,kno
   const header=()=>{const h=node('header');h.append(node('code',word.word),node('span','この位置のフレーム · 静的解析'));return h;};
   panel.replaceChildren(header(),node('p','スタックを解析しています…','stack-hover-loading'));panel.hidden=false;place(currentAnchor);
   try{
-   let compilation=known?.(model);
-   if(!compilation){let cached=cache.get(model);if(!cached||cached.version!==version){const source=model.getValue();const promise=queue.then(()=>{if(disposed)throw new Error('Closed');return runtime.compile(source);});queue=promise.catch(()=>{});cached={version,promise};cache.set(model,cached);}compilation=await cached.promise;}
+   const compilation=await analyze(model);
    if(disposed||request!==serial||model.isDisposed()||editor.getModel()!==model||model.getVersionId()!==version)return;
    const frame=compilation.stackFrames?.find(f=>f.line===position.lineNumber&&word.startColumn>=f.column&&word.startColumn<f.column+f.length);
    panel.replaceChildren(header());
    if(frame)render(frame);else panel.append(node('p',compilation.diagnostics.find(d=>d.severity==='error')?.message??'この命令の状態を解析できません。ソースを確認してください。'));
    place(currentAnchor);
-  }catch(error){if(request!==serial||disposed)return;panel.replaceChildren(header(),node('p',error instanceof Error?error.message:'解析できませんでした。'));place(currentAnchor);cache.delete(model);}
+  }catch(error){if(request!==serial||disposed)return;panel.replaceChildren(header(),node('p',error instanceof Error?error.message:'解析できませんでした。'));place(currentAnchor);}
  }
  function schedule(immediate=false){clearTimeout(timer);timer=setTimeout(()=>void show(),immediate?0:250);}
  const listeners=[editor.onMouseMove(e=>{clearTimeout(leaveTimer);if(e.event.ctrlKey||e.event.metaKey||e.target.type!==monaco.editor.MouseTargetType.CONTENT_TEXT){last=null;hide();return;}const position=e.target.position;if(position&&last&&position.equals(last))return;last=position;hide();if(last)schedule(e.event.altKey);}),editor.onMouseLeave(()=>{leaveTimer=setTimeout(()=>{last=null;hide();},120);}),editor.onDidChangeModel(()=>{last=null;hide();}),editor.onDidChangeModelContent(()=>{hide();if(last)schedule();}),editor.onDidScrollChange(e=>{if(e.scrollTopChanged||e.scrollLeftChanged){last=null;hide();}}),editor.onDidLayoutChange(()=>{if(!panel.hidden&&anchor)place(anchor);})];
@@ -50,5 +48,5 @@ export function installStackHover(editor:monaco.editor.IStandaloneCodeEditor,kno
  const down=(e:KeyboardEvent)=>{if(e.key==='Control'||e.key==='Meta'||e.key==='Escape'){hide();if(e.key==='Escape')last=null;}else if(e.key==='Alt'&&last&&!e.ctrlKey&&!e.metaKey){e.preventDefault();schedule(true);}};
  const up=(e:KeyboardEvent)=>{if((e.key==='Control'||e.key==='Meta')&&last)schedule();};
  const blur=()=>{last=null;hide();};window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',blur);
- return {dispose(){disposed=true;hide();listeners.forEach(l=>l.dispose());window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',blur);panel.remove();runtime.stop();}};
+ return {dispose(){disposed=true;hide();listeners.forEach(l=>l.dispose());window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',blur);panel.remove();}};
 }

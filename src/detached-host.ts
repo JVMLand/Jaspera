@@ -1,3 +1,6 @@
+import type {WorkspaceState} from './workspace-state';
+export type {ToolState} from './workspace-state';
+import type {Compilation} from './protocol';
 import type {FileView} from './project';
 import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
@@ -5,12 +8,12 @@ import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import type {DefinitionDocument} from './navigation';
 export interface EditorSnapshot {view?:FileView;key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
-export interface ToolState {output:{text:string;stream:string}[];stdin:string;problems:{label:string;severity:string}[]}
-export interface DetachedState {tools?:ToolState;canSave:boolean;running:boolean;status:string;theme:string;files:{key:string;title:string}[]}
+export type DetachedState=WorkspaceState;
 export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
+ compilation:(id:string,version:number)=>Promise<Compilation>;
  completionCatalog:()=>Promise<Catalog>;
  attach:(id:string,client:DetachedClient)=>EditorSnapshot|undefined;
  tabs:(id:string)=>EditorSnapshot[];openTab:(group:string,key:string)=>EditorSnapshot|undefined;closeTab:(group:string,id:string)=>void;
@@ -35,14 +38,16 @@ interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
 interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
+ compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
  completionCatalog:()=>Promise<Catalog>;
+ subscribe:(listener:()=>void)=>()=>void;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
  resolve:(model:monaco.editor.ITextModel,offset:number)=>Promise<DefinitionDocument[]>;
  stop:()=>void;check:()=>void;theme:(id:string)=>void;classFile:(model:monaco.editor.ITextModel)=>Promise<{name:string;bytecode:string}|undefined>;
 }
 export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:()=>void,options:Options){
  const entries=new Map<string,Entry>(),groups=new Map<string,Group>();
- const snapshot=(e:Entry):EditorSnapshot=>({view:e.view,key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
+ const snapshot=(e:Entry):EditorSnapshot=>({view:e.view,key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:options.state().theme,diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
  const broadcast=(e:Entry)=>{if(!e.model.isDisposed())try{groups.get(e.group)?.client?.update(snapshot(e));}catch{}};
  const remove=(id:string)=>{const e=entries.get(id);if(!e)return;entries.delete(id);for(const d of e.subscriptions)d.dispose();groups.get(e.group)?.client?.remove?.(id);onReturn(e.key);closeIfEmpty(e.group);};
  const release=(id:string)=>{const g=groups.get(id);if(!g)return;groups.delete(id);for(const name of g.panels)onReturn('panel:'+name);for(const e of [...entries.values()])if(e.group===id)remove(e.id);try{g.popup.close();}catch{}};
@@ -64,6 +69,11 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
+  compilation(id,version){
+   const entry=entries.get(id);
+   if(!entry||entry.model.isDisposed()||entry.model.getVersionId()!==version)return Promise.reject(new Error('文書の版が変更されています。'));
+   return options.compile(entry.model);
+  },
   completionCatalog:()=>options.completionCatalog(),
   attach(id,client){const g=groups.get(id);if(!g)return;g.client=client;client.state?.(options.state());const e=[...entries.values()].find(e=>e.group===id);return e?snapshot(e):undefined;},
   tabs:id=>[...entries.values()].filter(e=>e.group===id).map(snapshot),openTab,
@@ -92,10 +102,10 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  // until that gesture; its files remain accessible in the main window meanwhile.
  const resume=(event:Event)=>{if(!event.isTrusted||!pending.length)return;const next=pending[0];if(restoreWindow(next))pending.shift();};
  window.addEventListener('click',resume);window.addEventListener('keydown',resume);
- let lastState='';
- const refresh=()=>{const state=options.state(),serialized=JSON.stringify(state);if(serialized===lastState)return;lastState=serialized;for(const g of groups.values())try{g.client?.state?.(state);}catch{}};
- const watcher=setInterval(()=>{for(const g of groups.values())if(g.popup.closed)release(g.id);refresh();},300);
- const observer=new MutationObserver(()=>{for(const e of entries.values())broadcast(e);refresh();});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+ const refresh=()=>{const state=options.state();for(const g of groups.values())try{g.client?.state?.(state);}catch{}};
+ const unsubscribe=options.subscribe(refresh);
+ // Closing a native window is an external event; retain a fallback for lost unload events.
+ const watcher=setInterval(()=>{for(const g of groups.values())if(g.popup.closed)release(g.id);},300);
  return {
   snapshot():WindowLayout[]{return [...groups.values()].filter(g=>!g.popup.closed).map(g=>{const tabs=[...entries.values()].filter(e=>e.group===g.id).map(e=>e.key);let state=g.initial?{active:g.initial.active,views:g.initial.views,wordWrap:g.initial.wordWrap,order:g.initial.order}:{active:tabs[0]??'panel:'+([...g.panels][0]??''),views:{},wordWrap:false};try{state=g.client?.layout?.()??state;}catch{}return {tabs,panels:[...g.panels],...state,left:g.popup.screenX,top:g.popup.screenY,width:g.popup.outerWidth,height:g.popup.outerHeight};}).concat(pending);},
   restore(layouts:WindowLayout[]){pending=[];for(const layout of layouts)if(!restoreWindow(layout))pending.push(layout);},
@@ -115,6 +125,6 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
    groups.set(id,{id,popup,panels:new Set()});add(id,{key,title,model,readOnly},id);return true;
   },
   closeAll(){pending=[];for(const id of [...groups.keys()])release(id);},
-  dispose(){window.removeEventListener('click',resume);window.removeEventListener('keydown',resume);clearInterval(watcher);observer.disconnect();this.closeAll();delete window.jalwebDetached;}
+  dispose(){window.removeEventListener('click',resume);window.removeEventListener('keydown',resume);clearInterval(watcher);unsubscribe();this.closeAll();delete window.jalwebDetached;}
  };
 }
