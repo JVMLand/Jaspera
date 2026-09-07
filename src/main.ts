@@ -40,7 +40,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 </header>
 <nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
 
-<dialog id="dialog"><form method="dialog"><h2 id="dialog-title"></h2><p id="dialog-message"></p><input id="dialog-input" aria-labelledby="dialog-title" autocomplete="off"><div class="dialog-actions"><button value="cancel" id="dialog-cancel">キャンセル</button><button value="ok" id="dialog-ok">OK</button></div></form></dialog>
+<dialog id="dialog"><form method="dialog"><h2 id="dialog-title"></h2><p id="dialog-message"></p><div id="dialog-input-row"><input id="dialog-input" aria-labelledby="dialog-title" autocomplete="off"><span id="dialog-suffix" hidden></span></div><div class="dialog-actions"><button type="button" id="dialog-cancel">キャンセル</button><button type="submit" value="ok" id="dialog-ok">OK</button></div></form></dialog>
 <dialog id="project-properties" aria-labelledby="properties-title"><form id="properties-form" method="dialog">
   <h2 id="properties-title">プロジェクトのプロパティ</h2>
   <label for="properties-name">プロジェクト名</label><input id="properties-name" required maxlength="128" autocomplete="off">
@@ -510,11 +510,13 @@ async function downloadClass() {
   const c=example?await compileExample(model!):results.get(project.workspace.activeFile);if((!example&&checkedRevision!==revision) || !c?.bytecode)return;
   download(new Blob([Uint8Array.from(atob(c.bytecode),x=>x.charCodeAt(0))],{type:'application/java-vm'}),c.className.split('/').pop()+'.class');
 }
-function dialog(title:string,message:string,input?:string,confirm=false,confirmLabel='変更を破棄して続ける'):Promise<string|null> {
+function dialog(title:string,message:string,input?:string,confirm=false,confirmLabel='変更を破棄して続ける',suffix=''):Promise<string|null> {
   const d=el<HTMLDialogElement>('dialog');if(d.open)return Promise.resolve(null);
   el('dialog-title').textContent=title;el('dialog-message').textContent=message;
   const field=el<HTMLInputElement>('dialog-input');field.hidden=input===undefined;field.value=input??'';
-  el('dialog-cancel').hidden=input===undefined&&!confirm;
+  el('dialog-input-row').hidden=input===undefined;el('dialog-suffix').hidden=!suffix;el('dialog-suffix').textContent=suffix;
+  if(suffix)field.setAttribute('aria-describedby','dialog-suffix');else field.removeAttribute('aria-describedby');
+  el('dialog-cancel').hidden=input===undefined&&!confirm;el('dialog-cancel').onclick=()=>d.close('cancel');
   el('dialog-ok').textContent=confirm?confirmLabel:'OK';d.returnValue='';d.showModal();
   if(input!==undefined){field.focus();field.select();}else el(confirm?'dialog-cancel':'dialog-ok').focus();
   return new Promise(resolve=>d.addEventListener('close',()=>resolve(d.returnValue==='ok'?field.value:null),{once:true}));
@@ -541,8 +543,9 @@ el('properties-form').onsubmit=e=>{
 };
 el<HTMLInputElement>('properties-name').oninput=()=>el<HTMLInputElement>('properties-name').setCustomValidity('');
 async function addFile() {
-  const path=await dialog('JAL ファイルを追加','相対パスを入力してください（例: src/Helper.jal）。','src/Helper.jal');if(path===null)return;
-  try {validatePath(path);if(project.files.length>=64)throw new Error('ファイルは 64 個までです。');if(project.files.some(f=>f.path.toLowerCase()===path.toLowerCase()))throw new Error('同じファイル名が存在します。');}
+  const name=await dialog('JAL ファイルを追加','ファイル名を入力してください（例: src/com.example.Helper）。','src/Helper',false,'','.jal');if(name===null)return;
+  const path=name.trim().replace(/\.jal$/i,'').replaceAll('.','/')+'.jal';
+  try {if(path==='.jal')throw new Error('ファイル名を入力してください。');validatePath(path);if(project.files.length>=64)throw new Error('ファイルは 64 個までです。');if(project.files.some(f=>f.path.toLowerCase()===path.toLowerCase()))throw new Error('同じファイル名が存在します。');}
   catch(e){await dialog('追加できませんでした',String(e instanceof Error?e.message:e));return;}
   const className=path.replace(/^src\//,'').slice(0,-4).replace(/[^a-zA-Z0-9_$/]/g,'_').replace(/(^|\/)(?=\d)/g,'$1_');
   if(!project.files.length)project.workspace.entryFile=path;
