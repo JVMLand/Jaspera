@@ -1,3 +1,4 @@
+import {helpMenuItems,showHelpMessage} from './help';
 import * as monaco from './editor-platform';
 import {SourceAnalysis,showBytecodeOffsets} from './source-analysis';
 import {EditorPane,paneTab,paneIdentity,beforePane,movePaneOrder,arrangePaneTabs} from './pane';
@@ -63,15 +64,15 @@ function updateActions(){
 }
 const action=(id:string)=>{editor.focus();editor.trigger('menu',id,undefined);};
 const save=()=>{if(workspace.canSave)bridge?.save();};const run=()=>bridge?.run();
-function help(title:string,text:string){el('help-title').textContent=title;el('help-text').textContent=text;el<HTMLDialogElement>('help-dialog').showModal();}
+
 function openFile(){const select=el<HTMLSelectElement>('workspace-files');select.replaceChildren();for(const file of workspace.files){const option=document.createElement('option');option.value=file.key;option.textContent=file.title;select.append(option);}el<HTMLDialogElement>('open-file').showModal();}
-async function downloadClass(){if(!active)return;const result=await bridge?.classFile(active);if(!result){help('class を保存できませんでした','ソースのコンパイル結果を確認してください。');return;}const bytes=Uint8Array.from(atob(result.bytecode),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes]));const a=document.createElement('a');a.href=url;a.download=result.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function downloadClass(){if(!active)return;const result=await bridge?.classFile(active);if(!result){showHelpMessage('class を保存できませんでした','ソースのコンパイル結果を確認してください。');return;}const bytes=Uint8Array.from(atob(result.bytecode),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes]));const a=document.createElement('a');a.href=url;a.download=result.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 const menus=installMenus(el('menus'),[
  {label:'File',items:[{id:'open-workspace-file',label:'ワークスペースのファイルを開く…',shortcut:'Ctrl+O',action:openFile},{id:'save-project',label:'プロジェクトを保存',shortcut:'Ctrl+S',action:save},{id:'close-tab',label:'このタブを閉じる',action:()=>{if(toolTabs?.active)bridge?.closePanel(group,toolTabs.active);else if(active)closeTab(active);}},{id:'close-others',label:'他のタブを閉じる',action:()=>{if(active)closeTab(active,true);}},{id:'close-window',label:'ウィンドウを閉じる',action:()=>window.close()}]},
  {label:'Edit',items:[{id:'undo',label:'元に戻す',shortcut:'Ctrl+Z',action:()=>{if(active)bridge?.undo(active,false);}},{id:'redo',label:'やり直す',shortcut:'Ctrl+Y',action:()=>{if(active)bridge?.undo(active,true);}},{id:'find',label:'検索',shortcut:'Ctrl+F',action:()=>action('actions.find')},{id:'replace',label:'置換',shortcut:'Ctrl+H',action:()=>action('editor.action.startFindReplaceAction')},{id:'comment',label:'行コメントの切り替え',shortcut:'Ctrl+/',action:()=>action('editor.action.commentLine')},{id:'quick-fix',label:'Quick Fix…',shortcut:'Ctrl+.',action:()=>action('editor.action.quickFix')},{id:'wrap',label:'折り返しの切り替え',action:()=>editor.updateOptions({wordWrap:editor.getRawOptions().wordWrap==='on'?'off':'on'})},{id:'theme',label:'テーマ…',action:()=>{el<HTMLSelectElement>('themes').value=workspace.theme;el<HTMLDialogElement>('theme-picker').showModal();}}]},
  {label:'View',items:(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>bridge?.openPanel(group,name)}))},
  {label:'Build',items:[{id:'check',label:'プロジェクトを検査',action:()=>bridge?.check()},{id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:run},{id:'menu-stop',label:'停止',action:()=>bridge?.stop()},{id:'download',label:'現在のファイルの .class を保存…',action:()=>void downloadClass()}]},
- {label:'Help',items:[{id:'help-shortcuts',label:'操作とショートカット',action:()=>help('操作とショートカット','Ctrl+O: ワークスペースのファイルを開く / Ctrl+S: 保存先がある場合に保存 / Ctrl+Enter・F5: 実行 / Ctrl+Space: 補完 / Ctrl+.: Quick Fix / Ctrl+クリック・F12: 定義へ移動。×でタブを閉じ、Alt＋クリックで他のタブを閉じます。')},{id:'help-about',label:'JALWeb について',action:()=>help('JALWeb','元のワークスペースと編集内容を共有しています。Run の実行結果は元の Console に表示されます。小窓を閉じるとファイルは元のウィンドウで開き直せます。')}]}
+ {label:'Help',items:helpMenuItems(true,()=>workspace.canSave)}
 ]);
 el<HTMLDialogElement>('open-file').addEventListener('close',()=>{if(el<HTMLDialogElement>('open-file').returnValue==='open'){const snapshot=bridge?.openTab(group,el<HTMLSelectElement>('workspace-files').value);if(snapshot){update(snapshot);select(snapshot.id);}}});
 for(const theme of themes){const option=document.createElement('option');option.value=theme.id;option.textContent=theme.label;el('themes').append(option);}el<HTMLSelectElement>('themes').onchange=()=>bridge?.theme(el<HTMLSelectElement>('themes').value);

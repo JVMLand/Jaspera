@@ -1,3 +1,4 @@
+import {helpMenuItems} from './help';
 import * as monaco from './editor-platform';
 import {WorkspaceStateStore} from './workspace-state';
 import {CompilationService} from './compilation-service';
@@ -179,11 +180,7 @@ const menus=installMenus(el('menus'),[
     {id:'menu-stop',label:'停止',action:()=>stopRun()},
     {id:'download',label:'現在のファイルの .class を保存…',action:downloadClass}
   ]},
-  {label:'Help',items:[
-    {id:'help-project',label:'プロジェクトについて',action:()=>void dialog('プロジェクトについて','File → フォルダーを開くは設定の有無を自動判別し、プロジェクトを開くは .jalprj があるフォルダーを読み込みます。設定なしの場合はソースだけを保存します。約 1 秒ごとに外部の追加・削除・変更を反映します。Ctrl+S で同じフォルダーへ保存します。project.jalprj は名前と実行ファイルの設定だけを持ちます。初期の実行ファイルは src/Main.jal です。対応していないブラウザでは ZIP にエクスポートできます。')},
-    {id:'help-shortcuts',label:'操作とショートカット',action:()=>void dialog('操作とショートカット','Ctrl+S: 保存 / Ctrl+O: 開く / Ctrl+Enter・F5: 実行 / Ctrl+Space: 補完 / Ctrl+.: Quick Fix / 命令ホバー: スタックの実行前→実行後 / Ctrl+クリック・F12: クラス／メンバー／ラベルの定義へ移動。メニューは矢印キーと Escape でも操作できます。')},
-    {id:'help-about',label:'JALWeb について',action:()=>void dialog('JALWeb','JVM Assembly Language の Web エディタ。Monaco Editor・ANTLR・ASM・Bovine WASM JVM・OpenJDK を使用しています。コードのコンパイルと実行はブラウザ内で行います。')}
-  ]}
+  {label:'Help',items:helpMenuItems()}
 ]);
 function status(text:string,kind:'ready'|'loading'|'error'='ready') {workspaceState.update({status:text});el('state').textContent=text;el('state-dot').className=`status-dot ${kind}`;}
 function setDirty(value=true) {if(value)changeVersion++;dirty=value;el('project-name').textContent=project.name+(dirty?' •':'');document.title=`${dirty?'• ':''}${project.name} — JALWeb`;el('summary-project-name').textContent=project.name;}
