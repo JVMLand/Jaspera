@@ -26,4 +26,5 @@ const supplemental = {
 for(const [name,[title,body]] of Object.entries(supplemental)) documents[name] ??= {title,markdown:`## ${title}\n\n${body}`};
 await mkdir('src/generated',{recursive:true});
 await writeFile('src/generated/language.json',JSON.stringify({instructions,keywords,documents},null,2)+'\n');
+await writeFile('src/generated/language-core.json',JSON.stringify({instructions,keywords})+'\n');
 console.log(`Generated ${instructions.length} instructions and ${Object.keys(documents).length} documentation entries`);

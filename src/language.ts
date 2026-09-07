@@ -2,9 +2,8 @@ import {inlayHintColors} from './inlay-hint-style';
 import {instructionHighlightGroups,instructionColorRules} from './instruction-colors';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { instructionCategory } from './instruction-categories';
-import language from './generated/language.json';
+import language from './generated/language-core.json';
 import { completeOperand, consoleCompletions, type Member, type Catalog } from './completion';
-const docs = language.documents as Record<string,{title:string;markdown:string}>;
 export const instructionNames = language.instructions;
 const snippets: Record<string,string> = {
   getstatic: 'getstatic ${1:java/lang/System}->${2:out}:${3:Ljava/io/PrintStream;}',
@@ -17,7 +16,6 @@ const snippets: Record<string,string> = {
 };
 let jdkPromise: Promise<Record<string,Member[]>> | undefined;
 const getJdk = () => jdkPromise ??= import('./generated/jdk.json').then(m=>m.default as Record<string,Member[]>);
-export function instructionDoc(word:string) { return docs[word]; }
 export function registerLanguage(workspaceCatalog:()=>Promise<Catalog>=async()=>({})) {
   monaco.languages.register({id:'jal',extensions:['.jal'],aliases:['JAL','JVM Assembly Language']});
   monaco.languages.setLanguageConfiguration('jal',{
@@ -46,6 +44,7 @@ export function registerLanguage(workspaceCatalog:()=>Promise<Catalog>=async()=>
     const lineStart=!operand && prefix.trim().match(/^[\w]*$/);
     const suggestions:monaco.languages.CompletionItem[]=[];
     if(lineStart) {
+      const docs=(await import('./generated/language.json')).default.documents as Record<string,{title:string;markdown:string}>;
       for(const label of language.instructions.filter(i=>i!=='aload_4')) suggestions.push({label:{label,description:instructionCategory(label)},kind:monaco.languages.CompletionItemKind.Function,
         insertText:/^(getstatic|putstatic|getfield|putfield|invokevirtual|invokestatic|invokespecial|invokeinterface|new|anewarray|checkcast|instanceof)$/.test(label)?label+' ':snippets[label]??label,command:/^(get|put|invoke|new|anewarray|checkcast|instanceof)/.test(label)?{id:'editor.action.triggerSuggest',title:'オペランド補完'}:undefined,insertTextRules:monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,range,
         detail:docs[label]?.title,documentation:{value:docs[label]?.markdown??label},sortText:`0${label}`});

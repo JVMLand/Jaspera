@@ -4,7 +4,7 @@ import {installConsoleContextMenu} from './console-panel';
 import {installProblemsContextMenu} from './problems-panel';
 import {ToolPane,paneTab} from './pane';
 import {renderProjectTree} from './project-tree';
-import {installInstructionsPanel} from './instructions-panel';
+import {installInstructionsPanel} from './lazy-instructions-panel';
 import type {PanelName} from './panel-dock';
 import type {DetachedBridge,ToolState,DetachedState} from './detached-host';
 import './detached-tools.css';

@@ -23,7 +23,7 @@ import {paneDrop} from './tab-interactions';
 import type {Side} from './panel-dock';
 import {followInstructionClicks} from './instruction-click';
 import {installPanelDock} from './panel-dock';
-import {installInstructionsPanel} from './instructions-panel';
+import {installInstructionsPanel} from './lazy-instructions-panel';
 import {installStackHover} from './stack-hover';
 import {currentInspections} from './inspection-actions';
 
