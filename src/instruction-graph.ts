@@ -1,3 +1,4 @@
+import {methodLayouts,graphDocuments,rememberGraph} from './graph-cache';
 import {observePanelVisibility} from './panel-visibility';
 import type {AnalysisProgress,Compilation,GraphDocument,MethodGraph} from './protocol';
 import {WorkerRpc} from './worker-rpc';
@@ -54,7 +55,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
   layoutQueue=layoutQueue.then(async()=>{
    if(disposed||generation!==layoutTicket||!method.graph)return;
    method.phase='配置中';placeholder(method);
-   try{const graph={...method.graph,edges:method.graph.edges.filter(edge=>enabled.has(edge.kind))};const placed=await worker.call(api=>api.positionGraphs([graph]));if(!disposed&&generation===layoutTicket)render(method,placed);}
+   try{const graph={...method.graph,edges:method.graph.edges.filter(edge=>enabled.has(edge.kind))};const cached=methodLayouts.get(graph);const placed=cached??await worker.call(api=>api.positionGraphs([graph]));if(!cached)methodLayouts.set(graph,placed);if(!disposed&&generation===layoutTicket)render(method,placed);}
    catch(error){if(!disposed&&generation===layoutTicket){method.phase='配置できませんでした';placeholder(method);failure=String(error);summary();}}
   });
  }
@@ -62,7 +63,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
   if(!graph.nodes.length)return;
   let method=methods.find(m=>m.name===graph.name);if(method?.graph)return;
   if(graph.nodes.length>600||methods.reduce((sum,m)=>sum+(m.graph?.nodes.length??0),0)+graph.nodes.length>2000){failure='表示の上限を超えています（1メソッド600命令、クラス全体2,000命令）。';summary();return;}
-  method??=addMethod(graph.name);method.graph=graph;enqueueLayout(method);
+  method??=addMethod(graph.name);method.graph=graph;const cached=methodLayouts.get({...graph,edges:graph.edges.filter(edge=>enabled.has(edge.kind))});if(cached)render(method,cached);else enqueueLayout(method);
  }
  function progress(value:AnalysisProgress){
   const labels={queued:'解析待ち',loading:'JVM を読み込み中',parse:'構文解析',analysis:'型・フロー解析',frames:'フレーム解析',layout:'配置中',complete:'解析完了'};
@@ -76,16 +77,17 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  const wheel=(event:WheelEvent)=>{event.preventDefault();const rect=svg.getBoundingClientRect();zoom(event.deltaY<0?1.1:1/1.1,event.clientX-rect.left,event.clientY-rect.top);};svg.addEventListener('wheel',wheel,{passive:false});
  svg.onpointerdown=e=>{if(e.button!==0||(e.target as Element).closest('.graph-node'))return;autoFit=false;drag={x:e.clientX,y:e.clientY,left:x,top:y};svg.setPointerCapture(e.pointerId);};svg.onpointermove=e=>{if(drag){x=drag.left+e.clientX-drag.x;y=drag.top+e.clientY-drag.y;transform();}};svg.onpointerup=svg.onpointercancel=()=>{drag=undefined;};
  const resize=new ResizeObserver(()=>{if(svg.clientWidth&&svg.clientHeight)fitWidth();});resize.observe(svg);
- const context=installContextMenu(host,()=>[{label:'全体表示',action:fit},{label:'再解析',action:()=>{const previous=doc;doc=undefined;update(previous);}}]);
+ const context=installContextMenu(host,()=>[{label:'全体表示',action:fit},{label:'再解析',action:()=>{const previous=doc;if(previous)graphDocuments.delete(previous.source);doc=undefined;update(previous);}}]);
  function refresh(next?:GraphDocument){
   const same=next?.uri===doc?.uri&&next?.version===doc?.version;doc=next;if(same&&next){highlight();return;}
   clearTimeout(timer);const id=++ticket;++layoutTicket;worker.stop();layoutQueue=Promise.resolve();scene.replaceChildren();methods=[];failure='';autoFit=true;
   if(!next){status.textContent='JAL ファイルを開いてください。';return;}
   owner=next.uri.split('/').at(-1)??'';stage='メソッドを読み取り中';summary();
+  const cached=graphDocuments.get(next.source);if(cached){owner=cached.owner;for(const graph of cached.graphs)acceptGraph(graph);summary();return;}
   timer=setTimeout(()=>{void (async()=>{
    const outline=await worker.call(api=>api.outline(next.source));if(disposed||id!==ticket)return;
    if(outline[0])owner=outline[0].owner;for(const method of outline)addMethod(method.name);reflow();
-   const result=await compile(next,value=>{if(!disposed&&id===ticket)progress(value);});if(disposed||id!==ticket)return;
+   const result=await compile(next,value=>{if(!disposed&&id===ticket)progress(value);});rememberGraph(next.source,result);if(disposed||id!==ticket)return;
    for(const graph of result.graphs??[])acceptGraph(graph);
    failure=result.diagnostics.find(d=>d.severity==='error')?.message??failure;
    if(!methods.length&&!failure)failure='表示できる命令がありません。';
