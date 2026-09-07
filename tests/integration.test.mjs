@@ -19,6 +19,7 @@ test('JALWeb browser / real WebAssembly integration', {timeout:240000}, async t=
  const browser=await chromium.launch({channel,headless:true});
  t.after(()=>browser.close());
  const page=await browser.newPage();
+ await page.addInitScript(()=>localStorage.setItem('jalweb.theme','vs-dark'));
  await page.goto(`${base}/tests/harness.html`);
  await page.evaluate(async()=>{const {Runtime}=await import('/src/runtime.ts');globalThis.compiler=new Runtime();globalThis.Runtime=Runtime;});
  const compile=source=>page.evaluate(source=>globalThis.compiler.compile(source),source);
@@ -99,7 +100,7 @@ test('JALWeb browser / real WebAssembly integration', {timeout:240000}, async t=
    await page.locator('#run').click();
    await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行が完了しました',{},{timeout:30000});
    assert.equal(await page.locator('#output').textContent(),'Hello, World!\n');
-   await page.locator('.monaco-editor textarea').focus();
+   await page.locator('#editor .monaco-editor textarea').focus();
    await page.keyboard.press('ControlOrMeta+A');
    await page.keyboard.insertText('public class Test {public static main([Ljava/lang/String;)V {pop\nreturn}}');
    await page.waitForFunction(()=>Number(document.querySelector('#problem-count')?.textContent)>0);

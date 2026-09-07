@@ -1,6 +1,6 @@
 import {inlayHintColors} from './inlay-hint-style';
 import {instructionHighlightGroups,instructionColorRules} from './instruction-colors';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import { instructionCategory } from './instruction-categories';
 import language from './generated/language-core.json';
 import { completeOperand, consoleCompletions, type Member, type Catalog } from './completion';

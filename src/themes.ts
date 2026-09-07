@@ -2,7 +2,7 @@ import {inlayHintColors} from './inlay-hint-style';
 import './brand-themes.css';
 import './vibe-theme.css';
 import {instructionColorRules,instructionColors} from './instruction-colors';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import darcula from './darcula.json';
 import { referenceThemes, editorTheme } from './reference-themes';
 const key='jalweb.theme';

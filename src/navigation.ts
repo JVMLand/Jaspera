@@ -1,7 +1,7 @@
 import {WorkerRpc} from './worker-rpc';
 import type {NavigationApi} from './navigation.worker';
 import type {Catalog} from './completion';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import NavigationWorker from './navigation.worker?worker';
 import type {SymbolIndex,SymbolReference,ClassSymbol,Span} from './symbols.js';
 export interface SearchTarget {label:string;detail:string;kind:'file'|'class'|'method'|'field';uri?:string;offset?:number;owner?:string;name?:string;descriptor?:string}

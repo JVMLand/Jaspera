@@ -1,5 +1,5 @@
 import {renderFrameTransition} from './frame-transition';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import {instructionNames} from './language';
 import type {Compilation,StackFrame} from './protocol';
 import './stack-hover.css';

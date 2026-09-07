@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 // Mouse clicks only: cursor navigation and selection drags must not change the dictionary.
 export function followInstructionClicks(editor:monaco.editor.IStandaloneCodeEditor,show:(op:string)=>void){
  let down:{x:number;y:number}|undefined;
