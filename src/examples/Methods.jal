@@ -1,0 +1,18 @@
+// 別の static メソッドを呼ぶ。calc の #0 と #1 に引数が入る。
+public class examples/Methods {
+  public static main([Ljava/lang/String;)V {
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    bipush 6
+    bipush 7
+    invokestatic examples/Methods->calc(II)I
+    invokevirtual java/io/PrintStream->println(I)V
+    return
+  }
+
+  public static calc(II)I {
+    iload_0
+    iload_1
+    imul
+    ireturn
+  }
+}

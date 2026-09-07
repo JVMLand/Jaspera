@@ -1,0 +1,22 @@
+// int 配列を作り、要素を書き込んで読み出す。配列の添字は 0 から。
+public class examples/Arrays {
+  public static main([Ljava/lang/String;)V {
+    iconst_3
+    newarray I
+    astore_1
+    aload_1
+    iconst_0
+    bipush 42
+    iastore
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    aload_1
+    iconst_0
+    iaload
+    invokevirtual java/io/PrintStream->println(I)V
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    aload_1
+    arraylength
+    invokevirtual java/io/PrintStream->println(I)V
+    return
+  }
+}

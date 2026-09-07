@@ -1,0 +1,17 @@
+// 数値を比較し、条件に応じてジャンプする。最初の値を変えて試そう。
+public class examples/Branches {
+  public static main([Ljava/lang/String;)V {
+    bipush 12
+    bipush 10
+    if_icmpgt Large
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    ldc "10 or less"
+    goto Print
+    Large:
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    ldc "greater than 10"
+    Print:
+    invokevirtual java/io/PrintStream->println(Ljava/lang/String;)V
+    return
+  }
+}

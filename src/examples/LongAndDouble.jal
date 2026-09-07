@@ -1,0 +1,16 @@
+// long と double はそれぞれ 2 スロットを使う。型に対応する演算命令を使う。
+public class examples/LongAndDouble {
+  public static main([Ljava/lang/String;)V {
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    ldc2_w 10000000000L
+    ldc2_w 2L
+    lmul
+    invokevirtual java/io/PrintStream->println(J)V
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    ldc2_w 7.0d
+    ldc2_w 2.0d
+    ddiv
+    invokevirtual java/io/PrintStream->println(D)V
+    return
+  }
+}

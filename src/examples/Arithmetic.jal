@@ -1,0 +1,13 @@
+// 整数の足し算と掛け算。(7 + 5) * 3 を計算する。
+public class examples/Arithmetic {
+  public static main([Ljava/lang/String;)V {
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    bipush 7
+    iconst_5
+    iadd
+    iconst_3
+    imul
+    invokevirtual java/io/PrintStream->println(I)V
+    return
+  }
+}

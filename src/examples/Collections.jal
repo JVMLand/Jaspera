@@ -1,0 +1,22 @@
+// ArrayList に 2 つの文字列を追加する。add の戻り値は使わないので pop する。
+public class examples/Collections {
+  public static main([Ljava/lang/String;)V {
+    new java/util/ArrayList
+    dup
+    invokespecial java/util/ArrayList-><init>()V
+    astore_1
+    aload_1
+    ldc "JAL"
+    invokevirtual java/util/ArrayList->add(Ljava/lang/Object;)Z
+    pop
+    aload_1
+    ldc "JVM"
+    invokevirtual java/util/ArrayList->add(Ljava/lang/Object;)Z
+    pop
+    getstatic java/lang/System->out:Ljava/io/PrintStream;
+    aload_1
+    invokevirtual java/util/ArrayList->toString()Ljava/lang/String;
+    invokevirtual java/io/PrintStream->println(Ljava/lang/String;)V
+    return
+  }
+}
