@@ -1,3 +1,5 @@
+import {installConsoleContextMenu} from './console-panel';
+import {installProblemsContextMenu} from './problems-panel';
 import {ToolPane,paneTab} from './pane';
 import {renderProjectTree} from './project-tree';
 import {installInstructionsPanel} from './instructions-panel';
@@ -12,6 +14,7 @@ export function installDetachedTools(bridge:DetachedBridge|undefined,group:strin
  const collapsed=new Set<string>();let lastFiles='';
  const panels={project:get('popup-project'),console:get('popup-console'),problems:get('popup-problems'),instructions:get('instructions-panel')};
  const instructions=installInstructionsPanel(panels.instructions);
+ const contexts=[installConsoleContextMenu(panels.console,get('popup-output'),()=>bridge?.clearOutput()),installProblemsContextMenu(panels.problems)];
  const input=get('popup-stdin') as HTMLTextAreaElement;input.oninput=()=>bridge?.stdin(input.value);get('popup-clear').onclick=()=>bridge?.clearOutput();
  function refresh(){container.hidden=!active;document.getElementById('editor')!.hidden=!!active;for(const name of ['project','console','problems','instructions'] as const)panels[name].hidden=name!==active;onChange();}
  const api={
@@ -27,6 +30,6 @@ export function installDetachedTools(bridge:DetachedBridge|undefined,group:strin
    if(document.activeElement!==input)input.value=state.stdin;
    const problems=get('problems');problems.replaceChildren(...state.problems.map((item,index)=>{const li=document.createElement('li'),b=document.createElement('button');b.textContent=item.label;b.className=item.severity;b.onclick=()=>bridge?.problem(index,group);li.append(b);return li;}));panels.problems.querySelector<HTMLElement>('.empty-problems')!.hidden=state.problems.length>0;
   },
-  dispose(){instructions.dispose();container.remove();}
+  dispose(){for(const context of contexts)context.dispose();instructions.dispose();container.remove();}
  };return api;
 }

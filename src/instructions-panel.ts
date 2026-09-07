@@ -1,3 +1,4 @@
+import {installContextMenu,copyText,selectedText} from './context-menu';
 import {renderFrameTransition} from './frame-transition';
 import {instructionHighlightGroup} from './instruction-colors';
 import {renderMarkdown} from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
@@ -40,5 +41,11 @@ export function installInstructionsPanel(host:HTMLElement){
   for(const name of categories){const group=found.filter(e=>e.category===name);if(!group.length)continue;const folder=document.createElement('details');folder.open=!!query||!!category.value||group.some(e=>e.op===selected);folder.append(el('summary',name+' · '+group.length));const buttons=el('div',undefined,'instruction-buttons');for(const entry of group){const b=document.createElement('button');b.type='button';b.dataset.op=entry.op;b.style.color=`var(--instruction-${instructionHighlightGroup(entry.op)})`;b.textContent=entry.op;b.title=entry.title;b.onclick=()=>show(entry.op);buttons.append(b);}folder.append(buttons);list.append(folder);}
   show(found.some(e=>e.op===selected)?selected:found[0].op);
  }
- search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);},dispose(){resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
+ const context=installContextMenu(host,target=>{const op=target.closest<HTMLElement>('[data-op]')?.dataset.op??selected,entry=entries.find(e=>e.op===op)!;const selection=selectedText(detail);return [
+  {label:'命令名をコピー',action:()=>copyText(op)},
+  {label:'書き方の例をコピー',action:()=>copyText(entry.example)},
+  {label:'選択範囲をコピー',disabled:!selection,action:()=>copyText(selection)},null,
+  {label:'命令を検索',action:()=>{search.focus();toggle(true);}}
+ ];});
+ search.oninput=()=>{toggle(true);filter();};category.onchange=filter;filter();return {showInstruction(op:string){if(!instructionList.includes(op))return;selected=op;search.value='';category.value='';filter();toggle(false);},dispose(){context.dispose();resize.disconnect();document.removeEventListener('pointerdown',outside,true);markdown?.dispose();}};
 }

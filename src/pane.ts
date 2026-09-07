@@ -1,3 +1,4 @@
+import {installContextMenu,type ContextItem} from './context-menu';
 import {paneDrag} from './tab-interactions';
 import {layoutPanels,type LayoutPanel} from './workspace-layout';
 export function paneIdentity(key:string):{kind:'editor';key:string}|{kind:'tool';key:string;name:LayoutPanel}|undefined{
@@ -9,6 +10,7 @@ interface PaneActions {select:()=>void;close:(others:boolean)=>void}
 export abstract class Pane {
  abstract readonly kind:'editor'|'tool';
  constructor(readonly key:string,readonly title:string,private actions:PaneActions){}
+ contextItems():ContextItem[]{return [{label:'このタブを閉じる',action:()=>this.close()},{label:'他のタブを閉じる',action:()=>this.close(true)}];}
  select(){this.actions.select();}
  close(others=false){this.actions.close(others);}
 }
@@ -21,6 +23,7 @@ export function paneTab(pane:Pane,workspace:string,selected:boolean,button?:HTML
  const wrapper=document.createElement('div');wrapper.className=button?'dock-tab':'editor-tab';wrapper.dataset.paneKey=pane.key;wrapper.dataset.paneKind=pane.kind;wrapper.setAttribute('role','presentation');
  if(pane.kind==='editor')wrapper.dataset.tabKey=pane.key;else wrapper.dataset.panel=pane.key.slice(6);
  const tab=button??document.createElement('button');tab.classList.add(button?'dock-tab-button':'file-tab');if(!button)tab.textContent=pane.title;tab.title=pane.title+'（ドラッグ: 移動 / Alt＋クリック: 他のタブを閉じる）';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
+ installContextMenu(tab,()=>pane.contextItems());
  tab.onclick=e=>{e.altKey?pane.close(true):pane.select();};paneDrag(tab,workspace,pane.key);
  tab.addEventListener('keydown',e=>{if(e.key==='Delete'){e.preventDefault();pane.close();return;}if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const tabs=[...wrapper.parentElement!.querySelectorAll<HTMLElement>('[role=tab]')].filter(t=>!t.closest('[hidden]')),i=tabs.indexOf(tab),at=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[at]?.click();tabs[at]?.focus();});
  const close=document.createElement('button');close.className=button?'dock-tab-close':'tab-close';close.textContent='×';close.setAttribute('aria-label',pane.title+' のタブを閉じる');close.title='閉じる（Alt＋クリック: 他のタブを閉じる）';close.onclick=e=>pane.close(e.altKey);wrapper.append(tab,close);return {wrapper,button:tab};

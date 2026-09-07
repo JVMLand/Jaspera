@@ -47,25 +47,21 @@ export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>vo
  function close(name:PanelName){const side=sideOf(name);closed.add(name);if(selected[side]===name)selected[side]=order[side].find(n=>!closed.has(n))??null;refresh();}
  function closeOthers(name:PanelName){const side=sideOf(name);for(const n of order[side])if(n!==name)closed.add(n);closeSources(side);show(name);}
  function move(name:PanelName,side:Side,before?:PanelName){const old=sideOf(name);order[old]=order[old].filter(n=>n!==name);if(selected[old]===name)selected[old]=order[old].find(n=>!closed.has(n))??null;const at=before?order[side].indexOf(before):-1;order[side].splice(at<0?order[side].length:at,0,name);workspace.classList.add('dock-arranged');show(name);}
- let menu:HTMLElement|undefined;
- function dismiss(){menu?.remove();menu=undefined;}
- function context(name:PanelName,x:number,y:number){
-  dismiss();menu=document.createElement('div');menu.className='dock-menu';menu.setAttribute('role','menu');
-  const items:[string,()=>void][]=[['PROJECT グループへ移動',()=>move(name,'project')],['左側へ移動',()=>move(name,workspace.classList.contains('dock-swapped')?'output':'source')],['右側へ移動',()=>move(name,workspace.classList.contains('dock-swapped')?'source':'output')],['小窓で開く',()=>detach?.(name)],['このタブを閉じる',()=>close(name)],['他のタブを閉じる',()=>closeOthers(name)]];
-  for(const [label,action] of items){const b=document.createElement('button');b.textContent=label;b.setAttribute('role','menuitem');b.onclick=()=>{dismiss();action();};menu.append(b);}
-  document.body.append(menu);menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-8)+'px';menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-8)+'px';menu.querySelector('button')?.focus();
- }
  function hit(x:number,y:number){return sides.find(side=>{const b=panes[side].getBoundingClientRect();return x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;});}
  function highlight(x:number,y:number){const side=hit(x,y);for(const s of sides)panes[s].classList.toggle('dock-drop-target',s===side);return side;}
  for(const name of panelNames){
   const pane=new ToolPane(name,name==='project'?'PROJECT':name[0].toUpperCase()+name.slice(1),{select:()=>show(name),close:others=>others?closeOthers(name):close(name)});
-  const {wrapper,button:b}=paneTab(pane,workspaceId,selected[sideOf(name)]===name,buttons[name]);nodes[name]=wrapper;
-  b.oncontextmenu=e=>{e.preventDefault();context(name,e.clientX,e.clientY);};
-  b.addEventListener('keydown',e=>{if(e.key==='F10'&&e.shiftKey){e.preventDefault();const box=b.getBoundingClientRect();context(name,box.left,box.bottom);}});
+  const {wrapper}=paneTab(pane,workspaceId,selected[sideOf(name)]===name,buttons[name]);nodes[name]=wrapper;
+  pane.contextItems=()=>[
+   {label:'PROJECT グループへ移動',action:()=>move(name,'project')},
+   {label:'左側へ移動',action:()=>move(name,workspace.classList.contains('dock-swapped')?'output':'source')},
+   {label:'右側へ移動',action:()=>move(name,workspace.classList.contains('dock-swapped')?'source':'output')},
+   {label:'小窓で開く',action:()=>detach(name)},null,
+   {label:'このタブを閉じる',action:()=>close(name)},
+   {label:'他のタブを閉じる',action:()=>closeOthers(name)}
+  ];
  }
- const outside=(e:PointerEvent)=>{if(!menu?.contains(e.target as Node))dismiss();};document.addEventListener('pointerdown',outside);disposals.push(()=>document.removeEventListener('pointerdown',outside));
- const key=(e:KeyboardEvent)=>{if(e.key==='Escape')dismiss();};document.addEventListener('keydown',key);disposals.push(()=>document.removeEventListener('keydown',key));
  workspace.classList.add('dock-arranged');const resize=installGroupResize(workspace,onLayout);disposals.push(()=>resize.dispose());refresh();
  return {snapshot:():DockLayout=>({order:{project:[...order.project],source:[...order.source],output:[...order.output]},selected:{...selected},closed:[...closed],sizes:resize.snapshot(),swapped:workspace.classList.contains('dock-swapped')}),
- restore(layout?:DockLayout){const next:DockLayout=layout??{order:{project:['project'],source:[],output:['console','problems','instructions']},selected:{project:'project',source:null,output:'console'},closed:[],sizes:[.17,.48,.35],swapped:false};for(const side of sides){order[side]=[...next.order[side]];selected[side]=next.selected[side];}closed.clear();for(const name of next.closed)closed.add(name);workspace.classList.toggle('dock-swapped',next.swapped);resize.restore(next.sizes);refresh();},closeTools(side:Side){for(const name of order[side])closed.add(name);selected[side]=null;refresh();},show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){dismiss();for(const dispose of disposals)dispose();}};
+ restore(layout?:DockLayout){const next:DockLayout=layout??{order:{project:['project'],source:[],output:['console','problems','instructions']},selected:{project:'project',source:null,output:'console'},closed:[],sizes:[.17,.48,.35],swapped:false};for(const side of sides){order[side]=[...next.order[side]];selected[side]=next.selected[side];}closed.clear();for(const name of next.closed)closed.add(name);workspace.classList.toggle('dock-swapped',next.swapped);resize.restore(next.sizes);refresh();},closeTools(side:Side){for(const name of order[side])closed.add(name);selected[side]=null;refresh();},show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){for(const dispose of disposals)dispose();}};
 }

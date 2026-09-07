@@ -23,8 +23,6 @@
 #console-panel.dock-console>#clear{position:absolute;right:8px;top:6px;z-index:1;background:var(--theme-surface,#181e26)}
 .dock-drop-target{outline:2px solid var(--theme-accent,#91caba);outline-offset:-3px}
 .dock-drop-target:after{content:'ここへ移動';position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);background:var(--theme-selection,#2a4957);padding:12px 20px;color:var(--theme-text,#d7dce3);pointer-events:none;z-index:15;border-radius:5px}
-.dock-menu{position:fixed;z-index:10000;min-width:180px;padding:5px;background:var(--theme-surface,#181e26);border:1px solid var(--theme-border,#303640);box-shadow:0 6px 20px #0005;border-radius:5px}
-.dock-menu button{display:block;text-align:left;width:100%;padding:8px;border:0;background:transparent;color:var(--theme-text,#d7dce3)}.dock-menu button:hover{background:var(--theme-selection,#2a4957)}
 @media(min-width:801px){.workspace.dock-arranged{grid-template-columns:180px minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"project summary summary" "project source output"!important}.workspace.dock-arranged>.source-pane{grid-area:source!important}.workspace.dock-arranged>.output-pane{grid-area:output!important}.workspace.dock-arranged>.project-pane{grid-area:project!important}.workspace.dock-arranged.dock-swapped{grid-template-areas:"project summary summary" "project output source"!important}}
 @media(hover:none){.dock-tab-close{opacity:1}}
 

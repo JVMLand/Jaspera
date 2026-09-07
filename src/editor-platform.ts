@@ -8,5 +8,7 @@ import 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding';
 import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController';
 import 'monaco-editor/esm/vs/editor/contrib/codeAction/browser/codeActionContributions';
 import 'monaco-editor/esm/vs/editor/contrib/comment/browser/comment';
+import 'monaco-editor/esm/vs/editor/contrib/contextmenu/browser/contextmenu';
+import 'monaco-editor/esm/vs/editor/contrib/clipboard/browser/clipboard';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 (self as any).MonacoEnvironment={getWorker:()=>new EditorWorker()};

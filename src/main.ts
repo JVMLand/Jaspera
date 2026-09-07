@@ -1,3 +1,5 @@
+import {installConsoleContextMenu} from './console-panel';
+import {installProblemsContextMenu} from './problems-panel';
 import {editMenuItems} from './edit-menu';
 import {fileKind,installFilePicker} from './file-opening';
 import {helpMenuItems} from './help';
@@ -560,6 +562,7 @@ bindGroupEditor(groupEditors.get('source')!,'source');
 for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));
 groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,key=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}}));
 function selectTab(tab:'project'|'console'|'problems'|'instructions'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
+groupResources.push(installConsoleContextMenu(el('console-panel'),el('output'),()=>el('clear').click()),installProblemsContextMenu(el('problems-panel')));
 el('clear').onclick=()=>{workspaceState.updateTools({output:[]});el('output').textContent='';el('console-empty').hidden=false;};
 function showDiagnostics() {
   const problems:{label:string;severity:string}[]=[];
