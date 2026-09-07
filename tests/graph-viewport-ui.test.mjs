@@ -5,14 +5,14 @@ test('large graphs mount only the viewport and keep all methods accessible',{tim
  await page.evaluate(async()=>{
   const {installInstructionGraph}=await import('/src/instruction-graph.ts'),{methodLayouts}=await import('/src/graph-cache.ts');
   const host=document.createElement('div');host.id='probe';host.style.cssText='width:800px;height:650px';document.body.append(host);
-  const graphs=Array.from({length:20},(_,m)=>({name:'method'+m+'()V',nodes:Array.from({length:60},(_,n)=>({id:'n'+n,text:'nop',opcode:'nop',block:'entry',line:m*100+n+2,column:1,consumed:0,produced:0,unreachable:false})),edges:[]}));
-  for(const graph of graphs)methodLayouts.set(graph,{width:500,height:3080,boxes:[{x:0,y:0,width:500,height:3080,name:graph.name}],nodes:graph.nodes.map((n,i)=>({...n,id:'m0:'+n.id,x:250,y:60+i*50,width:150,height:30})),edges:[]});
+  const graphs=Array.from({length:60},(_,m)=>({name:'method'+m+'()V',nodes:Array.from({length:60},(_,n)=>({id:'n'+n,text:'nop',opcode:'nop',block:'entry',line:m*100+n+2,column:1,consumed:0,produced:0,unreachable:false})),edges:[]}));
+  for(const graph of graphs)methodLayouts.set(graph,{width:graph===graphs.at(-1)?100000:500,height:3080,boxes:[{x:0,y:0,width:500,height:3080,name:graph.name}],nodes:graph.nodes.map((n,i)=>({...n,id:'m0:'+n.id,x:250,y:60+i*50,width:150,height:30})),edges:[]});
   window.calls=0;window.panel=installInstructionGraph(host,async()=>{window.calls++;return {className:'Large',bytecode:'',diagnostics:[],graphs};},(_,line)=>window.visited=line);
   window.doc={uri:'inmemory://jal/Large.jal',source:'public class Large { '+graphs.map(g=>'public static '+g.name+' { return }').join(' ')+' }',version:1,line:2,column:1};window.panel.update(window.doc);
  });
  await page.waitForFunction(()=>document.querySelector('.graph-status')?.textContent.includes(' · 100% · '));
  await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length>0);
- const before=await page.locator('.graph-node').count();assert.ok(before<50,'offscreen nodes must not remain mounted');assert.equal(await page.locator('.graph-method-group').count(),20);
+ const before=await page.locator('.graph-node').count();assert.ok(before<50,'offscreen nodes must not remain mounted');assert.equal(await page.locator('.graph-method-group').count(),60);
  const svg=page.locator('.graph-canvas'),box=await svg.boundingBox();await page.mouse.move(box.x+20,box.y+box.height-20);await page.mouse.down();await page.mouse.move(box.x+20,box.y-6000,{steps:5});await page.mouse.up();
  await page.waitForFunction(()=>[...document.querySelectorAll('.graph-method')].some(n=>n.textContent==='method2()V'));assert.ok(await page.locator('.graph-node').count()<60);assert.equal(await page.evaluate(()=>window.calls),1);
  await page.evaluate(()=>window.panel.update({...window.doc,line:210,column:1}));await page.waitForFunction(()=>document.querySelector('.graph-node.selected'));

@@ -24,7 +24,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  let paintFrame=0;const schedulePaint=()=>{if(!paintFrame)paintFrame=requestAnimationFrame(()=>{paintFrame=0;paintVisible();});};
  const transform=()=>{scene.setAttribute('transform',`translate(${x},${y}) scale(${scale})`);schedulePaint();};
  const fit=()=>{const rect=svg.getBoundingClientRect();if(rect.width<1||rect.height<1)return;autoFit=false;scale=Math.max(.08,Math.min(1.4,(rect.width-24)/width,(rect.height-24)/height));x=(rect.width-width*scale)/2;y=12;transform();};
- const fitWidth=()=>{if(!svg.clientWidth)return;scale=Math.max(.08,Math.min(1,(svg.clientWidth-24)/width));x=(svg.clientWidth-width*scale)/2;y=12;transform();};
+ const fitWidth=()=>{if(!svg.clientWidth)return;const firstWidth=methods[0]?.layout?.width??Math.max(420,Math.min(1000,(methods[0]?.name.length??0)*7+32));scale=Math.max(.08,Math.min(1,(svg.clientWidth-24)/firstWidth));x=Math.max(12,(svg.clientWidth-firstWidth*scale)/2);y=12;transform();};
  const zoom=(factor:number,cx=svg.clientWidth/2,cy=svg.clientHeight/2)=>{autoFit=false;const next=Math.max(.08,Math.min(3,scale*factor));x=cx-(cx-x)*next/scale;y=cy-(cy-y)*next/scale;scale=next;transform();};
  function summary(){
   if(failure){status.textContent=failure;return;}
@@ -81,7 +81,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  function acceptGraph(graph:MethodGraph){
   if(!graph.nodes.length)return;
   let method=methods.find(m=>m.name===graph.name);if(method?.graph)return;
-  if(graph.nodes.length>600||methods.reduce((sum,m)=>sum+(m.graph?.nodes.length??0),0)+graph.nodes.length>2000){failure='表示の上限を超えています（1メソッド600命令，クラス全体2,000命令）。';summary();return;}
+  if(graph.nodes.length>600){failure=`${graph.name} は表示の上限を超えています（1メソッド600命令）。`;summary();return;}
   method??=addMethod(graph.name);method.graph=graph;for(const node of graph.nodes){const rows=lineNodes.get(node.line)??[];rows.push({id:'m'+methods.indexOf(method)+':'+node.id,column:node.column});rows.sort((a,b)=>a.column-b.column);lineNodes.set(node.line,rows);}const cached=methodLayouts.get({...graph,edges:graph.edges.filter(edge=>enabled.has(edge.kind))});if(cached)render(method,cached);else enqueueLayout(method);
  }
  function progress(value:AnalysisProgress){
