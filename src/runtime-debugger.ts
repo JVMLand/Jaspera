@@ -3,7 +3,7 @@ import type {DebugBreakpoint,DebugCommand,DebugLocation,DebugOptions,DebugSnapsh
 export class RuntimeDebugger {
  paused=false;
  frames:DebugFrame[]=[];
- private mode:DebugCommand|'entry'='entry';
+ private mode:DebugCommand|'entry'='continue';
  private location?:DebugLocation;
  private skips=new Map<number,DebugLocation>();
  private reason:DebugSnapshot['reason']='entry';
@@ -11,7 +11,7 @@ export class RuntimeDebugger {
  private rootDepths=new Map<number,number>();
  private classes:Set<string>;
  constructor(private vm:any,options:DebugOptions,private publishSnapshot:(snapshot:DebugSnapshot)=>void){
-  this.classes=new Set(options.classes);this.breakpoints(options.breakpoints);
+  this.mode=options.stopOnEntry?'entry':'continue';this.classes=new Set(options.classes);this.breakpoints(options.breakpoints);
   const module=vm._module;
   if(!module._jaspera_debug_enable)throw new Error('デバッガ対応 JVM がありません。pnpm run build:runtime を実行してください。');
   module.jasperaDebugger=this;

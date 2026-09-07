@@ -724,11 +724,11 @@ editor.onDidChangeCursorPosition(({position})=>{
   el('instruction-hint').textContent='命令ホバーでスタックの変化を表示';
 });
 function stopRun(show=true) {debugState({status:'finished',snapshot:undefined,previous:undefined});runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
-async function run(requestedModel?:monaco.editor.ITextModel,debugging=false) {
+async function run(requestedModel?:monaco.editor.ITextModel,debugging=true) {
   const model=requestedModel??editor.getModel(),example=model?.uri.authority==='example';
   if(running){stopRun();return;}running=true;const token=++runToken;updateActions();let owned:Runtime|undefined;const started=performance.now();
   const debugDisposals:monaco.IDisposable[]=[];if(debugging)debugState({status:'starting',snapshot:undefined,previous:undefined});
-  el('clear').click();el('console-empty').hidden=true;selectTab(debugging?'debug':'console');status('コンパイル中…','loading');
+  el('clear').click();el('console-empty').hidden=true;selectTab('console');status('コンパイル中…','loading');
   try {
     let entry:Compilation|undefined,classes:Compilation[];
     if(example){entry=await compileExample(model!);classes=entry.bytecode?[entry]:[];}

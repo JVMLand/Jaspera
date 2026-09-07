@@ -36,7 +36,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  }
 }`;
   try{
-   const compiled=await compile(source),run=vm.run(compiled,'',{classes:['Main'],breakpoints:[]});
+   const compiled=await compile(source),run=vm.run(compiled,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]});
    let stop=await next();const entry=stop;const states=[stop];
    while(stop.location.line!==13){stop=await advance('over');states.push(stop);if(states.length>20)throw Error('Stepping did not advance');}
    phase='into';const call=stop;const into=await advance('into');phase='inside';const inside=await advance('over');phase='out';const out=await advance('out');
@@ -55,7 +55,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  pop
  return
  } }`);
-   phase='class loading';const helperRun=vm.run({...caller,classes:[caller,helper]},'',{classes:['Main','Helper'],breakpoints:[]});
+   phase='class loading';const helperRun=vm.run({...caller,classes:[caller,helper]},'',{stopOnEntry:true,classes:['Main','Helper'],breakpoints:[]});
    await next();await advance('over');await advance('over');const loadedHelper=await advance('into');const returnedHelper=await advance('out');await vm.debugCommand('continue');await helperRun;
    const throwing=await compile(`public class Main {
  public static main([Ljava/lang/String;)V {
@@ -72,7 +72,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  }
 }`);
    phase='exception without debugger';await vm.run(throwing,'');
-   phase='exception';const throwRun=vm.run(throwing,'',{classes:['Main'],breakpoints:[]});await next();await advance('over');await advance('over');const caught=await advance('over');await vm.debugCommand('continue');await throwRun;
+   phase='exception';const throwRun=vm.run(throwing,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]});await next();await advance('over');await advance('over');const caught=await advance('over');await vm.debugCommand('continue');await throwRun;
    const threaded=await compile(`public class Main (super_class=java/lang/Thread) {
  public <init>()V {
  aload_0
@@ -94,7 +94,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  return
  }
 }`);
-   phase='thread';const threadRun=vm.run(threaded,'',{classes:['Main'],breakpoints:[{className:'Main',line:8}]});
+   phase='thread';const threadRun=vm.run(threaded,'',{stopOnEntry:true,classes:['Main'],breakpoints:[{className:'Main',line:8}]});
    const parentThread=await next(),childThread=await advance('continue'),childValue=await advance('over');await vm.debugCommand('continue');await threadRun;
    const loop=await compile(`public class Main {
  public static main([Ljava/lang/String;)V {
@@ -105,14 +105,14 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  goto Loop
  }
 }`);
-   phase='loop';const running=vm.run(loop,'',{classes:['Main'],breakpoints:[{className:'Main',line:6}]}).then(()=>null,e=>e.message);
+   phase='loop';const running=vm.run(loop,'',{stopOnEntry:true,classes:['Main'],breakpoints:[{className:'Main',line:6}]}).then(()=>null,e=>e.message);
    await next();const first=await advance('continue'),second=await advance('continue');
    phase='pause';await vm.debugBreakpoints([]);await vm.debugCommand('continue');await new Promise(r=>setTimeout(r,30));await vm.debugCommand('pause');const paused=await next();
    vm.stop();const stopped=await running;
    const self=await compile(`public class Main { public static main([Ljava/lang/String;)V {
  Loop:
  goto Loop
- } }`);phase='self';const selfRun=vm.run(self,'',{classes:['Main'],breakpoints:[]}).catch(e=>e.message);
+ } }`);phase='self';const selfRun=vm.run(self,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]}).catch(e=>e.message);
    const selfBefore=await next(),selfAfter=await advance('over');vm.stop();await selfRun;
 
    return {entry,states:states.map(s=>s.frames[0]),call,into,inside,out,stored,first,second,paused,stopped,normal,parentThread,childThread,childValue,selfBefore,selfAfter,caught,loadedHelper,returnedHelper};

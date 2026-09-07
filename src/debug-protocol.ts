@@ -4,5 +4,5 @@ export interface DebugFrame {id:number;className:string;method:string;descriptor
 export interface DebugSnapshot {location:DebugLocation;frames:DebugFrame[];reason:'entry'|'breakpoint'|'step'|'pause'}
 export interface DebugBreakpoint {className:string;line:number}
 export type DebugCommand='continue'|'pause'|'into'|'over'|'out';
-export interface DebugOptions {classes:string[];breakpoints:DebugBreakpoint[]}
+export interface DebugOptions {stopOnEntry?:boolean;classes:string[];breakpoints:DebugBreakpoint[]}
 export interface DebugState {documents?:Record<string,string>;status:'idle'|'starting'|'running'|'paused'|'finished';snapshot?:DebugSnapshot;previous?:DebugSnapshot;breakpoints:{uri:string;line:number}[]}
