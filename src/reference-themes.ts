@@ -2,7 +2,11 @@ import {inlayHintColors} from './inlay-hint-style';
 import type { editor } from 'monaco-editor/esm/vs/editor/editor.api';
 // Original JALWeb palettes inspired by the user-provided reference images.
 // These are visual interpretations, not themes supplied by the named companies.
+// Tsukuba palettes interpret Classic Purple and Future Blue for screen contrast.
+// https://futureship.sec.tsukuba.ac.jp/download_file/view/220/289
 export const referenceThemes=[
+ {id:'tsukuba-light',label:'Tsukuba Light',dark:false,palette:['#fdfcfe','#f1eef4','#d3ccd9','#332d3c','#726878','#6600cc','#e8e0ef','#6600cc','#ffffff','#a82d4b','#805c22'],syntax:['#663b91','#346252','#865e37','#817589','#326d7b','#83577e']},
+ {id:'tsukuba-night',label:'Tsukuba Night',dark:true,palette:['#1c1922','#26212e','#494050','#e1dae8','#b0a3bd','#b395d2','#3b3048','#6600cc','#ffffff','#eaa0af','#d5bd90'],syntax:['#b99ad5','#a0bcae','#d6b791','#9d8da9','#96bcc6','#c5a0c1']},
  {id:'japan-light',label:'Japan Light',dark:false,palette:['#ffffff','#eeeeef','#b5b8c5','#202533','#555e70','#193c87','#dce5f7','#153c85','#ffffff','#b02030','#785800'],syntax:['#173b8d','#386333','#864500','#646b77','#325d86','#792d65']},
  {id:'hitachi-light',label:'Hitachi Light',dark:false,palette:['#ffffff','#f5f6f7','#d0d7de','#202a33','#596773','#235a79','#e0ecf0','#294b5e','#ffffff','#ad293e','#806000'],syntax:['#244f70','#326545','#92572e','#65747e','#206f76','#79416e']},
  {id:'hitachi-dark',label:'Hitachi Dark',dark:true,palette:['#151d24','#202c35','#435461','#e2e9ed','#aab9c3','#8ec2d6','#304653','#3d667b','#ffffff','#ff9d9b','#e1c284'],syntax:['#9dcbdc','#b4cea0','#e8b38a','#9dadb7','#92cdc1','#c5b1de']},

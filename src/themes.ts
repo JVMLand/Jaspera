@@ -23,7 +23,7 @@ for(const id of ['vs','vs-dark','hc-black','hc-light'] as const)monaco.editor.de
 const variables=['bg','surface','border','text','muted','accent','selection','button','on-button','error','warning'];
 export function applyTheme(id:string,save=true) {
  if(!themes.some(t=>t.id===id))id='jal-night';
- const root=document.documentElement;root.dataset.theme=id;const family=id.split('-')[0];if(['vibe','denden','googol','entrance'].includes(family))root.dataset.themeFamily=family;else delete root.dataset.themeFamily;root.style.colorScheme=id==='vs'||id==='hc-light'||referenceThemes.some(t=>t.id===id&&!t.dark)?'light':'dark';
+ const root=document.documentElement;root.dataset.theme=id;const family=id.split('-')[0];if(['vibe','denden','googol','entrance','tsukuba'].includes(family))root.dataset.themeFamily=family;else delete root.dataset.themeFamily;root.style.colorScheme=id==='vs'||id==='hc-light'||referenceThemes.some(t=>t.id===id&&!t.dark)?'light':'dark';
  variables.forEach((v,i)=>{const color=palettes[id]?.[i];if(color)root.style.setProperty('--theme-'+v,color);else root.style.removeProperty('--theme-'+v);});
  for(const [group,color] of Object.entries(instructionColors(id)))root.style.setProperty('--instruction-'+group,'#'+color);
  monaco.editor.setTheme(['vs','vs-dark','hc-black','hc-light'].includes(id)?'jal-'+id:id);
