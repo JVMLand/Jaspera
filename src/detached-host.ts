@@ -1,12 +1,13 @@
+import type {FileView} from './project';
 import type {WindowLayout} from './workspace-layout';
 import type {PanelName} from './panel-dock';
 import type {Catalog} from './completion';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import type {DefinitionDocument} from './navigation';
-export interface EditorSnapshot {key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
+export interface EditorSnapshot {view?:FileView;key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
 export interface ToolState {output:{text:string;stream:string}[];stdin:string;problems:{label:string;severity:string}[]}
 export interface DetachedState {tools?:ToolState;canSave:boolean;running:boolean;status:string;theme:string;files:{key:string;title:string}[]}
-export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
+export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
@@ -30,9 +31,9 @@ export function replaceText(model:monaco.editor.ITextModel,text:string){
 }
 // Monaco 0.52 TextModel exposes undo/redo; its public ITextModel declaration omits them.
 type UndoableModel=monaco.editor.ITextModel & {undo:()=>void|Promise<void>;redo:()=>void|Promise<void>};
-interface Entry extends DetachedDocument {id:string;group:string;subscriptions:monaco.IDisposable[]}
+interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;subscriptions:monaco.IDisposable[]}
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
-interface Options {instruction?:(op:string)=>void;
+interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  completionCatalog:()=>Promise<Catalog>;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
@@ -41,21 +42,21 @@ interface Options {instruction?:(op:string)=>void;
 }
 export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run:()=>void,options:Options){
  const entries=new Map<string,Entry>(),groups=new Map<string,Group>();
- const snapshot=(e:Entry):EditorSnapshot=>({key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
+ const snapshot=(e:Entry):EditorSnapshot=>({view:e.view,key:e.key,id:e.id,source:e.model.getValue(),uri:e.model.uri.toString(),version:e.model.getVersionId(),title:e.title,readOnly:e.readOnly,theme:document.documentElement.dataset.theme??'jal-night',diagnostics:monaco.editor.getModelMarkers({owner:'jal',resource:e.model.uri})});
  const broadcast=(e:Entry)=>{if(!e.model.isDisposed())try{groups.get(e.group)?.client?.update(snapshot(e));}catch{}};
  const remove=(id:string)=>{const e=entries.get(id);if(!e)return;entries.delete(id);for(const d of e.subscriptions)d.dispose();groups.get(e.group)?.client?.remove?.(id);onReturn(e.key);closeIfEmpty(e.group);};
  const release=(id:string)=>{const g=groups.get(id);if(!g)return;groups.delete(id);for(const name of g.panels)onReturn('panel:'+name);for(const e of [...entries.values()])if(e.group===id)remove(e.id);try{g.popup.close();}catch{}};
  // Check after the entire tab transfer, not during temporary empty client states.
  function closeIfEmpty(id:string){queueMicrotask(()=>{const g=groups.get(id);if(g&&!g.panels.size&&![...entries.values()].some(e=>e.group===id))release(id);});}
  const add=(group:string,doc:DetachedDocument,id=crypto.randomUUID())=>{
-  const e:Entry={...doc,id,group,subscriptions:[]};entries.set(id,e);doc.model.pushStackElement();
+  const e:Entry={...doc,view:options.view?.(doc.key),id,group,subscriptions:[]};entries.set(id,e);doc.model.pushStackElement();
   e.subscriptions.push(doc.model.onDidChangeContent(()=>broadcast(e)),doc.model.onWillDispose(()=>remove(id)),monaco.editor.onDidChangeMarkers(uris=>{if(uris.some(u=>u.toString()===doc.model.uri.toString()))broadcast(e);}));
   return e;
  };
  const openTab=(group:string,key:string)=>{
   if(!groups.has(group))return;const doc=options.document(key);if(!doc||doc.model.isDisposed())return;
   let e=[...entries.values()].find(e=>e.key===doc.key);
-  if(e&&e.group!==group){const previous=e.group;groups.get(previous)?.client?.remove?.(e.id);e.group=group;closeIfEmpty(previous);}
+  if(e&&e.group!==group){e.view=groups.get(e.group)?.client?.layout?.().views[e.key]??e.view;const previous=e.group;groups.get(previous)?.client?.remove?.(e.id);e.group=group;closeIfEmpty(previous);}
   if(!e)e=add(group,doc);broadcast(e);onReturn(e.key);return snapshot(e);
  };
  const closePanel=(group:string,name:PanelName)=>{const g=groups.get(group);if(g?.panels.delete(name)){g.client?.panelRemoved?.(name);onReturn('panel:'+name);closeIfEmpty(group);}};
@@ -96,13 +97,14 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  const watcher=setInterval(()=>{for(const g of groups.values())if(g.popup.closed)release(g.id);refresh();},300);
  const observer=new MutationObserver(()=>{for(const e of entries.values())broadcast(e);refresh();});observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
  return {
-  snapshot():WindowLayout[]{return [...groups.values()].filter(g=>!g.popup.closed).map(g=>{const tabs=[...entries.values()].filter(e=>e.group===g.id).map(e=>e.key);let state=g.initial?{active:g.initial.active,views:g.initial.views,wordWrap:g.initial.wordWrap}:{active:tabs[0]??'panel:'+([...g.panels][0]??''),views:{},wordWrap:false};try{state=g.client?.layout?.()??state;}catch{}return {tabs,panels:[...g.panels],...state,left:g.popup.screenX,top:g.popup.screenY,width:g.popup.outerWidth,height:g.popup.outerHeight};}).concat(pending);},
+  snapshot():WindowLayout[]{return [...groups.values()].filter(g=>!g.popup.closed).map(g=>{const tabs=[...entries.values()].filter(e=>e.group===g.id).map(e=>e.key);let state=g.initial?{active:g.initial.active,views:g.initial.views,wordWrap:g.initial.wordWrap,order:g.initial.order}:{active:tabs[0]??'panel:'+([...g.panels][0]??''),views:{},wordWrap:false};try{state=g.client?.layout?.()??state;}catch{}return {tabs,panels:[...g.panels],...state,left:g.popup.screenX,top:g.popup.screenY,width:g.popup.outerWidth,height:g.popup.outerHeight};}).concat(pending);},
   restore(layouts:WindowLayout[]){pending=[];for(const layout of layouts)if(!restoreWindow(layout))pending.push(layout);},
   showInstruction(op:string){const g=[...groups.values()].find(g=>g.panels.has('instructions'));if(g)g.client?.instruction?.(op);},
   hasPanel:(name:PanelName)=>[...groups.values()].some(g=>g.panels.has(name)),
   focusPanel(name:PanelName){const g=[...groups.values()].find(g=>g.panels.has(name));if(g){g.client?.panel?.(name);g.popup.focus();}},
   openPanel(name:PanelName){if(this.hasPanel(name)){this.focusPanel(name);return true;}const id=crypto.randomUUID(),url=new URL('detached.html',location.href);url.searchParams.set('editor',id);const popup=window.open(url.href,'jalweb-'+id,'popup,width=900,height=680');if(!popup)return false;groups.set(id,{id,popup,panels:new Set()});openPanel(id,name);return true;},
-  returnTab(key:string){const e=[...entries.values()].find(e=>e.key===key);if(e)remove(e.id);},
+  returnPanel(name:PanelName){for(const g of groups.values())if(g.panels.has(name))closePanel(g.id,name);},
+  returnTab(key:string){const e=[...entries.values()].find(e=>e.key===key);if(!e)return;const view=groups.get(e.group)?.client?.layout?.().views[e.key]??e.view;remove(e.id);return view;},
   has:(key:string)=>[...entries.values()].some(e=>e.key===key),
   focus(key:string){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(undefined,e.id);groups.get(e.group)?.popup.focus();}},
   reveal(key:string,range?:monaco.IRange|monaco.IPosition){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(range,e.id);groups.get(e.group)?.popup.focus();}},

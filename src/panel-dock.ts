@@ -1,12 +1,12 @@
 import type {DockLayout} from './workspace-layout';
 import './panel-dock.css';
-import {holdDrag} from './tab-interactions';
+import {ToolPane,paneTab,arrangePaneTabs} from './pane';
 import {installGroupResize} from './group-resize';
 export const panelNames=['project','console','problems','instructions'] as const;
 export type PanelName=typeof panelNames[number];
 export type Side='project'|'source'|'output';
 const sides=['project','source','output'] as const;
-export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>void,closeSources:(side:Side)=>void,detach?:(name:PanelName)=>void){
+export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>void,closeSources:(side:Side)=>void,detach:(name:PanelName)=>void,workspaceId:string,tabOrder:()=>string[]){
  const get=(id:string)=>document.getElementById(id)!;
  const workspace=document.querySelector<HTMLElement>('.workspace')!;
  const panes={project:document.querySelector<HTMLElement>('.project-pane')!,source:document.querySelector<HTMLElement>('.source-pane')!,output:document.querySelector<HTMLElement>('.output-pane')!};
@@ -38,6 +38,7 @@ export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>vo
    panes[side].querySelector<HTMLElement>('.group-editor')?.toggleAttribute('hidden',active!==null);
   }
   for(const side of sides)for(const b of strips[side].querySelectorAll<HTMLElement>('[data-tab-key] [role=tab]')){b.dataset.editorSelected??=b.getAttribute('aria-selected')??'false';const active=selected[side]===null&&b.dataset.editorSelected==='true';b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;}
+  for(const side of sides)arrangePaneTabs(strips[side],tabOrder());
   extras[2].hidden=false;
   onLayout();
  }
@@ -57,19 +58,14 @@ export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>vo
  function hit(x:number,y:number){return sides.find(side=>{const b=panes[side].getBoundingClientRect();return x>=b.left&&x<=b.right&&y>=b.top&&y<=b.bottom;});}
  function highlight(x:number,y:number){const side=hit(x,y);for(const s of sides)panes[s].classList.toggle('dock-drop-target',s===side);return side;}
  for(const name of panelNames){
-  const wrapper=document.createElement('div');wrapper.className='dock-tab';wrapper.dataset.panel=name;wrapper.setAttribute('role','presentation');nodes[name]=wrapper;
-  const b=buttons[name];b.classList.add('dock-tab-button');b.title='長押し: 移動 / 右クリック: 配置と閉じる / Alt＋クリック: 他のタブを閉じる';b.onclick=e=>{e.altKey?closeOthers(name):show(name);};const drag=holdDrag(b,b.textContent??name,highlight,(x,y)=>{const side=hit(x,y);if(side){const before=order[side].find(n=>n!==name&&x<nodes[n].getBoundingClientRect().left+nodes[n].offsetWidth/2);move(name,side,before);}else detach?.(name);});disposals.push(()=>drag.dispose());b.oncontextmenu=e=>{e.preventDefault();context(name,e.clientX,e.clientY);};
-  b.onkeydown=e=>{if(e.key==='Delete'){e.preventDefault();close(name);return;}if(e.key==='F10'&&e.shiftKey){e.preventDefault();const box=b.getBoundingClientRect();context(name,box.left,box.bottom);return;}if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const tabs=[...strips[sideOf(name)].querySelectorAll<HTMLElement>('[role=tab]')].filter(t=>!t.closest('[hidden]')),i=tabs.indexOf(b),at=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[at]?.click();tabs[at]?.focus();};
-  const x=document.createElement('button');x.className='dock-tab-close';x.textContent='×';x.setAttribute('aria-label',name[0].toUpperCase()+name.slice(1)+' のタブを閉じる');x.onclick=e=>e.altKey?closeOthers(name):close(name);wrapper.append(b,x);
+  const pane=new ToolPane(name,name==='project'?'PROJECT':name[0].toUpperCase()+name.slice(1),{select:()=>show(name),close:others=>others?closeOthers(name):close(name)});
+  const {wrapper,button:b}=paneTab(pane,workspaceId,selected[sideOf(name)]===name,buttons[name]);nodes[name]=wrapper;
+  b.oncontextmenu=e=>{e.preventDefault();context(name,e.clientX,e.clientY);};
+  b.addEventListener('keydown',e=>{if(e.key==='F10'&&e.shiftKey){e.preventDefault();const box=b.getBoundingClientRect();context(name,box.left,box.bottom);}});
  }
- const sourceKeys=(e:KeyboardEvent)=>{
-  if(!(e.target instanceof HTMLElement)||!e.target.closest('[data-tab-key]')||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
-  e.preventDefault();e.stopImmediatePropagation();const strip=Object.values(strips).find(strip=>strip.contains(e.target as Node))!;const tabs=[...strip.querySelectorAll<HTMLElement>('[role=tab]')].filter(t=>!t.closest('[hidden]')),i=tabs.indexOf(e.target),at=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[at]?.click();tabs[at]?.focus();
- };
- for(const strip of Object.values(strips)){strip.addEventListener('keydown',sourceKeys,true);disposals.push(()=>strip.removeEventListener('keydown',sourceKeys,true));}
  const outside=(e:PointerEvent)=>{if(!menu?.contains(e.target as Node))dismiss();};document.addEventListener('pointerdown',outside);disposals.push(()=>document.removeEventListener('pointerdown',outside));
  const key=(e:KeyboardEvent)=>{if(e.key==='Escape')dismiss();};document.addEventListener('keydown',key);disposals.push(()=>document.removeEventListener('keydown',key));
  workspace.classList.add('dock-arranged');const resize=installGroupResize(workspace,onLayout);disposals.push(()=>resize.dispose());refresh();
  return {snapshot:():DockLayout=>({order:{project:[...order.project],source:[...order.source],output:[...order.output]},selected:{...selected},closed:[...closed],sizes:resize.snapshot(),swapped:workspace.classList.contains('dock-swapped')}),
- restore(layout?:DockLayout){const next:DockLayout=layout??{order:{project:['project'],source:[],output:['console','problems','instructions']},selected:{project:'project',source:null,output:'console'},closed:[],sizes:[.17,.48,.35],swapped:false};for(const side of sides){order[side]=[...next.order[side]];selected[side]=next.selected[side];}closed.clear();for(const name of next.closed)closed.add(name);workspace.classList.toggle('dock-swapped',next.swapped);resize.restore(next.sizes);refresh();},show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){dismiss();for(const dispose of disposals)dispose();}};
+ restore(layout?:DockLayout){const next:DockLayout=layout??{order:{project:['project'],source:[],output:['console','problems','instructions']},selected:{project:'project',source:null,output:'console'},closed:[],sizes:[.17,.48,.35],swapped:false};for(const side of sides){order[side]=[...next.order[side]];selected[side]=next.selected[side];}closed.clear();for(const name of next.closed)closed.add(name);workspace.classList.toggle('dock-swapped',next.swapped);resize.restore(next.sizes);refresh();},closeTools(side:Side){for(const name of order[side])closed.add(name);selected[side]=null;refresh();},show,close,showSource,refresh,move,hit,highlight,panes,strips,selected,swap(){workspace.classList.add('dock-arranged');workspace.classList.toggle('dock-swapped');onLayout();},dispose(){dismiss();for(const dispose of disposals)dispose();}};
 }

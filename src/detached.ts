@@ -1,6 +1,7 @@
+import {EditorPane,paneTab,paneIdentity,beforePane,movePaneOrder,arrangePaneTabs} from './pane';
 import type {WindowLayout} from './workspace-layout';
 import type {FileView} from './project';
-import {fileDrop} from './tab-interactions';
+import {paneDrop} from './tab-interactions';
 import {followInstructionClicks} from './instruction-click';
 import {installDetachedTools} from './detached-tools';
 import {WorkerRpc} from './worker-rpc';
@@ -31,7 +32,7 @@ const group=new URL(location.href).searchParams.get('editor')??'';
 const bridge:DetachedBridge|undefined=window.opener?.jalwebDetached;
 const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
 interface Tab {state:EditorSnapshot;model:monaco.editor.ITextModel;view:monaco.editor.ICodeEditorViewState|null;savedView?:FileView;timer?:ReturnType<typeof setTimeout>;offsets:Map<number,number>}
-const tabs=new Map<string,Tab>();let active:string|undefined,applying=false,workspace:DetachedState={canSave:false,running:false,status:'',theme:'jal-night',files:[]};
+const paneOrder:string[]=[];const tabs=new Map<string,Tab>();let active:string|undefined,applying=false,workspace:DetachedState={canSave:false,running:false,status:'',theme:'jal-night',files:[]};
 const worker=new WorkerRpc<OffsetsApi>(()=>new OffsetWorker()),overlays=document.createElement('div');overlays.id='editor-overlays';document.body.append(overlays);
 export const editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:overlays,automaticLayout:true,fontSize:15,lineHeight:27,minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,fixedOverflowWidgets:true,lineNumbersMinChars:10});
 const stackHover=installStackHover(editor);
@@ -42,20 +43,20 @@ function inspect(tab:Tab){clearTimeout(tab.timer);publishInspections(tab.model,[
 function showOffsets(){const offsets=current()?.offsets??new Map();editor.updateOptions({lineNumbers:n=>`<span class="jal-source-line">${n}</span><span class="jal-bytecode-offset">${offsets.get(n)??''}</span>`});}
 function select(id:string){const old=current();toolTabs?.showSource();const next=tabs.get(id);if(!next)return;if(old){old.view=editor.saveViewState();old.savedView=fileView();}active=id;editor.setModel(next.model);editor.updateOptions({readOnly:next.state.readOnly});if(next.view)editor.restoreViewState(next.view);else if(next.savedView){const v=next.savedView;editor.setPosition(next.model.validatePosition({lineNumber:v.line,column:v.column}));editor.setScrollPosition({scrollTop:v.scrollTop,scrollLeft:v.scrollLeft});}showOffsets();renderTabs();updateActions();}
 function fileView():FileView{const p=editor.getPosition();return {line:p?.lineNumber??1,column:p?.column??1,scrollTop:Math.round(editor.getScrollTop()),scrollLeft:Math.round(editor.getScrollLeft())};}
-function layout():Pick<WindowLayout,'active'|'views'|'wordWrap'>{const views:Record<string,FileView>=Object.create(null);for(const [id,tab] of tabs){if(id===active)tab.savedView=fileView();if(tab.savedView)views[tab.state.key]=tab.savedView;}return {active:toolTabs?.active?'panel:'+toolTabs.active:tabs.get(active??'')?.state.key??'',views,wordWrap:editor.getRawOptions().wordWrap==='on'};}
-function restoreLayout(layout:WindowLayout){for(const tab of tabs.values())tab.savedView=layout.views[tab.state.key];editor.updateOptions({wordWrap:layout.wordWrap?'on':'off'});const tab=[...tabs.values()].find(t=>t.state.key===layout.active)??tabs.get(active??'');if(tab){active=undefined;tab.view=null;select(tab.state.id);}if(layout.active.startsWith('panel:'))toolTabs?.show(layout.active.slice(6) as import('./panel-dock').PanelName);}
+function layout():Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>{const views:Record<string,FileView>=Object.create(null);for(const [id,tab] of tabs){if(id===active)tab.savedView=fileView();if(tab.savedView)views[tab.state.key]=tab.savedView;}return {order:[...paneOrder],active:toolTabs?.active?'panel:'+toolTabs.active:tabs.get(active??'')?.state.key??'',views,wordWrap:editor.getRawOptions().wordWrap==='on'};}
+function restoreLayout(layout:WindowLayout){paneOrder.splice(0,paneOrder.length,...(layout.order??[]));for(const tab of tabs.values())tab.savedView=layout.views[tab.state.key];editor.updateOptions({wordWrap:layout.wordWrap?'on':'off'});const tab=[...tabs.values()].find(t=>t.state.key===layout.active)??tabs.get(active??'');if(tab){active=undefined;tab.view=null;select(tab.state.id);}if(layout.active.startsWith('panel:'))toolTabs?.show(layout.active.slice(6) as import('./panel-dock').PanelName);}
 function closeTab(id:string,others=false){for(const key of [...tabs.keys()])if(others?key!==id:key===id)bridge?.closeTab(group,key);if(others)select(id);}
 function renderTabs(){
  el('file-tabs').replaceChildren();for(const [id,tab] of tabs){
-  const wrapper=document.createElement('div');wrapper.className='editor-tab';wrapper.setAttribute('role','presentation');const button=document.createElement('button');button.className='file-tab';button.textContent=tab.state.title;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(!toolTabs?.active&&active===id));button.tabIndex=active===id?0:-1;button.title=tab.state.title+'（Alt＋クリック: 他のタブを閉じる）';button.onclick=e=>e.altKey?closeTab(id,true):select(id);
-  button.onkeydown=e=>{const keys=[...tabs.keys()],i=keys.indexOf(id);if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?keys.length-1:(i+(e.key==='ArrowRight'?1:keys.length-1))%keys.length;select(keys[next]);el('file-tabs').querySelectorAll<HTMLElement>('[role=tab]')[next]?.focus();}};
-  const close=document.createElement('button');close.className='tab-close';close.textContent='×';close.setAttribute('aria-label',tab.state.title+' のタブを閉じる');close.onclick=e=>closeTab(id,e.altKey);wrapper.append(button,close);el('file-tabs').append(wrapper);
+  const pane=new EditorPane(tab.state.key,tab.state.title,{select:()=>select(id),close:others=>{if(others)toolTabs?.closeOthers();closeTab(id,others);}});
+  el('file-tabs').append(paneTab(pane,bridge?.workspaceId??'',!toolTabs?.active&&active===id).wrapper);
  }
- toolTabs?.renderTabs(el('file-tabs'));
+ toolTabs?.renderTabs(el('file-tabs'),()=>{for(const id of [...tabs.keys()])bridge?.closeTab(group,id);});arrangePaneTabs(el('file-tabs'),paneOrder);
 }
+
 function update(snapshot:EditorSnapshot){
  let tab=tabs.get(snapshot.id);if(!tab){
-  const model=monaco.editor.getModel(monaco.Uri.parse(snapshot.uri))??monaco.editor.createModel(snapshot.source,'jal',monaco.Uri.parse(snapshot.uri));tab={state:snapshot,model,view:null,offsets:new Map()};tabs.set(snapshot.id,tab);
+  const model=monaco.editor.getModel(monaco.Uri.parse(snapshot.uri))??monaco.editor.createModel(snapshot.source,'jal',monaco.Uri.parse(snapshot.uri));tab={state:snapshot,model,view:null,savedView:snapshot.view,offsets:new Map()};tabs.set(snapshot.id,tab);
   const entry=tab;model.onDidChangeContent(()=>{inspect(entry);if(applying)return;const result=bridge?.edit(entry.state.id,entry.state.version,model.getValue());if(result)update(result);});inspect(tab);renderTabs();
  }
  tab.state=snapshot;applyTheme(snapshot.theme,false);
@@ -86,7 +87,12 @@ const instructionClicks=followInstructionClicks(editor,op=>{toolTabs?.showInstru
 const initial=bridge?.attach(group,{layout,restoreLayout,update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files);applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(p);editor.revealPositionInCenter(p);}editor.focus();}});
 for(const snapshot of bridge?.tabs(group)??[])update(snapshot);if(initial)select(initial.id);else if(!bridge)el('status').textContent='元のワークスペースに接続できません。';updateActions();for(const name of bridge?.panels(group)??[])toolTabs?.show(name);
 bridge?.ready(group);
-const dropFiles=fileDrop(document.body,bridge?.workspaceId??'',key=>{const snapshot=bridge?.openTab(group,key);if(snapshot){update(snapshot);select(snapshot.id);editor.focus();}});
+const dropFiles=paneDrop(document.body,bridge?.workspaceId??'',(key,event)=>{
+ const pane=paneIdentity(key);if(!pane)return;movePaneOrder(paneOrder,key,beforePane(el('file-tabs'),key,event.clientX));
+ if(pane.kind==='tool')bridge?.openPanel(group,pane.name);
+ else {const snapshot=bridge?.openTab(group,key);if(snapshot){update(snapshot);select(snapshot.id);editor.focus();}}
+ renderTabs();
+});
 const definitionUI=installDefinitionUI((model,offset)=>{const tab=[...tabs.values()].find(t=>t.model===model);return tab?bridge?.definitions(tab.state.id,offset)??Promise.resolve([]):Promise.resolve([]);},(uri,range)=>bridge?.openDefinition(group,uri,range)??false);
 
 editor.addAction({id:'detached.undo',label:'Undo',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyZ],run:()=>{if(active)bridge?.undo(active,false);}});

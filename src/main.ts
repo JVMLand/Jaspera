@@ -1,6 +1,7 @@
+import {EditorPane,paneTab,paneIdentity,beforePane,movePaneOrder} from './pane';
 import {layoutSides,type WorkspaceLayout} from './workspace-layout';
 import {renderProjectTree} from './project-tree';
-import {fileDrop,holdDrag} from './tab-interactions';
+import {paneDrop} from './tab-interactions';
 import type {Side} from './panel-dock';
 import {followInstructionClicks} from './instruction-click';
 import {installPanelDock} from './panel-dock';
@@ -111,7 +112,7 @@ initializeThemes();
 const stackHover=installStackHover(editor,model=>{const path=[...models].find(([,m])=>m===model)?.[0],cached=path?compilationCache.get(path):undefined;return cached?.source===model.getValue()?cached.compilation:undefined;});
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),()=>void run(),{
- resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,
+ resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  state:()=>({tools:{output:[...el('output').children].map(n=>({text:n.textContent??'',stream:n.className})),stdin:el<HTMLTextAreaElement>('stdin').value,problems:[...el('problems').querySelectorAll('button')].map(n=>({label:n.textContent??'',severity:n.className}))},canSave:!!folder&&!storageBusy,running,status:el('state').textContent??'',theme:document.documentElement.dataset.theme??'jal-night',files:[...project.files.map(f=>({key:'source:'+f.path,title:f.path})),...[...classPreviews.values()].map(p=>({key:'preview:'+p.key,title:p.title+' (JAL)'}))]}),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:text=>{el<HTMLTextAreaElement>('stdin').value=text;setDirty();},clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
@@ -263,7 +264,7 @@ function captureWorkspace():WorkspaceLayout {
  for(const [side,view] of groupEditors){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(!doc)continue;selected[side]=doc.key;const p=view.getPosition();if(p)views[doc.key.startsWith('source:')?doc.key.slice(7):doc.key]={line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())};}
  const windows=detached.snapshot();for(const w of windows)for(const [key,v] of Object.entries(w.views))views[key.startsWith('source:')?key.slice(7):key]=v;
  const keys=[...visibleTabs().map(t=>t.key),...windows.flatMap(w=>w.tabs)];
- return {version:1,tabs:[...new Set(keys)].sort((a,b)=>tabOrder.indexOf(a)-tabOrder.indexOf(b)).map(key=>({key,side:sourceGroups.get(key)??'source'})),selected,activeSide,collapsedFolders:[...collapsedFolders],dock:panelDock!.snapshot(),windows,views,wordWrap:project.workspace.wordWrap};
+ return {version:1,order:[...tabOrder],tabs:[...new Set(keys)].sort((a,b)=>tabOrder.indexOf(a)-tabOrder.indexOf(b)).map(key=>({key,side:sourceGroups.get(key)??'source'})),selected,activeSide,collapsedFolders:[...collapsedFolders],dock:panelDock!.snapshot(),windows,views,wordWrap:project.workspace.wordWrap};
 }
 async function restorePreviewTabs(layout:WorkspaceLayout){
  const owner=project,epoch=previewEpoch;
@@ -275,7 +276,7 @@ async function restorePreviewTabs(layout:WorkspaceLayout){
 }
 function restoreWorkspace(layout:WorkspaceLayout){
  const available=(key:string)=>key.startsWith('source:')&&models.has(key.slice(7))||key.startsWith('preview:')&&classPreviews.has(key.slice(8));
- const tabs=layout.tabs.filter(t=>available(t.key));tabOrder=tabs.map(t=>t.key);sourceGroups.clear();for(const t of tabs)sourceGroups.set(t.key,t.side);
+ const tabs=layout.tabs.filter(t=>available(t.key));tabOrder=layout.order?[...layout.order]:tabs.map(t=>t.key);sourceGroups.clear();for(const t of tabs)sourceGroups.set(t.key,t.side);
  closedSourceTabs.clear();for(const f of project.files)if(!tabs.some(t=>t.key==='source:'+f.path))closedSourceTabs.add(f.path);
  collapsedFolders.clear();for(const path of layout.collapsedFolders)collapsedFolders.add(path);
  panelDock!.restore(layout.dock);
@@ -389,19 +390,8 @@ function closeEditorTabs(key:string,others=false){
 function closeClassPreview(key:string){closeEditorTabs('preview:'+key);}
 function renderEditorTab(item:EditorTab){
  const side=sourceGroups.get(item.key)??'source';const view=groupEditors.get(side)!;item.active=view.getModel()===(item.sourcePath!==undefined?models.get(item.sourcePath):classPreviews.get(item.previewKey!)?.model);
- const wrapper=document.createElement('div');wrapper.className='editor-tab';wrapper.dataset.tabKey=item.key;wrapper.setAttribute('role','presentation');
- const tab=document.createElement('button');tab.className='file-tab';tab.textContent=item.label;tab.title=item.label+'\n長押し: タブを移動 / 領域外へ移動: 小窓で開く\nAlt＋クリック: このタブ以外を閉じる';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(item.active));tab.tabIndex=item.active?0:-1;
- tab.onclick=e=>{e.altKey?closeEditorTabs(item.key,true):selectEditorTab(item);};
- enableTabDrag(tab,item);
- tab.onkeydown=e=>{
-  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();
-  const tabs=visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side),i=tabs.findIndex(t=>t.key===item.key),n=tabs.length;
-  const next=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:n-1))%n;
-  selectEditorTab(tabs[next]);(panelDock?.strips[side]??el('file-tabs')).querySelectorAll<HTMLElement>('[role=tab]')[next]?.focus();
- };
- const close=document.createElement('button');close.className='tab-close';close.textContent='×';close.setAttribute('aria-label',item.label+' のタブを閉じる');close.title='閉じる（Alt＋クリック: このタブ以外を閉じる）';
- close.onclick=e=>{closeEditorTabs(item.key,e.altKey);el('file-tabs').querySelector<HTMLElement>('[aria-selected=true]')?.focus();};
- wrapper.append(tab,close);(panelDock?.strips[side]??el('file-tabs')).append(wrapper);
+ const pane=new EditorPane(item.key,item.label,{select:()=>selectEditorTab(item),close:others=>{if(others)panelDock?.closeTools(side);closeEditorTabs(item.key,others);}});
+ const {wrapper}=paneTab(pane,window.jalwebDetached!.workspaceId,item.active);(panelDock?.strips[side]??el('file-tabs')).append(wrapper);
 }
 function detachEditorTab(item:EditorTab){
  const model=item.sourcePath!==undefined?models.get(item.sourcePath):classPreviews.get(item.previewKey!)?.model;
@@ -414,20 +404,17 @@ function detachEditorTab(item:EditorTab){
  const side=sourceGroups.get(item.key)??'source';const view=groupEditors.get(side)!;if(view.getModel()===model){view.setModel(null);const next=visibleTabs().find(t=>(sourceGroups.get(t.key)??'source')===side);if(next)selectEditorTab(next);else if(activeSide===side)activePreview=undefined;}
  renderFiles();updateActions();status('小窓で開きました。編集内容はワークスペースと共有されます。');
 }
-function enableTabDrag(button:HTMLButtonElement,item:EditorTab){
- holdDrag(button,item.label,(x,y)=>panelDock?.highlight(x,y),(x,y)=>{
-  const side=panelDock?.hit(x,y);if(!side){detachEditorTab(item);return;}
-  const target=[...panelDock!.strips[side].querySelectorAll<HTMLElement>('[data-tab-key]')].find(n=>n.dataset.tabKey!==item.key&&x<n.getBoundingClientRect().left+n.offsetWidth/2)?.dataset.tabKey;
-  if(target){tabOrder=tabOrder.filter(k=>k!==item.key);tabOrder.splice(tabOrder.indexOf(target),0,item.key);}
-  moveSource(item.key,side);
- });
+function movePane(key:string,side:Side,event:DragEvent){
+ const pane=paneIdentity(key);if(!pane)return;
+ const before=beforePane(panelDock!.strips[side],key,event.clientX);movePaneOrder(tabOrder,key,before);
+ if(pane.kind==='tool'){detached.returnPanel(pane.name);panelDock!.move(pane.name,side);}else moveSource(key,side);
 }
 function moveSource(key:string,side:Side){
  const doc=detachableDocument(key);if(!doc)return;
- if(detached.has(key))detached.returnTab(key);
+ const transferred=detached.has(key)?detached.returnTab(key):undefined;if(transferred&&key.startsWith('source:'))project.workspace.views[key.slice(7)]=transferred;
  const old=sourceGroups.get(key)??'source';sourceGroups.set(key,side);
  if(old!==side&&groupEditors.get(old)?.getModel()===doc.model){groupEditors.get(old)!.setModel(null);const next=visibleTabs().find(t=>(sourceGroups.get(t.key)??'source')===old&&t.key!==key);if(next)selectEditorTab(next);}
- if(key.startsWith('source:'))switchFile(key.slice(7));else selectClassPreview(key.slice(8));
+ if(key.startsWith('source:'))switchFile(key.slice(7));else {selectClassPreview(key.slice(8));if(transferred){editor.setPosition({lineNumber:transferred.line,column:transferred.column});editor.setScrollPosition({scrollTop:transferred.scrollTop,scrollLeft:transferred.scrollLeft});}}
  editor.focus();
 }
 function bindGroupEditor(view:monaco.editor.IStandaloneCodeEditor,side:Side){
@@ -540,10 +527,11 @@ el<HTMLTextAreaElement>('stdin').oninput=()=>setDirty();
 function output(text:string,stream='stdout') {el('console-empty').hidden=true;const span=document.createElement('span');span.className=stream;span.textContent=text;el('output').append(span);const scroller=document.querySelector<HTMLElement>('.dock-console-body')??el('console-panel');scroller.scrollTop=scroller.scrollHeight;}
 const instructionPanel=installInstructionsPanel(el('instructions-panel'));
 const instructionClicks=followInstructionClicks(editor,op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);});
-panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const view of groupEditors.values())view.layout();},side=>{for(const tab of visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side))closeEditorTabs(tab.key);},name=>{if(!detached.openPanel(name))status('小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。','error');});
+panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const view of groupEditors.values())view.layout();},side=>{for(const tab of visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side))closeEditorTabs(tab.key);},name=>{if(!detached.openPanel(name))status('小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。','error');},window.jalwebDetached!.workspaceId,()=>tabOrder);
 for(const side of ['project','output'] as const){const container=document.createElement('div');container.className='group-editor';container.hidden=true;panelDock.panes[side].append(container);const view=monaco.editor.create(container,{...editor.getRawOptions(),model:null,automaticLayout:true,ariaLabel:side+' グループの JAL ソースコード'});groupEditors.set(side,view);bindGroupEditor(view,side);}
 bindGroupEditor(groupEditors.get('source')!,'source');
-for(const side of ['project','source','output'] as const)groupResources.push(fileDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,key=>moveSource(key,side)));
+for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));
+groupResources.push(paneDrop(document.body,window.jalwebDetached!.workspaceId,key=>{const pane=paneIdentity(key);if(pane?.kind==='tool'){if(!detached.hasPanel(pane.name))detached.openPanel(pane.name);}else if(pane?.kind==='editor'){const tab=visibleTabs().find(t=>t.key===key);if(tab)detachEditorTab(tab);}}));
 function selectTab(tab:'project'|'console'|'problems'|'instructions'){if(detached.hasPanel(tab))detached.focusPanel(tab);else panelDock?.show(tab);}
 el('clear').onclick=()=>{el('output').textContent='';el('console-empty').hidden=false;};
 function showDiagnostics() {
