@@ -1,4 +1,4 @@
-import antlr4 from 'antlr4';
+import {parseJal} from './jal-parse.js';
 import JALLexer from './generated/offset-parser/JALLexer.js';
 import JALParser from './generated/offset-parser/JALParser.js';
 const rule=n=>JALParser.ruleNames[n?.ruleIndex];
@@ -6,8 +6,7 @@ const span=n=>({start:n.start.start,end:n.stop.stop+1});
 export function analyzeSymbols(source){
  const result={classes:[],references:[]};if(source.length>1024*1024)return result;
  try{
-  const lexer=new JALLexer(new antlr4.InputStream(source));lexer.removeErrorListeners();const tokens=new antlr4.CommonTokenStream(lexer);tokens.fill();
-  const parser=new JALParser(tokens);parser.removeErrorListeners();const root=parser.root();
+  const {stream:tokens,root}=parseJal(source);
   const collect=(node,name)=>{const out=[];const walk=n=>{if(rule(n)===name){out.push(n);return;}for(const c of n.children??[])walk(c);};walk(node);return out;};
   const valid=n=>n?.start?.start>=0&&n?.stop?.stop>=n.start.start&&!n.exception;
   const add=(node,ref)=>{if(valid(node))result.references.push({...span(node),...ref});};

@@ -1,8 +1,6 @@
 import {formatJal} from './formatter.js';
-import {parameterSlots} from './parameter-slots.js';
+import {analyzeSource} from './source-analysis-core.js';
 import {expose} from 'comlink';
-import {inspectSource} from './inspections.js';
-import {calculateOffsets} from './offsets.js';
-const api={format:formatJal,analyze(source:string){return {parameters:parameterSlots(source),offsets:calculateOffsets(source),inspections:inspectSource(source)};}};
+const api={format:formatJal,analyze:analyzeSource};
 export type OffsetsApi=typeof api;
 expose(api);

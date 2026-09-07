@@ -1,16 +1,13 @@
-import antlr4 from 'antlr4';
+import {parseJal} from './jal-parse.js';
 import JALLexer from './generated/offset-parser/JALLexer.js';
 import JALParser from './generated/offset-parser/JALParser.js';
 
 // Original tokens preserve editor positions; call sites, comments and macros are not declarations.
-export function parameterSlots(source){
+export function parameterSlots(source,parse=parseJal){
  if(source.length>1024*1024)return [];
  const result=[];
  try{
-  const lexer=new JALLexer(new antlr4.InputStream(source));lexer.removeErrorListeners();
-  const stream=new antlr4.CommonTokenStream(lexer);stream.fill();
-  const errors=stream.tokens.filter(t=>t.type===JALLexer.ERRCHAR).map(t=>t.tokenIndex);
-  const parser=new JALParser(stream);parser.removeErrorListeners();parser.addErrorListener({syntaxError:(_r,t)=>{if(t)errors.push(t.tokenIndex);},reportAmbiguity(){},reportAttemptingFullContext(){},reportContextSensitivity(){}});
+  const {stream,errors,root}=parse(source);
   const visit=node=>{
    if(JALParser.ruleNames[node.ruleIndex]!=='methodDefinition'){for(const child of node.children??[])visit(child);return;}
    const token=node.methodDescriptor()?.start,name=node.methodName()?.start;
@@ -25,7 +22,7 @@ export function parameterSlots(source){
    }
    result.push(...pending);
   };
-  visit(parser.root());
+  visit(root);
  }catch{/* Incomplete declarations have no hints until their descriptor is valid. */}
  return result;
 }

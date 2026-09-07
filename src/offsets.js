@@ -1,11 +1,11 @@
-import antlr4 from 'antlr4';
-import JALLexer from './generated/offset-parser/JALLexer.js';
+import {parseJal} from './jal-parse.js';
 import JALParser from './generated/offset-parser/JALParser.js';
 import sizes from './generated/offset-sizes.json';
 
 // Mirrors Javasm's InstructionOffsetCalculator: sum source instruction sizes per method.
 // No compiler, constant pool, class file or JVM is involved.
 function preprocess(source){
+ if(!/^\s*#/m.test(source))return {source,mapping:source.split(/\r\n|\r|\n/).map((_,i)=>i+1)};
  const macros=new Map(),mapping=[],output=[];let block=false;
  const expand=(text,depth=0)=>{
   if(depth>16)throw new Error('Macro recursion');
@@ -35,15 +35,11 @@ function preprocess(source){
  }
  return {source:output.join('\n'),mapping};
 }
-export function calculateOffsets(source){
+export function calculateOffsets(source,parse=parseJal){
  if(source.length>1024*1024)return [];
  try{
   const expanded=preprocess(source);if(expanded.source.length>2*1024*1024)return [];
-  const lexer=new JALLexer(new antlr4.InputStream(expanded.source));lexer.removeErrorListeners();
-  const tokens=new antlr4.CommonTokenStream(lexer);tokens.fill();
-  const errors=tokens.tokens.filter(t=>t.type===JALLexer.ERRCHAR).map(t=>t.tokenIndex);
-  const parser=new JALParser(tokens);parser.removeErrorListeners();parser.addErrorListener({syntaxError:(_r,t)=>{if(t)errors.push(t.tokenIndex);},reportAmbiguity(){},reportAttemptingFullContext(){},reportContextSensitivity(){}});
-  const root=parser.root(),result=[];
+  const {stream:tokens,errors,root}=parse(expanded.source),result=[];
   const children=node=>node.children??[];
   const collect=(node,rule)=>{const found=[];const walk=n=>{if(JALParser.ruleNames[n.ruleIndex]===rule){found.push(n);return;}for(const c of children(n))walk(c);};walk(node);return found;};
   for(const method of collect(root,'methodDefinition')){

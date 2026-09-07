@@ -1,5 +1,4 @@
-import antlr4 from 'antlr4';
-import JALLexer from './generated/offset-parser/JALLexer.js';
+import {parseJal} from './jal-parse.js';
 import JALParser from './generated/offset-parser/JALParser.js';
 
 // Inspect original parser tokens, never expanded macros or recovered instructions.
@@ -9,15 +8,11 @@ const integer=text=>{
  const value=text.startsWith('-')?-Number(text.slice(1)):Number(text);
  return Number.isSafeInteger(value)&&value>=-2147483648&&value<=2147483647?value:undefined;
 };
-export function inspectSource(source){
+export function inspectSource(source,parse=parseJal){
  if(source.length>1024*1024)return [];
  const result=[];
  try{
-  const lexer=new JALLexer(new antlr4.InputStream(source));lexer.removeErrorListeners();
-  const stream=new antlr4.CommonTokenStream(lexer);stream.fill();
-  const errors=stream.tokens.filter(t=>t.type===JALLexer.ERRCHAR).map(t=>t.tokenIndex);
-  const parser=new JALParser(stream);parser.removeErrorListeners();parser.addErrorListener({syntaxError:(_r,t)=>{if(t)errors.push(t.tokenIndex);},reportAmbiguity(){},reportAttemptingFullContext(){},reportContextSensitivity(){}});
-  const root=parser.root();
+  const {stream,errors,root}=parse(source);
   const collect=(node,rules)=>{const out=[];const visit=n=>{if(rules.includes(JALParser.ruleNames[n.ruleIndex])){out.push(n);return;}for(const c of n.children??[])visit(c);};visit(node);return out;};
   for(const method of collect(root,['methodDefinition'])){
    const bad=Math.min(...errors.filter(i=>i>=method.start.tokenIndex&&i<=(method.stop?.tokenIndex??Infinity)));

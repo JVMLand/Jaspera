@@ -1,3 +1,4 @@
+import {parseJal} from './jal-parse.js';
 import antlr4 from 'antlr4';
 import JALLexer from './generated/offset-parser/JALLexer.js';
 import JALParser from './generated/offset-parser/JALParser.js';
@@ -11,9 +12,7 @@ export function formatJal(source,{tabSize=2,insertSpaces=true}={}){
   const directiveLines=new Set(original.tokens.filter(t=>t.text==='#'&&/^[ \t]*$/.test(source.slice(source.lastIndexOf('\n',t.start-1)+1,t.start))).map(t=>t.line));
   const directives=[];let offset=0,continued=false;
   const masked=source.split(/(?<=\n)/).map((line,index)=>{const protect=continued||directiveLines.has(index+1);continued=protect&&/\\[ \t]*(?:\r?\n)?$/.test(line);if(protect){const text=line.replace(/[\r\n]+$/,'');directives.push({start:offset,stop:offset+text.length-1,text,type:-2,tokenIndex:-1});}offset+=line.length;return protect?line.replace(/[^\r\n]/g,' '):line;}).join('');
-  const lexer=new JALLexer(new antlr4.InputStream(masked));lexer.removeErrorListeners();const stream=new antlr4.CommonTokenStream(lexer);stream.fill();
-  let invalid=stream.tokens.some(t=>t.type===JALLexer.ERRCHAR);const parser=new JALParser(stream);parser.removeErrorListeners();parser.addErrorListener({syntaxError(){invalid=true;},reportAmbiguity(){},reportAttemptingFullContext(){},reportContextSensitivity(){}});
-  const root=parser.root(),starts=new Set(),labels=new Set(),labelEnds=new Set();
+  const {stream,errors,root}=parseJal(masked),invalid=errors.length>0,starts=new Set(),labels=new Set(),labelEnds=new Set();
   const walk=node=>{const rule=JALParser.ruleNames[node.ruleIndex];if(['fieldDefinition','methodDefinition','instruction','label','jvmInsArgLookupSwitchCase'].includes(rule)&&node.start?.tokenIndex>=0)starts.add(node.start.start);if(rule==='label'&&node.start?.tokenIndex>=0){labels.add(node.start.start);labelEnds.add(node.stop?.stop);}for(const child of node.children??[])walk(child);};walk(root);
   const tokens=[...stream.tokens.filter(t=>t.type!==-1&&t.type!==JALLexer.SPACE),...directives].sort((a,b)=>a.start-b.start);
   if(!tokens.length)return source.trim()?source:'';
