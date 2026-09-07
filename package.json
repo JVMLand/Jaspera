@@ -9,6 +9,7 @@
     "build:compiler": "node scripts/build-compiler.mjs",
     "generate": "node scripts/generate-language.mjs",
     "typecheck": "tsc --noEmit",
+    "perf": "node scripts/measure-workspace-performance.mjs",
     "build": "npm run generate && npm run typecheck && vite build && node scripts/build-offline.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",

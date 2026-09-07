@@ -46,3 +46,7 @@ node scripts/measure-performance.mjs .cache/performance-report.json
 ## 確認
 
 解析キュー，ASM の診断位置，フレーム，グラフ，マクロ，構文エラー，全 UTF-16 コード単位の JSON 往復をテスト。ブラウザでは202命令の使用例，Graph の非表示・再表示，検索中のサンプル保持，テーマ，小窓の同期を確認した。
+
+## ワークスペース全体の測定
+
+起動・補完・JDKグラフ・開き直し・メモリの測定は [性能の定点測定](performance-workspace.md) を参照。`npm run perf` で実行する。

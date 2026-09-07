@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "commit": "f14c8b95b43770870c9cafab5209e15003a7d67d",
+  "date": "2026-09-07T17:55:55.046Z",
+  "browser": "152.0.4191.53",
+  "profile": "local preview",
+  "timings": {
+    "coldStartup": 3970,
+    "firstExecution": 2751,
+    "openPrintStream": 4156,
+    "firstGraph": 26499,
+    "reopenGraphMedian": 452.0,
+    "opcodeCompletion": 229
+  },
+  "memory": [
+    {
+      "label": "startup",
+      "rendererHeapBytes": 11779644,
+      "rendererBackingStorageBytes": 3225949,
+      "documents": 3,
+      "nodes": 1131,
+      "jsEventListeners": 684,
+      "workers": 2
+    },
+    {
+      "label": "graphWarm",
+      "rendererHeapBytes": 20557464,
+      "rendererBackingStorageBytes": 4820703,
+      "documents": 3,
+      "nodes": 3650,
+      "jsEventListeners": 1042,
+      "workers": 5
+    },
+    {
+      "label": "after10Reopens",
+      "rendererHeapBytes": 22224520,
+      "rendererBackingStorageBytes": 4830357,
+      "documents": 3,
+      "nodes": 3696,
+      "jsEventListeners": 1042,
+      "workers": 3
+    }
+  ],
+  "notes": [
+    "Renderer JS heap excludes JVM/WASM worker memory and is not total application RAM.",
+    "Heap samples force GC to make retained renderer state comparable.",
+    "Use the same machine, browser and build mode when comparing reports."
+  ],
+  "visibleGraphNodes": 172,
+  "reopenGraphSamples": [
+    472,
+    625,
+    425,
+    420,
+    425,
+    454,
+    435,
+    482,
+    450,
+    499
+  ],
+  "environment": {
+    "deviceMemoryGiB": 32,
+    "hardwareConcurrency": 28,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
+  }
+}
