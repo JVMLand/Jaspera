@@ -15,9 +15,11 @@ export class MethodLayoutCache {
   // or line-number nodes are inserted, so compare topology by instruction order.
   private key(graph: MethodGraph) {
     const ids = new Map(graph.nodes.map((node, index) => [node.id, index]));
+    const blockIds=[...new Set(graph.nodes.map(node=>node.block))];
+    for(const [index,id] of blockIds.entries())if(id!==undefined)ids.set(id,graph.nodes.length+index);
     return JSON.stringify([
       graph.name,
-      graph.nodes.map(node => node.text),
+      graph.nodes.map(node => [node.text,blockIds.indexOf(node.block)]),
       graph.edges.map(edge => [ids.get(edge.from), ids.get(edge.to), edge.kind, edge.label]),
     ]);
   }
@@ -26,8 +28,11 @@ export class MethodLayoutCache {
     const placed = this.cache.get(this.key(graph));
     if (!placed) return;
     const ids = new Map(placed.nodes.map((node, index) => [node.id, 'm0:' + graph.nodes[index].id]));
+    const blocks=[...new Set(graph.nodes.map(node=>node.block))];
+    for(const [index,block] of [...new Set(placed.nodes.map(node=>node.block))].entries())ids.set('m0:'+block,'m0:'+blocks[index]);
     return {
       ...placed,
+      blocks:(placed.blocks??[]).map(block=>({...block,id:ids.get(block.id)!})),
       nodes: placed.nodes.map((node, index) => ({...node, ...graph.nodes[index], id: 'm0:' + graph.nodes[index].id})),
       edges: placed.edges.map(edge => ({...edge, from: ids.get(edge.from)!, to: ids.get(edge.to)!})),
     };

@@ -51,8 +51,9 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
    if(offset+placed.height<top||offset>bottom||placed.width<left||right<0){if(method.paintKey!=='hidden'){method.group.replaceChildren();method.paintKey='hidden';}continue;}
    const nodes=placed.nodes.filter(n=>n.x+n.width/2>=left&&n.x-n.width/2<=right&&offset+n.y+n.height/2>=top&&offset+n.y-n.height/2<=bottom);
    const edges=placed.edges.filter(edge=>{const points=edge.points??[];return points.length&&Math.max(...points.map(p=>p.x))>=left&&Math.min(...points.map(p=>p.x))<=right&&offset+Math.max(...points.map(p=>p.y))>=top&&offset+Math.min(...points.map(p=>p.y))<=bottom;});
-   const key=nodes.map(n=>n.id).join(',')+'|'+edges.map(e=>placed.edges.indexOf(e)).join(',');
-   if(method.paintKey!==key){method.paintKey=key;draw(method,{...placed,nodes,edges});}
+   const blocks=placed.blocks.filter(b=>b.x+b.width>=left&&b.x<=right&&offset+b.y+b.height>=top&&offset+b.y<=bottom);
+   const key=blocks.map(b=>b.id).join(',')+'|'+nodes.map(n=>n.id).join(',')+'|'+edges.map(e=>placed.edges.indexOf(e)).join(',');
+   if(method.paintKey!==key){method.paintKey=key;draw(method,{...placed,nodes,edges,blocks});}
   }
   highlight();
  }
@@ -62,7 +63,8 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
   const group=method.group;group.replaceChildren();
    const arrowId='graph-arrow-'+crypto.randomUUID();const defs=ns('defs'),marker=ns('marker',{id:arrowId,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});marker.append(ns('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'context-stroke'}));defs.append(marker);group.append(defs);
    for(const box of result.boxes){group.append(ns('rect',{x:box.x,y:box.y,width:box.width,height:box.height,rx:8,class:'graph-block'}),ns('text',{x:box.x+12,y:box.y+21,class:'graph-method'},box.name));}
-   for(const edge of result.edges){const points:{x:number;y:number}[]=edge.points??[];const path=ns('path',{d:points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '),class:'graph-edge '+edge.kind,'marker-end':`url(#${arrowId})`});path.append(ns('title',{},edge.kind+(edge.label?' · '+edge.label:'')));group.append(path);if(edge.label&&edge.x!==undefined)group.append(ns('text',{x:edge.x,y:edge.y!,'text-anchor':'middle',class:'graph-edge-label'},edge.label));}
+   for(const block of result.blocks)group.append(ns('rect',{x:block.x,y:block.y,width:block.width,height:block.height,rx:7,class:'graph-label-block','data-block':prefix(block.id)}));
+   for(const edge of result.edges){const points:{x:number;y:number}[]=edge.points??[];const path=ns('path',{d:points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '),class:'graph-edge '+edge.kind,'marker-end':`url(#${arrowId})`});path.append(ns('title',{},edge.kind+(edge.label?' · '+edge.label:'')));group.append(path);if(edge.label&&edge.x!==undefined){const label=ns('text',{'text-anchor':'middle',class:'graph-edge-label'});for(const [index,line] of edge.label.split('\n').entries())label.append(ns('tspan',{x:edge.x,y:edge.y!+index*14},line));group.append(label);}}
    for(const node of result.nodes){const g=ns('g',{transform:`translate(${node.x-node.width/2},${node.y-node.height/2})`,class:'graph-node'+(node.unreachable?' unreachable':''),role:'button',tabindex:0,'aria-label':`${node.line}行: ${node.text}`});g.dataset.id=node.id;g.style.setProperty('--node-color',`var(--instruction-${instructionHighlightGroup(node.opcode)})`);g.append(ns('rect',{width:node.width,height:node.height,rx:5}),ns('text',{x:12,y:20},node.text.length>60?node.text.slice(0,57)+'…':node.text),ns('title',{},node.text));const go=()=>{if(doc)navigate(doc,node.line,node.column);};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};group.append(g);}
 
 

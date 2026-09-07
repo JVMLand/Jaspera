@@ -6,3 +6,5 @@
 
 .graph-method-progress{fill:#999;fill-opacity:.28;transition:width .18s ease}.graph-method-state{fill:var(--theme-muted,#98a4b3);font:12px system-ui;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.graph-method-progress{transition:none}}
+
+.graph-label-block{fill:var(--theme-surface,#1b222b);fill-opacity:.55;stroke:var(--theme-muted,#98a4b3);stroke-opacity:.45;stroke-width:1;pointer-events:none}

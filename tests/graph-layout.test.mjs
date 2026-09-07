@@ -34,3 +34,15 @@ test('blocked corridors retain ELK detours and clear horizontal corridors use si
  assert.equal(clear.edges[0].points[0].x,110);assert.equal(clear.edges[0].points[1].x,160);
  assert.equal(blocked.edges[0].points.length,4);
 });
+
+test('label blocks contain their instructions and exception arrows attach to block borders',async()=>{
+ const method={name:'guarded()V',nodes:[{...node('a'),block:'B0'},{...node('b'),block:'B0'},{...node('c'),block:'B1'},{...node('d'),block:'B2'}],edges:[edge('a','b'),edge('b','c'),edge('a','c','stack'),{...edge('B0','B2','exception'),label:'RuntimeException'},edge('c','d')]};
+ const result=await positionGraphs([method],elk);assert.equal(result.blocks.length,3);assert.equal(result.edges.length,method.edges.length);
+ for(const n of result.nodes){const box=result.blocks.find(b=>b.id==='m0:'+n.block);assert.ok(box);assert.ok(n.x-n.width/2>=box.x&&n.x+n.width/2<=box.x+box.width);assert.ok(n.y-n.height/2>=box.y&&n.y+n.height/2<=box.y+box.height);}
+ for(const e of result.edges)for(let i=1;i<e.points.length;i++){const a=e.points[i-1],b=e.points[i];assert.ok(Math.abs(a.x-b.x)<.001||Math.abs(a.y-b.y)<.001);}
+ for(const e of result.edges)for(const [id,p] of [[e.from,e.points[0]],[e.to,e.points.at(-1)]]){
+  const n=result.nodes.find(n=>n.id===id),b=n?{x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height}:result.blocks.find(b=>b.id===id);
+  assert.ok(p.x>=b.x-.01&&p.x<=b.x+b.width+.01&&p.y>=b.y-.01&&p.y<=b.y+b.height+.01,JSON.stringify({id,b,p}));
+  assert.ok([Math.abs(p.x-b.x),Math.abs(p.x-b.x-b.width),Math.abs(p.y-b.y),Math.abs(p.y-b.y-b.height)].some(d=>d<.01),JSON.stringify({id,b,p}));
+ }
+});
