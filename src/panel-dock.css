@@ -1,0 +1,59 @@
+/* Both strips scroll horizontally when necessary, without drawing scrollbars. */
+#file-tabs,.output-header .tabs{overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;min-width:0}
+#file-tabs::-webkit-scrollbar,.output-header .tabs::-webkit-scrollbar{display:none}
+.output-header{padding-right:0!important}.output-header .tabs{gap:0;padding-left:0;width:100%}
+.dock-tab{display:flex;position:relative;flex-shrink:0;align-items:stretch;border-right:1px solid var(--theme-border,#303640);background:var(--theme-surface,#181e26);max-width:240px}
+.dock-tab:has([aria-selected=true]){background:var(--theme-bg,#151a21);box-shadow:inset 0 2px var(--theme-accent,#91caba)}
+#file-tabs .dock-tab-button,.output-header .dock-tab-button{height:100%;padding:0 7px 0 12px;font:12px "Segoe UI",sans-serif;border:0;background:transparent;color:var(--theme-muted,#98a4b3);touch-action:none;white-space:nowrap}
+#file-tabs .dock-tab-button[aria-selected=true],.output-header .dock-tab-button[aria-selected=true]{color:var(--theme-text,#d7dce3)}
+.output-header .dock-tab-button:after{display:none!important}
+.dock-tab-close{width:20px;align-self:center;margin:0 4px 0 0;padding:0;border:0;background:transparent;color:var(--theme-muted,#98a4b3);font-size:17px;opacity:0}
+.dock-tab:hover .dock-tab-close,.dock-tab-close:focus-visible{opacity:1}
+.dock-tab-close:hover{background:var(--theme-selection,#2a4957)}
+.dock-pane{position:relative;min-width:0}.dock-content{grid-row:2;grid-column:1;min-height:0;min-width:0;display:grid;overflow:hidden}
+.dock-content>[role=tabpanel]{grid-area:1/1!important;min-height:0;min-width:0;height:100%}
+.source-pane.dock-tool-active{grid-template-rows:47px minmax(0,1fr)!important}
+.source-pane.dock-tool-active>#editor,.source-pane.dock-tool-active>.editor-footer{display:none}
+.output-pane.dock-pane{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:47px minmax(0,1fr)!important;row-gap:0!important}
+.output-pane.dock-pane>.output-header{grid-area:1/1}
+#console-panel.dock-console{display:grid;grid-template-rows:minmax(0,1fr) auto auto;overflow:hidden;position:relative}
+.dock-console-body{position:relative;overflow:auto;min-height:0}
+#console-panel.dock-console>.stdin-section,#console-panel.dock-console>.runtime-card{grid-column:auto!important;grid-row:auto!important;display:block!important}
+#console-panel.dock-console>.runtime-card{display:flex!important;min-height:60px}
+#console-panel.dock-console>#clear{position:absolute;right:8px;top:6px;z-index:1;background:var(--theme-surface,#181e26)}
+.dock-drop-target{outline:2px solid var(--theme-accent,#91caba);outline-offset:-3px}
+.dock-drop-target:after{content:'ここへ移動';position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);background:var(--theme-selection,#2a4957);padding:12px 20px;color:var(--theme-text,#d7dce3);pointer-events:none;z-index:15;border-radius:5px}
+.dock-menu{position:fixed;z-index:10000;min-width:180px;padding:5px;background:var(--theme-surface,#181e26);border:1px solid var(--theme-border,#303640);box-shadow:0 6px 20px #0005;border-radius:5px}
+.dock-menu button{display:block;text-align:left;width:100%;padding:8px;border:0;background:transparent;color:var(--theme-text,#d7dce3)}.dock-menu button:hover{background:var(--theme-selection,#2a4957)}
+@media(min-width:801px){.workspace.dock-arranged{grid-template-columns:180px minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"project summary summary" "project source output"!important}.workspace.dock-arranged>.source-pane{grid-area:source!important}.workspace.dock-arranged>.output-pane{grid-area:output!important}.workspace.dock-arranged>.project-pane{grid-area:project!important}.workspace.dock-arranged.dock-swapped{grid-template-areas:"project summary summary" "project output source"!important}}
+@media(hover:none){.dock-tab-close{opacity:1}}
+
+.output-header .tabs .dock-tab-close,#file-tabs .dock-tab-close{width:20px;min-width:20px;padding:0;font-size:17px;flex-shrink:0}
+
+/* Three equal-behaviour groups; theme colours and surfaces remain in effect. */
+#app .workspace.dock-arranged{grid-template-columns:minmax(0,var(--group-0,.17fr)) 6px minmax(0,var(--group-1,.48fr)) 6px minmax(0,var(--group-2,.35fr))!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"summary summary summary summary summary" "project split0 source split1 output"!important;gap:0!important}
+#app .workspace.dock-arranged.dock-swapped{grid-template-areas:"summary summary summary summary summary" "project split0 output split1 source"!important}
+#app .workspace .dock-pane{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:47px minmax(0,1fr)!important;min-width:0;min-height:0;overflow:hidden;padding:0!important;gap:0!important}
+#app .workspace .dock-pane>.pane-header,#app .workspace .project-heading{grid-area:1/1!important;height:47px;padding:0!important;min-width:0;overflow:hidden}
+#app .workspace .group-editor{grid-area:2/1!important;min-width:0;min-height:0;height:100%;overflow:hidden}
+#app .workspace .dock-pane>.editor-footer{display:none}
+#app .workspace .dock-content{grid-area:2/1!important}
+#app .workspace [hidden]{display:none!important}
+#project-panel{position:relative;overflow:auto;padding-top:28px}
+#project-panel>#add-file{position:absolute;right:6px;top:3px}
+#file-list{display:block!important}
+#project-tabs{display:flex;width:100%;height:47px;overflow:auto;scrollbar-width:none;letter-spacing:normal}
+#project-tabs::-webkit-scrollbar{display:none}
+.dock-pane .dock-tab-button{height:100%;padding:0 7px 0 12px;font:12px "Segoe UI",sans-serif;border:0;background:transparent;color:var(--theme-muted,#98a4b3);touch-action:none;white-space:nowrap}
+.dock-pane .dock-tab-button[aria-selected=true]{color:var(--theme-text,#d7dce3)}
+.dock-pane .editor-tab{display:flex;position:relative;flex-shrink:0;min-width:0;max-width:340px;align-items:stretch;border-right:1px solid var(--theme-border);background:var(--theme-surface)}
+.dock-pane .editor-tab:has([aria-selected=true]){background:linear-gradient(var(--theme-accent),var(--theme-accent)) top/100% 2px no-repeat var(--theme-bg)}
+.dock-pane .editor-tab .file-tab{min-width:0;flex:1;border:0!important;background:transparent!important;padding:0 4px 0 12px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--theme-muted);touch-action:none}
+.dock-pane .editor-tab .file-tab[aria-selected=true]{color:var(--theme-text)}
+.dock-pane .editor-tab .file-tab:after{display:none!important}
+.dock-pane .tab-close{flex-shrink:0;align-self:center;width:20px!important;height:22px;margin:0 4px 0 0;padding:0!important;border:0;background:transparent;color:var(--theme-muted);font-size:17px!important;opacity:0}
+.dock-pane .editor-tab:hover .tab-close,.dock-pane .tab-close:focus-visible{opacity:1}
+.group-separator{position:relative;background:var(--theme-border,#303640);cursor:col-resize;touch-action:none;z-index:4;outline-offset:-2px}
+.group-separator:hover,.group-separator:focus-visible{background:var(--theme-accent,#91caba)}
+.separator-0{grid-area:split0}.separator-1{grid-area:split1}
+@media(max-width:800px){#app .workspace.dock-arranged,#app .workspace.dock-arranged.dock-swapped{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,var(--group-0,.17fr)) 6px minmax(0,var(--group-1,.48fr)) 6px minmax(0,var(--group-2,.35fr))!important;grid-template-areas:"summary" "project" "split0" "source" "split1" "output"!important}#app .workspace.dock-arranged.dock-swapped{grid-template-areas:"summary" "project" "split0" "output" "split1" "source"!important}.group-separator{cursor:row-resize}}
