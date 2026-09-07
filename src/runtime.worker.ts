@@ -1,3 +1,5 @@
+import {RuntimeDebugger} from './runtime-debugger';
+import type {DebugCommand,DebugBreakpoint} from './debug-protocol';
 /// <reference lib="webworker" />
 import {expose,wrap,type Remote} from 'comlink';
 import {scopedEndpoint} from './worker-rpc';
@@ -66,8 +68,13 @@ function encodeText(text: string) {
   for(let i=0;i<bytes.length;i+=8192) binary += String.fromCharCode(...bytes.subarray(i,i+8192));
   return btoa(binary);
 }
+let debuggerSession:RuntimeDebugger|undefined;
+function endDebug(){if(debuggerSession){vm._module._jaspera_debug_disable(vm.getActiveThread().ptr);debuggerSession=undefined;vm._module.jasperaDebugger=undefined;}}
 let busy = false;
-const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promise<Compilation|Disassembly|void>{
+const api={
+ debugCommand(command:DebugCommand){if(!debuggerSession)throw new Error('デバッグ実行中ではありません。');debuggerSession.command(command);},
+ debugBreakpoints(points:DebugBreakpoint[]){debuggerSession?.breakpoints(points);},
+ async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promise<Compilation|Disassembly|void>{
   if(busy){port.close();throw new Error('JVM は処理中です。');}
   busy=true;const scope=scopedEndpoint(port);events=wrap<RuntimeEvents>(scope.endpoint);notifications=Promise.resolve();
   try {
@@ -92,19 +99,21 @@ const api={async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promi
       if(!names.has(className))throw new Error('実行対象が見つかりません。');
       const manifest=classes.map(c=>c.className+'\t'+c.bytecode).join('\n');
       if(manifest.length>16*1024*1024)throw new Error('コンパイル結果が大きすぎます。');
+      if(data.debug)debuggerSession=new RuntimeDebugger(vm,data.debug,snapshot=>{flush();notify(sink=>sink.debug(snapshot));});
       await bridge.runProject(className, manifest, encodeText(data.stdin));
       for(const stream of ['stdout','stderr'] as const) buffers[stream] += decoders[stream].decode();
       flush();
 
     }
   } catch(error: any) {
+    endDebug();
     let message = error instanceof Error ? error.message : typeof error === 'string' ? error : (error?.constructor?.name || 'JVM error');
     try {
       if (error?.getMessage) message = `${error.constructor.name}: ${await error.getMessage()}`;
       if (error?.printStackTrace) await error.printStackTrace();
     } catch {}
     throw new Error(message);
-  } finally {if(compiling){progressText+=progressDecoder.decode();if(progressText)outputText("stdout",new TextEncoder().encode(progressText));progressText="";compiling=false;}flush();await notifications;events=undefined;scope.dispose();busy=false;}
+  } finally {endDebug();if(compiling){progressText+=progressDecoder.decode();if(progressText)outputText("stdout",new TextEncoder().encode(progressText));progressText="";compiling=false;}flush();await notifications;events=undefined;scope.dispose();busy=false;}
 }};
 export type RuntimeApi=typeof api;
 expose(api);

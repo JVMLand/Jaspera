@@ -27,7 +27,7 @@ export class WorkerRpc<T>{
   return new Promise<R>((resolve,reject)=>{
    const finish=(error?:Error,value?:R)=>{if(!this.pending.delete(cancel))return;clearTimeout(timer);if(error)reject(error);else resolve(value as R);};
    const cancel=(error:Error)=>finish(error);
-   const timer=setTimeout(()=>this.stop('処理時間の上限を超えたため停止しました。'),timeout);
+   const timer=timeout>0?setTimeout(()=>this.stop('処理時間の上限を超えたため停止しました。'),timeout):undefined;
    this.pending.add(cancel);
    try{invoke(this.remote!).then(value=>finish(undefined,value),error=>finish(error instanceof Error?error:new Error(String(error))));}catch(error){finish(error instanceof Error?error:new Error(String(error)));}
   });
