@@ -13,16 +13,7 @@ function library(){return jdk??=import('./generated/jdk.json').then(module=>{
  }
  return targets;
 }).catch(error=>{jdk=undefined;throw error;});}
-const normalize=(value:string)=>value.toLowerCase().replace(/->|\//g,'.');
-export function searchTargets(targets:SearchTarget[],query:string){
- const words=normalize(query.trim()).split(/\s+/).filter(Boolean);
- return targets.map((target,index)=>{
-  const name=normalize(target.label),full=normalize(target.detail+'.'+target.label);
-  const matches=words.every(word=>full.includes(word));
-  const score=!matches?Infinity:!words.length?(target.kind==='file'?0:10):name===words.join(' ')?0:name.startsWith(words.join(' '))?1:2;
-  return {target,index,score};
- }).filter(row=>Number.isFinite(row.score)).sort((a,b)=>a.score-b.score||a.index-b.index).slice(0,100).map(row=>row.target);
-}
+import {searchTargets} from './search-ranking';
 export function installSearchEverywhere(workspace:()=>Promise<SearchTarget[]>,open:(target:SearchTarget)=>Promise<()=>void|Promise<void>>){
  const dialog=document.createElement('dialog');dialog.className='search-everywhere';dialog.setAttribute('aria-label','どこでも検索');
  dialog.innerHTML='<header><h1>どこでも検索</h1><button type="button" aria-label="閉じる">×</button></header><input type="search" placeholder="ファイル・クラス・メソッド・フィールドを検索" aria-label="ファイル・定義を検索" role="combobox" aria-autocomplete="list" aria-controls="everywhere-results" aria-expanded="true"><p role="status" aria-live="polite"></p><div id="everywhere-results" role="listbox"></div><footer><kbd>↑</kbd> <kbd>↓</kbd> 選択　<kbd>Enter</kbd> 開く　<kbd>Esc</kbd> 閉じる</footer>';
