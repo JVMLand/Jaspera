@@ -31,7 +31,11 @@ export function applyTheme(id:string,save=true) {
  if(currentTheme!==id){currentTheme=id;for(const listener of themeListeners)listener(id);}
  return id;
 }
-export function restoreTheme(){let id='jal-night';try{id=localStorage.getItem(key)??id;}catch{}return applyTheme(id,false);}
+function savedTheme(){
+ try{const id=localStorage.getItem(key);return themes.some(t=>t.id===id)?id:undefined;}catch{return undefined;}
+}
+function preferredTheme(){return matchMedia('(prefers-color-scheme: dark)').matches?'vs-dark':'vs';}
+export function restoreTheme(){return applyTheme(savedTheme()??preferredTheme(),false);}
 export function openThemePicker(){
  const dialog=document.getElementById('theme-dialog') as HTMLDialogElement;
  (document.getElementById('theme-select') as HTMLSelectElement).value=currentTheme;
@@ -40,5 +44,10 @@ export function openThemePicker(){
 export function initializeThemes(){
  const select=document.getElementById('theme-select') as HTMLSelectElement;
  for(const t of themes){const option=document.createElement('option');option.value=t.id;option.textContent=t.label;select.append(option);}
+ const firstVisit=savedTheme()===undefined;
  select.value=restoreTheme();select.onchange=()=>applyTheme(select.value);
+ if(firstVisit){
+  applyTheme(select.value);
+  queueMicrotask(openThemePicker);
+ }
 }
