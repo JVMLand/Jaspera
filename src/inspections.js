@@ -29,7 +29,7 @@ export function inspectSource(source,parse=parseJal){
     const edit=(token,text)=>({start:token.start,end:token.stop+1,text});
     const report=(code,message,severity='warning',title,edits)=>result.push({code,message,severity,start:node.start.start,end:node.stop.stop+1,title,edits});
     const replace=(replacement,removeArg=false)=>[edit(op,replacement),...(removeArg?[edit(arg,'')]:[]),...(wide?[edit(ts[0],'')]:[])];
-    if(terminated)report('unreachable',`${terminated} の後の命令には到達できません（次のラベルまで）。`);
+    if(terminated)report('unreachable',`${terminated} の後の命令には到達できません。`);
     if(/^(goto(?:_w)?|[ilfda]?return|athrow|tableswitch|lookupswitch)$/.test(name))terminated=name;
     if(/^[ilfda]?return$/.test(name)&&expected&&name!==expected)report('return-type',`戻り値 ${returnType} には ${expected} が必要です。スタックの型も確認してください。`,'error');
     const value=integer(arg?.text);
