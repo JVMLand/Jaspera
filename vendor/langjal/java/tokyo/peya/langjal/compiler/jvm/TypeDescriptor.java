@@ -64,6 +64,11 @@ public class TypeDescriptor {
      */
     private final int arrayDimensions;
 
+    /** Slots occupied by a value; every array is a category-1 reference. */
+    public int getSlotSize() {
+        return this.arrayDimensions > 0 ? 1 : this.baseType.getCategory();
+    }
+
     /**
      * Constructs a TypeDescriptor with base type and array dimensions.
      *

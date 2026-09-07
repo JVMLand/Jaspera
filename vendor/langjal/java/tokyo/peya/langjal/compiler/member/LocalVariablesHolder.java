@@ -246,7 +246,7 @@ public class LocalVariablesHolder {
                 );
 
         TypeDescriptor lastType = maxLocalNum.type();
-        if (lastType.getBaseType().getCategory() == 2) {
+        if (lastType.getSlotSize() == 2) {
             // カテゴリ２の型は２スロット使用するので、次のインデックスは +2
             return maxLocalNum.index() + 2;
         } else {
@@ -428,10 +428,10 @@ public class LocalVariablesHolder {
                                                              @NotNull LabelInfo startLabel,
                                                              @NotNull LabelInfo endLabel) {
         int newStartSlot = idx;
-        int newEndSlot = idx + type.getBaseType().getCategory();
+        int newEndSlot = idx + type.getSlotSize();
         for (LocalVariableInfo local : this.locals) {
             int existingStartSlot = local.index();
-            int existingEndSlot = local.index() + local.type().getBaseType().getCategory();
+            int existingEndSlot = local.index() + local.type().getSlotSize();
             if (newStartSlot >= existingEndSlot || existingStartSlot >= newEndSlot)
                 continue;
 
@@ -485,7 +485,7 @@ public class LocalVariablesHolder {
      */
     public int getMaxLocalSize() {
         return this.locals.stream()
-                .mapToInt(local -> local.index() + local.type().getBaseType().getCategory())
+                .mapToInt(local -> local.index() + local.type().getSlotSize())
                 .max()
                 .orElse(0);
     }

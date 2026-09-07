@@ -298,7 +298,7 @@ public class MethodAnalyser {
     private LocalStackElement[] createLocalStack(@NotNull LocalVariableInfo[] locals) {
         // ローカル変数のスロットサイズはカテゴリ（1, 2）で変わる。
         int slotSize = Arrays.stream(locals)
-                .mapToInt(localInfo -> localInfo.index() + localInfo.type().getBaseType().getCategory())
+                .mapToInt(localInfo -> localInfo.index() + localInfo.type().getSlotSize())
                 .max()
                 .orElse(0);
 
@@ -328,7 +328,7 @@ public class MethodAnalyser {
             localStack[i] = new LocalStackElement(this.nop, local.index(), elem, local.isParameter());
 
             // 2スロット型の場合は次のスロットをTopElementで埋める
-            if (type.getBaseType().getCategory() == 2) {
+            if (type.getSlotSize() == 2) {
                 i++;
                 if (i < slotSize)
                     localStack[i] = new LocalStackElement(this.nop, i, top);

@@ -201,7 +201,7 @@ public class JALMethodCompiler {
             TypeDescriptor paramType = parameters[i];
             String paramName = String.format("arg%05d", i);
             // パラメータをローカル変数として登録
-            if (paramType.getBaseType().getCategory() == 2) {
+            if (paramType.getSlotSize() == 2) {
                 this.locals.registerParameter(paramName, paramType, currentIndex++);
                 currentIndex++; // カテゴリ２は ２スロット使うため，インデックスを進める
             } else
