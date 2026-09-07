@@ -5,3 +5,13 @@ test('every supported instruction has a category, explanation and diagram',()=>{
 test('small primitive values occupy int stack entries',()=>{for(const op of ['i2b','i2c','i2s','baload','caload','saload'])assert.match(guide(op).forms[0].after[0],/: int$/);for(const op of ['bastore','castore','sastore'])assert.match(guide(op).forms[0].before.at(-1),/: int$/);});
 test('local diagrams describe only stores and increments',()=>{assert.equal(guide('iload_1').forms[0].locals,undefined);assert.equal(guide('iadd').forms[0].locals,undefined);assert.ok(guide('istore_1').forms[0].locals);assert.deepEqual(guide('iinc').forms[0].before,[]);assert.deepEqual(guide('iinc').forms[0].locals.after,['#1: 4 : int']);});
 test('stack manipulation variants keep ordering and category restrictions',()=>{const f=guide('dup2_x2').forms;assert.equal(f.length,4);assert.deepEqual(f[3].before,['value2','value1']);assert.deepEqual(f[3].after,['value1','value2','value1']);assert.match(f[3].note,/カテゴリ2/);assert.equal(guide('pop2').forms.length,2);assert.deepEqual(guide('swap').forms[0].after,['value1','value2']);});
+
+test('editorial summaries keep operand order only where it matters',()=>{
+ for(const op of ['iadd','lmul','iand','ior','ixor','if_icmpeq','if_acmpne'])assert.doesNotMatch(guide(op).summary,/先に積んだ|左側|右側|TOP の下/);
+ assert.match(guide('isub').summary,/TOP の値を、その下の値から引き/);assert.match(guide('idiv').summary,/TOP の値で、その下の値を割り/);
+ assert.match(guide('ishl').summary,/ビット数/);assert.match(guide('iand').forms[0].note,/両方のビット/);
+ assert.match(guide('iadd').markdown,/オーバーフロー/);assert.doesNotMatch(guide('iadd').markdown,/IEEE|NaN|形式|スタック効果|先に積んだ/);
+ assert.match(guide('idiv').markdown,/ArithmeticException/);assert.match(guide('fdiv').markdown,/NaN/);
+ assert.doesNotMatch(guide('i2l').markdown,/NaN|丸め/);assert.match(guide('d2i').markdown,/NaN/);
+ for(const op of instructionList)assert.doesNotMatch(guide(op).markdown,/##### \*\*(形式|スタック効果|例):/,op);
+});

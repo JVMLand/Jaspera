@@ -31,7 +31,7 @@ export function installInstructionsPanel(host:HTMLElement){
   const advanced=el('div',undefined,'instruction-advanced');
   markdown=renderMarkdown({value:entry.markdown,isTrusted:false,supportHtml:false});
   for(const anchor of markdown.element.querySelectorAll<HTMLAnchorElement>('a[data-href]')){const href=anchor.dataset.href!;if(/^https:\/\//.test(href)){anchor.href=href;anchor.target='_blank';anchor.rel='noopener noreferrer';}}
-  advanced.append(markdown.element);detail.append(advanced);
+  advanced.append(markdown.element);if(entry.markdown.trim())detail.append(advanced);
   const link=document.createElement('a');link.textContent='JVM 仕様書で命令を確認 ↗';link.href='https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.'+op.replace(/^([ilfd])const_(?:m1|[0-5])$/, '$1const_$1').replace(/_([0-3])$/, '_n').replace(/^([fd])cmp[lg]$/, '$1cmp_op').replace(/^if_([ai])cmp(?:eq|ne|lt|ge|gt|le)$/, 'if_$1cmp_cond').replace(/^if(?:eq|ne|lt|ge|gt|le)$/, 'if_cond');link.target='_blank';link.rel='noopener noreferrer';detail.append(link);detail.scrollTop=0;
  }
  function filter(){
