@@ -32,7 +32,7 @@ registerLanguage(()=>navigation.completionCatalog());
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 <header class="toolbar">
   <div class="brand"><img class="brand-logo" src="./favicon.svg" alt="Javasm ロゴ" width="40" height="40"><h1>JAL<span>Web</span></h1><span class="brand-caption">JVM ASSEMBLY LAB</span></div>
-  <div class="toolbar-actions"><button id="stop" class="subtle" disabled>■ Stop</button><button id="run" class="run" title="実行（Ctrl+Enter / F5）"><span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
+  <div class="toolbar-actions"><button id="run" class="run" title="実行（Ctrl+Enter / F5）"><span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
 </header>
 <nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
 
@@ -173,7 +173,6 @@ const menus=installMenus(el('menus'),[
   {label:'Build',items:[
     {id:'check-project',label:'検査',action:()=>{clearTimeout(analysisTimer);void analyze();}},
     {id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:()=>void run()},
-    {id:'menu-stop',label:'停止',action:()=>stopRun()},
     {id:'download',label:'class に書き出す…',action:downloadClass}
   ]},
   {label:'Help',items:helpMenuItems()}
@@ -191,8 +190,11 @@ function updateActions() {
   menus.disabled('find',!model);
   menus.disabled('rename-file',!!activePreview||!editor.getModel()||!project.files.length);menus.disabled('close-tab',!editor.getModel());menus.hidden('save-class-source',!activePreview);
   menus.disabled('project-properties-menu',folder?.properties===false);el<HTMLButtonElement>('summary-properties').disabled=folder?.properties===false;
-  el<HTMLButtonElement>('run').disabled=running;el<HTMLButtonElement>('stop').disabled=!running;
-  menus.disabled('menu-run',running);menus.disabled('menu-stop',!running);
+  const runButton=el<HTMLButtonElement>('run');
+  runButton.innerHTML=running?'<span aria-hidden="true">■</span> Stop <kbd>Ctrl ↵</kbd>':'<span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd>';
+  runButton.title=(running?'停止':'実行')+'（Ctrl+Enter / F5）';
+  runButton.setAttribute('aria-label',running?'停止':'実行');
+  menus.label('menu-run',running?'停止':'実行');
   menus.disabled('download',!!activePreview||!editor.getModel()||checkedRevision!==revision || !results.get(project.workspace.activeFile)?.bytecode);
   menus.disabled('remove-file',!!activePreview||!editor.getModel()||project.files.length<=1);
 }
@@ -612,7 +614,7 @@ editor.onDidChangeCursorPosition(({position})=>{
 });
 function stopRun(show=true) {runToken++;runner?.stop();runner=undefined;running=false;updateActions();if(show)status('停止しました');}
 async function run() {
-  if(running)return;running=true;const token=++runToken;updateActions();let owned:Runtime|undefined;const started=performance.now();
+  if(running){stopRun();return;}running=true;const token=++runToken;updateActions();let owned:Runtime|undefined;const started=performance.now();
   el('clear').click();el('console-empty').hidden=true;selectTab('console');status('コンパイル中…','loading');
   try {
     clearTimeout(analysisTimer);await analyze();if(token!==runToken)return;
@@ -625,7 +627,7 @@ async function run() {
   }catch(e){if(token===runToken){output(`${e instanceof Error?e.message:String(e)}\n`,'stderr');status('実行に失敗しました','error');}}
   finally {owned?.stop();if(token===runToken){runner=undefined;running=false;updateActions();}}
 }
-el('run').onclick=()=>void run();el('stop').onclick=()=>stopRun();
+el('run').onclick=()=>void run();
 editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
 window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});

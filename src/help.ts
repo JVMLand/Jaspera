@@ -35,7 +35,7 @@ export function helpMenuItems(detached=false,canSave=()=>true){
       };
       if(!detached||canSave())row('保存',[mod,'S']);
       row('開く',[mod,'O']);
-      row('実行',[mod,'Enter'],['F5']);
+      row('実行 / 停止',[mod,'Enter'],['F5']);
       row('補完',[mod,'Space']);
       row('クイックフィックス',[mod,'.']);
       row('検索',[mod,'F']);

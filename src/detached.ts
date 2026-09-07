@@ -62,7 +62,7 @@ function update(snapshot:EditorSnapshot){
 function remove(id:string){const tab=tabs.get(id);if(!tab)return;const keys=[...tabs.keys()],at=keys.indexOf(id);tabs.delete(id);if(active===id){editor.setModel(null);active=undefined;}tab.model.dispose();if(!active){const next=[...tabs.keys()][Math.min(at,tabs.size-1)];if(next)select(next);}renderTabs();updateActions();}
 function updateActions(){
  const tab=current();document.title=(toolTabs?.active??tab?.state.title??'JALWeb Editor')+' — JALWeb';menus.hidden('save-project',!workspace.canSave);menus.disabled('close-tab',!tab&&!toolTabs?.active);menus.disabled('close-others',!tab||tabs.size<2);menus.disabled('open-workspace-file',!workspace.files.length);
- for(const id of ['undo','redo','replace','comment','quick-fix'])menus.disabled(id,!tab||tab.state.readOnly);menus.disabled('find',!tab);menus.disabled('download',!tab||tab.state.readOnly);menus.disabled('menu-run',workspace.running);menus.disabled('menu-stop',!workspace.running);
+ for(const id of ['undo','redo','replace','comment','quick-fix'])menus.disabled(id,!tab||tab.state.readOnly);menus.disabled('find',!tab);menus.disabled('download',!tab||tab.state.readOnly);menus.label('menu-run',workspace.running?'停止':'実行');
 }
 const action=(id:string)=>{editor.focus();editor.trigger('menu',id,undefined);};
 const save=()=>{if(workspace.canSave)bridge?.save();};const run=()=>bridge?.run();
@@ -74,7 +74,7 @@ const menus=installMenus(el('menus'),[
  {label:'File',items:[{id:'open-files',label:'開く…',shortcut:'Ctrl+O',action:filePicker.open},{id:'open-workspace-file',label:'プロジェクト内のファイル…',action:openFile},null,{id:'save-project',label:'保存',shortcut:'Ctrl+S',action:save},null,{id:'close-tab',label:'このタブを閉じる',action:()=>{if(toolTabs?.active)bridge?.closePanel(group,toolTabs.active);else if(active)closeTab(active);}},{id:'close-others',label:'他のタブを閉じる',action:()=>{if(active)closeTab(active,true);}},{id:'close-window',label:'ウィンドウを閉じる',action:()=>window.close()}]},
  {label:'Edit',items:editMenuItems(id=>{if(id==='undo'||id==='redo'){if(active)bridge?.undo(active,id==='redo');}else action(id);})},
  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>editor.updateOptions({wordWrap:editor.getRawOptions().wordWrap==='on'?'off':'on'})},{id:'theme',label:'テーマ…',action:()=>{el<HTMLSelectElement>('themes').value=workspace.theme;el<HTMLDialogElement>('theme-picker').showModal();}},null,...(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>bridge?.openPanel(group,name)}))]},
- {label:'Build',items:[{id:'check',label:'検査',action:()=>bridge?.check()},{id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:run},{id:'menu-stop',label:'停止',action:()=>bridge?.stop()},{id:'download',label:'class に書き出す…',action:()=>void downloadClass()}]},
+ {label:'Build',items:[{id:'check',label:'検査',action:()=>bridge?.check()},{id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:run},{id:'download',label:'class に書き出す…',action:()=>void downloadClass()}]},
  {label:'Help',items:helpMenuItems(true,()=>workspace.canSave)}
 ]);
 el<HTMLDialogElement>('open-file').addEventListener('close',()=>{if(el<HTMLDialogElement>('open-file').returnValue==='open'){const snapshot=bridge?.openTab(group,el<HTMLSelectElement>('workspace-files').value);if(snapshot){update(snapshot);select(snapshot.id);}}});

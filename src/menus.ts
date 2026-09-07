@@ -26,5 +26,5 @@ export function installMenus(container:HTMLElement,definitions:Menu[]) {
   container.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close(true);}if(e.key==='Tab')close(true);});
   document.addEventListener('pointerdown',e=>{if(!container.contains(e.target as Node))close();});
   container.addEventListener('focusout',e=>{if(e.relatedTarget instanceof Node && !container.contains(e.relatedTarget))close();});
-  return {hidden(id:string,value:boolean){items.get(id)!.hidden=value;},disabled(id:string,value:boolean){items.get(id)!.disabled=value;}};
+  return {label(id:string,value:string){items.get(id)!.querySelector('span')!.textContent=value;},hidden(id:string,value:boolean){items.get(id)!.hidden=value;},disabled(id:string,value:boolean){items.get(id)!.disabled=value;}};
 }
