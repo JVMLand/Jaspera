@@ -76,7 +76,7 @@ const api={
  debugBreakpoints(points:DebugBreakpoint[]){debuggerSession?.breakpoints(points);},
  async execute(data:RuntimeRequest,port:MessagePort,heapMiB=128):Promise<Compilation|Disassembly|void>{
   if(busy){port.close();throw new Error('JVM は処理中です。');}
-  busy=true;const scope=scopedEndpoint(port);events=wrap<RuntimeEvents>(scope.endpoint);notifications=Promise.resolve();
+  busy=true;outputBytes=0;buffers={stdout:'',stderr:''};for(const decoder of Object.values(decoders))decoder.decode();progressDecoder.decode();const scope=scopedEndpoint(port);events=wrap<RuntimeEvents>(scope.endpoint);notifications=Promise.resolve();
   try {
     await initialize(heapMiB);
     if (data.type === 'compile') {
@@ -99,7 +99,7 @@ const api={
       if(!names.has(className))throw new Error('実行対象が見つかりません。');
       const manifest=classes.map(c=>c.className+'\t'+c.bytecode).join('\n');
       if(manifest.length>16*1024*1024)throw new Error('コンパイル結果が大きすぎます。');
-      if(data.debug)debuggerSession=new RuntimeDebugger(vm,data.debug,snapshot=>{flush();notify(sink=>sink.debug(snapshot));});
+      if(data.debug){debuggerSession=new RuntimeDebugger(vm,data.debug,snapshot=>{flush();notify(sink=>sink.debug(snapshot));});notify(sink=>sink.debugReady());await notifications;}
       await bridge.runProject(className, manifest, encodeText(data.stdin));
       for(const stream of ['stdout','stderr'] as const) buffers[stream] += decoders[stream].decode();
       flush();

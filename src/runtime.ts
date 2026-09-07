@@ -7,6 +7,7 @@ export class Runtime {
  private rpc=new WorkerRpc<RuntimeApi>(()=>new Worker(new URL('./runtime.worker.ts',import.meta.url),{type:'module'}));
  private active?:object;
  constructor(private heapMiB=128){}
+ onDebugReady:()=>void|Promise<void>=()=>{};
  onDebug:(snapshot:DebugSnapshot)=>void=()=>{};
  onProgress:(loaded:number,total:number)=>void=()=>{};
  onOutput:(stream:'stdout'|'stderr',text:string)=>void=()=>{};
@@ -14,7 +15,7 @@ export class Runtime {
   if(this.active)throw new Error('JVM は処理中です。');
   const token={};this.active=token;
   const channel=new MessageChannel(),scope=scopedEndpoint(channel.port1);
-  const events:RuntimeEvents={debug:snapshot=>{if(this.active===token)this.onDebug(snapshot);},analysis:progress=>{if(this.active===token)onProgress?.(progress);},progress:(loaded,total)=>{if(this.active===token){this.onProgress(loaded,total);onProgress?.({phase:"loading",completed:loaded,total});}},output:(stream,text)=>{if(this.active===token)this.onOutput(stream,text);}};
+  const events:RuntimeEvents={debugReady:()=>{if(this.active===token)return this.onDebugReady();},debug:snapshot=>{if(this.active===token)this.onDebug(snapshot);},analysis:progress=>{if(this.active===token)onProgress?.(progress);},progress:(loaded,total)=>{if(this.active===token){this.onProgress(loaded,total);onProgress?.({phase:"loading",completed:loaded,total});}},output:(stream,text)=>{if(this.active===token)this.onOutput(stream,text);}};
   expose(events,scope.endpoint);
   try{return await this.rpc.call<Compilation|Disassembly|void>(api=>api.execute(request,transfer(channel.port2,[channel.port2]),this.heapMiB),timeout);}
   catch(error){if(this.active===token)this.rpc.stop();throw error;}
