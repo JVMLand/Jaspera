@@ -1,3 +1,4 @@
+import {simplifyGraphRoutes} from './simplify-graph-routes';
 import {straightenGraphEdges} from './straighten-graph-edges';
 import type {ELK,ElkNode,ElkPoint} from 'elkjs/lib/elk-api';
 import type {MethodGraph,GraphEdge,GraphNode} from './protocol';
@@ -11,6 +12,7 @@ export async function positionGraphs(methods:MethodGraph[],elk:Pick<ELK,'layout'
  const nodes:PlacedNode[]=[],edges:PlacedEdge[]=[],boxes:MethodBox[]=[],blocks:BlockBox[]=[];
  let width=0,top=0;
  for(const [index,method] of methods.entries()){
+  const nodeStart=nodes.length,edgeStart=edges.length,blockStart=blocks.length;
   const grouped=new Map<string,GraphNode[]>();for(const node of method.nodes){const id=node.block??'B0';grouped.set(id,[...(grouped.get(id)??[]),node]);}
   const compound=grouped.size>1||method.edges.some(e=>e.kind==='exception');
   const graph:ElkNode={id:'method',layoutOptions:{
@@ -44,6 +46,8 @@ export async function positionGraphs(methods:MethodGraph[],elk:Pick<ELK,'layout'
    for(const section of route.sections??[])edges.push({...edge,from:prefix+edge.from,to:prefix+edge.to,points:[section.startPoint,...section.bendPoints??[],section.endPoint].map(point=>({x:point.x+x,y:point.y+y+offset})),...(label?{x:label.x!+label.width!/2+x,y:label.y!+y+offset+10}:{})});
   }
   const w=Math.max(result.width??0,method.name.length*7+32),h=(result.height??0)+30;
+  const methodNodes=nodes.slice(nodeStart),methodBlocks=blocks.slice(blockStart);
+  simplifyGraphRoutes([...methodNodes.map(n=>({id:n.id,x:n.x-n.width/2,y:n.y-n.height/2,width:n.width,height:n.height})),...methodBlocks],edges.slice(edgeStart),new Map(methodNodes.map(n=>[n.id,prefix+n.block])),{x:0,y:top,width:w,height:h});
   boxes.push({name:method.name,x:0,y:top,width:w,height:h});width=Math.max(width,w);top+=h+24;
  }
  return {width,height:Math.max(0,top-24),nodes,edges,boxes,blocks};

@@ -1,0 +1,25 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {build} from 'esbuild';
+await build({entryPoints:['src/simplify-graph-routes.ts'],outfile:'.cache/graph-routes.mjs',bundle:true,platform:'node',format:'esm'});const {simplifyGraphRoutes}=await import('../.cache/graph-routes.mjs');
+const source={id:'s',x:20,y:20,width:100,height:30},target={id:'t',x:240,y:160,width:100,height:30},bounds={x:0,y:0,width:500,height:350};
+const route=()=>({from:'s',to:'t',label:'FirstException\nSecondException',x:360,y:90,points:[{x:70,y:50},{x:70,y:100},{x:290,y:100},{x:290,y:160}]});
+for(const mirrored of [false,true])test('downward diagonal edges use '+(mirrored?'west':'east')+' with one elbow',()=>{
+ const mirror=b=>({...b,x:500-b.x-b.width}),boxes=mirrored?[mirror(source),mirror(target)]:[source,target],edge=route();if(mirrored)edge.points=edge.points.map(p=>({x:500-p.x,y:p.y}));
+ simplifyGraphRoutes(boxes,[edge],new Map(),bounds);assert.equal(edge.points.length,3);assert.equal(edge.points[0].x,mirrored?boxes[0].x:source.x+source.width);assert.equal(edge.label,'FirstException\nSecondException');assert.ok(Number.isFinite(edge.x)&&Number.isFinite(edge.y));
+ for(let i=1;i<edge.points.length;i++){assert.ok(edge.points[i].y>=edge.points[i-1].y);assert.ok(edge.points[i].x===edge.points[i-1].x||edge.points[i].y===edge.points[i-1].y);}
+});
+test('south wins when lateral shortcuts cross an obstacle',()=>{
+ const edge={...route(),label:''};simplifyGraphRoutes([source,target,{id:'wall',x:125,y:10,width:200,height:60}],[edge],new Map(),bounds);assert.equal(edge.points.length,3);assert.equal(edge.points[0].y,source.y+source.height);assert.equal(edge.points[1].x,edge.points[0].x);
+});
+test('occupied shortcuts retain the existing detour and parallel arrows remain distinct',()=>{
+ const edge=route(),old=structuredClone(edge);simplifyGraphRoutes([source,target,{id:'wall',x:125,y:0,width:100,height:210}],[edge],new Map(),bounds);assert.deepEqual(edge,old);
+ const a={...route(),label:''},b={...route(),label:''};simplifyGraphRoutes([source,target],[a,b],new Map(),bounds);assert.notDeepEqual(a.points,b.points);
+});
+test('block exception routes use block sides without crossing contained nodes',()=>{
+ const boxes=[{...source,id:'B0',width:140,height:80},{...target,id:'B1',width:140,height:80},{id:'a',x:40,y:40,width:100,height:30},{id:'b',x:260,y:180,width:100,height:30}];
+ const edge={from:'B0',to:'B1',label:'Exception',points:[{x:90,y:100},{x:90,y:130},{x:310,y:130},{x:310,y:160}]};simplifyGraphRoutes(boxes,[edge],new Map([['a','B0'],['b','B1']]),bounds);assert.equal(edge.points.length,3);assert.equal(edge.points[0].x,160);
+});
+
+test('loop return lanes can leave sideways without reversing the forward layout',()=>{
+ const s={...source,y:180},t={...source,id:'t'},edge={from:'s',to:'t',label:'',points:[{x:70,y:180},{x:70,y:150},{x:180,y:150},{x:180,y:0},{x:70,y:0},{x:70,y:20}]};
+ simplifyGraphRoutes([s,t],[edge],new Map(),bounds);assert.ok(edge.points.length<6);assert.equal(edge.points[0].x,s.x+s.width);assert.equal(edge.points[0].y,195);assert.deepEqual(edge.points.at(-1),{x:70,y:20});assert.equal(s.y,180);assert.equal(t.y,20);
+});

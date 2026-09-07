@@ -23,7 +23,7 @@ export function straightenGraphEdges(graph:ElkNode){
   const section=edge.sections[0];
   for(const axis of ['y','x'] as const){
    const across:Axis=axis==='y'?'x':'y',a=span(source,axis),b=span(target,axis);
-   const forward=a.end<b.start,backward=b.end<a.start;if(!forward&&!backward)continue;
+   const forward=a.end<b.start,backward=b.end<a.start;if(!forward&&!backward||axis==='y'&&backward)continue;
    const start=forward?a.end:a.start,end=forward?b.start:b.end,travel={start:Math.min(start,end),end:Math.max(start,end)};
    const sa=span(source,across),sb=span(target,across);
    let available:Interval[]=[{start:Math.max(sa.start,sb.start)+clearance,end:Math.min(sa.end,sb.end)-clearance}];
