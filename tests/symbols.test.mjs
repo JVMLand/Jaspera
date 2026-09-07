@@ -15,3 +15,8 @@ test('index includes class hierarchy, fields and exact method descriptors',()=>{
 test('member names, owners and descriptor object types have distinct reference spans',()=>{const refs=analyzeSymbols(source).references;const member=refs.find(r=>r.kind==='method'&&r.name==='println');assert.equal(member.owner,'java/io/PrintStream');assert.equal(member.descriptor,'(Ljava/lang/String;)V');assert.equal(source.slice(member.start,member.end),'println');assert.equal(refs.filter(r=>r.kind==='field'&&r.name==='out').length,1);assert.equal(refs.filter(r=>r.kind==='class'&&r.owner==='java/io/PrintStream').length,2);});
 test('same-named labels resolve within their own method',()=>{const refs=analyzeSymbols(source).references.filter(r=>r.kind==='label'&&r.name==='L');assert.equal(new Set(refs.map(r=>r.target.start)).size,2);});
 test('comments and string contents never become reference links',()=>{const r=analyzeSymbols('public class A { public a()V { /* new java/lang/Object */ ldc "java/lang/String" return } }');assert.deepEqual(r.references,[]);});
+
+test('incomplete instructions do not remove other method definitions from the symbol index',()=>{
+ const result=analyzeSymbols('public class Partial { public static before()I { iconst_1 ireturn } public static broken()V { bipush ? return } public static after()I { iconst_2 ireturn } }');
+ assert.deepEqual(result.classes[0].members.map(m=>m.name),['before','broken','after']);
+});

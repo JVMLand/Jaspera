@@ -18,7 +18,7 @@ export class Runtime {
   catch(error){if(this.active===token)this.rpc.stop();throw error;}
   finally{scope.dispose();channel.port2.close();if(this.active===token)this.active=undefined;}
  }
- compile(source:string,onProgress?:(progress:AnalysisProgress)=>void,options:CompileOptions={stackFrames:true,graphs:true}){return this.request({type:'compile',source,options},60_000,onProgress) as Promise<Compilation>;}
+ compile(source:string,onProgress?:(progress:AnalysisProgress)=>void,options:CompileOptions={stackFrames:true,graphs:true}){return this.request({type:'compile',source,options},Math.min(300_000,60_000+source.length),onProgress) as Promise<Compilation>;}
  disassemble(bytecode:string){return this.request({type:'disassemble',bytecode},30_000) as Promise<Disassembly>;}
  run(compilation:Compilation,stdin:string){return this.request({type:'run',compilation,stdin},30_000);}
  stop(message='停止しました。'){this.active=undefined;this.rpc.stop(message);}
