@@ -1,3 +1,5 @@
+import {editMenuItems} from './edit-menu';
+import {fileKind,installFilePicker} from './file-opening';
 import {helpMenuItems} from './help';
 import * as monaco from './editor-platform';
 import {WorkspaceStateStore} from './workspace-state';
@@ -18,7 +20,7 @@ import { registerLanguage } from './language';
 import { Runtime } from './runtime';
 import {createDetachedHost} from './detached-host';
 import {createNavigation,installDefinitionUI} from './navigation';
-import { defaultProject, validatePath as relativePath, type Project } from './project';
+import { defaultProject, validateProject, validatePath as relativePath, type Project } from './project';
 import { openFolder, parseProperties, pickFolder, newBinding, saveFolder, projectArchive, type FolderBinding, type ClassFileEntry } from './folder-project';
 import { installMenus } from './menus';
 import type { Compilation } from './protocol';
@@ -34,7 +36,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 </header>
 <nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
 
-<input id="class-input" type="file" accept=".class" multiple hidden>
 <dialog id="dialog"><form method="dialog"><h2 id="dialog-title"></h2><p id="dialog-message"></p><input id="dialog-input" aria-labelledby="dialog-title" autocomplete="off"><div class="dialog-actions"><button value="cancel" id="dialog-cancel">キャンセル</button><button value="ok" id="dialog-ok">OK</button></div></form></dialog>
 <dialog id="project-properties" aria-labelledby="properties-title"><form id="properties-form" method="dialog">
   <h2 id="properties-title">プロジェクトのプロパティ</h2>
@@ -106,7 +107,7 @@ const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),()=>void run(),{
  compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
- state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
+ openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:setStdin,clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
  stop:()=>stopRun(),check:()=>{clearTimeout(analysisTimer);void analyze();},theme:id=>applyTheme(id),
@@ -147,38 +148,33 @@ async function openDefinition(uri:string,selection?:monaco.IRange|monaco.IPositi
  editor.focus();window.focus();return true;
 }
 let panelDock:ReturnType<typeof installPanelDock>|undefined;
+const filePicker=installFilePicker(files=>void openFiles(files));
 const menus=installMenus(el('menus'),[
   {label:'File',items:[
-    {id:'open-class',label:'.class を開く…',action:()=>el<HTMLInputElement>('class-input').click()},
-    {id:'close-class',label:'逆アセンブルのタブを閉じる',action:()=>{if(activePreview)closeClassPreview(activePreview);}},
-    {id:'save-class-source',label:'逆アセンブルした JAL を保存…',action:()=>{const p=activePreview?classPreviews.get(activePreview):undefined;if(p)download(new Blob([p.model.getValue()],{type:'text/plain;charset=utf-8'}),p.title.replace(/\.class$/i,'.jal'));}},
+    {id:'new-file',label:'新規ファイル…',action:()=>void addFile()},
     {id:'new-project',label:'新規プロジェクト',action:()=>void newProject()},
-    {id:'open-project-file',label:'プロジェクトを開く…',action:()=>void openProjectFolder(true)},
-    {id:'open-project',label:'フォルダーを開く…',shortcut:'Ctrl+O',action:()=>void openProjectFolder()},
-    {id:'save-project',label:'プロジェクトを保存',shortcut:'Ctrl+S',action:()=>void saveProject()},
-    {id:'save-project-as',label:'別のフォルダーに保存…',action:()=>void saveProject(true)},
-    {id:'export-project',label:'ZIP にエクスポート…',action:()=>void exportProject()},
-    {id:'new-file',label:'JAL ファイルを追加…',action:()=>void addFile()},
-    {id:'rename-file',label:'ファイル名を変更…',action:()=>void renameFile()},
-    {id:'remove-file',label:'ファイルを削除…',action:()=>void removeFile()},
+    null,
+    {id:'open-files',label:'開く…',shortcut:'Ctrl+O',action:filePicker.open},
+    {id:'open-project',label:'フォルダーを開く…',action:()=>void openProjectFolder()},
+    null,
+    {id:'save-project',label:'保存',shortcut:'Ctrl+S',action:()=>void saveProject()},
+    {id:'save-project-as',label:'別の場所に保存…',action:()=>void saveProject(true)},
+    {id:'export-project',label:'ZIP に書き出す…',action:()=>void exportProject()},
+    {id:'save-class-source',label:'JAL に書き出す…',action:()=>{const p=activePreview?classPreviews.get(activePreview):undefined;if(p)download(new Blob([p.model.getValue()],{type:'text/plain;charset=utf-8'}),p.title.replace(/\.class$/i,'.jal'));}},
+    null,
+    {id:'close-tab',label:'ファイルを閉じる',action:()=>{const tab=visibleTabs().find(t=>t.active);if(tab)closeEditorTabs(tab.key);}},
+    {id:'rename-file',label:'名前を変更…',action:()=>void renameFile()},
+    {id:'remove-file',label:'削除…',action:()=>void removeFile()},
+    null,
     {id:'project-properties-menu',label:'プロジェクトのプロパティ…',action:openProperties}
   ]},
-  {label:'Edit',items:[
-    {id:'quick-fix',label:'Quick Fix…',shortcut:'Ctrl+.',action:()=>editAction('editor.action.quickFix')},
-    {id:'undo',label:'元に戻す',shortcut:'Ctrl+Z',action:()=>editAction('undo')},
-    {id:'redo',label:'やり直す',shortcut:'Ctrl+Y',action:()=>editAction('redo')},
-    {id:'find',label:'検索',shortcut:'Ctrl+F',action:()=>editAction('actions.find')},
-    {id:'replace',label:'置換',shortcut:'Ctrl+H',action:()=>editAction('editor.action.startFindReplaceAction')},
-    {id:'comment',label:'行コメントの切り替え',shortcut:'Ctrl+/',action:()=>editAction('editor.action.commentLine')},
-    {id:'theme-settings',label:'テーマとレイアウト…',action:openThemePicker},
-    {id:'wrap',label:'折り返しの切り替え',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}}
-  ]},
-  {label:'View',items:[...(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
+  {label:'Edit',items:editMenuItems(editAction)},
+  {label:'View',items:[{id:'wrap',label:'折り返し',action:()=>{project.workspace.wordWrap=!project.workspace.wordWrap;editor.updateOptions({wordWrap:project.workspace.wordWrap?'on':'off'});setDirty();}},{id:'theme-settings',label:'テーマ…',action:openThemePicker},null,...(['project','console','problems','instructions'] as const).map(name=>({id:'show-'+name,label:name[0].toUpperCase()+name.slice(1),action:()=>selectTab(name)})),{id:'swap-panes',label:'左右のペインを入れ替える',action:()=>panelDock?.swap()}]},
   {label:'Build',items:[
-    {id:'check-project',label:'プロジェクトを検査',action:()=>{clearTimeout(analysisTimer);void analyze();}},
+    {id:'check-project',label:'検査',action:()=>{clearTimeout(analysisTimer);void analyze();}},
     {id:'menu-run',label:'実行',shortcut:'Ctrl+Enter',action:()=>void run()},
     {id:'menu-stop',label:'停止',action:()=>stopRun()},
-    {id:'download',label:'現在のファイルの .class を保存…',action:downloadClass}
+    {id:'download',label:'class に書き出す…',action:downloadClass}
   ]},
   {label:'Help',items:helpMenuItems()}
 ]);
@@ -190,7 +186,10 @@ function publishWorkspaceAvailability(){workspaceState.update({canSave:!!folder&
 function updateActions() {
   publishWorkspaceAvailability();
   refreshOffsets();
-  menus.disabled('rename-file',!!activePreview||!editor.getModel()||!project.files.length);menus.disabled('close-class',!activePreview);menus.disabled('save-class-source',!activePreview);
+  const model=editor.getModel(),readOnly=editor.getRawOptions().readOnly;
+  for(const id of ['undo','redo','replace','comment','quick-fix'])menus.disabled(id,!model||!!readOnly);
+  menus.disabled('find',!model);
+  menus.disabled('rename-file',!!activePreview||!editor.getModel()||!project.files.length);menus.disabled('close-tab',!editor.getModel());menus.hidden('save-class-source',!activePreview);
   menus.disabled('project-properties-menu',folder?.properties===false);el<HTMLButtonElement>('summary-properties').disabled=folder?.properties===false;
   el<HTMLButtonElement>('run').disabled=running;el<HTMLButtonElement>('stop').disabled=!running;
   menus.disabled('menu-run',running);menus.disabled('menu-stop',!running);
@@ -271,7 +270,7 @@ function snapshot():Project {
   const layout=captureWorkspace();return {...project,files:project.files.map(f=>({path:f.path,source:models.get(f.path)!.getValue()})),workspace:{...project.workspace,layout}};
 }
 function download(blob:Blob,name:string) {const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function storageState(busy:boolean){storageBusy=busy;publishWorkspaceAvailability();if(busy)status('ファイルを処理中…','loading');for(const id of ['new-project','open-project','open-project-file','save-project','save-project-as','export-project'])menus.disabled(id,busy);}
+function storageState(busy:boolean){storageBusy=busy;publishWorkspaceAvailability();if(busy)status('ファイルを処理中…','loading');for(const id of ['new-project','open-project','open-files','save-project','save-project-as','export-project'])menus.disabled(id,busy);}
 function storageError(e:unknown,title:string){if(e instanceof Error&&e.name==='AbortError'){status('キャンセルしました');return;}status(title,'error');void dialog(title,e instanceof Error?e.message:String(e));}
 async function openProjectFolder(requireProperties=false){
   if(storageBusy)return;storageState(true);
@@ -434,25 +433,63 @@ function syncClassFiles(binding:FolderBinding,files:ClassFileEntry[]){
  for(const p of [...classPreviews.values()])if(p.folderPath){const next=files.find(f=>f.path===p.folderPath);if(!next)closeClassPreview(p.key);else if(next.mtime!==p.mtime||next.size!==p.size)queueClass(()=>next.handle.getFile(),p.key,p.title,false,p.folderPath);}
  if(previous.length!==files.length||previous.some((f,i)=>f.path!==files[i]?.path))renderFiles();
 }
-function openDroppedClasses(files:File[]){
- const classes=files.filter(f=>/\.class$/i.test(f.name));
- if(classes.length>16){void dialog('ファイルが多すぎます','一度に開ける .class は 16 個までです。');return;}
- for(const file of classes)queueClass(async()=>file,'drop:'+ (++dropSequence),file.name);
+async function openFiles(files:File[]):Promise<string[]>{
+ if(storageBusy)return [];
+ if(files.length>64){await dialog('ファイルを開けませんでした','一度に開けるファイルは64個までです。');return [];}
+ if(files.some(file=>fileKind(file.name)==='project')){
+  if(files.length!==1){await dialog('プロジェクトを開く','プロジェクトは1つずつ開いてください。');return [];}
+  const file=files[0];
+  try{
+   if(file.size>65536)throw new Error('プロジェクト設定は64 KiB以下にしてください。');
+   const text=await file.text();parseProperties(text);
+   if(await dialog('プロジェクトを開く','ソースも読み込むため、'+file.name+' があるフォルダーを選んでください。',undefined,true,'フォルダーを選ぶ')===null)return [];
+   storageState(true);
+   const root=await pickFolder(),loaded=await openFolder(root,true);
+   if(loaded.binding.configName!==file.name||loaded.binding.baseline.get(file.name)!==text)throw new Error('選んだプロジェクトのフォルダーではありません。');
+   if(await allowReplace())await installProject(loaded.project,loaded.binding);
+  }catch(e){storageError(e,'プロジェクトを開けませんでした');}finally{storageState(false);}
+  return [];
+ }
+ const owner=project,opened:string[]=[];
+ for(const file of files){
+  if(project!==owner)break;
+  try{
+   const kind=fileKind(file.name);
+   if(kind==='class'){
+    const key='drop:'+(++dropSequence);await queueClass(async()=>file,key,file.name);
+    if(project===owner&&classPreviews.has(key))opened.push('preview:'+key);
+   }else if(kind==='source'){
+    if(file.size>1024*1024)throw new Error('ソースは1 MiB以下にしてください。');
+    const source=await file.text();if(project!==owner)break;
+    let path='src/'+file.name.replace(/\.jal$/i,'.jal');
+    if(project.files.some(f=>f.path.toLowerCase()===path.toLowerCase())){
+     const selected=await dialog('同じ名前のファイルがあります','読み込むファイルに別の名前を付けてください。',path.replace(/\.jal$/,'_2.jal'));
+     if(selected===null)continue;path=selected;
+    }
+    if(project!==owner)break;
+    validatePath(path);
+    if(project.files.some(f=>f.path.toLowerCase()===path.toLowerCase()))throw new Error('同じ名前のファイルがあります。');
+    const copy=snapshot();copy.files.push({path,source});if(copy.files.length===1)copy.workspace={...copy.workspace,activeFile:path,entryFile:path};validateProject(copy);
+    project.files.push({path,source});if(project.files.length===1)project.workspace.entryFile=path;
+    attachModel(path,source);switchFile(path);invalidate();setDirty();opened.push('source:'+path);
+   }else throw new Error('開けるファイルは .jal、.class、.jalprj です。');
+  }catch(e){await dialog(file.name+' を開けませんでした',e instanceof Error?e.message:String(e));}
+ }
+ return opened;
 }
-el<HTMLInputElement>('class-input').onchange=()=>{const input=el<HTMLInputElement>('class-input');openDroppedClasses([...input.files??[]]);input.value='';};
 window.addEventListener('dragover',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();e.dataTransfer.dropEffect='copy';}});
-window.addEventListener('drop',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();openDroppedClasses([...e.dataTransfer.files]);}});
+window.addEventListener('drop',e=>{if(e.dataTransfer?.types.includes('Files')){e.preventDefault();void openFiles([...e.dataTransfer.files]);}});
 
 function downloadClass() {
   const c=results.get(project.workspace.activeFile);if(checkedRevision!==revision || !c?.bytecode)return;
   download(new Blob([Uint8Array.from(atob(c.bytecode),x=>x.charCodeAt(0))],{type:'application/java-vm'}),c.className.split('/').pop()+'.class');
 }
-function dialog(title:string,message:string,input?:string,confirm=false):Promise<string|null> {
+function dialog(title:string,message:string,input?:string,confirm=false,confirmLabel='変更を破棄して続ける'):Promise<string|null> {
   const d=el<HTMLDialogElement>('dialog');if(d.open)return Promise.resolve(null);
   el('dialog-title').textContent=title;el('dialog-message').textContent=message;
   const field=el<HTMLInputElement>('dialog-input');field.hidden=input===undefined;field.value=input??'';
   el('dialog-cancel').hidden=input===undefined&&!confirm;
-  el('dialog-ok').textContent=confirm?'変更を破棄して続ける':'OK';d.returnValue='';d.showModal();
+  el('dialog-ok').textContent=confirm?confirmLabel:'OK';d.returnValue='';d.showModal();
   if(input!==undefined){field.focus();field.select();}else el(confirm?'dialog-cancel':'dialog-ok').focus();
   return new Promise(resolve=>d.addEventListener('close',()=>resolve(d.returnValue==='ok'?field.value:null),{once:true}));
 }
@@ -590,7 +627,7 @@ async function run() {
 }
 el('run').onclick=()=>void run();el('stop').onclick=()=>stopRun();
 editor.addAction({id:'jal.run',label:'JAL: Run',keybindings:[monaco.KeyMod.CtrlCmd|monaco.KeyCode.Enter,monaco.KeyCode.F5],run:()=>run()});
-window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();void openProjectFolder();}}});
+window.addEventListener('keydown',e=>{if(el<HTMLDialogElement>('theme-dialog').open||el<HTMLDialogElement>('dialog').open||el<HTMLDialogElement>('project-properties').open)return;if((e.ctrlKey||e.metaKey)&&!e.altKey){if(e.key.toLowerCase()==='s'){e.preventDefault();void saveProject();}else if(e.key.toLowerCase()==='o'){e.preventDefault();filePicker.open();}}});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
-window.addEventListener('pagehide',()=>{disposed=true;unsubscribeTheme();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
+window.addEventListener('pagehide',()=>{disposed=true;filePicker.dispose();unsubscribeTheme();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;disassembler.stop();for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project);

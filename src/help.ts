@@ -18,7 +18,7 @@ export function showHelpMessage(title:string,text:string){openHelp(title,[elemen
 export function helpMenuItems(detached=false,canSave=()=>true){
   return [
     ...(!detached?[{id:'help-project',label:'プロジェクト',action:()=>openHelp('プロジェクト',[
-      element('p','プロジェクトは、設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → プロジェクトを開くから選んでください。'),
+      element('p','プロジェクトは、設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → フォルダーを開くから選んでください。'),
       element('p','実行するファイルは、File → プロジェクトのプロパティで変更できます。初期設定は src/Main.jal です。')
     ])}]:[]),
     {id:'help-shortcuts',label:'ショートカット',action:()=>{
@@ -34,7 +34,7 @@ export function helpMenuItems(detached=false,canSave=()=>true){
         });tr.append(name,keys);body.append(tr);
       };
       if(!detached||canSave())row('保存',[mod,'S']);
-      row(detached?'ファイルを開く':'フォルダーを開く',[mod,'O']);
+      row('開く',[mod,'O']);
       row('実行',[mod,'Enter'],['F5']);
       row('補完',[mod,'Space']);
       row('クイックフィックス',[mod,'.']);

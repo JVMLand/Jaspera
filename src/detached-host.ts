@@ -14,6 +14,7 @@ export interface DetachedDocument {key:string;title:string;model:monaco.editor.I
 export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
  compilation:(id:string,version:number)=>Promise<Compilation>;
+ openFiles:(files:File[],group:string)=>Promise<void>;
  completionCatalog:()=>Promise<Catalog>;
  attach:(id:string,client:DetachedClient)=>EditorSnapshot|undefined;
  tabs:(id:string)=>EditorSnapshot[];openTab:(group:string,key:string)=>EditorSnapshot|undefined;closeTab:(group:string,id:string)=>void;
@@ -39,6 +40,7 @@ interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLa
 interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
+ openFiles:(files:File[])=>Promise<string[]>;
  completionCatalog:()=>Promise<Catalog>;
  subscribe:(listener:()=>void)=>()=>void;
  state:()=>DetachedState;document:(keyOrUri:string)=>DetachedDocument|undefined;
@@ -74,6 +76,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
    if(!entry||entry.model.isDisposed()||entry.model.getVersionId()!==version)return Promise.reject(new Error('文書の版が変更されています。'));
    return options.compile(entry.model);
   },
+  async openFiles(files,group){if(!groups.has(group))return;for(const key of await options.openFiles(files)){if(!groups.has(group))break;const state=openTab(group,key);if(state)groups.get(group)?.client?.reveal?.(undefined,state.id);}},
   completionCatalog:()=>options.completionCatalog(),
   attach(id,client){const g=groups.get(id);if(!g)return;g.client=client;client.state?.(options.state());const e=[...entries.values()].find(e=>e.group===id);return e?snapshot(e):undefined;},
   tabs:id=>[...entries.values()].filter(e=>e.group===id).map(snapshot),openTab,

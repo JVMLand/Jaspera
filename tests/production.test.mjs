@@ -30,7 +30,7 @@ test('Production static build works under a subdirectory and on mobile',{timeout
  assert.ok(await page.locator('#run').isVisible());assert.ok(await page.locator('#output').isVisible());
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
  await page.screenshot({path:'test-results/mobile.png'});
- await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();
+ await page.locator('#menu-view').click();await page.locator('#theme-settings').click();
  for(const [id,bg] of [['darcula','rgb(43, 43, 43)'],['vs','rgb(255, 255, 255)'],['vs-dark','rgb(30, 30, 30)'],['hc-black','rgb(0, 0, 0)'],['hc-light','rgb(255, 255, 255)']]) {
   await page.locator('#theme-select').selectOption(id);
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),id);
@@ -55,17 +55,17 @@ test('Production static build works under a subdirectory and on mobile',{timeout
  const owner=page.locator('#editor .view-lines').getByText('java/lang/System',{exact:true}).first();await page.keyboard.down('Control');await owner.hover();await page.locator('.goto-definition-link').first().waitFor({timeout:45000});await owner.click();await page.keyboard.up('Control');await page.waitForFunction(()=>document.querySelector('#file-tabs [aria-selected=true]')?.textContent==='java/lang/System.class (JAL)');await page.getByRole('button',{name:'java/lang/System.class (JAL) のタブを閉じる',exact:true}).click();
 
   await page.screenshot({path:`test-results/theme-${id}-desktop.png`});
-  await page.setViewportSize({width:390,height:844});await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();
+  await page.setViewportSize({width:390,height:844});await page.locator('#menu-view').click();await page.locator('#theme-settings').click();
  }
  await page.locator('#theme-dialog button').click();await page.locator('#summary-properties').click();await page.locator('#project-properties').waitFor({state:'visible'});assert.equal(await page.locator('#properties-name').inputValue(),'Main');await page.locator('#properties-cancel').click();
  await page.reload();await page.waitForFunction(()=>document.documentElement.dataset.theme==='denden-night');
- await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();
+ await page.locator('#menu-view').click();await page.locator('#theme-settings').click();
  await page.locator('#theme-select').selectOption('darcula');await page.locator('#theme-dialog button').click();await page.reload();
  await page.waitForFunction(()=>document.documentElement.dataset.theme==='darcula');
  await page.screenshot({path:'test-results/theme-darcula-mobile.png'});
- await page.setViewportSize({width:1440,height:900});await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();await page.locator('#theme-select').selectOption('vs');await page.locator('#theme-dialog button').click();await page.waitForTimeout(200);await page.screenshot({path:'test-results/theme-light-desktop.png'});
+ await page.setViewportSize({width:1440,height:900});await page.locator('#menu-view').click();await page.locator('#theme-settings').click();await page.locator('#theme-select').selectOption('vs');await page.locator('#theme-dialog button').click();await page.waitForTimeout(200);await page.screenshot({path:'test-results/theme-light-desktop.png'});
  assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(),'src/Main.jal');
- await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();await page.locator('#theme-select').selectOption('jal-night');await page.locator('#theme-dialog button').click();
+ await page.locator('#menu-view').click();await page.locator('#theme-settings').click();await page.locator('#theme-select').selectOption('jal-night');await page.locator('#theme-dialog button').click();
  assert.equal(await page.locator('.source-pane').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(21, 26, 33)');
  // The detached entry must also resolve when hosted below a path prefix.
  const tab=await page.getByRole('tab',{name:'src/Main.jal',exact:true}).boundingBox();
