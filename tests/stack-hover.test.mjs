@@ -12,6 +12,17 @@ const source=`public class Main (major_version=67, minor_version=0) {
   iconst_0
   ireturn
  }
+ public static operations(I)V {
+  iload_0
+  iload_0
+  iload_0
+  iadd
+  dup
+  pop
+  pop2
+  nop
+  return
+ }
  public static categoryTwo()V {
   lconst_0
   lstore_0
@@ -31,3 +42,5 @@ test('loads and branches show before and after with no locals payload',()=>{asse
 test('stores and iinc identify the changed local and its operation',()=>{assert.deepEqual(frame('istore_1').before,['1 : int']);assert.deepEqual(frame('istore_1').after,[]);assert.equal(frame('istore_1').local,1);assert.deepEqual(frame('istore_1').localsBefore,['int']);assert.deepEqual(frame('istore_1').localsAfter,['int','1 : int']);assert.equal(frame('iinc').effect,'#1 ← #1 + 1');});
 test('long occupies one stack value and two local slots',()=>{assert.deepEqual(frame('lstore_0').before,['0 : long']);assert.deepEqual(frame('lstore_0').localsAfter,['0 : long','継続スロット']);});
 test('member calls retain meaningful reference types',()=>{assert.deepEqual(frame('getstatic').after,['java.io.PrintStream']);assert.deepEqual(frame('invokevirtual').before,['java.io.PrintStream','"Hello" : java.lang.String']);assert.deepEqual(frame('invokevirtual').after,[]);});
+
+test('effects count consumed and produced values even when their types match',()=>{assert.equal(frame('iadd').consumed,2);assert.equal(frame('iadd').produced,1);assert.equal(frame('iadd').before.length,3);assert.equal(frame('dup').consumed,1);assert.equal(frame('dup').produced,2);assert.equal(frame('nop').consumed,0);assert.equal(frame('nop').produced,0);assert.equal(frame('lstore_0').consumed,1);assert.equal(frame('invokevirtual').consumed,2);assert.equal(frame('ireturn').terminal,'メソッド終了');});

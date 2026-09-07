@@ -62,6 +62,12 @@ final class StackFrames {
         }
         return "["+String.join(",",values)+"]";
     }
+    // Track operations, not value/type equality: iadd consumes two ints and creates a new int.
+    static final class Transition extends Frame<BasicValue> {
+        int untouched;
+        Transition(Frame<BasicValue> before){super(before);untouched=before.getStackSize();}
+        @Override public BasicValue pop(){BasicValue value=super.pop();untouched=Math.min(untouched,getStackSize());return value;}
+    }
     static void append(List<String> result,MethodNode method,Frame<BasicValue>[] frames,BasicVerifier verifier) throws AnalyzerException {
         Origins origins=new Origins();Frame<SourceValue>[] originFrames=new Analyzer<>(origins).analyze("java/lang/Object",method);
         for(int i=0;i<method.instructions.size();i++) {
@@ -71,13 +77,15 @@ final class StackFrames {
             String prefix="{\"line\":"+source.start.getLine()+",\"column\":"+(source.start.getCharPositionInLine()+1)+",\"length\":"+(source.start.getStopIndex()-source.start.getStartIndex()+1);
             Frame<BasicValue> before=frames[i];
             if(before==null){result.add(prefix+",\"unreachable\":true}");continue;}
-            Frame<BasicValue> after=new Frame<>(before);after.execute(instruction,verifier);
+            Transition after=new Transition(before);after.execute(instruction,verifier);
             Frame<SourceValue> originBefore=originFrames[i],originAfter=originBefore==null?null:new Frame<>(originBefore);
             if(originAfter!=null)originAfter.execute(instruction,origins);
+            int opcode=instruction.getOpcode();
+            String terminal=opcode>=Opcodes.IRETURN&&opcode<=Opcodes.RETURN?"メソッド終了":opcode==Opcodes.ATHROW?"例外ハンドラーまたは呼び出し元へ":"";
             String effect=""; int local=-1;
             if(instruction instanceof IincInsnNode increment){local=increment.var;effect="#"+local+" ← #"+local+(increment.incr>=0?" + ":" − ")+Math.abs((long)increment.incr);}
             else if(instruction instanceof VarInsnNode variable&&instruction.getOpcode()>=Opcodes.ISTORE&&instruction.getOpcode()<=Opcodes.ASTORE){local=variable.var;effect="#"+local+" ← スタック TOP";}
-            result.add(prefix+",\"before\":"+stack(before,originBefore)+",\"after\":"+stack(after,originAfter)+",\"local\":"+local+",\"effect\":"+Bridge.quote(effect)+
+            result.add(prefix+",\"consumed\":"+(before.getStackSize()-after.untouched)+",\"produced\":"+(after.getStackSize()-after.untouched)+",\"terminal\":"+Bridge.quote(terminal)+",\"before\":"+stack(before,originBefore)+",\"after\":"+stack(after,originAfter)+",\"local\":"+local+",\"effect\":"+Bridge.quote(effect)+
                 (local<0?"":",\"localsBefore\":"+locals(before,originBefore)+",\"localsAfter\":"+locals(after,originAfter))+"}");
         }
     }
