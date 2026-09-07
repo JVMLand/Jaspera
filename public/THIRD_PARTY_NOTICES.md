@@ -2,6 +2,7 @@
 
 | Component | Version / source | License |
 | --- | --- | --- |
+| Workbox | 7.4.1, https://github.com/GoogleChrome/workbox | MIT, `licenses/Workbox.txt` |
 | Comlink | 4.4.2, https://github.com/GoogleChromeLabs/comlink | Apache-2.0, `licenses/Comlink.txt` |
 | elkjs | 0.12.0, https://github.com/kieler/elkjs/tree/ff5771d7165445c42c408bb8a090c8035272218c | EPL-2.0, `licenses/ELK.txt`; unmodified library |
 | Monaco Editor | 0.52.2, https://github.com/microsoft/monaco-editor | MIT |

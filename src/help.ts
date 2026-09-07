@@ -17,6 +17,7 @@ export function showHelpMessage(title:string,text:string){openHelp(title,[elemen
 
 export function helpMenuItems(detached=false,canSave=()=>true){
   return [
+    {id:'help-offline',label:'オフラインの準備…',action:()=>{void import('./offline').then(m=>m.openOfflinePreparation());}},
     ...(!detached?[{id:'help-project',label:'プロジェクト',action:()=>openHelp('プロジェクト',[
       element('p','プロジェクトは、設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → フォルダーを開くから選んでください。'),
       element('p','実行するファイルは、File → プロジェクトのプロパティで変更できます。初期設定は src/Main.jal です。')
