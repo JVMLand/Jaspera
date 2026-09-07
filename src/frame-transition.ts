@@ -1,3 +1,4 @@
+import {formatFrameValue} from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {
  before:string[];after:string[];consumed:number;produced:number;
@@ -21,7 +22,7 @@ export function renderFrameTransition(frame:FrameTransition){
     for(const index of visible){
      const changed=locals?(frame.locals?.changed??values.map((_,i)=>i)).includes(index):index>=values.length-(side?frame.produced:frame.consumed);
      const row=node('div',undefined,'frame-row'),value=node('div',undefined,'frame-value'+(changed?(side?' is-produced':' is-consumed'):''));
-     value.append(node('code',values[index]));if(changed)value.title=side?'追加・更新される値':'消費・更新される値';
+     value.append(node('code',formatFrameValue(values[index])));if(changed)value.title=side?'追加・更新される値':'消費・更新される値';
      if(locals)row.append(node('small',frame.locals?.labels?.[index]??'#'+index,'frame-marker'));else if(index===values.length-1)row.append(node('small','TOP','frame-marker'));
      row.append(value);body.append(row);
     }
