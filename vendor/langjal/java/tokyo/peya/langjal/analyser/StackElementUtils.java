@@ -408,9 +408,6 @@ public class StackElementUtils {
                 || newType.getBaseType().equals(ClassReferenceType.OBJECT))
             return TypeDescriptor.OBJECT;
 
-        if (existingType.isArray() || newType.isArray())
-            return getCommonArrayType(existingType, newType);
-
         if (existingType.getBaseType().isPrimitive() || newType.getBaseType().isPrimitive()) {
             throw new IllegalArgumentException(
                     "Cannot merge object stack elements with different primitive types: " +
@@ -448,7 +445,7 @@ public class StackElementUtils {
 
     /**
      * Finds the common super type of two class reference types.
-     * If either is an interface, returns Object.
+     * Preserves a unique most-specific common interface from the target class hierarchy.
      *
      * @param type1 The first class reference type.
      * @param type2 The second class reference type.
