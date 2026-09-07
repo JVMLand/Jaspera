@@ -31,8 +31,8 @@ for(const mirrored of [false,true])for(const narrowTarget of [false,true])test('
  const occupied={from:'other',to:'t',label:'',points:[{x:336,y:50},{x:336,y:270}]};
  if(mirrored){for(const box of boxes)box.x=500-box.x-box.width;for(const e of [edge,occupied])e.points=e.points.map(p=>({x:500-p.x,y:p.y}));}
  const end={...edge.points.at(-1)};simplifyGraphRoutes(boxes,narrowTarget?[edge,occupied]:[edge],new Map(),bounds);
- assert.equal(edge.points.length,narrowTarget?5:3);assert.equal(edge.points[0].x,mirrored?310:190);assert.equal(edge.points[1].x,mirrored?120:380);
- assert.deepEqual(edge.points.at(-1),narrowTarget?end:{x:mirrored?120:380,y:270});
+ assert.equal(edge.points.length,narrowTarget?4:3);assert.equal(edge.points[0].x,mirrored?310:190);assert.equal(edge.points[1].x,mirrored?120:380);
+ assert.deepEqual(edge.points.at(-1),narrowTarget?{x:mirrored?160:340,y:281}:{x:mirrored?120:380,y:270});
  for(let i=1;i<edge.points.length;i++)assert.ok(edge.points[i].y>=edge.points[i-1].y);
 });
 
@@ -75,4 +75,17 @@ for(const obstacle of ['node','edge'])test('east departures remain offset when t
  const edges=[edge,...(obstacle==='edge'?[{from:'other',to:'elsewhere',label:'',points:[{x:120,y:35},{x:200,y:35}]}]:[])];
  simplifyGraphRoutes(boxes,edges,new Map(),bounds);
  assert.deepEqual(edge.points[0],{x:120,y:46});assert.equal(edge.points.length,3);
+});
+
+for(const mirrored of [false,true])for(const interlocked of [false,true])test('dup sibling routes nest without crossings and land on target sides '+mirrored+' '+interlocked,()=>{
+ const boxes=[{id:'dup',x:100,y:20,width:110,height:30},{id:'wall',x:0,y:100,width:330,height:30},{id:'init',x:0,y:180,width:330,height:30},{id:'put',x:0,y:260,width:330,height:30}];
+ const near={from:'dup',to:'init',label:'',points:[{x:210,y:46},{x:350,y:46},{x:350,y:160},{x:200,y:160},{x:200,y:180}]};
+ const far={from:'dup',to:'put',label:'',points:[{x:210,y:35},{x:340,y:35},{x:340,y:240},{x:100,y:240},{x:100,y:260}]};
+ if(interlocked){near.points=[{x:210,y:35},{x:340,y:35},{x:340,y:160},{x:200,y:160},{x:200,y:180}];far.points=[{x:210,y:46},{x:350,y:46},{x:350,y:170},{x:340,y:170},{x:340,y:240},{x:100,y:240},{x:100,y:260}];}
+ if(mirrored){for(const box of boxes)box.x=500-box.x-box.width;for(const edge of [near,far])edge.points=edge.points.map(p=>({x:500-p.x,y:p.y}));}
+ simplifyGraphRoutes(boxes,[near,far],new Map(),{x:0,y:0,width:500,height:350});
+ for(const edge of [near,far]){assert.equal(edge.points.length,4);assert.equal(edge.points[2].y,edge.points[3].y);assert.equal(edge.points[3].x,mirrored?170:330);}
+ assert.ok(far.points[0].y<near.points[0].y);
+ assert.ok(mirrored?far.points[1].x<near.points[1].x:far.points[1].x>near.points[1].x);
+ assert.equal(near.to,'init');assert.equal(far.to,'put');
 });

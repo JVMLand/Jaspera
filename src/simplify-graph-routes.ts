@@ -10,6 +10,19 @@ function hits(a:Point,b:Point,box:Box){
 }
 function clean(points:Point[]){const out:Point[]=[];for(const point of points){if(out.length&&length(out.at(-1)!,point)<epsilon)continue;out.push(point);while(out.length>2){const a=out.at(-3)!,b=out.at(-2)!,c=out.at(-1)!;if((Math.abs(a.x-b.x)<epsilon&&Math.abs(b.x-c.x)<epsilon||Math.abs(a.y-b.y)<epsilon&&Math.abs(b.y-c.y)<epsilon)&&length(a,c)>=length(a,b)+length(b,c)-epsilon)out.splice(out.length-2,1);else break;}}return out;}
 
+function parallelOverlap(points:Point[],other:Point[]){
+ return points.slice(1).some((p,i)=>other.slice(1).some((q,j)=>{const a=points[i],b=other[j];return Math.abs(a.x-p.x)<epsilon&&Math.abs(b.x-q.x)<epsilon&&Math.abs(a.x-b.x)<gap&&Math.min(Math.max(a.y,p.y),Math.max(b.y,q.y))-Math.max(Math.min(a.y,p.y),Math.min(b.y,q.y))>epsilon||Math.abs(a.y-p.y)<epsilon&&Math.abs(b.y-q.y)<epsilon&&Math.abs(a.y-b.y)<gap&&Math.min(Math.max(a.x,p.x),Math.max(b.x,q.x))-Math.max(Math.min(a.x,p.x),Math.min(b.x,q.x))>epsilon;}));
+}
+function crossings(points:Point[],other:Point[]){
+ let count=0;
+ for(let i=1;i<points.length;i++)for(let j=1;j<other.length;j++){
+  let a=points[i-1],b=points[i],c=other[j-1],d=other[j];
+  if(Math.abs(a.x-b.x)<epsilon)[a,b,c,d]=[c,d,a,b];
+  if(Math.abs(a.y-b.y)<epsilon&&Math.abs(c.x-d.x)<epsilon&&c.x>Math.min(a.x,b.x)+epsilon&&c.x<Math.max(a.x,b.x)-epsilon&&a.y>Math.min(c.y,d.y)+epsilon&&a.y<Math.max(c.y,d.y)-epsilon)count++;
+ }
+ return count;
+}
+
 /** Find open vertical corridors across the shared width, rather than trying only its center. */
 function straightLanes(left:number,right:number,top:number,bottom:number,obstacles:Box[],edge:Route,edges:Route[]){
  let lanes=[[left,right]];
@@ -61,6 +74,13 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
     candidates.push(points);
    }
   }
+  // A side landing avoids the final horizontal-then-vertical hook into a top port.
+  if(target.y>=bottom)for(const x of new Set(old.map(p=>p.x))){
+   const east=x>Math.max(source.x+source.width,target.x+target.width),west=x<Math.min(source.x,target.x);
+   if(!east&&!west)continue;
+   for(const y of [sy,bottom-gap,source.y+gap])for(const endY of [ty,ty-gap,ty+gap])
+    candidates.push([{x:east?source.x+source.width:source.x,y},{x,y},{x,y:endY},{x:east?target.x+target.width:target.x,y:endY}]);
+  }
   // ELK can leave a dogleg between compound blocks even when the corridor is clear.
   // Shortcut interior sections as well as the departure, preserving both endpoints.
   if(target.y>=bottom)for(let i=1;i<old.length-3;i++)for(let j=i+2;j<old.length-1;j++){
@@ -76,7 +96,7 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
    if(points.some(p=>p.x<bounds.x||p.x>bounds.x+bounds.width||p.y<bounds.y||p.y>bounds.y+bounds.height))continue;
    if(points.slice(1).some((p,i)=>obstacles.some(box=>hits(points[i],p,box))))continue;
    // Preserve distinct parallel arrows, including their attachment points.
-   if(edges.some(other=>other!==edge&&points.slice(1).some((p,i)=>other.points.slice(1).some((q,j)=>{const a=points[i],b=other.points[j];return Math.abs(a.x-p.x)<epsilon&&Math.abs(b.x-q.x)<epsilon&&Math.abs(a.x-b.x)<gap&&Math.min(Math.max(a.y,p.y),Math.max(b.y,q.y))-Math.max(Math.min(a.y,p.y),Math.min(b.y,q.y))>epsilon||Math.abs(a.y-p.y)<epsilon&&Math.abs(b.y-q.y)<epsilon&&Math.abs(a.y-b.y)<gap&&Math.min(Math.max(a.x,p.x),Math.max(b.x,q.x))-Math.max(Math.min(a.x,p.x),Math.min(b.x,q.x))>epsilon;}))))continue;
+   if(edges.some(other=>other!==edge&&parallelOverlap(points,other.points)))continue;
    let label:Box|undefined;
    if(edge.label){
     const lines=edge.label.split('\n'),width=Math.max(...lines.map(line=>line.length*6)),height=lines.length*14;
@@ -91,5 +111,37 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
   }
   if(edge.points===old)break;
   }
+ }
+ untangleSideFans(boxes,edges,parents);
+}
+
+/** Order sibling lanes together: the lower destination uses the outer lane and upper exit. */
+function untangleSideFans(boxes:Box[],edges:Route[],parents:Map<string,string>){
+ const groups=new Map<string,Route[]>(),byId=new Map(boxes.map(b=>[b.id,b]));
+ for(const edge of edges){const p=edge.points;if(edge.label||p.length<4||p[1].x===p[0].x||p[1].y!==p[0].y||!byId.has(edge.to)||byId.get(edge.to)!.y<=p[0].y)continue;
+  const key=edge.from+':'+(p[1].x>p[0].x?'east':'west');const group=groups.get(key)??[];group.push(edge);groups.set(key,group);
+ }
+ for(const group of groups.values()){
+  if(group.length<2)continue;
+  const east=group[0].points[1].x>group[0].points[0].x;
+  const lanes=group.map(e=>e.points[1].x).sort((a,b)=>east?b-a:a-b),exits=group.map(e=>e.points[0].y).sort((a,b)=>a-b);
+  const ordered=[...group].sort((a,b)=>byId.get(b.to)!.y-byId.get(a.to)!.y);
+  const outside=edges.filter(e=>!group.includes(e));
+  const proposed=ordered.map((edge,i)=>{
+   const target=byId.get(edge.to)!,center=target.y+target.height/2;
+   const make=(y:number)=>[{...edge.points[0],y:exits[i]},{x:lanes[i],y:exits[i]},{x:lanes[i],y},{x:east?target.x+target.width:target.x,y}];
+   const points=[center,center-gap,center+gap].map(make).find(points=>!outside.some(e=>parallelOverlap(points,e.points)))??make(center);
+   return {edge,points};
+  });
+  if(proposed.some(({edge,points})=>{
+   const obstacles=boxes.filter(b=>b.id!==parents.get(edge.from)&&b.id!==parents.get(edge.to));
+   for(const other of outside)if(other.label&&other.x!==undefined&&other.y!==undefined){const lines=other.label.split('\n'),width=Math.max(...lines.map(line=>line.length*6));obstacles.push({id:'',x:other.x-width/2,y:other.y-10,width,height:lines.length*14});}
+   return points.slice(1).some((p,i)=>obstacles.some(b=>hits(points[i],p,b)))||outside.some(e=>parallelOverlap(points,e.points));
+  }))continue;
+  if(proposed.some((a,i)=>proposed.slice(i+1).some(b=>parallelOverlap(a.points,b.points))))continue;
+  const score=(routes:Point[][])=>routes.reduce((sum,p,i)=>sum+routes.slice(i+1).reduce((s,q)=>s+crossings(p,q),0)+outside.reduce((s,e)=>s+crossings(p,e.points),0),0);
+  const before=score(ordered.map(e=>e.points)),after=score(proposed.map(p=>p.points));
+  if(after>before||after===before&&proposed.reduce((n,p)=>n+p.points.length,0)>=ordered.reduce((n,e)=>n+e.points.length,0))continue;
+  for(const {edge,points} of proposed)edge.points=points;
  }
 }
