@@ -37,7 +37,7 @@ test('Production static build works under a subdirectory and on mobile',{timeout
   assert.equal(await page.locator('.monaco-editor').first().evaluate(e=>getComputedStyle(e).backgroundColor),id==='vs'?'rgb(255, 255, 254)':bg);
   assert.equal(await page.locator('.source-pane').evaluate(e=>getComputedStyle(e).backgroundColor),bg);
  }
- for(const [id,bg] of [['japan-light','rgb(255, 255, 255)'],['japan-dark','rgb(20, 27, 41)'],['hitachi-light','rgb(255, 255, 255)'],['hitachi-dark','rgb(21, 29, 36)'],['ntt-light','rgb(255, 255, 255)'],['ntt-dark','rgb(12, 25, 45)']]) {
+ for(const [id,bg] of [['japan-light','rgb(255, 255, 255)'],['japan-dark','rgb(20, 27, 41)'],['hitachi-light','rgb(255, 255, 255)'],['hitachi-dark','rgb(21, 29, 36)'],['denden-light','rgb(255, 255, 255)'],['denden-night','rgb(12, 25, 45)']]) {
   await page.locator('#theme-select').selectOption(id);
   assert.equal(await page.locator('.monaco-editor').first().evaluate(e=>getComputedStyle(e).backgroundColor),bg);
   assert.equal(await page.evaluate(()=>document.documentElement.style.colorScheme),id.endsWith('light')?'light':'dark');
@@ -48,7 +48,7 @@ test('Production static build works under a subdirectory and on mobile',{timeout
   await page.setViewportSize({width:1440,height:900});await page.waitForTimeout(180);
   const source=await page.locator('.source-pane').boundingBox(),output=await page.locator('.output-pane').boundingBox(),project=await page.locator('.project-pane').boundingBox();
   if(id.startsWith('hitachi'))assert.ok(output.y>=source.y+source.height,'Hitachi terminal is below editor');
-  if(id.startsWith('ntt'))assert.ok(project.x>=source.x+source.width,'NTT project card is on the right');
+  if(id.startsWith('denden'))assert.ok(project.x<source.x && output.x>source.x,'DenDen uses left navigation and adjacent work panels');
   if(id.startsWith('japan'))assert.ok(project.x<source.x && output.x>source.x,'Japan uses a tree and side-by-side work panels');
   assert.ok(source.height>=190 && source.width>=300);assert.ok(output.y+output.height<=900);
   assert.equal(await page.locator('#output').textContent(),'Hello, World!\n');
@@ -58,7 +58,7 @@ test('Production static build works under a subdirectory and on mobile',{timeout
   await page.setViewportSize({width:390,height:844});await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();
  }
  await page.locator('#theme-dialog button').click();await page.locator('#summary-properties').click();await page.locator('#project-properties').waitFor({state:'visible'});assert.equal(await page.locator('#properties-name').inputValue(),'Main');await page.locator('#properties-cancel').click();
- await page.reload();await page.waitForFunction(()=>document.documentElement.dataset.theme==='ntt-dark');
+ await page.reload();await page.waitForFunction(()=>document.documentElement.dataset.theme==='denden-night');
  await page.locator('#menu-edit').click();await page.locator('#theme-settings').click();
  await page.locator('#theme-select').selectOption('darcula');await page.locator('#theme-dialog button').click();await page.reload();
  await page.waitForFunction(()=>document.documentElement.dataset.theme==='darcula');

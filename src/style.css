@@ -21,11 +21,11 @@
 :root[data-theme^="hitachi-"] .menu-popup{--theme-button:#34586c;--theme-on-button:#ffffff}
 :root[data-theme^="hitachi-"] .toolbar{border-bottom-color:#364955}
 :root[data-theme^="hitachi-"] .runtime-card{box-shadow:inset 3px 0 var(--theme-accent)}
-:root[data-theme^="ntt-"] .toolbar{border-top:3px solid var(--theme-accent);background:var(--theme-bg)}
-:root[data-theme^="ntt-"] .menubar{background:var(--theme-bg);border-bottom:2px solid var(--theme-accent)}
-:root[data-theme^="ntt-"] .runtime-card{background:linear-gradient(115deg,var(--theme-surface),var(--theme-selection))}
-:root[data-theme^="ntt-"] .brand h1{color:var(--theme-accent)}
-:root[data-theme^="ntt-"] :is(dialog,.menu-popup){border-radius:8px}
+
+
+
+
+
 
 .monaco-editor .jal-source-line{display:inline-block;width:4ch;text-align:right}.monaco-editor .jal-bytecode-offset{display:inline-block;width:6ch;padding-left:1ch;text-align:right;color:var(--theme-muted,#98a4b3);font-size:inherit;opacity:.85}
 

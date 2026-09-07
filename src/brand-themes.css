@@ -1,0 +1,162 @@
+/* Theme chrome is shared by the main workspace and detached windows.
+   Geometry stays in the docking system so saved sizes and D&D remain authoritative. */
+:root[data-theme-family]{--pane-header-height:42px;--theme-canvas:var(--theme-surface);--pane-radius:10px;--pane-shadow:none}
+:root[data-theme-family] #app{grid-template-rows:64px 36px minmax(0,1fr) 28px}
+:root[data-theme-family] .toolbar{padding:0 22px;background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
+:root[data-theme-family] .brand-caption{display:none}
+:root[data-theme-family] .menubar{background:var(--theme-bg);padding:0 18px;border-bottom:1px solid var(--theme-border)}
+:root[data-theme-family] .workspace{background:var(--theme-canvas);padding:14px}
+:root[data-theme-family] .workspace-summary{display:flex;align-items:center;justify-content:space-between;gap:20px;grid-area:summary;position:relative;isolation:isolate;padding:16px 22px;margin:0 0 14px;min-height:92px;overflow:hidden}
+:root[data-theme-family] .workspace-summary>div,:root[data-theme-family] .workspace-summary>button{position:relative;z-index:1}
+:root[data-theme-family] .summary-eyebrow{display:none}
+:root[data-theme-family] .workspace-summary h2{font-size:26px;letter-spacing:-.5px;margin:0 0 8px}
+:root[data-theme-family] .workspace-summary p{margin:0;line-height:1.6}
+:root[data-theme-family] .workspace .dock-pane{border:1px solid var(--theme-border);border-radius:var(--pane-radius);background:var(--theme-bg);box-shadow:var(--pane-shadow);margin:0 5px}
+:root[data-theme-family] .workspace .pane-header,:root[data-theme-family] .workspace .project-heading{background:var(--theme-bg)}
+:root[data-theme-family] :is(#file-tabs,#project-tabs){height:var(--pane-header-height)}
+:root[data-theme-family] .group-separator{background:transparent}
+:root[data-theme-family] .group-separator::before{content:"";position:absolute;inset:35% 2px;border-radius:4px;background:var(--theme-border)}
+:root[data-theme-family] .group-separator:is(:hover,:focus-visible)::before{inset:5% 1px;background:var(--theme-accent)}
+:root[data-theme-family] :is(dialog,.menu-popup,.dock-menu){border-radius:var(--pane-radius);border-color:var(--theme-border)}
+:root[data-theme-family] .menu>button{font-size:12px}
+:root[data-theme-family] :is(.menu>button:hover,.menu>button[aria-expanded=true]){background:var(--theme-selection);color:var(--theme-accent)}
+:root[data-theme-family] #file-list{padding:8px!important;margin:0;max-height:none}
+:root[data-theme-family] #file-list button{padding:10px 12px;margin:2px 0;font-family:inherit}
+:root[data-theme-family] #file-list button::before{content:none}
+:root[data-theme-family] :is(.stdin-section,.runtime-card){background:var(--theme-bg);border-color:var(--theme-border)}
+:root[data-theme-family] .statusbar{background:var(--theme-bg);border-color:var(--theme-border);color:var(--theme-muted)}
+:root[data-theme-family] body.detached-window{grid-template-rows:36px var(--pane-header-height) minmax(0,1fr) 28px;background:var(--theme-canvas)}
+:root[data-theme-family] .detached-window #file-tabs{height:var(--pane-header-height);background:var(--theme-bg)}
+:root[data-theme-family] .detached-window #file-tabs .file-tab{height:100%}
+:root[data-theme-family] .detached-window :is(#editor,.detached-tools){margin:0 8px 8px;border:1px solid var(--theme-border);border-radius:var(--pane-radius);overflow:hidden;box-shadow:var(--pane-shadow)}
+
+/* Vibe: glass, electric gradients, star fields, soft neon edges and oversized pills. */
+:root[data-theme-family="vibe"]{--pane-radius:17px;--pane-header-height:46px;--theme-canvas:#09071b;--pane-shadow:0 12px 32px #02001855,0 0 20px #6e42ed12}
+:root[data-theme="vibe-light"]{--theme-canvas:#f1eafd;--pane-shadow:0 12px 28px #563e8c18,0 0 22px #b982e814}
+:root[data-theme-family="vibe"] #app{grid-template-rows:68px 38px minmax(0,1fr) 28px}
+:root[data-theme-family="vibe"] .toolbar{background:linear-gradient(105deg,var(--theme-bg),var(--theme-surface));border-bottom-color:color-mix(in srgb,var(--theme-accent) 35%,transparent)}
+:root[data-theme-family="vibe"] .brand h1{font-weight:800;letter-spacing:-1px;background:linear-gradient(110deg,var(--theme-accent),#b093ff 55%,#dc7ae0);background-clip:text;color:transparent}
+:root[data-theme-family="vibe"] .brand h1 span{color:inherit}
+:root[data-theme-family="vibe"] .brand-logo{filter:drop-shadow(0 0 9px #9561f688)}
+:root[data-theme-family="vibe"] .workspace{padding:18px;background:radial-gradient(ellipse at 20% 0%,#7136c923,transparent 60%),radial-gradient(ellipse at 95% 90%,#009ee81c,transparent 50%),var(--theme-canvas)}
+:root[data-theme-family="vibe"] .workspace-summary{min-height:112px;border:1px solid var(--theme-border);border-radius:22px;background:radial-gradient(circle at 80% 30%,#7438cc55,transparent 30%),radial-gradient(circle at 55% 130%,#00cfee45,transparent 50%),linear-gradient(120deg,var(--theme-bg),var(--theme-surface));box-shadow:inset 0 1px #ffffff22,0 0 36px #712df41a;padding:22px 28px}
+:root[data-theme-family="vibe"] .workspace-summary::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 65% 25%,#91f4ff 0 1px,transparent 3px),radial-gradient(circle at 85% 70%,#ff9cff 0 1px,transparent 3px),radial-gradient(circle at 40% 65%,#a297fa 0 1px,transparent 3px),linear-gradient(115deg,transparent 60%,#a2a4ff10 60.1%,transparent 60.5%),repeating-linear-gradient(0deg,transparent 0 23px,#8174d40c 24px),repeating-linear-gradient(90deg,transparent 0 39px,#8174d410 40px);pointer-events:none}
+:root[data-theme-family="vibe"] .workspace-summary::after{content:"";position:absolute;right:18%;top:12px;width:210px;height:160px;border:1px solid #86eaff99;border-radius:50%;transform:rotate(-25deg);box-shadow:0 0 30px #b45bff55,inset 0 0 25px #42ddff33;pointer-events:none}
+:root[data-theme-family="vibe"] .workspace-summary h2{font-size:32px;font-weight:750}
+:root[data-theme-family="vibe"] .workspace-summary button{border:1px solid #b6a4ff99;border-radius:30px;background:linear-gradient(115deg,#6943de,#a43fc8);color:#fff;box-shadow:0 4px 20px #7547da44,inset 0 1px #ffffff40;padding:12px 20px;font-weight:600}
+:root[data-theme-family="vibe"] :is(.menu>button,#file-list button){border-radius:10px}
+:root[data-theme-family="vibe"] .menu-popup{box-shadow:0 16px 50px #15072555;backdrop-filter:blur(18px);background:color-mix(in srgb,var(--theme-bg) 95%,transparent)}
+:root[data-theme-family="vibe"] [data-pane-key]:has([aria-selected=true]){box-shadow:inset 0 2px var(--theme-accent),inset 0 -12px 20px #895cdd16;background:var(--theme-selection)!important}
+:root[data-theme-family="vibe"] .runtime-dot{box-shadow:0 0 12px #80edc6}
+:root[data-theme-family="vibe"] .instruction-article{border-radius:14px}
+:root[data-theme="vibe-light"] .brand h1{background-image:linear-gradient(110deg,#007eaa,#743bca 55%,#ac358e)}
+
+/* DenDen: restrained portal navigation, a blue network panorama and fine card frames. */
+:root[data-theme-family="denden"]{--pane-radius:7px;--theme-canvas:var(--theme-surface);--pane-shadow:0 2px 8px #173f6d06}
+:root[data-theme-family="denden"] .brand h1{color:var(--theme-accent);letter-spacing:-.5px}
+:root[data-theme-family="denden"] .brand h1 span{color:var(--theme-text)}
+:root[data-theme-family="denden"] .workspace{padding:14px 18px 18px 8px}
+:root[data-theme-family="denden"] .workspace-summary{margin-left:5px;margin-right:5px;min-height:144px;border-radius:7px;background:linear-gradient(90deg,#08294ff5 0%,#08294fc9 36%,#07306a20 75%),url('/theme-network.svg') center right/cover no-repeat,#08294f;color:#fff;padding:24px 28px;border-bottom:8px solid #194478}
+:root[data-theme-family="denden"] .workspace-summary h2{font-size:28px;font-weight:700;letter-spacing:.4px}
+:root[data-theme-family="denden"] .workspace-summary p{color:#e0ecff}
+:root[data-theme-family="denden"] .workspace-summary button{align-self:flex-end;border:1px solid #d7e6fb;background:#fff;color:#064b92;border-radius:4px;font-weight:600;padding:10px 16px}
+:root[data-theme-family="denden"] .workspace .project-pane{border-width:0 1px 0 0;border-radius:0;box-shadow:none;background:var(--theme-surface);margin-left:0}
+:root[data-theme-family="denden"] .workspace .project-heading{background:var(--theme-surface)}
+:root[data-theme-family="denden"] #file-list button{border-radius:5px;color:var(--theme-accent);font-size:12px}
+:root[data-theme-family="denden"] #file-list button.selected{background:var(--theme-selection);box-shadow:inset 3px 0 var(--theme-accent)}
+:root[data-theme-family="denden"] .workspace [data-pane-key]{border-right:0;background:transparent}
+:root[data-theme-family="denden"] .workspace [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 0 -2px var(--theme-accent)}
+:root[data-theme-family="denden"] .menu-popup{box-shadow:0 8px 24px #0b386121}
+:root[data-theme-family="denden"] :is(dialog,.workspace-summary button){font-family:"Segoe UI","Yu Gothic UI",sans-serif}
+
+/* Googol: generous Material-like surfaces, pill selections and four colour accents. */
+:root[data-theme-family="googol"]{--pane-radius:18px;--pane-header-height:48px;--theme-canvas:#f6f8fc}
+:root[data-theme="googol-night"]{--theme-canvas:#17181a}
+:root[data-theme-family="googol"] #app{font-family:Arial,"Noto Sans JP",sans-serif;grid-template-rows:72px 42px minmax(0,1fr) 28px}
+:root[data-theme-family="googol"] .toolbar{padding:0 28px;border-bottom:0}
+:root[data-theme-family="googol"] .brand h1{font-weight:500;letter-spacing:-1.4px;background:linear-gradient(90deg,#4285f4 0 24%,#ea4335 24% 43%,#c28c00 43% 62%,#4285f4 62% 79%,#34a853 79% 91%,#ea4335 91%);background-clip:text;color:transparent}
+:root[data-theme-family="googol"] .brand h1 span{color:inherit}
+:root[data-theme-family="googol"] .brand-logo{padding:3px;border:2px solid #4285f4;border-right-color:#ea4335;border-bottom-color:#fbbc04;border-left-color:#34a853;border-radius:50%}
+:root[data-theme-family="googol"] .menubar{padding-left:24px}
+:root[data-theme-family="googol"] .menu>button{border-radius:24px;padding-left:18px;padding-right:18px}
+:root[data-theme-family="googol"] .workspace{padding:8px 20px 20px 10px}
+:root[data-theme-family="googol"] .workspace-summary{padding:12px 24px 20px;min-height:92px;border-bottom:1px solid var(--theme-border);border-radius:0;background:transparent}
+:root[data-theme-family="googol"] .workspace-summary h2{font-weight:500;color:var(--theme-accent);font-size:27px}
+:root[data-theme-family="googol"] .workspace-summary button{border-radius:28px;border:0;background:var(--theme-selection);color:var(--theme-accent);padding:13px 22px;font-size:13px}
+:root[data-theme-family="googol"] .workspace .project-pane{border:0;background:transparent;box-shadow:none;margin:0 8px 0 0}
+:root[data-theme-family="googol"] .workspace .project-heading{background:transparent;border-bottom:0}
+:root[data-theme-family="googol"] #file-list button{border-radius:24px;padding:12px 16px;font-size:13px}
+:root[data-theme-family="googol"] #file-list .file-folder>summary{padding:10px 12px;border-radius:24px;font-family:inherit}
+:root[data-theme-family="googol"] .workspace [data-pane-key],:root[data-theme-family="googol"] .detached-window [data-pane-key]{margin:5px 2px;border:0;border-radius:24px;background:transparent}
+:root[data-theme-family="googol"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:none!important}
+:root[data-theme-family="googol"] .workspace :is(#project-tabs,#file-tabs,.output-header .tabs){padding:0 5px}
+:root[data-theme-family="googol"] :is(.menu-popup,.dock-menu){padding:8px;box-shadow:0 6px 18px #20212424}
+:root[data-theme-family="googol"] :is(.menu-popup button,.dock-menu button){border-radius:20px}
+:root[data-theme-family="googol"] :is(dialog input,dialog select,textarea){border-radius:8px}
+:root[data-theme-family="googol"] .runtime-dot{background:#34a853}
+
+/* Entrance: dark service bar, compact commands, square blades and blue active rails. */
+:root[data-theme-family="entrance"]{--pane-radius:0px;--pane-header-height:36px;--theme-canvas:var(--theme-bg)}
+:root[data-theme-family="entrance"] #app{font-family:"Segoe UI","Yu Gothic UI",sans-serif;font-size:12px;grid-template-rows:40px 34px minmax(0,1fr) 24px}
+:root[data-theme-family="entrance"] .toolbar{background:#1b1b1b;color:#fff;padding:0 16px;border:0}
+:root[data-theme-family="entrance"] .brand{gap:10px}
+:root[data-theme-family="entrance"] .brand-logo{width:24px;height:24px}
+:root[data-theme-family="entrance"] .brand h1{font-size:16px;letter-spacing:0;font-weight:600}
+:root[data-theme-family="entrance"] .brand h1 span{color:#fff}
+:root[data-theme-family="entrance"] .menubar{padding:0 8px;background:var(--theme-surface)}
+:root[data-theme-family="entrance"] .menu>button{padding:0 14px;border-radius:0;font-size:12px}
+:root[data-theme-family="entrance"] .workspace{padding:0}
+:root[data-theme-family="entrance"] .workspace-summary{min-height:83px;margin:0;padding:16px 22px;border-bottom:1px solid var(--theme-border);background:var(--theme-bg)}
+:root[data-theme-family="entrance"] .workspace-summary h2{font-size:24px;font-weight:600;margin:0 0 5px;letter-spacing:0}
+:root[data-theme-family="entrance"] .workspace-summary p{color:var(--theme-muted);font-size:11px}
+:root[data-theme-family="entrance"] .workspace-summary button{border:0;border-left:1px solid var(--theme-border);border-radius:0;background:transparent;color:var(--theme-accent);padding:8px 16px}
+:root[data-theme-family="entrance"] .workspace .dock-pane{margin:0;border:0;border-right:1px solid var(--theme-border);box-shadow:none}
+:root[data-theme-family="entrance"] .workspace .project-pane,:root[data-theme-family="entrance"] .workspace .project-heading{background:var(--theme-surface)}
+:root[data-theme-family="entrance"] .group-separator{background:var(--theme-surface)}
+:root[data-theme-family="entrance"] .group-separator::before{inset:0 2px;background:var(--theme-border);border-radius:0}
+:root[data-theme-family="entrance"] .workspace [data-pane-key],:root[data-theme-family="entrance"] .detached-window [data-pane-key]{border:0;border-right:1px solid var(--theme-border);background:transparent}
+:root[data-theme-family="entrance"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 3px 0 var(--theme-accent)!important}
+:root[data-theme-family="entrance"] #file-list{padding:3px 0!important}
+:root[data-theme-family="entrance"] #file-list button{border-radius:0;padding:8px 14px;font-size:12px;margin:0;border-bottom:1px solid color-mix(in srgb,var(--theme-border) 45%,transparent)}
+:root[data-theme-family="entrance"] #file-list button.selected{box-shadow:inset 3px 0 var(--theme-accent)}
+:root[data-theme-family="entrance"] :is(dialog,input,textarea,select,.menu-popup,.dock-menu){border-radius:0}
+:root[data-theme-family="entrance"] .menu-popup{box-shadow:0 4px 10px #0003}
+:root[data-theme-family="entrance"] .detached-window .menubar{background:#1b1b1b;color:#fff}
+:root[data-theme-family="entrance"] .detached-window .menu>button{color:#fff}
+:root[data-theme-family="entrance"] .detached-window :is(#editor,.detached-tools){margin:0;border-width:0}
+
+@media(max-width:800px){
+ :root[data-theme-family] #app{height:100dvh;min-height:680px;grid-template-rows:52px 36px minmax(0,1fr) 26px}
+ :root[data-theme-family] .toolbar{padding:0 12px}
+ :root[data-theme-family] .workspace{padding:6px}
+ :root[data-theme-family] .workspace-summary{min-height:74px;padding:12px 14px;margin:0 0 6px;gap:10px;border-radius:min(var(--pane-radius),12px)}
+ :root[data-theme-family] .workspace-summary h2{font-size:22px;margin:0}
+ :root[data-theme-family] .workspace-summary p{display:none}
+ :root[data-theme-family] .workspace-summary button{font-size:11px;padding:8px 10px}
+ :root[data-theme-family] .workspace .dock-pane{margin:0}
+ :root[data-theme-family] .group-separator::before{inset:2px 35%}
+ :root[data-theme-family] .group-separator:is(:hover,:focus-visible)::before{inset:1px 5%}
+ :root[data-theme-family="entrance"] #app{grid-template-rows:40px 32px minmax(0,1fr) 24px}
+ :root[data-theme-family="denden"] .workspace-summary{border-bottom-width:4px}
+ :root[data-theme-family="vibe"] .workspace-summary::after{right:5%;top:-25px}
+}
+
+:root[data-theme-family] #app .workspace [data-pane-key] .file-tab{height:100%;min-height:0}
+@media(min-width:801px){
+ :root:is([data-theme-family="denden"],[data-theme-family="googol"],[data-theme-family="entrance"]) #app .workspace.dock-arranged{grid-template-areas:"project split0 summary summary summary" "project split0 source split1 output"!important}
+ :root:is([data-theme-family="denden"],[data-theme-family="googol"],[data-theme-family="entrance"]) #app .workspace.dock-arranged.dock-swapped{grid-template-areas:"project split0 summary summary summary" "project split0 output split1 source"!important}
+}
+
+:root[data-theme-family] #app .workspace .dock-pane>.pane-header,
+:root[data-theme-family] #app .workspace .project-heading{min-height:var(--pane-header-height);height:var(--pane-header-height)}
+
+@media(max-width:800px){
+ :root[data-theme-family] #console-panel.dock-console>.runtime-card{min-height:40px;padding:5px 12px}
+ :root[data-theme-family] #console-empty{padding:5px 10px;justify-content:flex-start}
+ :root[data-theme-family] #console-empty .terminal-symbol{display:none}
+ :root[data-theme-family] #console-empty p{margin:3px 0;font-size:12px}
+ :root[data-theme-family] #console-empty>span:last-child{display:none}
+ :root[data-theme-family] #project-panel{padding-top:0}
+ :root[data-theme-family] #file-list{padding:0 26px 0 4px!important}
+ :root[data-theme-family] #file-list button,:root[data-theme-family] #file-list .file-folder>summary{padding:4px 10px;margin:0}
+}

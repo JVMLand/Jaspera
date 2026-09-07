@@ -11,7 +11,7 @@ test('Monaco and dictionary share themed instruction colors',{timeout:60000},asy
  const ids=await page.evaluate(async()=>(await import('/src/themes.ts')).themes.map(t=>t.id));
  for(const id of ids){await page.evaluate(async id=>(await import('/src/themes.ts')).applyTheme(id,false),id);await page.waitForTimeout(150);await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.layout();editor.revealLineInCenter(12,1);editor.render(true);});await page.waitForTimeout(80);
   const check=await page.evaluate(async()=>{const {instructionColors}=await import('/src/instruction-colors.ts');const expected=instructionColors(document.documentElement.dataset.theme);const rgb=hex=>'rgb('+[0,2,4].map(n=>parseInt(hex.slice(n,n+2),16)).join(', ')+')';const node=[...document.querySelectorAll('.view-line span:not(:has(span))')].find(n=>n.textContent==='getfield');const heading=document.querySelector('.instruction-detail h2');return {actual:node&&getComputedStyle(node).color,expected:rgb(expected.field_access),heading:getComputedStyle(heading).color,headingExpected:rgb(expected.value_calculations)};});assert.equal(check.actual,check.expected,id);assert.equal(check.heading,check.headingExpected,id);
-  if(['darcula','japan-light','ntt-dark'].includes(id))await page.screenshot({path:'.cache/instruction-colors-'+id+'.png'});
+  if(['darcula','japan-light','denden-night'].includes(id))await page.screenshot({path:'.cache/instruction-colors-'+id+'.png'});
  }
  assert.deepEqual(errors,[]);
 });

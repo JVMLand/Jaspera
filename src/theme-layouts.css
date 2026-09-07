@@ -1,9 +1,9 @@
 /* Layout changes operate on the same editor/models; switching never rebuilds the workspace. */
 .workspace-summary{display:none;min-width:0}.workspace-summary h2{margin:4px 0;font-size:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.workspace-summary p{margin:6px 0 0;font-size:12px}.summary-eyebrow{font-size:10px;letter-spacing:1.6px}.workspace-summary>div{min-width:0}.workspace-summary>button{flex-shrink:0;padding:9px 14px;border:1px solid var(--theme-border);border-radius:5px;background:var(--theme-bg);color:var(--theme-accent);font-size:12px}
-:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;grid-area:summary}
-:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .project-pane{grid-area:project}
-:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .source-pane{grid-area:source}
-:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .output-pane{grid-area:output}
+:root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;grid-area:summary}
+:root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .project-pane{grid-area:project}
+:root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .source-pane{grid-area:source}
+:root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .output-pane{grid-area:output}
 /* Japan: dense navigation tree, ledger-like frames and a permanent operation strip. */
 :root[data-theme^="japan-"] #app{grid-template-rows:60px 32px minmax(0,1fr) 26px;font-family:"Meiryo","Yu Gothic UI",sans-serif;font-size:12px}
 :root[data-theme^="japan-"] .workspace{padding:6px;gap:6px;background:var(--theme-surface);grid-template-columns:182px minmax(0,1fr) minmax(290px,29%);grid-template-rows:52px minmax(0,1fr);grid-template-areas:"project summary summary" "project source output"}
@@ -44,27 +44,6 @@
 :root[data-theme^="hitachi-"] .runtime-card div span,:root[data-theme^="hitachi-"] .runtime-label{display:none}
 :root[data-theme^="hitachi-"] #console-empty{flex-direction:row;gap:14px}
 :root[data-theme^="hitachi-"] #console-empty p{margin:0}
-/* NTT: airy dashboard with a project card and result cards on the right. */
-:root[data-theme^="ntt-"] #app{grid-template-rows:76px 40px minmax(0,1fr) 30px}
-:root[data-theme^="ntt-"] .workspace{padding:20px;gap:18px;background:var(--theme-surface);grid-template-columns:minmax(0,1fr) minmax(300px,30%);grid-template-rows:104px 124px minmax(0,1fr);grid-template-areas:"summary summary" "source project" "source output"}
-:root[data-theme^="ntt-"] .workspace-summary{border:1px solid var(--theme-border);padding:18px 28px;border-radius:12px;background:radial-gradient(ellipse at 85% 20%,#37689999,transparent 55%),linear-gradient(110deg,#082549,#114886);color:#f3f8ff;box-shadow:0 4px 14px #00356612}
-:root[data-theme^="ntt-"] .summary-eyebrow:before{content:"PROJECT WORKSPACE"}
-:root[data-theme^="ntt-"] .workspace-summary h2{font-size:27px;letter-spacing:.5px}
-:root[data-theme^="ntt-"] .workspace-summary button{background:#ffffff;border:0;color:#064f9b;padding:12px 18px;border-radius:6px}
-:root[data-theme^="ntt-"] :is(.source-pane,.project-pane){border:1px solid var(--theme-border);border-radius:12px;overflow:hidden;background:var(--theme-bg);box-shadow:0 3px 12px #002c6810}
-:root[data-theme^="ntt-"] .project-pane{padding:4px 12px 8px}
-:root[data-theme^="ntt-"] .project-heading{height:34px;border:0;padding:0 6px}
-:root[data-theme^="ntt-"] #file-list{padding:0;max-height:70px;overflow:auto}
-:root[data-theme^="ntt-"] #file-list button{border-radius:6px;padding:9px 12px;margin:2px 0}
-:root[data-theme^="ntt-"] .output-pane{background:transparent;grid-template-rows:44px minmax(70px,1fr) 106px 60px;row-gap:10px;overflow:visible}
-:root[data-theme^="ntt-"] .output-header{min-height:44px;border:1px solid var(--theme-border);border-radius:9px;background:var(--theme-bg)}
-:root[data-theme^="ntt-"] :is(#console-panel,#problems-panel,.stdin-section,.runtime-card){border:1px solid var(--theme-border);border-radius:10px;background:var(--theme-bg);box-shadow:0 2px 9px #002c6808}
-:root[data-theme^="ntt-"] .stdin-section{padding:10px 14px}
-:root[data-theme^="ntt-"] .stdin-section textarea{height:54px}
-:root[data-theme^="ntt-"] .runtime-card{padding:0 16px}
-:root[data-theme^="ntt-"] #output{padding:16px}
-:root[data-theme^="ntt-"] dialog{border-radius:14px;padding:30px}
-:root[data-theme^="ntt-"] .menu-popup{padding:8px;border-radius:10px;box-shadow:0 8px 30px #002c6820}
 /* Native IDE themes use a compact, continuous tool-window layout. */
 :root[data-theme="darcula"] #app{grid-template-rows:56px 30px minmax(0,1fr) 26px}
 :root[data-theme="darcula"] .workspace{grid-template-columns:170px minmax(0,1fr) minmax(290px,31%)}
@@ -72,26 +51,23 @@
 @media(max-width:1050px){
  :root[data-theme^="japan-"] .workspace{grid-template-columns:140px minmax(0,1fr) 270px}
  :root[data-theme^="hitachi-"] .workspace{grid-template-columns:155px minmax(0,1fr);padding-right:14px;column-gap:14px}
- :root[data-theme^="ntt-"] .workspace{padding:12px;gap:12px;grid-template-columns:minmax(0,1fr) 290px}
 }
 @media(max-width:800px){
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) #app{height:auto;min-height:100dvh;grid-template-rows:60px 34px auto 30px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 420px 330px;grid-template-areas:"summary" "project" "source" "output";padding:10px;gap:10px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .project-pane{display:block;max-height:135px;padding:0 8px;border:1px solid var(--theme-border)}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) #file-list{display:flex;overflow:auto;max-height:70px;margin:0;padding:4px;gap:4px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) #file-list button{width:auto;flex-shrink:0;max-width:250px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace-summary{padding:14px;gap:8px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace-summary h2{font-size:20px}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace-summary p{display:none}
- :root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace-summary button{font-size:11px;padding:9px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) #app{height:auto;min-height:100dvh;grid-template-rows:60px 34px auto 30px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto 420px 330px;grid-template-areas:"summary" "project" "source" "output";padding:10px;gap:10px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .project-pane{display:block;max-height:135px;padding:0 8px;border:1px solid var(--theme-border)}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) #file-list{display:flex;overflow:auto;max-height:70px;margin:0;padding:4px;gap:4px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) #file-list button{width:auto;flex-shrink:0;max-width:250px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace-summary{padding:14px;gap:8px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace-summary h2{font-size:20px}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace-summary p{display:none}
+ :root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace-summary button{font-size:11px;padding:9px}
  :root[data-theme^="japan-"] .menu>button{min-width:0}
  :root[data-theme^="japan-"] .workspace{padding:5px;gap:5px;grid-template-rows:auto auto 420px 300px}
  :root[data-theme^="hitachi-"] .output-pane{grid-template-columns:minmax(0,1fr);grid-template-rows:40px minmax(0,1fr) 90px}
  :root[data-theme^="hitachi-"] :is(#console-panel,#problems-panel){grid-column:1;grid-row:2}
  :root[data-theme^="hitachi-"] .stdin-section{grid-column:1;grid-row:3;border-left:0;border-top:1px solid var(--theme-border)}
  :root[data-theme^="hitachi-"] .runtime-card{display:none}
- :root[data-theme^="ntt-"] .output-pane{grid-template-rows:44px minmax(70px,1fr) 106px}
- :root[data-theme^="ntt-"] .runtime-card{display:none}
  :root[data-theme="darcula"] .workspace{grid-template-columns:1fr;grid-template-rows:40px minmax(260px,55%) minmax(220px,45%)}
  :root[data-theme="darcula"] .menu-popup{top:86px}
 }

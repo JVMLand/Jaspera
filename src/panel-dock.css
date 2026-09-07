@@ -12,9 +12,9 @@
 .dock-tab-close:hover{background:var(--theme-selection,#2a4957)}
 .dock-pane{position:relative;min-width:0}.dock-content{grid-row:2;grid-column:1;min-height:0;min-width:0;display:grid;overflow:hidden}
 .dock-content>[role=tabpanel]{grid-area:1/1!important;min-height:0;min-width:0;height:100%}
-.source-pane.dock-tool-active{grid-template-rows:47px minmax(0,1fr)!important}
+.source-pane.dock-tool-active{grid-template-rows:var(--pane-header-height,47px) minmax(0,1fr)!important}
 .source-pane.dock-tool-active>#editor,.source-pane.dock-tool-active>.editor-footer{display:none}
-.output-pane.dock-pane{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:47px minmax(0,1fr)!important;row-gap:0!important}
+.output-pane.dock-pane{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:var(--pane-header-height,47px) minmax(0,1fr)!important;row-gap:0!important}
 .output-pane.dock-pane>.output-header{grid-area:1/1}
 #console-panel.dock-console{display:grid;grid-template-rows:minmax(0,1fr) auto auto;overflow:hidden;position:relative}
 .dock-console-body{position:relative;overflow:auto;min-height:0}
@@ -33,8 +33,8 @@
 /* Three equal-behaviour groups; theme colours and surfaces remain in effect. */
 #app .workspace.dock-arranged{grid-template-columns:minmax(0,var(--group-0,.17fr)) 6px minmax(0,var(--group-1,.48fr)) 6px minmax(0,var(--group-2,.35fr))!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"summary summary summary summary summary" "project split0 source split1 output"!important;gap:0!important}
 #app .workspace.dock-arranged.dock-swapped{grid-template-areas:"summary summary summary summary summary" "project split0 output split1 source"!important}
-#app .workspace .dock-pane{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:47px minmax(0,1fr)!important;min-width:0;min-height:0;overflow:hidden;padding:0!important;gap:0!important}
-#app .workspace .dock-pane>.pane-header,#app .workspace .project-heading{grid-area:1/1!important;height:47px;padding:0!important;min-width:0;overflow:hidden}
+#app .workspace .dock-pane{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:var(--pane-header-height,47px) minmax(0,1fr)!important;min-width:0;min-height:0;overflow:hidden;padding:0!important;gap:0!important}
+#app .workspace .dock-pane>.pane-header,#app .workspace .project-heading{grid-area:1/1!important;height:var(--pane-header-height,47px);padding:0!important;min-width:0;overflow:hidden}
 #app .workspace .group-editor{grid-area:2/1!important;min-width:0;min-height:0;height:100%;overflow:hidden}
 #app .workspace .dock-pane>.editor-footer{display:none}
 #app .workspace .dock-content{grid-area:2/1!important}
@@ -42,7 +42,7 @@
 #project-panel{position:relative;overflow:auto;padding-top:28px}
 #project-panel>#add-file{position:absolute;right:6px;top:3px}
 #file-list{display:block!important}
-#project-tabs{display:flex;width:100%;height:47px;overflow:auto;scrollbar-width:none;letter-spacing:normal}
+#project-tabs{display:flex;width:100%;height:var(--pane-header-height,47px);overflow:auto;scrollbar-width:none;letter-spacing:normal}
 #project-tabs::-webkit-scrollbar{display:none}
 .dock-pane .dock-tab-button{height:100%;padding:0 7px 0 12px;font:12px "Segoe UI",sans-serif;border:0;background:transparent;color:var(--theme-muted,#98a4b3);touch-action:none;white-space:nowrap}
 .dock-pane .dock-tab-button[aria-selected=true]{color:var(--theme-text,#d7dce3)}

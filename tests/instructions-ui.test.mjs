@@ -12,7 +12,7 @@ test('Instructions dictionary works without JVM and across themes',{timeout:9000
  assert.equal(await panel.locator('.instruction-advanced summary').count(),0);assert.doesNotMatch(await panel.locator('.instruction-advanced').textContent(),/Before:|After:|スタック効果/);assert.equal(await panel.locator('.instruction-advanced script').count(),0);
  await search.fill('not_an_opcode');assert.equal(await panel.locator('.instruction-detail').isVisible(),false);assert.match(await panel.locator('.instruction-index').textContent(),/該当する命令がありません/);
  await search.fill('');await category.selectOption('同期');assert.deepEqual(await panel.locator('.instruction-buttons button').allTextContents(),['monitorenter','monitorexit']);await category.selectOption('');await search.fill('iadd');await page.locator('#instructions-tab').click();
- for(const theme of ['jal-night','darcula','japan-light','japan-dark','hitachi-light','hitachi-dark','ntt-light','ntt-dark']){
+ for(const theme of ['jal-night','darcula','japan-light','japan-dark','hitachi-light','hitachi-dark','denden-light','denden-night']){
   await page.evaluate(async id=>(await import('/src/themes.ts')).applyTheme(id,false),theme);await page.waitForTimeout(80);
   const bounds=await panel.locator('.instruction-detail').boundingBox();assert.ok(bounds.height>100,theme+JSON.stringify(bounds));assert.ok(bounds.width>200,theme);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),theme);await page.screenshot({path:'.cache/instructions-'+theme+'.png'});
  }

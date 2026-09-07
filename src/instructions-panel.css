@@ -14,7 +14,7 @@
 @media(max-width:650px){.instruction-index{max-height:65px}.instruction-search :is(input,select){padding:5px}.instruction-detail{min-height:75px}}
 
 @media(min-width:801px){:root[data-theme^="hitachi-"] .workspace:has(.instructions-open){grid-template-rows:88px minmax(200px,1fr) minmax(340px,45%)}}
-@media(max-width:800px){:root:is([data-theme^="japan-"],[data-theme^="hitachi-"],[data-theme^="ntt-"]) .workspace:has(.instructions-open){grid-template-rows:auto auto 420px 460px}}
+@media(max-width:800px){:root:is([data-theme^="japan-"],[data-theme^="hitachi-"]) .workspace:has(.instructions-open){grid-template-rows:auto auto 420px 460px}}
 
 .instruction-detail h2{color:var(--instruction-color,var(--theme-accent))}
 
