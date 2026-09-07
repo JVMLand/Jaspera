@@ -23,13 +23,24 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
   if(target.y>=source.y){
    const left=Math.max(source.x,target.x)+gap,right=Math.min(source.x+source.width,target.x+target.width)-gap;
    if(left<=right&&target.y>=bottom)candidates.push([{x:(left+right)/2,y:bottom},{x:(left+right)/2,y:target.y}]);
-   for(const y of [sy,bottom-gap])for(const x of [tx,Math.max(target.x+gap,Math.min(old.at(-1)!.x,target.x+target.width-gap))]){
+   // Existing lane coordinates also make good landing points on a wide target.
+   // Slide the destination along its top border instead of returning to a fixed port.
+   const landingXs=new Set([tx,...old.map(p=>Math.max(target.x+gap,Math.min(p.x,target.x+target.width-gap)))]);
+   for(const y of [sy,bottom-gap])for(const x of landingXs){
     if(y<=target.y&&(x>source.x+source.width||x<source.x))candidates.push([{x:x>sx?source.x+source.width:source.x,y},{x,y},{x,y:target.y}]);
    }
    for(const x of [sx,source.x+gap,source.x+source.width-gap])if(ty>=bottom&&(x<target.x||x>target.x+target.width))candidates.push([{x,y:bottom},{x,y:ty},{x:x<tx?target.x:target.x+target.width,y:ty}]);
   }
-  // Reuse the existing obstacle-avoiding return lane for upward/back edges.
-  if(target.y<source.y)for(let i=1;i<old.length-1;i++){const point=old[i];if(point.x>source.x+source.width||point.x<source.x)candidates.push([{x:point.x>sx?source.x+source.width:source.x,y:sy},{x:point.x,y:sy},...old.slice(i)]);}
+  // Keep ELK's outer lane and final attachment when a direct shortcut is blocked.
+  // Only shorten the departure; forward routes must still move downward.
+  for(let i=1;i<old.length-1;i++){
+   const point=old[i];if(point.x<=source.x+source.width&&point.x>=source.x)continue;
+   for(const y of target.y>=source.y?[sy,bottom-gap,source.y+gap]:[sy]){
+    const points=[{x:point.x>sx?source.x+source.width:source.x,y},{x:point.x,y},...old.slice(i)];
+    if(target.y>=source.y&&points.some((p,j)=>j>0&&p.y<points[j-1].y))continue;
+    candidates.push(points);
+   }
+  }
   const otherLabels=edges.filter(e=>e!==edge&&e.label&&e.x!==undefined).map(e=>({id:'',x:e.x!-Math.max(...e.label.split('\n').map(line=>line.length*6))/2,y:e.y!-10,width:Math.max(...e.label.split('\n').map(line=>line.length*6)),height:e.label.split('\n').length*14}));
   const obstacles=boxes.filter(box=>box.id!==edge.from&&box.id!==edge.to&&box.id!==parents.get(edge.from)&&box.id!==parents.get(edge.to)).concat(otherLabels);
   const viable=candidates.map(clean).filter(points=>points.length<old.length||north&&points.length===old.length).sort((a,b)=>a.length-b.length||Number(Math.abs(a.at(-1)!.y-target.y)>epsilon)-Number(Math.abs(b.at(-1)!.y-target.y)>epsilon)||a.reduce((sum,p,i)=>sum+(i?length(a[i-1],p):0),0)-b.reduce((sum,p,i)=>sum+(i?length(b[i-1],p):0),0));

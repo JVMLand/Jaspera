@@ -23,3 +23,15 @@ test('loop return lanes can leave sideways without reversing the forward layout'
  const s={...source,y:180},t={...source,id:'t'},edge={from:'s',to:'t',label:'',points:[{x:70,y:180},{x:70,y:150},{x:180,y:150},{x:180,y:0},{x:70,y:0},{x:70,y:20}]};
  simplifyGraphRoutes([s,t],[edge],new Map(),bounds);assert.ok(edge.points.length<6);assert.equal(edge.points[0].x,s.x+s.width);assert.equal(edge.points[0].y,195);assert.deepEqual(edge.points.at(-1),{x:70,y:20});assert.equal(s.y,180);assert.equal(t.y,20);
 });
+
+for(const mirrored of [false,true])for(const narrowTarget of [false,true])test('aload uses the outer lane with a movable landing point '+mirrored+' '+narrowTarget,()=>{
+ const boxes=[{id:'s',x:100,y:10,width:90,height:25},{id:'t',x:0,y:270,width:narrowTarget?340:400,height:30},{id:'new',x:0,y:65,width:330,height:30},{id:'dup',x:55,y:125,width:90,height:30},{id:'iconst',x:20,y:170,width:60,height:30},{id:'init',x:0,y:215,width:330,height:30}];
+ const old=[{x:150,y:35},{x:150,y:45},{x:380,y:45},{x:380,y:260},{x:300,y:260},{x:300,y:270}],edge={from:'s',to:'t',label:'',points:structuredClone(old)};
+ // A second lane prevents landing at the narrow target's rightmost edge.
+ const occupied={from:'other',to:'t',label:'',points:[{x:336,y:50},{x:336,y:270}]};
+ if(mirrored){for(const box of boxes)box.x=500-box.x-box.width;for(const e of [edge,occupied])e.points=e.points.map(p=>({x:500-p.x,y:p.y}));}
+ const end={...edge.points.at(-1)};simplifyGraphRoutes(boxes,narrowTarget?[edge,occupied]:[edge],new Map(),bounds);
+ assert.equal(edge.points.length,narrowTarget?5:3);assert.equal(edge.points[0].x,mirrored?310:190);assert.equal(edge.points[1].x,mirrored?120:380);
+ assert.deepEqual(edge.points.at(-1),narrowTarget?end:{x:mirrored?120:380,y:270});
+ for(let i=1;i<edge.points.length;i++)assert.ok(edge.points[i].y>=edge.points[i-1].y);
+});
