@@ -85,7 +85,7 @@ export function installInstructionGraph(host:HTMLElement,compile:(doc:GraphDocum
  function progress(value:AnalysisProgress){
   const labels={queued:'解析待ち',loading:'JVM を読み込み中',parse:'構文解析',analysis:'型・フロー解析',frames:'フレーム解析',layout:'配置中',complete:'解析完了'};
   stage=value.phase==='queued'?(value.waitingFor??'先行する解析の完了待ち'):value.phase==='loading'&&value.total===0?'JVM を準備中':labels[value.phase];
-  if(value.phase==='loading'&&value.total>0)stage+=` ${Math.floor(value.completed/value.total*100)}%`;
+  if((value.phase==='loading'||value.phase==='parse')&&value.total>0)stage+=` ${Math.floor(value.completed/value.total*100)}%`;
   if(value.method)stage+=` · ${value.method}`;
   const currentName=value.method?.split('(')[0];
   const waiting=value.phase==='analysis'?(currentName?`${currentName} の型・フロー解析待ち`:'クラスの型・フロー解析待ち'):value.phase==='frames'?(currentName?`${currentName} のフレーム解析待ち`:'フレーム解析の開始待ち'):stage;

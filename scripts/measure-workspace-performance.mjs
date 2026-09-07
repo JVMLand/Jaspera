@@ -19,13 +19,13 @@ try{
  await sample('startup');
  async function openClass(){await page.keyboard.press('Shift');await page.keyboard.press('Shift');const dialog=page.getByRole('dialog',{name:'どこでも検索'});await dialog.getByRole('combobox').fill('java.io.PrintStream');await dialog.getByRole('option').filter({has:page.locator('strong',{hasText:/^PrintStream$/})}).first().click();await dialog.waitFor({state:'hidden'});}
  await timed('openPrintStream',openClass);
- await timed('firstGraph',async()=>{await page.locator('#graph-tab').click();await page.waitForFunction(()=>document.querySelector('#graph-panel .graph-status')?.textContent.includes('100%')&&document.querySelector('#graph-panel .graph-status')?.textContent.includes('java/io/PrintStream')&&document.querySelectorAll('#graph-panel .graph-node').length>0);});
+ await timed('firstGraph',async()=>{await page.locator('#graph-tab').click();await page.waitForFunction(()=>document.querySelector('#graph-panel .graph-status')?.textContent.includes(' · 100% · ')&&document.querySelector('#graph-panel .graph-status')?.textContent.includes('java/io/PrintStream')&&document.querySelectorAll('#graph-panel .graph-node').length>0);});
  report.visibleGraphNodes=await page.locator('#graph-panel .graph-node').count();
  await sample('graphWarm');
  const repetitions=[];
  for(let i=0;i<10;i++){
   await page.locator('[data-pane-key^="preview:definition:java/io/PrintStream"] .tab-close').click();
-  const start=performance.now();await openClass();await page.waitForFunction(()=>document.querySelector('#graph-panel .graph-status')?.textContent.includes('100%')&&document.querySelector('#graph-panel .graph-status')?.textContent.includes('java/io/PrintStream')&&document.querySelectorAll('#graph-panel .graph-node').length>0);repetitions.push(Math.round(performance.now()-start));console.log('reopen '+(i+1)+': '+repetitions.at(-1)+' ms');
+  const start=performance.now();await openClass();await page.waitForFunction(()=>document.querySelector('#graph-panel .graph-status')?.textContent.includes(' · 100% · ')&&document.querySelector('#graph-panel .graph-status')?.textContent.includes('java/io/PrintStream')&&document.querySelectorAll('#graph-panel .graph-node').length>0);repetitions.push(Math.round(performance.now()-start));console.log('reopen '+(i+1)+': '+repetitions.at(-1)+' ms');
  }
  const sorted=[...repetitions].sort((a,b)=>a-b),middle=Math.floor(sorted.length/2);report.timings.reopenGraphMedian=sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;report.reopenGraphSamples=repetitions;
  await sample('after10Reopens');

@@ -10,7 +10,7 @@ test('large graphs mount only the viewport and keep all methods accessible',{tim
   window.calls=0;window.panel=installInstructionGraph(host,async()=>{window.calls++;return {className:'Large',bytecode:'',diagnostics:[],graphs};},(_,line)=>window.visited=line);
   window.doc={uri:'inmemory://jal/Large.jal',source:'public class Large { '+graphs.map(g=>'public static '+g.name+' { return }').join(' ')+' }',version:1,line:2,column:1};window.panel.update(window.doc);
  });
- await page.waitForFunction(()=>document.querySelector('.graph-status')?.textContent.includes('100%'));
+ await page.waitForFunction(()=>document.querySelector('.graph-status')?.textContent.includes(' · 100% · '));
  await page.waitForFunction(()=>document.querySelectorAll('.graph-node').length>0);
  const before=await page.locator('.graph-node').count();assert.ok(before<50,'offscreen nodes must not remain mounted');assert.equal(await page.locator('.graph-method-group').count(),20);
  const svg=page.locator('.graph-canvas'),box=await svg.boundingBox();await page.mouse.move(box.x+20,box.y+box.height-20);await page.mouse.down();await page.mouse.move(box.x+20,box.y-6000,{steps:5});await page.mouse.up();

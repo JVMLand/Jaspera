@@ -97,8 +97,8 @@ public final class Bridge {
             tokens.fill();
             for(Token token:tokens.getTokens()) if(token.getType()==JALLexer.ERRCHAR)
                 add("error","Unexpected character: "+token.getText(),token.getLine(),token.getCharPositionInLine(),1);
-            JALParser parser=new JALParser(tokens);
-            parser.removeErrorListeners(); parser.addErrorListener(errors); JALParser.RootContext tree=parser.root();
+            JALParser.RootContext tree=SourceParser.parse(tokens,errors,diagnostics.isEmpty(),
+                    reportProgress ? (completed,total)->progress("parse","","",completed,total) : null);
             if(tree.classDefinition()==null || tree.classDefinition().className()==null) add("error","クラス宣言が必要です。",1,0,1);
             else {
                 List<Diagnostic> syntaxErrors = List.copyOf(diagnostics);
