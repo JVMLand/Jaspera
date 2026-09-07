@@ -41,7 +41,7 @@ public final class Disassembler {
         if(i instanceof LdcInsnNode n){String value=constant(n.cst);if(n.cst instanceof Type t && t.getSort()==Type.METHOD||n.cst instanceof Handle||n.cst instanceof ConstantDynamic){return "// ldc "+value;}return (n.cst instanceof Long||n.cst instanceof Double?"ldc2_w ":"ldc ")+value;}
         if(i instanceof MultiANewArrayInsnNode n)return op+" "+n.desc+" "+n.dims;
         if(i instanceof TableSwitchInsnNode n)return op+" "+n.min+" { "+String.join(", ",n.labels.stream().map(labels::get).toList())+" } default "+labels.get(n.dflt);
-        if(i instanceof LookupSwitchInsnNode n){List<String> cases=new ArrayList<>();for(int k=0;k<n.keys.size();k++)cases.add(n.keys.get(k)+": "+labels.get(n.labels.get(k)));cases.add("default: "+labels.get(n.dflt));return op+" { "+String.join(", ",cases)+" }";}
+        if(i instanceof LookupSwitchInsnNode n){List<String> cases=new ArrayList<>();for(int k=0;k<n.keys.size();k++)cases.add(n.keys.get(k)+": "+labels.get(n.labels.get(k)));cases.add("default: "+labels.get(n.dflt));return op+" {\n  "+String.join(",\n  ",cases)+"\n}";}
         if(i instanceof InvokeDynamicInsnNode n){StringBuilder s=new StringBuilder("invokedynamic "+n.name+" "+n.desc+" "+handle(n.bsm));for(Object arg:n.bsmArgs)s.append(' ').append(constant(arg));return s.toString();}
         return op;
     }
@@ -60,7 +60,7 @@ public final class Disassembler {
                     LabelNode end=catches.get(0).end;
                     StringBuilder s=new StringBuilder("    [~"+labels.get(end));for(TryCatchBlockNode t:catches)s.append(t.type==null?" -> "+labels.get(t.handler):", "+t.type+": "+labels.get(t.handler));line(s+"]");
                 }
-            }else if(i.getOpcode()>=0)line("    "+instruction(i,labels));
+            }else if(i.getOpcode()>=0)for(String part:instruction(i,labels).split("\n"))line("    "+part);
         }
         line("  }");
     }
