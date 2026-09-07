@@ -69,6 +69,15 @@ public class InstructionEvaluationHelperLDC {
         return EvaluatedInstruction.of(evaluator, ldcInsnNode, instructionSize);
     }
 
+    public static @NotNull EvaluatedInstruction evaluateClass(@NotNull AbstractInstructionEvaluator<?> evaluator,
+                                                              JALParser.@NotNull TypeDescriptorContext descriptor,
+                                                              int ldcType) {
+        Type type = Type.getType(descriptor.getText());
+        if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY)
+            throw new IllegalInstructionException("ldc requires a reference or array class descriptor.", descriptor);
+        return EvaluatedInstruction.of(evaluator, new LdcInsnNode(type), ldcType == LDC ? 1 : 2);
+    }
+
     public static FrameDifferenceInfo getFrameDifferenceInfo(@NotNull InstructionInfo instruction) {
         LdcInsnNode ldcInsn = (LdcInsnNode) instruction.insn();
         Object value = ldcInsn.cst;

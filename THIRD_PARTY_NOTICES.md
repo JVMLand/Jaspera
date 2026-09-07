@@ -39,3 +39,5 @@ Instruction completion categories reuse Javasm Japanese completion descriptions,
 The class viewer uses ASM to parse class files and adapts JALP rendering conventions from LangJAL (`jalp` ClassPrinter / CodePrinter / MethodPrinter). It does not reuse the CLI class finder or handwritten binary reader. See `licenses/LangJAL.txt`.
 
 The vendored LangJAL analyser adds opt-in reporter level checks to avoid formatting disabled debug/info messages. Existing reporters keep logging enabled by default; the browser compiler disables these levels.
+
+The vendored LangJAL analyser preserves the current class type and initializes all aliases of `this` after `super()` / `this()` calls. Its grammar and ldc evaluators accept reference/array class constants so the ASM-based class viewer can retain these instructions. These are JALWeb modifications.

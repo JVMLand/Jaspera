@@ -5,9 +5,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import tokyo.peya.langjal.analyser.FrameDifferenceInfo;
-import tokyo.peya.langjal.analyser.stack.ObjectElement;
 import tokyo.peya.langjal.analyser.stack.StackElementCapsule;
-import tokyo.peya.langjal.analyser.stack.UninitializedThisElement;
 import tokyo.peya.langjal.compiler.FileEvaluatingReporter;
 import tokyo.peya.langjal.compiler.JALParser;
 import tokyo.peya.langjal.compiler.instructions.AbstractInstructionEvaluator;
@@ -25,25 +23,10 @@ public class InstructionEvaluatorInvokeSpecial
     private static void opSpecialInvocation(@NotNull InstructionInfo instruction,
                                             @NotNull FrameDifferenceInfo.Builder builder,
                                             @NotNull MethodInsnNode method) {
-        StackElementCapsule uninitialisedRefCapsule = new StackElementCapsule(
-                instruction, actualElm -> {
-            // UninitializedThisElement の場合は，ObjectElement をローカル変数０に入れる
-            if (actualElm instanceof UninitializedThisElement)
-                return new ObjectElement(
-                        instruction,
-                        TypeDescriptor.className(method.owner)
-                );
-
-            return actualElm; // 通常の ObjectElement であればそのまま返す
-        }
-        );
         if (method.name.equals("<init>"))
-            builder.popToCapsule(uninitialisedRefCapsule);
+            builder.popToCapsule(new StackElementCapsule(instruction));
         else
-            builder.popObjectRef();  // 通常のメソッド呼び出し
-
-        if (method.name.equals("<init>") && method.owner.equals(instruction.ownerClass().superName))
-            builder.addLocalFromCapsule(0, uninitialisedRefCapsule);
+            builder.popObjectRef();
     }
 
     @Override

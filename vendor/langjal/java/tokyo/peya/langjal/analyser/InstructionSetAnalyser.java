@@ -5,6 +5,8 @@ import tokyo.peya.langjal.compiler.exceptions.analyse.ClassAnalyseException;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import tokyo.peya.langjal.compiler.jvm.TypeDescriptor;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LookupSwitchInsnNode;
 import org.objectweb.asm.tree.TableSwitchInsnNode;
@@ -403,12 +405,30 @@ public class InstructionSetAnalyser {
                         if (actual instanceof TopElement && this.stack.size() > 1) actual = this.stack.get(this.stack.size() - 2);
                         try { this.popStackElement(instruction, element); }
                         catch (ClassAnalyseException e) { throw new InstructionAnalysisException(instruction, consumedSlots, element, actual, e); }
+                        if (actual instanceof UninitializedThisElement && element instanceof StackElementCapsule &&
+                                instruction.insn() instanceof MethodInsnNode call &&
+                                call.getOpcode() == EOpcodes.INVOKESPECIAL && call.name.equals("<init>"))
+                            this.initialiseThis(instruction);
                         consumedSlots++;
                     }
                     break;
             }
 
             this.updateMaxes();
+        }
+    }
+
+    // super() and this() initialize the current class, not the constructor owner.
+    // Update all aliases; constructing an unrelated object must not overwrite local 0.
+    private void initialiseThis(@NotNull InstructionInfo instruction) {
+        ObjectElement initialized = new ObjectElement(instruction, TypeDescriptor.className(instruction.ownerClass().name));
+        for (int i = 0; i < this.stack.size(); i++)
+            if (this.stack.get(i) instanceof UninitializedThisElement)
+                this.stack.set(i, initialized);
+        for (int i = 0; i < this.locals.size(); i++) {
+            LocalStackElement local = this.locals.get(i);
+            if (local.stackElement() instanceof UninitializedThisElement)
+                this.locals.set(i, new LocalStackElement(local.producer(), local.index(), initialized, local.isParameter()));
         }
     }
 

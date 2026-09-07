@@ -22,6 +22,8 @@ public class InstructionEvaluatorLDC extends AbstractInstructionEvaluator<JALPar
                                          @NotNull InstructionsHolder instructions, @NotNull LabelsHolder labels,
                                          @NotNull LocalVariablesHolder locals,
                                          JALParser.@NotNull JvmInsLdcContext instruction) {
+        if (instruction.typeDescriptor() != null)
+            return InstructionEvaluationHelperLDC.evaluateClass(this, instruction.typeDescriptor(), InstructionEvaluationHelperLDC.LDC);
         return InstructionEvaluationHelperLDC.evaluate(
                 this, instruction.jvmInsArgScalarType(), InstructionEvaluationHelperLDC.LDC
         );

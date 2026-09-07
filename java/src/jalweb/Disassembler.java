@@ -38,7 +38,7 @@ public final class Disassembler {
         if(i instanceof MethodInsnNode n)return op+" "+n.owner+"->"+n.name+n.desc;
         if(i instanceof JumpInsnNode n)return op+" "+labels.get(n.label);
         if(i instanceof IincInsnNode n)return (n.var>255||n.incr< -128||n.incr>127?"wide ":"")+"iinc "+n.var+" "+n.incr;
-        if(i instanceof LdcInsnNode n){String value=constant(n.cst);if(n.cst instanceof Type||n.cst instanceof Handle||n.cst instanceof ConstantDynamic){return "// ldc "+value;}return (n.cst instanceof Long||n.cst instanceof Double?"ldc2_w ":"ldc ")+value;}
+        if(i instanceof LdcInsnNode n){String value=constant(n.cst);if(n.cst instanceof Type t && t.getSort()==Type.METHOD||n.cst instanceof Handle||n.cst instanceof ConstantDynamic){return "// ldc "+value;}return (n.cst instanceof Long||n.cst instanceof Double?"ldc2_w ":"ldc ")+value;}
         if(i instanceof MultiANewArrayInsnNode n)return op+" "+n.desc+" "+n.dims;
         if(i instanceof TableSwitchInsnNode n)return op+" "+n.min+" { "+String.join(", ",n.labels.stream().map(labels::get).toList())+" } default "+labels.get(n.dflt);
         if(i instanceof LookupSwitchInsnNode n){List<String> cases=new ArrayList<>();for(int k=0;k<n.keys.size();k++)cases.add(n.keys.get(k)+": "+labels.get(n.labels.get(k)));cases.add("default: "+labels.get(n.dflt));return op+" { "+String.join(", ",cases)+" }";}

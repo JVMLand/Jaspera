@@ -8,3 +8,5 @@ test('wide and aligned variable-length switches follow Javasm sizes',()=>{assert
 test('method offsets reset; comments and strings do not become instructions',()=>{const source='public class Test { public static a()V { ldc "nop return"\n/* sipush 99 */ pop\nreturn } public static b()V { return } }';assert.deepEqual(calculateOffsets(source).map(i=>i.offset),[0,2,3,0]);});
 test('multiline object macros map offsets back to the invocation line',async()=>{const result=calculateOffsets(await readFile('tests/fixtures/MultiLineDefine.jal','utf8'));assert.deepEqual(result.filter(i=>i.line===16).map(i=>i.offset),[0,3,5]);assert.equal(result.at(-1).offset,17);});
 test('incomplete operand stops later offsets instead of showing stale estimates',()=>{assert.deepEqual(offsets('nop\nsipush\nreturn'),[0,1]);assert.deepEqual(offsets('nop\nunknown_macro\nreturn'),[0]);});
+
+test("class literal operands retain source offsets",()=>{assert.deepEqual(offsets("ldc Ljava/lang/String;\npop\nldc_w [I\npop\nreturn"),[0,2,3,6,7]);});
