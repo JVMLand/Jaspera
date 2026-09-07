@@ -13,6 +13,7 @@ export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
+ projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compilation:(id:string,version:number)=>Promise<Compilation>;
  openFiles:(files:File[],group:string)=>Promise<void>;
@@ -40,6 +41,7 @@ interface Entry extends DetachedDocument {view?:FileView;id:string;group:string;
 interface Group {id:string;popup:Window;client?:DetachedClient;initial?:WindowLayout;panels:Set<PanelName>}
 interface Options {view?:(key:string)=>FileView|undefined;instruction?:(op:string)=>void;
  panelOpened?:(name:PanelName)=>void;problem?:(index:number,group:string)=>void;stdin?:(text:string)=>void;clearOutput?:()=>void;
+ projectAction:(action:'create'|'rename'|'move',path:string,folder:boolean)=>void;
  compileUsage:(source:string)=>Promise<Compilation>;
  compile:(model:monaco.editor.ITextModel)=>Promise<Compilation>;
  openFiles:(files:File[])=>Promise<string[]>;
@@ -57,7 +59,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  const release=(id:string)=>{const g=groups.get(id);if(!g)return;groups.delete(id);for(const name of g.panels)onReturn('panel:'+name);for(const e of [...entries.values()])if(e.group===id)remove(e.id);try{g.popup.close();}catch{}};
  // Check after the entire tab transfer, not during temporary empty client states.
  function closeIfEmpty(id:string){queueMicrotask(()=>{const g=groups.get(id);if(g&&!g.panels.size&&![...entries.values()].some(e=>e.group===id))release(id);});}
- const add=(group:string,doc:DetachedDocument,id=crypto.randomUUID())=>{
+ const add=(group:string,doc:DetachedDocument,id:string=crypto.randomUUID())=>{
   const e:Entry={...doc,view:options.view?.(doc.key),id,group,subscriptions:[]};entries.set(id,e);doc.model.pushStackElement();
   e.subscriptions.push(doc.model.onDidChangeContent(()=>broadcast(e)),doc.model.onWillDispose(()=>remove(id)),monaco.editor.onDidChangeMarkers(uris=>{if(uris.some(u=>u.toString()===doc.model.uri.toString()))broadcast(e);}));
   return e;
@@ -73,6 +75,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
  window.jalwebDetached={ready(id){const g=groups.get(id);if(g?.initial){g.client?.restoreLayout?.(g.initial);g.initial=undefined;}},workspaceId:crypto.randomUUID(),
   instruction:op=>options.instruction?.(op),
   panels:id=>[...(groups.get(id)?.panels??[])],openPanel,closePanel,problem:(index,group)=>options.problem?.(index,group),stdin:text=>options.stdin?.(text),clearOutput:()=>options.clearOutput?.(),
+  projectAction:(action,path,folder)=>options.projectAction(action,path,folder),
   compileUsage:source=>options.compileUsage(source),
   compilation(id,version){
    const entry=entries.get(id);
@@ -121,6 +124,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   openPanel(name:PanelName){if(this.hasPanel(name)){this.focusPanel(name);return true;}const id=crypto.randomUUID(),url=new URL('detached.html',location.href);url.searchParams.set('editor',id);const popup=window.open(url.href,'jalweb-'+id,'popup,width=900,height=680');if(!popup)return false;groups.set(id,{id,popup,panels:new Set()});openPanel(id,name);return true;},
   returnPanel(name:PanelName){for(const g of groups.values())if(g.panels.has(name))closePanel(g.id,name);},
   returnTab(key:string){const e=[...entries.values()].find(e=>e.key===key);if(!e)return;const view=groups.get(e.group)?.client?.layout?.().views[e.key]??e.view;remove(e.id);return view;},
+  replaceDocument(key:string,doc:DetachedDocument){const entry=[...entries.values()].find(e=>e.key===key);if(!entry)return;const view=groups.get(entry.group)?.client?.layout?.().views[key];for(const subscription of entry.subscriptions)subscription.dispose();entries.delete(entry.id);const next=add(entry.group,doc,entry.id);next.view=view;broadcast(next);},
   has:(key:string)=>[...entries.values()].some(e=>e.key===key),
   focus(key:string){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(undefined,e.id);groups.get(e.group)?.popup.focus();}},
   reveal(key:string,range?:monaco.IRange|monaco.IPosition){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(range,e.id);groups.get(e.group)?.popup.focus();}},

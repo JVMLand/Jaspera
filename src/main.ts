@@ -1,3 +1,4 @@
+import {planPathChange} from './project-paths';
 import {tabLabels} from './file-labels';
 import {examples,exampleSource,rememberExample,withoutExampleLayout} from './example-library';
 import {inlayHintOptions} from './inlay-hint-style';
@@ -113,7 +114,7 @@ const overlayThemeObserver=new MutationObserver(syncOverlayTheme);overlayThemeOb
 const stackHover=installStackHover(editor,compileModel);
 const detached=createDetachedHost(key=>{const owner=project;queueMicrotask(()=>{if(disposed||restoringLayout||project!==owner)return;for(const view of groupEditors.values()){const model=view.getModel(),doc=model?detachableDocument(model.uri.toString()):undefined;if(doc&&detached.has(doc.key))view.setModel(null);}
 if(key.startsWith('panel:')){panelDock?.show(key.slice(6) as 'project'|'console'|'problems'|'instructions');return;}const current=editor.getModel();if(current&&detached.has(!activePreview?'source:'+project.workspace.activeFile:'preview:'+activePreview)){captureView();activePreview=undefined;editor.setModel(null);}const tab=visibleTabs().find(t=>t.key===key);const next=tab??visibleTabs()[0];if(!editor.getModel()&&next)selectEditorTab(next);else{renderFiles();updateActions();}});},()=>void saveProject(),model=>void run(model),{
- compileUsage,compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
+ projectAction,compileUsage,compile:compileModel,resolve:(model,offset)=>navigation.resolve(model,offset),completionCatalog:()=>navigation.completionCatalog(),document:detachableDocument,view:key=>{const doc=detachableDocument(key),view=[...groupEditors.values()].find(v=>v.getModel()===doc?.model),p=view?.getPosition();return p&&view?{line:p.lineNumber,column:p.column,scrollTop:Math.round(view.getScrollTop()),scrollLeft:Math.round(view.getScrollLeft())}:key.startsWith('source:')?project.workspace.views[key.slice(7)]:undefined;},
  openFiles, state:()=>workspaceState.value,subscribe:listener=>workspaceState.subscribe(listener),
  instruction:op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);},
  panelOpened:name=>panelDock?.close(name),stdin:setStdin,clearOutput:()=>el('clear').click(),problem:(index,group)=>{const target=problemTargets[index],model=target?models.get(target.path):undefined;if(target&&model)void window.jalwebDetached?.openDefinition(group,model.uri.toString(),model.validatePosition({lineNumber:target.line,column:target.column}));},
@@ -245,7 +246,7 @@ const collapsedFolders=new Set<string>();
 function renderFiles() {
   workspaceState.update({files:[...project.files.map(f=>({key:'source:'+f.path,title:f.path})),...examples.map(f=>({key:'preview:example:'+f.path,title:f.path})),...[...classPreviews.values()].filter(p=>!p.example).map(p=>({key:'preview:'+p.key,title:previewTitle(p)}))]});
   const list=el('file-list');list.replaceChildren();document.querySelectorAll('.workspace .editor-tab').forEach(n=>n.remove());
-  renderProjectTree(list,[...examples.map(f=>({path:f.path,key:'preview:example:'+f.path,active:activePreview==='example:'+f.path,open:()=>{ensureExample(f.path);selectClassPreview('example:'+f.path);}})),...project.files.map(f=>({path:f.path,key:'source:'+f.path,active:!!editor.getModel()&&!activePreview&&f.path===project.workspace.activeFile,open:()=>switchFile(f.path)})),...(folder?.classFiles??[]).map(f=>({path:f.path,key:'',active:activePreview==='folder:'+f.path,open:()=>queueClass(()=>f.handle.getFile(),'folder:'+f.path,f.path,true,f.path)}))],window.jalwebDetached!.workspaceId,collapsedFolders);
+  renderProjectTree(list,[...examples.map(f=>({path:f.path,key:'preview:example:'+f.path,active:activePreview==='example:'+f.path,open:()=>{ensureExample(f.path);selectClassPreview('example:'+f.path);}})),...project.files.map(f=>({path:f.path,key:'source:'+f.path,active:!!editor.getModel()&&!activePreview&&f.path===project.workspace.activeFile,open:()=>switchFile(f.path)})),...(folder?.classFiles??[]).map(f=>({path:f.path,key:'',active:activePreview==='folder:'+f.path,open:()=>queueClass(()=>f.handle.getFile(),'folder:'+f.path,f.path,true,f.path)}))],window.jalwebDetached!.workspaceId,collapsedFolders,{create:directory=>void addFile(directory),rename:(path,folder)=>void changePath(path,folder,false),move:(path,folder)=>void changePath(path,folder,true)});
   const tabs=visibleTabs(),labels=tabLabels(tabs.map(tab=>({key:tab.key,path:tab.label})));
   for(const tab of tabs)renderEditorTab(tab,labels.get(tab.key)!);
   panelDock?.refresh();
@@ -546,8 +547,9 @@ el('properties-form').onsubmit=e=>{
   el<HTMLDialogElement>('project-properties').close();
 };
 el<HTMLInputElement>('properties-name').oninput=()=>el<HTMLInputElement>('properties-name').setCustomValidity('');
-async function addFile() {
-  const name=await dialog('JAL ファイルを追加','ファイル名を入力してください（例: src/com.example.Helper）。','src/Helper',false,'','.jal');if(name===null)return;
+async function addFile(directory='src') {
+  const owner=project;
+  const name=await dialog('JAL ファイルを追加','ファイル名を入力してください（例: src/com.example.Helper）。',(directory?directory+'/':'')+'Helper',false,'','.jal');if(name===null||project!==owner)return;
   const path=name.trim().replace(/\.jal$/i,'').replaceAll('.','/')+'.jal';
   try {if(path==='.jal')throw new Error('ファイル名を入力してください。');validatePath(path);if(project.files.length>=64)throw new Error('ファイルは 64 個までです。');if(project.files.some(f=>f.path.toLowerCase()===path.toLowerCase()))throw new Error('同じファイル名が存在します。');}
   catch(e){await dialog('追加できませんでした',String(e instanceof Error?e.message:e));return;}
@@ -555,16 +557,38 @@ async function addFile() {
   if(!project.files.length)project.workspace.entryFile=path;
   project.files.push({path,source:`public class ${className} {\n}\n`});attachModel(path,project.files.at(-1)!.source);switchFile(path);invalidate();setDirty();editor.focus();
 }
-async function renameFile() {
-  if(activePreview||!project.files.length)return;
-  const old=project.workspace.activeFile,path=await dialog('ファイル名を変更','クラス名・参照はソース内で変更してください。',old);if(path===null||path===old)return;
-  try {validatePath(path);if(project.files.some(f=>f.path!==old&&f.path.toLowerCase()===path.toLowerCase()))throw new Error('同じファイル名が存在します。');}
-  catch(e){await dialog('変更できませんでした',String(e instanceof Error?e.message:e));return;}
-  captureView();closedSourceTabs.delete(old);const source=models.get(old)!.getValue();editor.setModel(null);models.get(old)!.dispose();models.delete(old);attachModel(path,source);
-  project.files.find(f=>f.path===old)!.path=path;
-  if(project.workspace.entryFile===old)project.workspace.entryFile=path;
-  if(project.workspace.views[old])project.workspace.views[path]=project.workspace.views[old];delete project.workspace.views[old];
-  results.delete(old);switchFile(path,false);invalidate();setDirty();
+async function renameFile(){if(!activePreview&&project.workspace.activeFile)await changePath(project.workspace.activeFile,false,false);}
+function projectAction(action:'create'|'rename'|'move',path:string,isFolder:boolean){window.focus();if(action==='create')void addFile(path);else void changePath(path,isFolder,action==='move');}
+async function changePath(old:string,isFolder:boolean,move:boolean){
+ const owner=project,parent=old.split('/').slice(0,-1).join('/'),base=old.split('/').pop()!;
+ const input=await dialog(move?'移動先フォルダー':isFolder?'フォルダー名を変更':'ファイル名を変更',move?'移動先のフォルダーパスを入力してください。空欄ならルートに移動します。':'クラス名・参照はソース内で変更してください。',move?parent:isFolder?base:base.replace(/\.jal$/i,''),false,'',!move&&!isFolder?'.jal':'');
+ if(input===null||project!==owner)return;
+ const name=input.trim().replaceAll('\\','/');
+ const destination=move?(name?name.replace(/\/$/,'')+'/':'')+base:(parent?parent+'/':'')+(isFolder?name:name.replace(/\.jal$/i,'').replaceAll('.','/')+'.jal');
+ if(destination===old)return;
+ try{
+  if(!move&&!name)throw new Error('名前を入力してください。');
+  const paths=project.files.map(f=>f.path),changes=planPathChange(paths,old,destination,isFolder);
+  if(folder?.classFiles?.some(f=>[...changes.values()].some(path=>path.toLowerCase()===f.path.toLowerCase()||path.toLowerCase().startsWith(f.path.toLowerCase()+'/'))))throw new Error('移動先に同じ名前のファイルが存在します。');
+  captureView();
+  for(const [from,to] of changes){
+   const model=models.get(from)!,source=model.getValue(),key='source:'+from,newKey='source:'+to;
+   const views=[...groupEditors.values()].filter(view=>view.getModel()===model).map(view=>({view,state:view.saveViewState()}));
+   attachModel(to,source);const next=models.get(to)!;
+   const file=project.files.find(f=>f.path===from)!;file.path=to;file.source=source;
+   if(project.workspace.entryFile===from)project.workspace.entryFile=to;
+   if(project.workspace.activeFile===from)project.workspace.activeFile=to;
+   if(project.workspace.views[from])project.workspace.views[to]=project.workspace.views[from];delete project.workspace.views[from];
+   if(closedSourceTabs.delete(from))closedSourceTabs.add(to);
+   const side=sourceGroups.get(key);sourceGroups.delete(key);if(side)sourceGroups.set(newKey,side);
+   tabOrder=tabOrder.map(value=>value===key?newKey:value);
+   detached.replaceDocument(key,{key:newKey,title:to,model:next,readOnly:false});
+   for(const {view,state} of views){view.setModel(next);if(state)view.restoreViewState(state);}
+   models.delete(from);model.dispose();results.delete(from);
+  }
+  if(isFolder){for(const path of [...collapsedFolders])if(path===old||path.startsWith(old+'/')){collapsedFolders.delete(path);collapsedFolders.add(destination+path.slice(old.length));}}
+  renderFiles();invalidate();setDirty();updateActions();
+ }catch(error){await dialog('変更できませんでした',error instanceof Error?error.message:String(error));}
 }
 async function removeFile() {
   if(activePreview)return;
@@ -585,7 +609,7 @@ el<HTMLTextAreaElement>('stdin').oninput=()=>setStdin(el<HTMLTextAreaElement>('s
 function output(text:string,stream='stdout') {workspaceState.updateTools({output:[...workspaceState.value.tools.output,{text,stream}]});el('console-empty').hidden=true;const span=document.createElement('span');span.className=stream;span.textContent=text;el('output').append(span);const scroller=document.querySelector<HTMLElement>('.dock-console-body')??el('console-panel');scroller.scrollTop=scroller.scrollHeight;}
 const instructionPanel=installInstructionsPanel(el('instructions-panel'),compileUsage);
 const instructionClicks=followInstructionClicks(editor,op=>{instructionPanel.showInstruction(op);detached.showInstruction(op);});
-panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const view of groupEditors.values())view.layout();},side=>{for(const tab of visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side))closeEditorTabs(tab.key);},name=>{if(!detached.openPanel(name))status('小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。','error');},window.jalwebDetached!.workspaceId,()=>tabOrder);
+panelDock=installPanelDock(name=>{project.workspace.panel=name;},()=>{for(const view of groupEditors.values())view.layout();},side=>{for(const tab of visibleTabs().filter(t=>(sourceGroups.get(t.key)??'source')===side))closeEditorTabs(tab.key);},name=>{if(!detached.openPanel(name))status('小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。','error');},window.jalwebDetached!.workspaceId,()=>tabOrder,name=>name==='project'?[{label:'新規 JAL ファイル…',action:()=>void addFile()},null]:[]);
 for(const side of ['project','output'] as const){const container=document.createElement('div');container.className='group-editor';container.hidden=true;panelDock.panes[side].append(container);const view=monaco.editor.create(container,{...editor.getRawOptions(),model:null,automaticLayout:true,ariaLabel:side+' グループの JAL ソースコード'});groupEditors.set(side,view);bindGroupEditor(view,side);}
 bindGroupEditor(groupEditors.get('source')!,'source');
 for(const side of ['project','source','output'] as const)groupResources.push(paneDrop(panelDock.panes[side],window.jalwebDetached!.workspaceId,(key,event)=>movePane(key,side,event)));

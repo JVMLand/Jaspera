@@ -1,3 +1,4 @@
+import type {ContextItem} from './context-menu';
 import type {DockLayout} from './workspace-layout';
 import './panel-dock.css';
 import {ToolPane,paneTab,arrangePaneTabs} from './pane';
@@ -6,7 +7,7 @@ export const panelNames=['project','console','problems','instructions'] as const
 export type PanelName=typeof panelNames[number];
 export type Side='project'|'source'|'output';
 const sides=['project','source','output'] as const;
-export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>void,closeSources:(side:Side)=>void,detach:(name:PanelName)=>void,workspaceId:string,tabOrder:()=>string[]){
+export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>void,closeSources:(side:Side)=>void,detach:(name:PanelName)=>void,workspaceId:string,tabOrder:()=>string[],contextItems:(name:PanelName)=>ContextItem[]=()=>[]){
  const get=(id:string)=>document.getElementById(id)!;
  const workspace=document.querySelector<HTMLElement>('.workspace')!;
  const panes={project:document.querySelector<HTMLElement>('.project-pane')!,source:document.querySelector<HTMLElement>('.source-pane')!,output:document.querySelector<HTMLElement>('.output-pane')!};
@@ -52,7 +53,7 @@ export function installPanelDock(onSelect:(name:PanelName)=>void,onLayout:()=>vo
  for(const name of panelNames){
   const pane=new ToolPane(name,name==='project'?'PROJECT':name[0].toUpperCase()+name.slice(1),{select:()=>show(name),close:others=>others?closeOthers(name):close(name)});
   const {wrapper}=paneTab(pane,workspaceId,selected[sideOf(name)]===name,buttons[name]);nodes[name]=wrapper;
-  pane.contextItems=()=>[
+  pane.contextItems=()=>[...contextItems(name),
    {label:'PROJECT グループへ移動',action:()=>move(name,'project')},
    {label:'左側へ移動',action:()=>move(name,workspace.classList.contains('dock-swapped')?'output':'source')},
    {label:'右側へ移動',action:()=>move(name,workspace.classList.contains('dock-swapped')?'source':'output')},

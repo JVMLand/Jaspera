@@ -54,7 +54,9 @@ function renderTabs(){
 }
 
 function update(snapshot:EditorSnapshot){
- let tab=tabs.get(snapshot.id);if(!tab){
+ let tab=tabs.get(snapshot.id);
+ if(tab&&tab.state.uri!==snapshot.uri){const selected=active===snapshot.id,view=selected?editor.saveViewState():tab.view;const index=paneOrder.indexOf(tab.state.key);if(index>=0)paneOrder[index]=snapshot.key;remove(snapshot.id);update(snapshot);tabs.get(snapshot.id)!.view=view;if(selected)select(snapshot.id);return;}
+ if(!tab){
   const model=monaco.editor.getModel(monaco.Uri.parse(snapshot.uri))??monaco.editor.createModel(snapshot.source,'jal',monaco.Uri.parse(snapshot.uri));tab={state:snapshot,model,view:null,savedView:snapshot.view};tabs.set(snapshot.id,tab);
   const entry=tab;model.onDidChangeContent(()=>{inspect(entry);if(applying)return;const result=bridge?.edit(entry.state.id,entry.state.version,model.getValue());if(result)update(result);});inspect(tab);renderTabs();
  }
