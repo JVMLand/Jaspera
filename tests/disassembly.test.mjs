@@ -5,6 +5,7 @@ test('class decompilation, drag/drop, folder view and preservation of sources',{
  static { System.out.println("INITIALIZER MUST NOT RUN"); }
  public static int choose(int n){try {switch(n){case 1:return 10;case 20:return 30;default:return 0;}}catch(RuntimeException e){return -1;}}
  public static String concat(int n){return "value="+n;}
+ public static Class<?> type(){return String.class;}
 }`);
  const javac=spawnSync('javac',['--release','21','-encoding','UTF-8','-d','.cache/disassembly-test','.cache/disassembly-test/DropProbe.java'],{encoding:'utf8'});assert.equal(javac.status,0,javac.stderr);
  const bytes=await readFile('.cache/disassembly-test/DropProbe.class'),base='http://127.0.0.1:5185';
@@ -15,7 +16,7 @@ test('class decompilation, drag/drop, folder view and preservation of sources',{
  const source=()=>page.evaluate(async()=>{const {editor}=await import('/src/main.ts');return editor.getValue();});
  await t.test('ASM parsing never initializes the input class; a simple JAL roundtrip recompiles',async()=>{
   const result=await page.evaluate(async bytes=>{const {Runtime}=await import('/src/runtime.ts');const runtime=new Runtime();let output='';runtime.onOutput=(_stream,text)=>output+=text;try{const probe=await runtime.disassemble(btoa(String.fromCharCode(...bytes)));const compiled=await runtime.compile('public class RoundTrip { public static main([Ljava/lang/String;)V { return } }');const restored=await runtime.disassemble(compiled.bytecode);const checked=await runtime.compile(restored.source);return {output,probe:probe.source,diagnostics:checked.diagnostics,className:checked.className};}finally{runtime.stop();}},[...bytes]);
-  assert.equal(result.output,'');assert.match(result.probe,/INITIALIZER MUST NOT RUN/);assert.deepEqual(result.diagnostics,[]);assert.equal(result.className,'RoundTrip');
+  assert.equal(result.output,'');assert.ok(result.probe.startsWith('/*\n  Decompiled by JALP (Java Assembly Language Parser)\n  Class: DropProbe.class\n  Compiled from "DropProbe.java"\n*/\n'));assert.doesNotMatch(result.probe,/注意:|再コンパイル|表せない|powered by ASM|recreated/);assert.match(result.probe,/ldc Ljava\/lang\/String;/);assert.match(result.probe,/INITIALIZER MUST NOT RUN/);assert.deepEqual(result.diagnostics,[]);assert.equal(result.className,'RoundTrip');
  });
  await t.test('drop opens a readonly JAL tab without running class initializers',async()=>{
   await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setValue(editor.getValue()+'\n// keep my edit');});

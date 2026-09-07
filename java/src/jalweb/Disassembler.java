@@ -9,7 +9,6 @@ import tokyo.peya.langjal.compiler.jvm.EOpcodes;
 /** JALP-style rendering over ASM's validated class reader. Never defines or executes the input class. */
 public final class Disassembler {
     private final StringBuilder out=new StringBuilder();
-    private final Set<String> warnings=new LinkedHashSet<>();
     private void line(String text){out.append(text).append('\n');if(out.length()>1024*1024)throw new IllegalArgumentException("逆アセンブル結果は 1 MiB 以下にしてください。");}
     private static String clean(String s){return s.replace('\r',' ').replace('\n',' ');}
     private static String type(String s){return s.startsWith("[")?s:"L"+s+";";}
@@ -22,11 +21,11 @@ public final class Disassembler {
     private String constant(Object c){
         if(c instanceof String s)return Bridge.quote(s);
         if(c instanceof Long)return c+"L";
-        if(c instanceof Float f){if(!Float.isFinite(f))warnings.add("非有限浮動小数点定数の再コンパイルには対応していません。");return f+"f";}
-        if(c instanceof Double d){if(!Double.isFinite(d))warnings.add("非有限浮動小数点定数の再コンパイルには対応していません。");return d+"d";}
-        if(c instanceof Type t){warnings.add("class / MethodType 定数の ldc は現在の JAL 文法では再コンパイルできません。");return t.getSort()==Type.METHOD?"MethodType|"+t.getDescriptor():t.getDescriptor();}
+        if(c instanceof Float f){return f+"f";}
+        if(c instanceof Double d){return d+"d";}
+        if(c instanceof Type t){return t.getSort()==Type.METHOD?"MethodType|"+t.getDescriptor():t.getDescriptor();}
         if(c instanceof Handle h)return handle(h);
-        if(c instanceof ConstantDynamic d){warnings.add("ConstantDynamic はコメントとして表示しています。");return "ConstantDynamic "+clean(d.getName())+" "+d.getDescriptor()+" "+handle(d.getBootstrapMethod());}
+        if(c instanceof ConstantDynamic d){return "ConstantDynamic "+clean(d.getName())+" "+d.getDescriptor()+" "+handle(d.getBootstrapMethod());}
         return String.valueOf(c);
     }
     private String handle(Handle h){String[] tags={"","getfield","getstatic","putfield","putstatic","invokevirtual","invokestatic","invokespecial","newinvokespecial","invokeinterface"};return "MethodHandle|"+tags[h.getTag()]+"|"+h.getOwner()+"->"+h.getName()+(h.getTag()<=4?":":"")+h.getDesc();}
@@ -39,7 +38,7 @@ public final class Disassembler {
         if(i instanceof MethodInsnNode n)return op+" "+n.owner+"->"+n.name+n.desc;
         if(i instanceof JumpInsnNode n)return op+" "+labels.get(n.label);
         if(i instanceof IincInsnNode n)return (n.var>255||n.incr< -128||n.incr>127?"wide ":"")+"iinc "+n.var+" "+n.incr;
-        if(i instanceof LdcInsnNode n){String value=constant(n.cst);if(n.cst instanceof Type||n.cst instanceof Handle||n.cst instanceof ConstantDynamic){warnings.add("JAL で表せない ldc 定数はコメントとして表示しています。");return "// ldc "+value;}return (n.cst instanceof Long||n.cst instanceof Double?"ldc2_w ":"ldc ")+value;}
+        if(i instanceof LdcInsnNode n){String value=constant(n.cst);if(n.cst instanceof Type||n.cst instanceof Handle||n.cst instanceof ConstantDynamic){return "// ldc "+value;}return (n.cst instanceof Long||n.cst instanceof Double?"ldc2_w ":"ldc ")+value;}
         if(i instanceof MultiANewArrayInsnNode n)return op+" "+n.desc+" "+n.dims;
         if(i instanceof TableSwitchInsnNode n)return op+" "+n.min+" { "+String.join(", ",n.labels.stream().map(labels::get).toList())+" } default "+labels.get(n.dflt);
         if(i instanceof LookupSwitchInsnNode n){List<String> cases=new ArrayList<>();for(int k=0;k<n.keys.size();k++)cases.add(n.keys.get(k)+": "+labels.get(n.labels.get(k)));cases.add("default: "+labels.get(n.dflt));return op+" { "+String.join(", ",cases)+" }";}
@@ -59,7 +58,6 @@ public final class Disassembler {
                 List<TryCatchBlockNode> catches=method.tryCatchBlocks.stream().filter(t->t.start==l).toList();
                 if(!catches.isEmpty()){
                     LabelNode end=catches.get(0).end;
-                    if(catches.stream().anyMatch(t->t.end!=end))warnings.add("終了位置の異なる例外テーブルは JAL では再コンパイルできない場合があります。");
                     StringBuilder s=new StringBuilder("    [~"+labels.get(end));for(TryCatchBlockNode t:catches)s.append(t.type==null?" -> "+labels.get(t.handler):", "+t.type+": "+labels.get(t.handler));line(s+"]");
                 }
             }else if(i.getOpcode()>=0)line("    "+instruction(i,labels));
@@ -70,20 +68,19 @@ public final class Disassembler {
         byte[] bytes=Base64.getDecoder().decode(encoded);
         if(bytes.length<10||bytes.length>1024*1024||bytes[0]!=(byte)0xca||bytes[1]!=(byte)0xfe||bytes[2]!=(byte)0xba||bytes[3]!=(byte)0xbe)throw new IllegalArgumentException("有効な .class ファイル（1 MiB 以下）を指定してください。");
         ClassNode c=new ClassNode();new ClassReader(bytes).accept(c,ClassReader.SKIP_FRAMES);Disassembler d=new Disassembler();
-        d.line("//");
-        d.line("// JAL source recreated from a .class file by JALWeb");
-        d.line("// (powered by ASM)");
-        d.line("//");
+        d.line("/*");
+        d.line("  Decompiled by JALP (Java Assembly Language Parser)");
+        d.line("  Class: "+clean(c.name).replace("*/","* /")+".class");
+        if(c.sourceFile!=null)d.line("  Compiled from \""+clean(c.sourceFile).replace("*/","* /")+"\"");
+        d.line("*/");
         d.line("");
-        if(c.superName==null)d.warnings.add("super_class がない特殊なクラスです。");
         String meta="major_version="+(c.version&65535)+", minor_version="+(c.version>>>16);
         if(c.superName!=null)meta+=", super_class="+c.superName;
         if(!c.interfaces.isEmpty())meta+=", interfaces="+String.join(", ",c.interfaces);
         d.line(flags(c.access,0)+"class "+c.name+" ("+meta+") {");
         for(FieldNode f:c.fields)d.line("  "+flags(f.access,1)+f.name+":"+f.desc+(f.value==null?"":" = "+d.constant(f.value)));
         for(MethodNode m:c.methods)d.method(m);d.line("}");
-        String header="";for(String warning:d.warnings)header+="// 注意: "+warning+"\n";
-        String source=header+d.out;if(source.getBytes(StandardCharsets.UTF_8).length>1024*1024)throw new IllegalArgumentException("逆アセンブル結果が大きすぎます。");
+        String source=d.out.toString();if(source.getBytes(StandardCharsets.UTF_8).length>1024*1024)throw new IllegalArgumentException("逆アセンブル結果が大きすぎます。");
         return "{\"className\":"+Bridge.quote(c.name)+",\"source\":"+Bridge.quote(source)+"}";
     }
 }
