@@ -4,8 +4,8 @@ export const layoutPanels=['project','console','problems','instructions'] as con
 export type LayoutSide=typeof layoutSides[number];
 export type LayoutPanel=typeof layoutPanels[number];
 export interface DockLayout {order:Record<LayoutSide,LayoutPanel[]>;selected:Record<LayoutSide,LayoutPanel|null>;closed:LayoutPanel[];sizes:number[];swapped:boolean}
-export interface WindowLayout {tabs:string[];panels:LayoutPanel[];active:string;views:Record<string,FileView>;left:number;top:number;width:number;height:number;wordWrap:boolean}
-export interface WorkspaceLayout {version:1;tabs:{key:string;side:LayoutSide}[];selected:Partial<Record<LayoutSide,string>>;activeSide:LayoutSide;collapsedFolders:string[];dock:DockLayout;windows:WindowLayout[];views:Record<string,FileView>;wordWrap:boolean}
+export interface WindowLayout {order?:string[];tabs:string[];panels:LayoutPanel[];active:string;views:Record<string,FileView>;left:number;top:number;width:number;height:number;wordWrap:boolean}
+export interface WorkspaceLayout {order?:string[];version:1;tabs:{key:string;side:LayoutSide}[];selected:Partial<Record<LayoutSide,string>>;activeSide:LayoutSide;collapsedFolders:string[];dock:DockLayout;windows:WindowLayout[];views:Record<string,FileView>;wordWrap:boolean}
 const record=(v:unknown):v is Record<string,any>=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const strings=(v:unknown,max=256):string[]=>Array.isArray(v)?[...new Set(v.filter((s):s is string=>typeof s==='string'&&s.length<=512))].slice(0,max):[];
 const side=(v:unknown):v is LayoutSide=>layoutSides.includes(v as LayoutSide);
@@ -31,7 +31,7 @@ export function readWorkspaceLayout(value:unknown):WorkspaceLayout|undefined{
  const windows:WindowLayout[]=[];const windowKeys=new Set<string>(),windowPanels=new Set<LayoutPanel>();
  if(Array.isArray(value.windows))for(const w of value.windows.slice(0,16))if(record(w)){
   const wt=strings(w.tabs).filter(k=>{if(windowKeys.has(k))return false;windowKeys.add(k);return true;}),wp=strings(w.panels).filter(panel).filter(n=>{if(windowPanels.has(n))return false;windowPanels.add(n);return true;});
-  if(wt.length||wp.length)windows.push({tabs:wt,panels:wp,active:typeof w.active==='string'&&w.active.length<=512?w.active:'',views:readViews(w.views),left:finite(w.left,0,-100000,100000),top:finite(w.top,0,-100000,100000),width:finite(w.width,900,320,10000),height:finite(w.height,680,240,10000),wordWrap:w.wordWrap===true});
+  if(wt.length||wp.length)windows.push({...(Array.isArray(w.order)?{order:strings(w.order)}:{}),tabs:wt,panels:wp,active:typeof w.active==='string'&&w.active.length<=512?w.active:'',views:readViews(w.views),left:finite(w.left,0,-100000,100000),top:finite(w.top,0,-100000,100000),width:finite(w.width,900,320,10000),height:finite(w.height,680,240,10000),wordWrap:w.wordWrap===true});
  }
- return {version:1,tabs,selected:active,activeSide:side(value.activeSide)?value.activeSide:'source',collapsedFolders:strings(value.collapsedFolders),dock:{order,selected,closed,sizes,swapped:d.swapped===true},windows,views:readViews(value.views),wordWrap:value.wordWrap===true};
+ return {...(Array.isArray(value.order)?{order:strings(value.order)}:{}),version:1,tabs,selected:active,activeSide:side(value.activeSide)?value.activeSide:'source',collapsedFolders:strings(value.collapsedFolders),dock:{order,selected,closed,sizes,swapped:d.swapped===true},windows,views:readViews(value.views),wordWrap:value.wordWrap===true};
 }
