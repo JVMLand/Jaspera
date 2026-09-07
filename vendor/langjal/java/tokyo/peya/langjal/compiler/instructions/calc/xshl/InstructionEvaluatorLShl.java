@@ -16,7 +16,7 @@ public class InstructionEvaluatorLShl extends AbstractSingleInstructionEvaluator
     @Override
     public FrameDifferenceInfo getFrameDifferenceInfo(@NotNull InstructionInfo instruction) {
         return FrameDifferenceInfo.builder(instruction)
-                .popPrimitive(StackElementType.LONG)
+                .popPrimitive(StackElementType.INTEGER)
                 .popPrimitive(StackElementType.LONG)
                 .pushPrimitive(StackElementType.LONG)
                 .build();

@@ -17,7 +17,6 @@ public class InstructionEvaluatorINeg extends AbstractSingleInstructionEvaluator
     public FrameDifferenceInfo getFrameDifferenceInfo(@NotNull InstructionInfo instruction) {
         return FrameDifferenceInfo.builder(instruction)
                 .popPrimitive(StackElementType.INTEGER)
-                .popPrimitive(StackElementType.INTEGER)
                 .pushPrimitive(StackElementType.INTEGER)
                 .build();
     }

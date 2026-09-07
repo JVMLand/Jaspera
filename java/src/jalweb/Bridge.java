@@ -85,9 +85,14 @@ public final class Bridge {
                 for(MethodNode method:node.methods) {
                     if((method.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))!=0) continue;
                     if(method.tryCatchBlocks==null) method.tryCatchBlocks=new ArrayList<>();
+                    // ASM's tree analyzer uses the logical jump opcode; widths belong to encoding.
+                    java.util.Map<JumpInsnNode,Integer> wideJumps=new java.util.IdentityHashMap<>();
+                    for(AbstractInsnNode insn:method.instructions) if(insn instanceof JumpInsnNode jump && (jump.getOpcode()==200||jump.getOpcode()==201)) {
+                        wideJumps.put(jump,jump.getOpcode()); jump.setOpcode(jump.getOpcode()==200?Opcodes.GOTO:Opcodes.JSR);
+                    }
                     try {
                         BasicVerifier verifier=new StackFrames.Verifier();
-                        Frame<BasicValue>[] frames=new Analyzer<>(verifier).analyze(node.name,method);
+                        Frame<BasicValue>[] frames=new Analyzer<>(verifier).analyzeAndComputeMaxs(node.name,method);
                         StackFrames.append(stackFrames,method,frames,verifier);
                     }
                     catch(AnalyzerException e) {
@@ -99,6 +104,7 @@ public final class Bridge {
                         StackDiagnostics.Range range=StackDiagnostics.opcode(e.node,line);
                         add("error",method.name+": "+e.getMessage(),range.line(),range.column(),range.length());
                     }
+                    finally {wideJumps.forEach((jump,opcode)->jump.setOpcode(opcode));}
                 }
                 if(node.version>67) add("error","This runtime supports class file versions up to 67 (Java 23).",1,0,1);
                 if(diagnostics.stream().noneMatch(d->d.severity().equals("error"))) {

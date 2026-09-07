@@ -53,7 +53,7 @@ public class InstructionEvaluatorMultiANewArray
         for (int i = 0; i < insn.dims; i++)
             builder.popPrimitive(StackElementType.INTEGER);
 
-        builder.pushObjectRef(TypeDescriptor.className(insn.desc));
+        builder.pushObjectRef(TypeDescriptor.parse(insn.desc));
 
         return builder.build();
     }

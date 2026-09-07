@@ -17,7 +17,6 @@ public class InstructionEvaluatorFNeg extends AbstractSingleInstructionEvaluator
     public FrameDifferenceInfo getFrameDifferenceInfo(@NotNull InstructionInfo instruction) {
         return FrameDifferenceInfo.builder(instruction)
                 .popPrimitive(StackElementType.FLOAT)
-                .popPrimitive(StackElementType.FLOAT)
                 .pushPrimitive(StackElementType.FLOAT)
                 .build();
     }

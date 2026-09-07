@@ -31,7 +31,7 @@ public class InstructionEvaluationHelperLDC {
         TerminalNode number = scalar.NUMBER();
         TerminalNode string = scalar.STRING();
         if (string != null) {
-            if (ldcType == LDC2_W || ldcType == LDC_W)
+            if (ldcType == LDC2_W)
                 throw new IllegalInstructionException(
                         "ldc2_w cannot be used with string literals, please use ldc or ldc_w instead.",
                         scalar

@@ -125,7 +125,7 @@ public class JALMethodCompiler {
         this.evaluateMethodMetadata(method);
         this.evaluateMethodParameters(method);
         this.evaluateMethodBody(method.methodBody());
-        if ((this.compileFlags & CompileSettings.COMPUTE_STACK_FRAME_MAP) != 0)
+        if ((this.compileFlags & CompileSettings.COMPUTE_STACK_FRAME_MAP) != 0 && (this.clazz.version & 0xffff) >= 50)
             this.addStackMapTable();
     }
 
