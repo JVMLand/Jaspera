@@ -180,7 +180,25 @@ function straightenTopFans(boxes:Box[],edges:Route[],parents:Map<string,string>)
    if(!points)break;
    proposed.push({...edge,points});
   }
-  if(proposed.length!==ordered.length)continue;
+  if(proposed.length!==ordered.length){
+   // If an equally wide intervening instruction blocks top landings, assign
+   // the outer lanes and side entry slots together instead of competing for one port.
+   proposed.length=0;
+   const right=Math.max(target.x+target.width,...ordered.map(e=>{const s=byId.get(e.from);return s?s.x+s.width:Infinity;}));
+   const lanes=[...new Set(ordered.flatMap(e=>e.points.map(p=>p.x)).filter(x=>x>right))].sort((a,b)=>a-b);
+   if(lanes.length<ordered.length||(ordered.length-1)*gap>target.height-2*gap)continue;
+   for(const [i,edge] of ordered.entries()){
+    const source=byId.get(edge.from);if(!source||source.y+source.height>target.y)break;
+    const y=source.y+source.height/2,endY=target.y+target.height/2+(i-(ordered.length-1)/2)*gap;
+    const candidates=[y,source.y+source.height-gap,source.y+gap].map(exitY=>[{x:source.x+source.width,y:exitY},{x:lanes[i],y:exitY},{x:lanes[i],y:endY},{x:target.x+target.width,y:endY}]);
+    const obstacles=boxes.filter(b=>b.id!==parents.get(edge.from)&&b.id!==parents.get(edge.to));
+    for(const other of outside)if(other.label&&other.x!==undefined&&other.y!==undefined){const lines=other.label.split('\n'),width=Math.max(...lines.map(line=>line.length*6));obstacles.push({id:'',x:other.x-width/2,y:other.y-10,width,height:lines.length*14});}
+    const points=candidates.find(points=>!points.slice(1).some((p,j)=>obstacles.some(b=>hits(points[j],p,b)))&&![...outside,...proposed].some(e=>parallelOverlap(points,e.points)||crossings(points,e.points)>0));
+    if(!points)break;
+    proposed.push({...edge,points});
+   }
+   if(proposed.length!==ordered.length)continue;
+  }
   const shorter=proposed.reduce((n,e)=>n+e.points.length,0)<ordered.reduce((n,e)=>n+e.points.length,0);
   const west=ordered.some(e=>e.points[1].x<e.points[0].x);
   const crossed=ordered.some((e,i)=>ordered.slice(i+1).some(o=>crossings(e.points,o.points)>0));

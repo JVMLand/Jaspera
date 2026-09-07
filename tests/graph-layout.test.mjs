@@ -75,3 +75,13 @@ test('PrintStream constructor arguments descend from centered east exits with on
  for(const [i,route] of routes.entries()){const source=result.nodes[i];assert.equal(route.points.length,3);assert.deepEqual(route.points[0],{x:source.x+source.width/2,y:source.y});assert.equal(route.points[1].x,route.points[2].x);}
  assert.ok(routes[0].points[1].x>routes[1].points[1].x&&routes[1].points[1].x>routes[2].points[1].x);
 });
+
+test('wide invokestatic leaves from its east center when four values share a side landing',async()=>{
+ const texts=['aload_0','iconst_0','aload_2','invokestatic java/io/PrintStream->toCharset(Ljava/lang/String;)Ljava/nio/charset/Charset;','new java/io/FileOutputStream','dup','aload_1','invokespecial java/io/FileOutputStream-><init>(Ljava/lang/String;)V','invokespecial java/io/PrintStream-><init>(ZLjava/nio/charset/Charset;Ljava/io/OutputStream;)V','return'];
+ const nodes=texts.map((text,i)=>({...node('n'+i),text,opcode:text.split(' ')[0]}));
+ const method={name:'<init>(Ljava/lang/String;Ljava/lang/String;)V',nodes,edges:[...nodes.slice(1).map((_,i)=>edge('n'+i,'n'+(i+1))),...[[2,3],[4,5],[6,7],[5,7],[5,8],[3,8],[1,8],[0,8]].map(([a,b])=>edge('n'+a,'n'+b,'stack'))]};
+ const result=await positionGraphs([method],elk),call=result.nodes[3],target=result.nodes[8],routes=[5,3,1,0].map(i=>result.edges.find(e=>e.from==='m0:n'+i&&e.to==='m0:n8'&&e.kind==='stack'));
+ for(const route of routes){assert.equal(route.points.length,4);assert.equal(route.points[1].x,route.points[2].x);assert.equal(route.points[2].y,route.points[3].y);assert.equal(route.points[3].x,target.x+target.width/2);}
+ assert.deepEqual(routes[1].points[0],{x:call.x+call.width/2,y:call.y});
+ for(let i=1;i<routes.length;i++){assert.ok(routes[i].points[1].x>routes[i-1].points[1].x);assert.ok(routes[i].points[3].y>routes[i-1].points[3].y);}
+});
