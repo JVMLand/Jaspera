@@ -21,3 +21,9 @@ test('syntax and lexer errors prevent bytecode emission',async()=>{
   const result=await compile(name,source);assert.equal(result.bytecode,'');assert.ok(result.diagnostics.some(d=>d.severity==='error'),name);
  }
 });
+
+test('conditional branches inside a label block retain locals needed at their target',async()=>{
+ const result=await compile('branch-local','public class Main (major_version=67, minor_version=0) { public static choose(I)I { iconst_4 istore_1 goto Test Test: iload_0 ifeq Done iconst_5 istore_1 goto Done Done: iload_1 ireturn } }');assert.deepEqual(result.diagnostics,[]);assert.ok(result.bytecode);
+ const probe=directory+'/BranchProbe.java';await writeFile(probe,'import java.util.*; public class BranchProbe extends ClassLoader { public static void main(String[] a) throws Exception { byte[] code=Base64.getDecoder().decode(a[0]); Class<?> c=new BranchProbe().defineClass(null,code,0,code.length); var m=c.getMethod("choose",int.class); if(!m.invoke(null,0).equals(4) || !m.invoke(null,1).equals(5)) throw new AssertionError(); } }');java([probe,result.bytecode]);
+});
+test('a branch that reaches an uninitialized local remains invalid',async()=>{const result=await compile('missing-local','public class Main (major_version=67, minor_version=0) { public static choose(I)I { iload_0 ifeq Done iconst_5 istore_1 Done: iload_1 ireturn } }');assert.equal(result.bytecode,'');assert.ok(result.diagnostics.some(d=>d.severity==='error'));});

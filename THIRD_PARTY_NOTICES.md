@@ -41,3 +41,5 @@ The class viewer uses ASM to parse class files and adapts JALP rendering convent
 The vendored LangJAL analyser adds opt-in reporter level checks to avoid formatting disabled debug/info messages. Existing reporters keep logging enabled by default; the browser compiler disables these levels.
 
 The vendored LangJAL analyser preserves the current class type and initializes all aliases of `this` after `super()` / `this()` calls. Its grammar and ldc evaluators accept reference/array class constants so the ASM-based class viewer can retain these instructions. These are JALWeb modifications.
+
+Native/abstract method declarations skip code generation and reject instruction bodies. Local-variable liveness accounts for conditional jumps within label-delimited blocks, retaining values used only on a branch. These are JALWeb modifications of the vendored LangJAL compiler/analyser.

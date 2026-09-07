@@ -398,13 +398,36 @@ public class MethodAnalyser {
         List<InstructionInfo> instructions = analyser.getInstructions();
         for (int i = instructions.size() - 1; i >= 0; i--) {
             BitSet before = (BitSet) liveLocals.clone();
-            this.applyInstructionLiveness(instructions.get(i), liveLocals);
+            InstructionInfo instruction = instructions.get(i);
+            // A label-delimited block may contain a conditional jump before its last instruction.
+            // Preserve values needed on that branch, even if the fallthrough overwrites them.
+            if (instruction.insn() instanceof JumpInsnNode jump) {
+                if (instruction.opcode() == EOpcodes.GOTO || instruction.opcode() == EOpcodes.GOTO_W)
+                    liveLocals.clear();
+                this.addLiveSuccessor(liveLocals, jump.label);
+            } else if (instruction.insn() instanceof TableSwitchInsnNode table) {
+                liveLocals.clear();
+                this.addLiveSuccessor(liveLocals, table.dflt);
+                for (LabelNode target : table.labels) this.addLiveSuccessor(liveLocals, target);
+            } else if (instruction.insn() instanceof LookupSwitchInsnNode lookup) {
+                liveLocals.clear();
+                this.addLiveSuccessor(liveLocals, lookup.dflt);
+                for (LabelNode target : lookup.labels) this.addLiveSuccessor(liveLocals, target);
+            } else if (isReturnOrThrow(instruction.opcode())) {
+                liveLocals.clear();
+            }
+            this.applyInstructionLiveness(instruction, liveLocals);
             if (!before.equals(liveLocals))
                 if (this.context.isDebugEnabled()) this.context.postDebug("Liveness after walking " + instructions.get(i) +
                         " backwards: " + before + " -> " + liveLocals);
         }
 
         return liveLocals;
+    }
+
+    private void addLiveSuccessor(@NotNull BitSet liveLocals, @NotNull LabelNode target) {
+        BitSet successor = this.liveLocalsAtEntry.get(this.labels.getLabelByNode(target));
+        if (successor != null) liveLocals.or(successor);
     }
 
     private @NotNull BitSet computeLiveLocalsAtExit(@NotNull LabelInfo label) {
