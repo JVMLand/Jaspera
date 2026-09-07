@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from './editor-platform';
 import type {Inspection} from './inspections.js';
 const cache=new WeakMap<monaco.editor.ITextModel,{version:number;items:Inspection[]}>();
 const range=(model:monaco.editor.ITextModel,start:number,end:number)=>{

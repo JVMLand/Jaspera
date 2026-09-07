@@ -1,0 +1,12 @@
+// Register Monaco contributions before any language provider initializes its services.
+// Both windows must load the same feature set, regardless of application import order.
+export * from 'monaco-editor/esm/vs/editor/editor.api';
+import 'monaco-editor/esm/vs/editor/contrib/hover/browser/hoverContribution';
+import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController';
+import 'monaco-editor/esm/vs/editor/contrib/gotoSymbol/browser/goToCommands';
+import 'monaco-editor/esm/vs/editor/contrib/folding/browser/folding';
+import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController';
+import 'monaco-editor/esm/vs/editor/contrib/codeAction/browser/codeActionContributions';
+import 'monaco-editor/esm/vs/editor/contrib/comment/browser/comment';
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+(self as any).MonacoEnvironment={getWorker:()=>new EditorWorker()};
