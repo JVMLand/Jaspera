@@ -35,3 +35,17 @@ for(const mirrored of [false,true])for(const narrowTarget of [false,true])test('
  assert.deepEqual(edge.points.at(-1),narrowTarget?end:{x:mirrored?120:380,y:270});
  for(let i=1;i<edge.points.length;i++)assert.ok(edge.points[i].y>=edge.points[i-1].y);
 });
+
+for(const blocked of [false,true])test('inter-block stack routes remove intermediate backtracking unless blocked '+blocked,()=>{
+ const boxes=[{id:'s',x:649.5,y:426,width:136,height:30},{id:'t',x:42,y:890,width:460,height:30},
+  {id:'B1',x:479.5,y:338,width:453.5,height:206},{id:'B2',x:34,y:586,width:453.5,height:166},{id:'B3',x:24,y:802,width:496,height:186},
+  {id:'goto',x:662.5,y:476,width:110,height:30},
+  ...(blocked?[{id:'wall',x:130,y:805,width:420,height:20}]:[])];
+ const edge={from:'s',to:'t',label:'',points:[{x:649.5,y:452},{x:508.5,y:452},{x:508.5,y:777},{x:92,y:777},{x:92,y:840},{x:370.57,y:840},{x:370.57,y:890}]};
+ const old=structuredClone(edge.points);
+ const occupied={from:'other',to:'t',label:'',points:[{x:498,y:402},{x:498,y:890}]};
+ const control={from:'goto',to:'t',label:'',points:[{x:666.5,y:506},{x:666.5,y:905},{x:502,y:905}]};
+ simplifyGraphRoutes(boxes,[edge,occupied,control],new Map([['s','B1'],['t','B3']]),{x:0,y:0,width:957,height:1012});
+ if(blocked)assert.deepEqual(edge.points,old);
+ else {assert.equal(edge.points.length,5);assert.deepEqual(edge.points[0],old[0]);assert.deepEqual(edge.points.at(-1),old.at(-1));assert.ok(edge.points.every(p=>p.x>=370.57));}
+});

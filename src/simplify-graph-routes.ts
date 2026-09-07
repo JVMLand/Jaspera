@@ -17,6 +17,8 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
  for(const edge of edges){
   if(edge.points.length<3||edge.from===edge.to)continue;
   const source=byId.get(edge.from),target=byId.get(edge.to);if(!source||!target)continue;
+  // A second pass combines an interior shortcut with a shorter side departure.
+  for(let pass=0;pass<2;pass++){
   const old=edge.points,first=old[0],north=Math.abs(first.y-source.y)<epsilon;
   const candidates:Point[][]=[];
   const sx=source.x+source.width/2,sy=source.y+source.height/2,tx=target.x+target.width/2,ty=target.y+target.height/2,bottom=source.y+source.height;
@@ -41,6 +43,16 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
     candidates.push(points);
    }
   }
+  // ELK can leave a dogleg between compound blocks even when the corridor is clear.
+  // Shortcut interior sections as well as the departure, preserving both endpoints.
+  if(target.y>=bottom)for(let i=1;i<old.length-3;i++)for(let j=i+2;j<old.length-1;j++){
+   const a=old[i],b=old[j];if(b.y<a.y)continue;
+   for(const corner of [{x:a.x,y:b.y},{x:b.x,y:a.y}]){
+    const points=[...old.slice(0,i+1),corner,...old.slice(j)];
+    if(points.some((p,k)=>k>0&&p.y<points[k-1].y))continue;
+    candidates.push(points);
+   }
+  }
   const otherLabels=edges.filter(e=>e!==edge&&e.label&&e.x!==undefined).map(e=>({id:'',x:e.x!-Math.max(...e.label.split('\n').map(line=>line.length*6))/2,y:e.y!-10,width:Math.max(...e.label.split('\n').map(line=>line.length*6)),height:e.label.split('\n').length*14}));
   const obstacles=boxes.filter(box=>box.id!==edge.from&&box.id!==edge.to&&box.id!==parents.get(edge.from)&&box.id!==parents.get(edge.to)).concat(otherLabels);
   const viable=candidates.map(clean).filter(points=>points.length<old.length||north&&points.length===old.length).sort((a,b)=>a.length-b.length||Number(Math.abs(a.at(-1)!.y-target.y)>epsilon)-Number(Math.abs(b.at(-1)!.y-target.y)>epsilon)||a.reduce((sum,p,i)=>sum+(i?length(a[i-1],p):0),0)-b.reduce((sum,p,i)=>sum+(i?length(b[i-1],p):0),0));
@@ -60,6 +72,8 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
     if(!label)continue;
    }
    edge.points=points;if(label){edge.x=label.x+label.width/2;edge.y=label.y+10;}break;
+  }
+  if(edge.points===old)break;
   }
  }
 }
