@@ -63,3 +63,16 @@ for(const mirrored of [false,true])test('parallel stack and control routes use s
  assert.ok(Math.abs(stack.points[0].x-control.points[0].x)>=4);
  assert.ok(Math.abs(stack.points[0].x-exception.points[0].x)>=4);
 });
+
+for(const alreadyShort of [false,true])test('east departures prefer the vertical center over a marginally shorter route '+alreadyShort,()=>{
+ const edge={from:'s',to:'t',label:'',points:alreadyShort?[{x:120,y:46},{x:260,y:46},{x:260,y:160}]:[{x:70,y:50},{x:70,y:100},{x:260,y:100},{x:260,y:160}]};
+ simplifyGraphRoutes([source,target],[edge],new Map(),bounds);
+ assert.equal(edge.points.length,3);assert.deepEqual(edge.points[0],{x:120,y:35});
+});
+for(const obstacle of ['node','edge'])test('east departures remain offset when the center is occupied by a '+obstacle,()=>{
+ const edge={from:'s',to:'t',label:'',points:[{x:120,y:46},{x:260,y:46},{x:260,y:160}]};
+ const boxes=[source,target,...(obstacle==='node'?[{id:'wall',x:125,y:32,width:50,height:6}]:[])];
+ const edges=[edge,...(obstacle==='edge'?[{from:'other',to:'elsewhere',label:'',points:[{x:120,y:35},{x:200,y:35}]}]:[])];
+ simplifyGraphRoutes(boxes,edges,new Map(),bounds);
+ assert.deepEqual(edge.points[0],{x:120,y:46});assert.equal(edge.points.length,3);
+});

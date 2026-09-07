@@ -23,7 +23,7 @@ function straightLanes(left:number,right:number,top:number,bottom:number,obstacl
  return lanes.map(([a,b])=>(a+b)/2).sort((a,b)=>Math.abs(a-center)-Math.abs(b-center));
 }
 
-/** Keep the downward ELK placement; only replace a route with fewer elbows.
+/** Keep the downward ELK placement; reduce elbows or center an east departure.
  * Loop edges keep their return path, but can leave the source from a side. */
 export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string,string>,bounds:{x:number;y:number;width:number;height:number}){
  const byId=new Map(boxes.map(box=>[box.id,box]));
@@ -37,6 +37,9 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
   const old=edge.points,first=old[0],north=Math.abs(first.y-source.y)<epsilon;
   const candidates:Point[][]=[];
   const sx=source.x+source.width/2,sy=source.y+source.height/2,tx=target.x+target.width/2,ty=target.y+target.height/2,bottom=source.y+source.height;
+  // Prefer a centered east port to saving a few pixels of vertical travel.
+  const eastOffset=(points:Point[])=>Math.abs(points[0].x-source.x-source.width)<epsilon&&points[1].x>points[0].x&&Math.abs(points[1].y-points[0].y)<epsilon?Math.abs(points[0].y-sy):Infinity;
+  const departurePenalty=(points:Point[])=>Number.isFinite(eastOffset(points))?eastOffset(points):0;
   if(target.y>=source.y){
    const left=Math.max(source.x,target.x)+gap,right=Math.min(source.x+source.width,target.x+target.width)-gap;
    if(left<=right&&target.y>=bottom)for(const x of straightLanes(left,right,bottom,target.y,obstacles,edge,edges))candidates.push([{x,y:bottom},{x,y:target.y}]);
@@ -68,7 +71,7 @@ export function simplifyGraphRoutes(boxes:Box[],edges:Route[],parents:Map<string
     candidates.push(points);
    }
   }
-  const viable=candidates.map(clean).filter(points=>points.length<old.length||north&&points.length===old.length).sort((a,b)=>a.length-b.length||Number(Math.abs(a.at(-1)!.y-target.y)>epsilon)-Number(Math.abs(b.at(-1)!.y-target.y)>epsilon)||a.reduce((sum,p,i)=>sum+(i?length(a[i-1],p):0),0)-b.reduce((sum,p,i)=>sum+(i?length(b[i-1],p):0),0));
+  const viable=candidates.map(clean).filter(points=>points.length<old.length||points.length===old.length&&(north||Number.isFinite(eastOffset(old))&&eastOffset(points)<eastOffset(old)-epsilon)).sort((a,b)=>a.length-b.length||Number(Math.abs(a.at(-1)!.y-target.y)>epsilon)-Number(Math.abs(b.at(-1)!.y-target.y)>epsilon)||departurePenalty(a)-departurePenalty(b)||a.reduce((sum,p,i)=>sum+(i?length(a[i-1],p):0),0)-b.reduce((sum,p,i)=>sum+(i?length(b[i-1],p):0),0));
   for(const points of viable){
    if(points.some(p=>p.x<bounds.x||p.x>bounds.x+bounds.width||p.y<bounds.y||p.y>bounds.y+bounds.height))continue;
    if(points.slice(1).some((p,i)=>obstacles.some(box=>hits(points[i],p,box))))continue;
