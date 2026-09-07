@@ -1,3 +1,4 @@
+import {inlayHintOptions} from './inlay-hint-style';
 import {editMenuItems} from './edit-menu';
 import {installFilePicker} from './file-opening';
 import {helpMenuItems,showHelpMessage} from './help';
@@ -26,7 +27,7 @@ const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById
 interface Tab {state:EditorSnapshot;model:monaco.editor.ITextModel;view:monaco.editor.ICodeEditorViewState|null;savedView?:FileView}
 const paneOrder:string[]=[];const tabs=new Map<string,Tab>();let active:string|undefined,applying=false,workspace:DetachedState={tools:{output:[],stdin:'',problems:[]},canSave:false,running:false,status:'',theme:'jal-night',files:[]};
 const overlays=document.createElement('div');overlays.id='editor-overlays';document.body.append(overlays);
-export const editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:overlays,automaticLayout:true,fontSize:15,lineHeight:27,minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,fixedOverflowWidgets:true,lineNumbersMinChars:10});
+export const editor=monaco.editor.create(el('editor'),{inlayHints:inlayHintOptions,overflowWidgetsDomNode:overlays,automaticLayout:true,fontSize:15,lineHeight:27,minimap:{enabled:false},scrollBeyondLastLine:false,tabSize:2,fixedOverflowWidgets:true,lineNumbersMinChars:10});
 const stackHover=installStackHover(editor,model=>{
  const tab=[...tabs.values()].find(t=>t.model===model);
  return tab&&bridge?bridge.compilation(tab.state.id,tab.state.version):Promise.reject(new Error('元のワークスペースに接続できません。'));

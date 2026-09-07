@@ -1,3 +1,4 @@
+import {inlayHintColors} from './inlay-hint-style';
 import type { editor } from 'monaco-editor/esm/vs/editor/editor.api';
 // Original JALWeb palettes inspired by the user-provided reference images.
 // These are visual interpretations, not themes supplied by the named companies.
@@ -26,7 +27,7 @@ export function editorTheme(t:typeof referenceThemes[number]):editor.IStandalone
   {token:'comment',foreground:comment.slice(1)},{token:'type',foreground:type.slice(1)},
   {token:'type.identifier',foreground:fn.slice(1)},{token:'function',foreground:fn.slice(1)},
   {token:'delimiter',foreground:text.slice(1)},{token:'operator',foreground:text.slice(1)}
- ],colors:{'editor.background':bg,'editor.foreground':text,'editorLineNumber.foreground':muted,
+ ],colors:{...inlayHintColors(muted),'editor.background':bg,'editor.foreground':text,'editorLineNumber.foreground':muted,
   'editorLineNumber.activeForeground':accent,'editorCursor.foreground':accent,'editor.selectionBackground':selection,
   'editor.lineHighlightBackground':surface,'editorWidget.background':surface,'editorWidget.foreground':text,
   'editorWidget.border':border,'editorSuggestWidget.selectedBackground':selection,

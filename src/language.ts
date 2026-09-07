@@ -1,3 +1,4 @@
+import {inlayHintColors} from './inlay-hint-style';
 import {instructionHighlightGroups,instructionColorRules} from './instruction-colors';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { instructionCategory } from './instruction-categories';
@@ -77,5 +78,5 @@ export function registerLanguage(workspaceCatalog:()=>Promise<Catalog>=async()=>
     {token:'keyword.instruction',foreground:'81C7BE'},{token:'keyword',foreground:'BBA7EB'},
     {token:'string',foreground:'DCD29D'},{token:'comment',foreground:'717D8A'},
     {token:'type',foreground:'B8CBDF'},{token:'type.identifier',foreground:'DFA971'},{token:'number',foreground:'DFA971'}
-  ],colors:{'editor.background':'#151a21','editor.foreground':'#d7dce3','editorLineNumber.foreground':'#52606d','editor.lineHighlightBackground':'#1b222c','editor.selectionBackground':'#2a4957','editorCursor.foreground':'#8fddd0','editorWidget.background':'#202833'}});
+  ],colors:{...inlayHintColors('#91a1b2'),'editor.background':'#151a21','editor.foreground':'#d7dce3','editorLineNumber.foreground':'#52606d','editor.lineHighlightBackground':'#1b222c','editor.selectionBackground':'#2a4957','editorCursor.foreground':'#8fddd0','editorWidget.background':'#202833'}});
 }

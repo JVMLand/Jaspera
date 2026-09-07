@@ -1,3 +1,4 @@
+import {inlayHintColors} from './inlay-hint-style';
 import './brand-themes.css';
 import {instructionColorRules,instructionColors} from './instruction-colors';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
@@ -9,7 +10,7 @@ const themeListeners=new Set<(id:string)=>void>();
 export const selectedTheme=()=>currentTheme;
 export function onThemeChange(listener:(id:string)=>void){themeListeners.add(listener);return ()=>themeListeners.delete(listener);}
 export const themes=[{id:'jal-night',label:'JAL Night'},{id:'darcula',label:'Darcula'},{id:'vs-dark',label:'Visual Studio Dark'},{id:'vs',label:'Visual Studio Light'},{id:'hc-black',label:'High Contrast Dark'},{id:'hc-light',label:'High Contrast Light'},...referenceThemes.map(({id,label})=>({id,label}))];
-monaco.editor.defineTheme('darcula',{...darcula,rules:[...darcula.rules,...instructionColorRules('darcula')]} as monaco.editor.IStandaloneThemeData);
+monaco.editor.defineTheme('darcula',{...darcula,colors:{...darcula.colors,...inlayHintColors('#a4a3a3')},rules:[...darcula.rules,...instructionColorRules('darcula')]} as monaco.editor.IStandaloneThemeData);
 const palettes:Record<string,string[]>={
  darcula:['#2b2b2b','#3c3f41','#515151','#bbbbbb','#a4a3a3','#589df6','#214283','#365880','#ffffff','#ff6b68','#ffc66d'],
  'vs-dark':['#1e1e1e','#252526','#454545','#d4d4d4','#a6a6a6','#75beff','#264f78','#0e639c','#ffffff','#f48771','#cca700'],
@@ -18,7 +19,7 @@ const palettes:Record<string,string[]>={
  'hc-light':['#ffffff','#ffffff','#000000','#000000','#292929','#0000a0','#cce8ff','#0000a0','#ffffff','#a00000','#705000']
 };
 for(const theme of referenceThemes){palettes[theme.id]=theme.palette;const data=editorTheme(theme);monaco.editor.defineTheme(theme.id,{...data,rules:[...data.rules,...instructionColorRules(theme.id)]});}
-for(const id of ['vs','vs-dark','hc-black','hc-light'] as const)monaco.editor.defineTheme('jal-'+id,{base:id,inherit:true,rules:instructionColorRules(id),colors:{}});
+for(const id of ['vs','vs-dark','hc-black','hc-light'] as const)monaco.editor.defineTheme('jal-'+id,{base:id,inherit:true,rules:instructionColorRules(id),colors:inlayHintColors(palettes[id][4])});
 const variables=['bg','surface','border','text','muted','accent','selection','button','on-button','error','warning'];
 export function applyTheme(id:string,save=true) {
  if(!themes.some(t=>t.id===id))id='jal-night';

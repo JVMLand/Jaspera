@@ -1,3 +1,4 @@
+import {inlayHintOptions} from './inlay-hint-style';
 import {installConsoleContextMenu} from './console-panel';
 import {installProblemsContextMenu} from './problems-panel';
 import {editMenuItems} from './edit-menu';
@@ -94,7 +95,7 @@ const editorOverlays=document.createElement('div');editorOverlays.id='editor-ove
 // Theme is global to Monaco; editor options must not override it when groups are created.
 initializeThemes();
 workspaceState.update({theme:selectedTheme()});
-export let editor=monaco.editor.create(el('editor'),{overflowWidgetsDomNode:editorOverlays,fixedOverflowWidgets:true,automaticLayout:true,fontSize:15,lineHeight:27,
+export let editor=monaco.editor.create(el('editor'),{inlayHints:inlayHintOptions,overflowWidgetsDomNode:editorOverlays,fixedOverflowWidgets:true,automaticLayout:true,fontSize:15,lineHeight:27,
   fontFamily:'"Cascadia Code", "JetBrains Mono", Consolas, monospace',fontLigatures:true,minimap:{enabled:false},
   padding:{top:24,bottom:24},scrollBeyondLastLine:false,tabSize:2,insertSpaces:true,renderLineHighlight:'line',
   overviewRulerBorder:false,hideCursorInOverviewRuler:true,lineNumbersMinChars:10,folding:true,glyphMargin:false,
