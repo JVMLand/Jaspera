@@ -40,10 +40,9 @@ export class SourceAnalysis {
   schedule(model:Model){
     this.cancel(model);
     if(this.disposed||model.isDisposed())return;
-    this.cache.delete(model);
+    // Keep the last offsets visible until a current analysis can replace them.
     this.hintsChanged.fire();
     publishInspections(model,[]);
-    this.changed(model);
     const dispose=model.onWillDispose(()=>this.cancel(model));
     const timer=setTimeout(()=>{
       this.cancel(model);
@@ -62,7 +61,7 @@ export class SourceAnalysis {
 
   offsets(model:Model|null):SourceOffset[]{
     const cached=model?this.cache.get(model):undefined;
-    return cached?.version===model?.getVersionId()?cached?.data.offsets??[]:[];
+    return cached?.data.offsets??[];
   }
   private cancel(model:Model){const pending=this.pending.get(model);if(pending){clearTimeout(pending.timer);pending.dispose.dispose();this.pending.delete(model);}}
   dispose(){this.disposed=true;this.formatting.dispose();this.hints.dispose();this.hintsChanged.dispose();for(const model of this.pending.keys())this.cancel(model);this.worker.dispose();}

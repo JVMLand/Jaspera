@@ -19,5 +19,23 @@ test('shared syntax snapshots work over Comlink and recover after incomplete edi
    return {first,broken,repaired,large:large.offsets.length,formatted};
   }finally{rpc.dispose();}
  });
+ const stable=await page.evaluate(async()=>{
+  const monaco=await import('/src/editor-platform.ts');
+  const {SourceAnalysis}=await import('/src/source-analysis.ts');
+  const source='public class Main { public static main()V {\n bipush 100\n pop\n return\n}}';
+  const model=monaco.editor.createModel(source,'jal');let notifications=0;
+  const analysis=new SourceAnalysis(()=>notifications++,()=>false);
+  const wait=async count=>{for(let i=0;i<200&&notifications<count;i++)await new Promise(r=>setTimeout(r,10));if(notifications<count)throw new Error('analysis timeout');};
+  try{
+   analysis.schedule(model);await wait(1);const before=analysis.offsets(model);
+   model.setValue(source.replace('bipush 100','sipush 300'));analysis.schedule(model);
+   const during=analysis.offsets(model),pendingNotifications=notifications;
+   await wait(2);const after=analysis.offsets(model);
+   model.setValue('');analysis.schedule(model);await wait(3);
+   return {before,during,pendingNotifications,after,empty:analysis.offsets(model)};
+  }finally{analysis.dispose();model.dispose();}
+ });
+ assert.deepEqual(stable.during,stable.before);assert.equal(stable.pendingNotifications,1);
+ assert.deepEqual(stable.before.map(i=>i.offset),[0,2,3]);assert.deepEqual(stable.after.map(i=>i.offset),[0,3,4]);assert.deepEqual(stable.empty,[]);
  assert.deepEqual(result.repaired,result.first);assert.equal(result.first.parameters[0].slot,0);assert.equal(result.first.inspections[0].code,'short-push');assert.ok(result.broken.offsets.length<result.first.offsets.length);assert.equal(result.large,1001);assert.match(result.formatted,/\n  Start:\n/);
 });
