@@ -5,15 +5,21 @@
   "sections": [
     {
       "title": "Opus tuum demonstra",
-      "body": "Modus demonstrationis in tabula View litteras editoris et instrumentorum auget. Magnitudinem tabularum mutare potes; litterae spatio accommodantur. Hoc modo relicto, forma prior restituitur."
+      "body": "Modus demonstrationis in tabula View litteras editoris et instrumentorum auget. Magnitudinem tabularum mutare potes; litterae spatio accommodantur. Hoc modo relicto, forma prior restituitur.",
+      "image": "presentation",
+      "imageAlt": "Litterae editoris in modo demonstrationis auctae."
     },
     {
       "title": "Investiga aut ad finem exsequere",
-      "body": "Sagitta iuxta bullam exsecutionis investigationem vel exsecutionem eligi sinit. Exsecutio puncta interruptionis semel praeterit, nec ea delet. Mandata investigationis quae adhiberi nequeunt inactiva ostenduntur."
+      "body": "Sagitta iuxta bullam exsecutionis investigationem vel exsecutionem eligi sinit. Exsecutio puncta interruptionis semel praeterit, nec ea delet. Mandata investigationis quae adhiberi nequeunt inactiva ostenduntur.",
+      "image": "run",
+      "imageAlt": "Investigatio et exsecutio in tabula bullae exsecutionis."
     },
     {
       "title": "Tabulae electionum et themata",
-      "body": "Tabulas electionum per Alt+F similesque claves aperi. Mandata secundum frequentiam usus ordinantur. Googol Light et Night bullas divisas, instrumenta investigationis et filtra graphi ex exemplo Material 3 Expressive adhibent. Indicia selectionis et cursoris quoque correcta sunt."
+      "body": "Tabulas electionum per Alt+F similesque claves aperi. Mandata secundum frequentiam usus ordinantur. Googol Light et Night bullas divisas, instrumenta investigationis et filtra graphi ex exemplo Material 3 Expressive adhibent. Indicia selectionis et cursoris quoque correcta sunt.",
+      "image": "theme",
+      "imageAlt": "Graphus et tabula electionum in Googol Light."
     }
   ]
 }

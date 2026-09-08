@@ -1,19 +1,25 @@
 {
   "title": "JAL in navigatro scribe et exsequere",
   "introduction": "Jaspera linguam JAL, qua mandata JVM scribuntur, emendare et exsequi sinit. Exempla muta ut mandata et acervum valorum explores.",
-  "imageAlt": "Fons HelloWorld, mandatis coloribus distinctis et positionibus in bytecode indicatis.",
+  "imageAlt": "Jaspera cum editore et arbore operis iuxta positis.",
   "sections": [
     {
       "title": "A scriptura ad exsecutionem",
-      "body": "Mandata, genera et methodi compleri possunt; errores indicantur et forma codicis componitur. Programmata in JVM intra navigatrum exsequuntur."
+      "body": "Mandata, genera et methodi compleri possunt; errores indicantur et forma codicis componitur. Programmata in JVM intra navigatrum exsequuntur.",
+      "image": "editor",
+      "imageAlt": "Fons HelloWorld et positiones in bytecode."
     },
     {
       "title": "Valores sequere",
-      "body": "Ad puncta interruptionis consiste et gradatim procede ut acervum et variabiles locales inspicias. Index mandatorum exempla continet; graphus nexus valorum et cursum exsecutionis ostendit."
+      "body": "Ad puncta interruptionis consiste et gradatim procede ut acervum et variabiles locales inspicias. Index mandatorum exempla continet; graphus nexus valorum et cursum exsecutionis ostendit.",
+      "image": "debugger",
+      "imageAlt": "Exsecutio ad punctum interruptionis intermissa, acervo et variabilibus localibus ostensis."
     },
     {
       "title": "Fasciculos aperi",
-      "body": "Fasciculos JAL, class et JAR aperire et emendare potes. Tabulas dispone vel in fenestras separatas transfer. Septem linguae praebentur."
+      "body": "Fasciculos JAL, class et JAR aperire et emendare potes. Tabulas dispone vel in fenestras separatas transfer. Septem linguae praebentur.",
+      "image": "files",
+      "imageAlt": "Tabula fasciculorum et arbor operis."
     }
   ]
 }

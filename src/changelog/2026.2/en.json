@@ -5,15 +5,21 @@
   "sections": [
     {
       "title": "Present your work",
-      "body": "Presentation mode in View enlarges editor and interface text. Panels remain resizable, and tool text scales with the available space. Leaving the mode restores your previous display settings."
+      "body": "Presentation mode in View enlarges editor and interface text. Panels remain resizable, and tool text scales with the available space. Leaving the mode restores your previous display settings.",
+      "image": "presentation",
+      "imageAlt": "Larger editor text in presentation mode."
     },
     {
       "title": "Debug or run through",
-      "body": "The arrow beside Run opens Debug and Run. Run ignores breakpoints for that invocation without deleting them. Debug commands that cannot be used in the current state are disabled."
+      "body": "The arrow beside Run opens Debug and Run. Run ignores breakpoints for that invocation without deleting them. Debug commands that cannot be used in the current state are disabled.",
+      "image": "run",
+      "imageAlt": "Debug and Run in the run button menu."
     },
     {
       "title": "Menus and themes",
-      "body": "Open menus with Alt+F and similar shortcuts. Items are ordered by expected frequency of use. Googol Light and Night adopt Material 3 Expressive-inspired split buttons, a debugging toolbar and graph filter chips. Selection and hover states have also been corrected."
+      "body": "Open menus with Alt+F and similar shortcuts. Items are ordered by expected frequency of use. Googol Light and Night adopt Material 3 Expressive-inspired split buttons, a debugging toolbar and graph filter chips. Selection and hover states have also been corrected.",
+      "image": "theme",
+      "imageAlt": "Graph and menu in Googol Light."
     }
   ]
 }

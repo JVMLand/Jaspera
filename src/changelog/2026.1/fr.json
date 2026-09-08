@@ -1,19 +1,25 @@
 {
   "title": "Écrire et exécuter du JAL dans le navigateur",
   "introduction": "Jaspera permet de modifier et d’exécuter du JAL, un langage assembleur pour la JVM. Modifiez les exemples pour observer les instructions et la pile.",
-  "imageAlt": "Code de HelloWorld avec coloration des instructions et offsets du bytecode.",
+  "imageAlt": "Jaspera avec l’éditeur et l’arborescence du projet.",
   "sections": [
     {
       "title": "De la saisie à l’exécution",
-      "body": "La complétion des instructions, types et méthodes, les diagnostics et le formatage sont disponibles. Les programmes s’exécutent sur une JVM dans le navigateur."
+      "body": "La complétion des instructions, types et méthodes, les diagnostics et le formatage sont disponibles. Les programmes s’exécutent sur une JVM dans le navigateur.",
+      "image": "editor",
+      "imageAlt": "Code de HelloWorld et offsets du bytecode."
     },
     {
       "title": "Suivre les valeurs",
-      "body": "Arrêtez-vous aux points d’arrêt et avancez pas à pas pour examiner la pile et les variables locales. La documentation contient des exemples ; le graphe montre les dépendances de données et le flux de contrôle."
+      "body": "Arrêtez-vous aux points d’arrêt et avancez pas à pas pour examiner la pile et les variables locales. La documentation contient des exemples ; le graphe montre les dépendances de données et le flux de contrôle.",
+      "image": "debugger",
+      "imageAlt": "Pause à un point d’arrêt avec la pile et les variables locales affichées."
     },
     {
       "title": "Ouvrir vos fichiers",
-      "body": "Ouvrez et modifiez des fichiers JAL, class et JAR. Réorganisez les panneaux ou détachez-les dans des fenêtres. L’interface propose sept langues."
+      "body": "Ouvrez et modifiez des fichiers JAL, class et JAR. Réorganisez les panneaux ou détachez-les dans des fenêtres. L’interface propose sept langues.",
+      "image": "files",
+      "imageAlt": "Menu Fichier et arborescence du projet."
     }
   ]
 }

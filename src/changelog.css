@@ -107,3 +107,7 @@
     padding: 20px;
   }
 }
+
+#changelog article .changelog-hero {
+  margin-bottom: 28px;
+}

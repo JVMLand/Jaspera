@@ -5,7 +5,7 @@ type Entry = {
   title: string;
   introduction: string;
   imageAlt: string;
-  sections: { title: string; body: string }[];
+  sections: { title: string; body: string; image: string; imageAlt: string }[];
 };
 const pages = import.meta.glob<{ default: Entry }>('./changelog/*/*.json');
 const images = import.meta.glob<string>('./changelog/*/*.jpg', {
@@ -71,13 +71,19 @@ export function openChangelog(initial = __APP_VERSION__) {
       image.alt = entry.imageAlt;
       image.loading = 'lazy';
       image.decoding = 'async';
-      article.replaceChildren(title, intro, image);
+      image.className = 'changelog-hero';
+      article.replaceChildren(image, title, intro);
       for (const section of entry.sections) {
         const h = document.createElement('h2'),
           p = document.createElement('p');
         h.textContent = section.title;
         p.textContent = section.body;
-        article.append(h, p);
+        const screenshot = document.createElement('img');
+        screenshot.src = images[`./changelog/${version}/${section.image}-${locale}.jpg`];
+        screenshot.alt = section.imageAlt;
+        screenshot.loading = 'lazy';
+        screenshot.decoding = 'async';
+        article.append(h, p, screenshot);
       }
       article.scrollTop = 0;
       if (version === __APP_VERSION__) viewedCurrent = true;

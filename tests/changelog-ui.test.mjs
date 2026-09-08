@@ -20,7 +20,13 @@ test('every release has localized text and screenshots, including the package ve
       for (const key of ['title', 'introduction', 'imageAlt'])
         assert.ok(entry[key]?.trim(), `${version}/${lang}/${key}`);
       assert.ok(entry.sections.length > 0);
-      for (const section of entry.sections) assert.ok(section.title && section.body);
+      for (const section of entry.sections) {
+        assert.ok(section.title && section.body && section.imageAlt);
+        assert.match(section.image, /^[a-z-]+$/);
+        assert.ok(
+          (await stat(`src/changelog/${version}/${section.image}-${lang}.jpg`)).size > 1000,
+        );
+      }
       assert.ok((await stat(`src/changelog/${version}/${lang}.jpg`)).size > 1000);
     }
 });
@@ -57,6 +63,11 @@ test(
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:5297');
     await page.locator('#changelog article h1').waitFor();
+    assert.equal(await page.locator('#changelog article img').count(), 4);
+    assert.equal(
+      await page.locator('#changelog article > :first-child').evaluate((e) => e.className),
+      'changelog-hero',
+    );
     assert.match(
       await page.locator('#changelog article h1').textContent(),
       new RegExp('^' + currentVersion.replace('.', '\\.')),

@@ -1,19 +1,25 @@
 {
   "title": "Scrivi ed esegui JAL nel browser",
   "introduction": "Jaspera è un editor e un ambiente di esecuzione per JAL, un linguaggio assembly per la JVM. Modifica gli esempi per esplorare le istruzioni e lo stack.",
-  "imageAlt": "Sorgente di HelloWorld con istruzioni evidenziate e offset del bytecode.",
+  "imageAlt": "Jaspera con editor e albero del progetto affiancati.",
   "sections": [
     {
       "title": "Dalla scrittura all’esecuzione",
-      "body": "Sono disponibili completamento di istruzioni, tipi e metodi, diagnostica e formattazione. I programmi vengono eseguiti su una JVM nel browser."
+      "body": "Sono disponibili completamento di istruzioni, tipi e metodi, diagnostica e formattazione. I programmi vengono eseguiti su una JVM nel browser.",
+      "image": "editor",
+      "imageAlt": "Sorgente di HelloWorld e offset del bytecode."
     },
     {
       "title": "Segui i valori",
-      "body": "Fermati ai breakpoint e procedi passo per passo per esaminare stack e variabili locali. La guida alle istruzioni include esempi; il grafo mostra dipendenze dei dati e flusso di controllo."
+      "body": "Fermati ai breakpoint e procedi passo per passo per esaminare stack e variabili locali. La guida alle istruzioni include esempi; il grafo mostra dipendenze dei dati e flusso di controllo.",
+      "image": "debugger",
+      "imageAlt": "Pausa a un breakpoint con stack e variabili locali visibili."
     },
     {
       "title": "Apri i tuoi file",
-      "body": "Apri e modifica file JAL, class e JAR. Riordina i pannelli o separali in finestre. L’interfaccia è disponibile in sette lingue."
+      "body": "Apri e modifica file JAL, class e JAR. Riordina i pannelli o separali in finestre. L’interfaccia è disponibile in sette lingue.",
+      "image": "files",
+      "imageAlt": "Menu File e albero del progetto."
     }
   ]
 }

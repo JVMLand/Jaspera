@@ -5,15 +5,21 @@
   "sections": [
     {
       "title": "Présenter votre travail",
-      "body": "Le mode présentation du menu Affichage agrandit le texte de l’éditeur et de l’interface. Les panneaux restent redimensionnables et leur texte s’adapte à l’espace disponible. Quitter ce mode rétablit les réglages précédents."
+      "body": "Le mode présentation du menu Affichage agrandit le texte de l’éditeur et de l’interface. Les panneaux restent redimensionnables et leur texte s’adapte à l’espace disponible. Quitter ce mode rétablit les réglages précédents.",
+      "image": "presentation",
+      "imageAlt": "Texte agrandi en mode présentation."
     },
     {
       "title": "Déboguer ou exécuter sans arrêt",
-      "body": "La flèche à côté du bouton d’exécution propose Déboguer et Exécuter. Exécuter ignore les points d’arrêt pour cette exécution seulement, sans les supprimer. Les commandes de débogage indisponibles sont désactivées."
+      "body": "La flèche à côté du bouton d’exécution propose Déboguer et Exécuter. Exécuter ignore les points d’arrêt pour cette exécution seulement, sans les supprimer. Les commandes de débogage indisponibles sont désactivées.",
+      "image": "run",
+      "imageAlt": "Déboguer et Exécuter dans le menu du bouton d’exécution."
     },
     {
       "title": "Menus et thèmes",
-      "body": "Ouvrez les menus avec Alt+F et les raccourcis similaires. Les entrées sont classées par fréquence d’utilisation. Googol Light et Night adoptent des boutons divisés, une barre de débogage et des filtres de graphe inspirés de Material 3 Expressive. Les états de sélection et de survol ont aussi été corrigés."
+      "body": "Ouvrez les menus avec Alt+F et les raccourcis similaires. Les entrées sont classées par fréquence d’utilisation. Googol Light et Night adoptent des boutons divisés, une barre de débogage et des filtres de graphe inspirés de Material 3 Expressive. Les états de sélection et de survol ont aussi été corrigés.",
+      "image": "theme",
+      "imageAlt": "Graphe et menu avec Googol Light."
     }
   ]
 }
