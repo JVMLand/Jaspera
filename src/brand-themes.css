@@ -315,7 +315,9 @@
   background: transparent;
 }
 :root[data-theme-family='googol'] [data-pane-key] [role='tab'] {
-  border-radius: inherit;
+  border-radius: 0;
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
 }
 :root[data-theme-family='googol'] [data-pane-key]:hover {
   background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
