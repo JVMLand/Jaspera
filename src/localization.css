@@ -1,0 +1,13 @@
+#language-dialog label {
+  display: block;
+  margin: 16px 0 8px;
+}
+#language-select {
+  width: 100%;
+  padding: 10px;
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  font: inherit;
+}
