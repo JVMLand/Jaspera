@@ -1,3 +1,4 @@
+import { SourceDocuments } from './source-documents';
 import { languageMenuItem } from './localization';
 import { msg } from './messages.js';
 import { revealEditorPosition, type RevealMode } from './editor-reveal';
@@ -852,6 +853,41 @@ function renderFiles() {
   for (const tab of tabs) renderEditorTab(tab, labels.get(tab.key)!);
   panelDock?.refresh();
 }
+let documentStore: SourceDocuments<monaco.editor.ITextModel, Side> | undefined;
+function documents() {
+  return (documentStore ??= new SourceDocuments({
+    project: () => project,
+    models,
+    closed: closedSourceTabs,
+    groups: sourceGroups,
+    order: () => tabOrder,
+    setOrder: (order) => {
+      tabOrder = order;
+    },
+    results,
+    create: attachModel,
+    removeView: (key, model) => {
+      for (const view of groupEditors.values())
+        if (model && view.getModel() === model) view.setModel(null);
+      detached.returnTab(key);
+    },
+    replaceView: (key, nextKey, model, next) => {
+      breakpoints.move(model, next);
+      for (const view of groupEditors.values())
+        if (view.getModel() === model) {
+          const state = view.saveViewState();
+          view.setModel(next);
+          if (state) view.restoreViewState(state);
+        }
+      detached.replaceDocument(key, {
+        key: nextKey,
+        title: nextKey.slice(7),
+        model: next,
+        readOnly: false,
+      });
+    },
+  }));
+}
 function attachModel(path: string, source: string) {
   const model = monaco.editor.createModel(
     source,
@@ -900,6 +936,7 @@ async function installProject(next: Project, binding?: FolderBinding) {
   editor.setModel(null);
   for (const model of models.values()) model.dispose();
   models = new Map();
+  documentStore = undefined;
   project = next;
   closedSourceTabs.clear();
   results.clear();
@@ -1168,19 +1205,12 @@ async function pollFolder() {
           continue;
         }
         if (next === undefined) {
-          if (editor.getModel() === model) editor.setModel(null);
-          model?.dispose();
-          models.delete(path);
-          closedSourceTabs.delete(path);
-          project.files = project.files.filter((f) => f.path !== path);
-          results.delete(path);
-          delete project.workspace.views[path];
+          documents().remove(path);
         } else if (model) {
           model.setValue(next);
           project.files.find((f) => f.path === path)!.source = next;
         } else {
-          attachModel(path, next);
-          project.files.push({ path, source: next });
+          documents().add(path, next);
         }
       }
       if (next === undefined) binding.baseline.delete(path);
@@ -1208,16 +1238,12 @@ async function pollFolder() {
       else switchFile(active, false);
       setDirty(dirty);
       invalidate();
-      if (!running) status('フォルダーの変更を反映しました');
+      if (!running) status(msg('m72ea8d310b87'));
     }
-    if (conflicts.length)
-      status(
-        `外部変更と編集中の内容が競合しています: ${conflicts.join(', ')}（編集内容を保持）`,
-        'error',
-      );
+    if (conflicts.length) status(msg('m1c8e4e125589', [conflicts.join(', ')]), 'error');
   } catch (e) {
     if (folder === binding && !storageBusy)
-      status(`フォルダーの監視: ${e instanceof Error ? e.message : String(e)}`, 'error');
+      status(msg('mef930ebfe351', [e instanceof Error ? e.message : String(e)]), 'error');
   } finally {
     applyingExternal = false;
     watchBusy = false;
@@ -1780,9 +1806,7 @@ async function addFile(directory = 'src') {
     .slice(0, -4)
     .replace(/[^a-zA-Z0-9_$/]/g, '_')
     .replace(/(^|\/)(?=\d)/g, '$1_');
-  if (!project.files.length) project.workspace.entryFile = path;
-  project.files.push({ path, source: `public class ${className} {\n}\n` });
-  attachModel(path, project.files.at(-1)!.source);
+  documents().add(path, `public class ${className} {\n}\n`);
   switchFile(path);
   invalidate();
   setDirty();
@@ -1829,41 +1853,9 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
         ),
       )
     )
-      throw new Error('移動先に同じ名前のファイルが存在します。');
+      throw new Error(msg('m00d100ab4b93'));
     captureView();
-    for (const [from, to] of changes) {
-      const model = models.get(from)!,
-        source = model.getValue(),
-        key = 'source:' + from,
-        newKey = 'source:' + to;
-      const views = [...groupEditors.values()]
-        .filter((view) => view.getModel() === model)
-        .map((view) => ({ view, state: view.saveViewState() }));
-      attachModel(to, source);
-      const next = models.get(to)!;
-      breakpoints.move(model, next);
-      const file = project.files.find((f) => f.path === from)!;
-      file.path = to;
-      file.source = source;
-      if (project.workspace.entryFile === from) project.workspace.entryFile = to;
-      if (project.workspace.activeFile === from) project.workspace.activeFile = to;
-      if (project.workspace.views[from])
-        project.workspace.views[to] = project.workspace.views[from];
-      delete project.workspace.views[from];
-      if (closedSourceTabs.delete(from)) closedSourceTabs.add(to);
-      const side = sourceGroups.get(key);
-      sourceGroups.delete(key);
-      if (side) sourceGroups.set(newKey, side);
-      tabOrder = tabOrder.map((value) => (value === key ? newKey : value));
-      detached.replaceDocument(key, { key: newKey, title: to, model: next, readOnly: false });
-      for (const { view, state } of views) {
-        view.setModel(next);
-        if (state) view.restoreViewState(state);
-      }
-      models.delete(from);
-      model.dispose();
-      results.delete(from);
-    }
+    for (const [from, to] of changes) documents().rename(from, to);
     if (isFolder) {
       for (const path of [...collapsedFolders])
         if (path === old || path.startsWith(old + '/')) {
@@ -1876,25 +1868,17 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
     setDirty();
     updateActions();
   } catch (error) {
-    await dialog('変更できませんでした', error instanceof Error ? error.message : String(error));
+    await dialog(msg('maa8b870b5410'), error instanceof Error ? error.message : String(error));
   }
 }
 async function removeFile() {
   if (activePreview) return;
   if (project.files.length <= 1) return;
   const path = project.workspace.activeFile;
-  if (
-    (await dialog('ファイルを削除', `${path} をプロジェクトから削除します。`, undefined, true)) ===
-    null
-  )
+  if ((await dialog(msg('m7ea5e4d1250b'), msg('md75b21712bbf', [path]), undefined, true)) === null)
     return;
-  project.files = project.files.filter((f) => f.path !== path);
-  if (project.workspace.entryFile === path) project.workspace.entryFile = project.files[0].path;
-  switchFile(project.files[0].path);
-  models.get(path)!.dispose();
-  models.delete(path);
-  results.delete(path);
-  delete project.workspace.views[path];
+  documents().remove(path);
+  switchFile(project.workspace.activeFile, false);
   invalidate();
   setDirty();
 }
