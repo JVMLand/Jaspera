@@ -26,7 +26,11 @@ export class RuntimeDebugger {
   const user=this.classes.has(where.className),previous=this.location;
   const rootDepth=Math.min(this.rootDepths.get(where.thread)??Infinity,user?where.depth:Infinity);
   this.rootDepths.set(where.thread,rootDepth);
-  if(where.depth<rootDepth)return false;
+  if(where.depth<rootDepth){
+   // A step cannot carry on in a later, unrelated call made by the runtime.
+   if(previous?.thread===where.thread&&['into','over','out'].includes(this.mode))this.mode='continue';
+   return false;
+  }
   let reason:DebugSnapshot['reason']|undefined;
   if(user&&this.points.has(where.className+':'+where.line))reason='breakpoint';
   else if(this.mode==='entry'&&user)reason='entry';
@@ -43,6 +47,9 @@ export class RuntimeDebugger {
  command(command:DebugCommand){
   if(command==='pause'){if(!this.paused)this.mode='pause';return;}
   if(!this.paused)throw new Error('JVM は停止していません。');
-  this.mode=command;this.skips.set(this.location!.thread,this.location!);this.paused=false;this.vm.scheduleTimeout();
+  const rootReturn=this.location!.depth===this.rootDepths.get(this.location!.thread)&&/^(?:[ilfda]?return)$/.test(this.frames[0]?.instruction?.opcode??'');
+  // Native/reflection frames may return without another instruction hook at a
+  // shallower depth. End stepping explicitly when the user's root frame returns.
+  this.mode=rootReturn&&['into','over','out'].includes(command)?'continue':command;this.skips.set(this.location!.thread,this.location!);this.paused=false;this.vm.scheduleTimeout();
  }
 }
