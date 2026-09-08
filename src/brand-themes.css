@@ -216,126 +216,147 @@
   font-family: var(--font-ui);
 }
 
-/* Googol: generous Material-like surfaces, pill selections and four colour accents. */
+/* Googol: Material 3 surface roles, tonal navigation and filled primary actions. */
 :root[data-theme-family='googol'] {
-  --pane-radius: 18px;
+  --pane-radius: 16px;
   --pane-header-height: 48px;
-  --theme-canvas: #f6f8fc;
+  --theme-canvas: #f0f3fa;
+  --material-container: #e9edf5;
+  --material-on-selection: #001d35;
+  --material-shadow: 0 2px 6px #1a1c201f, 0 1px 2px #1a1c2026;
 }
 :root[data-theme='googol-night'] {
-  --theme-canvas: #17181a;
+  --theme-canvas: #111318;
+  --material-container: #282b31;
+  --material-on-selection: #d1e4ff;
+  --material-shadow: 0 2px 6px #0004, 0 1px 2px #0005;
 }
 :root[data-theme-family='googol'] #app {
   font-family: var(--font-ui);
-  grid-template-rows: 72px 42px minmax(0, 1fr) 28px;
+  grid-template-rows: 64px 40px minmax(0, 1fr) 28px;
 }
 :root[data-theme-family='googol'] .toolbar {
-  padding: 0 28px;
+  padding: 0 24px;
   border-bottom: 0;
+  background: var(--theme-canvas);
 }
 :root[data-theme-family='googol'] .brand h1 {
   font-weight: 500;
-  letter-spacing: -1.4px;
-  background: linear-gradient(
-    90deg,
-    #4285f4 0 24%,
-    #ea4335 24% 43%,
-    #c28c00 43% 62%,
-    #4285f4 62% 79%,
-    #34a853 79% 91%,
-    #ea4335 91%
-  );
-  background-clip: text;
-  color: transparent;
+  letter-spacing: -0.6px;
+  color: var(--theme-text);
+  background: none;
 }
 :root[data-theme-family='googol'] .brand h1 span {
   color: inherit;
 }
 :root[data-theme-family='googol'] .brand-logo {
-  padding: 3px;
-  border: 2px solid #4285f4;
-  border-right-color: #ea4335;
-  border-bottom-color: #fbbc04;
-  border-left-color: #34a853;
-  border-radius: 50%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
 }
 :root[data-theme-family='googol'] .menubar {
-  padding-left: 24px;
+  padding: 0 16px;
+  border-bottom: 0;
+  background: var(--theme-canvas);
 }
 :root[data-theme-family='googol'] .menu > button {
-  border-radius: 24px;
-  padding-left: 18px;
-  padding-right: 18px;
+  border-radius: 20px;
+  padding: 0 16px;
 }
 :root[data-theme-family='googol'] .workspace {
-  padding: 8px 20px 20px 10px;
+  padding: 8px 16px 16px;
 }
 :root[data-theme-family='googol'] .workspace-summary {
-  padding: 12px 24px 20px;
-  min-height: 92px;
-  border-bottom: 1px solid var(--theme-border);
-  border-radius: 0;
+  padding: 8px 16px 16px;
+  min-height: 80px;
+  border: 0;
   background: transparent;
 }
 :root[data-theme-family='googol'] .workspace-summary h2 {
+  font-weight: 400;
+  color: var(--theme-text);
+  font-size: calc(24px * var(--ui-font-scale, 1));
+}
+:root[data-theme-family='googol'] :is(.run, .workspace-summary button) {
+  border-radius: 20px;
+  border: 0;
+  min-height: 40px;
+  padding: 0 24px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   font-weight: 500;
-  color: var(--theme-accent);
-  font-size: calc(27px * var(--ui-font-scale, 1));
+  box-shadow: none;
 }
 :root[data-theme-family='googol'] .workspace-summary button {
-  border-radius: 28px;
-  border: 0;
   background: var(--theme-selection);
-  color: var(--theme-accent);
-  padding: 13px 22px;
-  font-size: calc(13px * var(--ui-font-scale, 1));
+  color: var(--material-on-selection);
 }
-:root[data-theme-family='googol'] .workspace .project-pane {
+:root[data-theme-family='googol'] .workspace .dock-pane {
   border: 0;
-  background: transparent;
   box-shadow: none;
-  margin: 0 8px 0 0;
 }
-:root[data-theme-family='googol'] .workspace .project-heading {
-  background: transparent;
-  border-bottom: 0;
+:root[data-theme-family='googol'] :is(.pane-header, .project-heading, .output-header) {
+  border-bottom: 1px solid var(--theme-border);
 }
-:root[data-theme-family='googol'] #file-list button {
+:root[data-theme-family='googol'] #file-list button,
+:root[data-theme-family='googol'] #file-list .file-folder > summary {
   border-radius: 24px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   font-size: calc(13px * var(--ui-font-scale, 1));
 }
-:root[data-theme-family='googol'] #file-list .file-folder > summary {
-  padding: 10px 12px;
-  border-radius: 24px;
-  font-family: inherit;
+:root[data-theme-family='googol'] #file-list button.active {
+  box-shadow: none;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
 }
-:root[data-theme-family='googol'] .workspace [data-pane-key],
-:root[data-theme-family='googol'] .detached-window [data-pane-key] {
-  margin: 5px 2px;
+:root[data-theme-family='googol'] :is(.workspace, .detached-window) [data-pane-key] {
+  margin: 4px 2px;
   border: 0;
-  border-radius: 24px;
+  border-radius: 8px;
   background: transparent;
 }
 :root[data-theme-family='googol'] [data-pane-key]:has([aria-selected='true']) {
   background: var(--theme-selection) !important;
   box-shadow: none !important;
 }
-:root[data-theme-family='googol'] .workspace :is(#project-tabs, #file-tabs, .output-header .tabs) {
-  padding: 0 5px;
+:root[data-theme-family='googol'] [data-pane-key] [aria-selected='true'] {
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] [data-pane-key] [role='tab']::after {
+  display: none;
+}
+:root[data-theme-family='googol'] :is(#project-tabs, #file-tabs, .output-header .tabs) {
+  padding: 0 4px;
 }
 :root[data-theme-family='googol'] :is(.menu-popup, .dock-menu) {
-  padding: 8px;
-  box-shadow: 0 6px 18px #20212424;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--material-container);
+  box-shadow: var(--material-shadow);
 }
 :root[data-theme-family='googol'] :is(.menu-popup button, .dock-menu button) {
-  border-radius: 20px;
+  border-radius: 0;
+  min-height: 40px;
+  padding-inline: 16px;
+}
+:root[data-theme-family='googol']
+  :is(.menu > button, .menu-popup button, .dock-menu button, #file-list button):hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
+}
+:root[data-theme-family='googol'] dialog {
+  border: 0;
+  border-radius: 28px;
+  background: var(--material-container);
+  box-shadow: var(--material-shadow);
 }
 :root[data-theme-family='googol'] :is(dialog input, dialog select, textarea) {
-  border-radius: 8px;
+  border: 1px solid var(--theme-muted);
+  border-radius: 4px;
+  background: transparent;
 }
-:root[data-theme-family='googol'] .runtime-dot {
-  background: #34a853;
+:root[data-theme-family='googol'] :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
 }
 
 /* Entrance: service header, navigation rail and flat content blades. */
