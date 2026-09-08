@@ -1,3 +1,4 @@
+import './fonts.css';
 // Register Monaco contributions before any language provider initializes its services.
 // Both windows must load the same feature set, regardless of application import order.
 export * from 'monaco-editor/esm/vs/editor/editor.api';
