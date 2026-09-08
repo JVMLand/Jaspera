@@ -60,6 +60,12 @@ export class BreakpointStore {
     line = model.validatePosition({ lineNumber: line, column: 1 }).lineNumber;
     this.set(model, lines.includes(line) ? lines.filter((n) => n !== line) : [...lines, line]);
   }
+  /** Translation replaces comments/literals without changing instruction line positions. */
+  replaceTranslatedSource(model: monaco.editor.ITextModel, source: string) {
+    const lines = this.lines(model);
+    model.setValue(source);
+    if (lines.length) this.set(model, lines);
+  }
   move(from: monaco.editor.ITextModel, to: monaco.editor.ITextModel) {
     const lines = this.lines(from);
     if (lines.length) this.set(to, lines);

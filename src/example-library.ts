@@ -1,3 +1,4 @@
+import { localizedMessage } from './localization';
 import HelloWorld from './examples/HelloWorld.jal?raw';
 import Arithmetic from './examples/Arithmetic.jal?raw';
 import Branches from './examples/Branches.jal?raw';
@@ -21,11 +22,34 @@ export const examples = Object.entries({
 }).map(([name, source]) => ({ path: 'example/' + name + '.jal', source }));
 export const isExampleKey = (key: string) => key.startsWith('preview:example:');
 const edits = new Map<string, string>();
-export const exampleSource = (path: string) =>
-  edits.get(path) ?? examples.find((e) => e.path === path)?.source;
+export function translatedExample(path: string) {
+  const example = examples.find((e) => e.path === path);
+  if (!example) return;
+  const name = path
+    .split('/')
+    .pop()!
+    .replace(/\.jal$/, '');
+  let source = example.source.replace(
+    /^\/\/[^\n]*/,
+    () => '// ' + localizedMessage('example.' + name + '.comment'),
+  );
+  const literals: Record<string, string> = {
+    'Hello, JAL!': 'example.hello',
+    '10 or less': 'example.less',
+    'greater than 10': 'example.greater',
+    'Answer: ': 'example.answer',
+  };
+  source = source.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (literal, value) =>
+    literals[value] ? JSON.stringify(localizedMessage(literals[value])) : literal,
+  );
+  return source;
+}
+export const exampleSource = (path: string) => edits.get(path) ?? translatedExample(path);
 export const rememberExample = (path: string, source: string) => {
-  edits.set(path, source);
+  if (source === translatedExample(path)) edits.delete(path);
+  else edits.set(path, source);
 };
+export const isEditedExample = (path: string) => edits.has(path);
 // Transient example documents never enter project metadata or folder/ZIP exports.
 export function withoutExampleLayout(layout: WorkspaceLayout): WorkspaceLayout {
   const keep = (key: string) => !isExampleKey(key);
