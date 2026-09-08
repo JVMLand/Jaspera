@@ -27,6 +27,7 @@ MSYS2 UCRT64 tools may also supply CMake/Ninja. C compilation itself uses Emscri
 - Complete the existing cooperative debugger hook using `CONT_DEBUGGER_PAUSE`.
 - Spill cached integer/reference，float and double TOS values before suspension.
 - Skip interpreter return/suspend sentinels. Method resolution and TOS redispatch do not count as completed instructions. Self-targeting branches still advance the per-thread instruction serial.
+- Export the suspended instruction and operands for a pure next-instruction preview.
 - Copy actual stack and local values using Bovine's GC stack summaries. Do not dereference outgoing arguments that now overlap a callee's locals.
 - Decode Java strings from their Latin-1 / UTF-16 storage without calling Java methods or allocating in the JVM heap.
 - Stop rescheduling Java threads while paused，but leave the JS event loop available for Comlink commands.

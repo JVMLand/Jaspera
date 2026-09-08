@@ -98,7 +98,7 @@
        if (!ent->catch_type || instanceof(exception_type, ent->catch_type->classdesc)) {
 --- /dev/null
 +++ b/vm/jaspera_debugger.c
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,107 @@
 +// Jaspera's cooperative instruction debugger. No Java calls or GC allocation
 +// are allowed while copying a suspended frame into JavaScript.
 +#include "debugger.h"
@@ -114,6 +114,31 @@
 +EM_JS(void, jaspera_frame, (int id, const char *cls,int cn,const char *name,int nn,const char *desc,int dn,int pc,int line,int native), {
 +  Module.jasperaDebugger.frames.push({id,className:UTF8ToString(cls,cn),method:UTF8ToString(name,nn),descriptor:UTF8ToString(desc,dn),pc,line,native:!!native,stack:[],locals:[]});
 +});
++EM_JS(void, jaspera_instruction, (const char *opcode,int local,int increment,int argc,int returns,int dimensions,const char *constant,const char *string,int length), {
++  const frames=Module.jasperaDebugger.frames;
++  frames[frames.length-1].instruction={opcode:UTF8ToString(opcode),local,increment,arguments:argc,returns:!!returns,dimensions,constant:string?JSON.stringify(UTF8ToString(string,length)):constant?UTF8ToString(constant):undefined};
++});
++static void emit_instruction(bytecode_insn *insn) {
++  const char *opcode=insn_code_to_string(insn->kind),*string=nullptr;int local=-1,increment=0,argc=-1,returns=0,dimensions=0,length=0;char value[128]={0};
++  if(insn->kind>=insn_dload&&insn->kind<=insn_astore)local=insn->index;
++  if(insn->kind==insn_iinc){local=insn->iinc.index;increment=insn->iinc.const_;}
++  if(insn->kind==insn_multianewarray)dimensions=insn->multianewarray->dimensions;
++  if(strncmp(opcode,"invoke",6)==0){
++    if(insn->kind==insn_invokevirtual||insn->kind==insn_invokespecial||insn->kind==insn_invokestatic||insn->kind==insn_invokeinterface){
++      method_descriptor *d=insn->cp->methodref.descriptor;argc=d->args_count+(insn->kind!=insn_invokestatic);returns=d->return_type.base_kind!=TYPE_KIND_VOID;
++    }else if(insn->kind!=insn_invokedynamic){argc=insn->args;returns=insn->returns;}
++  }
++  switch(insn->kind){
++    case insn_iconst:snprintf(value,sizeof(value),"%d",(int)insn->integer_imm);break;
++    case insn_lconst:snprintf(value,sizeof(value),"%" PRId64 "L",insn->integer_imm);break;
++    case insn_fconst:snprintf(value,sizeof(value),"%.9gf",(double)insn->f_imm);break;
++    case insn_dconst:snprintf(value,sizeof(value),"%.17gd",insn->d_imm);break;
++    case insn_aconst_null:strcpy(value,"null");break;
++    case insn_ldc:if(insn->cp->kind==CP_KIND_STRING){string=insn->cp->string.chars.chars;length=insn->cp->string.chars.len;}break;
++    default:break;
++  }
++  jaspera_instruction(opcode,local,increment,argc,returns,dimensions,value[0]?value:nullptr,string,length);
++}
 +EM_JS(void, jaspera_value, (int local,const char *text), {
 +  const frames=Module.jasperaDebugger.frames;
 +  frames[frames.length-1][local?'locals':'stack'].push(UTF8ToString(text));
@@ -160,6 +185,7 @@
 +    m=f->method;
 +    jaspera_frame((int)(uintptr_t)f,m->my_class->name.chars,m->my_class->name.len,m->name.chars,m->name.len,m->unparsed_descriptor.chars,m->unparsed_descriptor.len,is_interpreter_frame(f)?f->code[f->program_counter].original_pc:-1,source_line(f),is_frame_native(f));
 +    if(!is_interpreter_frame(f)||!m->code_analysis)continue;
++    emit_instruction(&f->code[f->program_counter]);
 +    stack_summary *s=m->code_analysis->stack_states[f->program_counter];
 +    if(!s)continue;
 +    for(int i=0;i<s->stack;i++){if((uintptr_t)&f->stack[i]>=unowned)jaspera_value(0,"呼び出し先へ移動");else emit_value(f->stack[i],s->entries[i],0); }
