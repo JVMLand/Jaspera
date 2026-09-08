@@ -1,4 +1,4 @@
-import { bindMessage } from './localization';
+import { bindTranslation, localizedMessage } from './localization';
 export interface Item {
   id: string;
   label: string;
@@ -51,9 +51,20 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
     wrapper.setAttribute('role', 'none');
     const button = document.createElement('button');
     button.id = 'menu-' + menu.label.toLowerCase();
-    const key = ('chrome.' + menu.label) as Parameters<typeof bindMessage>[1];
-    bindMessage(button, key);
     const accelerator = menuKeys[menu.label];
+    bindTranslation(button, () => {
+      const label = localizedMessage('chrome.' + menu.label);
+      button.textContent = label;
+      button.setAttribute('aria-label', label);
+      if (accelerator) {
+        const hint = document.createElement('span');
+        hint.setAttribute('aria-hidden', 'true');
+        const letter = document.createElement('u');
+        letter.textContent = accelerator.toUpperCase();
+        hint.append('(', letter, ')');
+        button.append(hint);
+      }
+    });
     if (accelerator) {
       button.setAttribute('aria-keyshortcuts', 'Alt+' + accelerator.toUpperCase());
       button.title = 'Alt+' + accelerator.toUpperCase();

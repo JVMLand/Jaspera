@@ -29,6 +29,12 @@ test(
         ['h', 'help'],
       ]) {
         await view.evaluate(async (entry) => (await import(entry)).editor.focus(), entry);
+        assert.equal(await view.locator('#menu-' + menu + ' u').textContent(), key.toUpperCase());
+        assert.ok(
+          (await view.locator('#menu-' + menu).textContent()).endsWith(
+            '(' + key.toUpperCase() + ')',
+          ),
+        );
         await view.keyboard.press('Alt+' + key);
         assert.equal(await view.locator('#menu-' + menu).getAttribute('aria-expanded'), 'true');
         assert.equal(
