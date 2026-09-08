@@ -77,6 +77,13 @@ export function helpMenuItems() {
       },
     },
     {
+      id: 'help-licenses',
+      label: msg('help.licenses.title'),
+      action: () => {
+        void import('./licenses').then((m) => m.openLicenses());
+      },
+    },
+    {
       id: 'help-about',
       label: msg('m9965ae4e8456', [APP_NAME]),
       action: () => {

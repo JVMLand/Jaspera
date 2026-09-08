@@ -921,5 +921,9 @@
   "help.langjal.title": "À propos de LangJAL",
   "help.langjal.description": "JAL est un langage assembleur permettant d’écrire les instructions de la JVM sous forme de texte. Jaspera utilise LangJAL pour compiler le code JAL en fichiers de classe.",
   "help.langjal.website": "Site officiel",
-  "help.langjal.repository": "Dépôt GitHub"
+  "help.langjal.repository": "Dépôt GitHub",
+  "help.licenses.title": "Licences open source",
+  "help.licenses.notices": "Mentions des logiciels tiers",
+  "help.licenses.loading": "Chargement…",
+  "help.licenses.error": "Impossible de charger la licence. Sélectionnez-la à nouveau pour réessayer."
 }

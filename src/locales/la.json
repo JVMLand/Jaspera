@@ -921,5 +921,9 @@
   "help.langjal.title": "De LangJAL",
   "help.langjal.description": "JAL est lingua qua instructiones JVM ut textus scribuntur. Jaspera LangJAL adhibet ut codicem JAL in fasciculos classium componat.",
   "help.langjal.website": "Situs officialis",
-  "help.langjal.repository": "Repositorium GitHub"
+  "help.langjal.repository": "Repositorium GitHub",
+  "help.licenses.title": "Licentiae fontis aperti",
+  "help.licenses.notices": "Notitiae programmatum aliorum",
+  "help.licenses.loading": "Oneratur…",
+  "help.licenses.error": "Licentia onerari non potuit. Iterum elige."
 }

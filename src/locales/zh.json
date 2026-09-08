@@ -921,5 +921,9 @@
   "help.langjal.title": "关于 LangJAL",
   "help.langjal.description": "JAL 是一种用文本编写 JVM 指令的汇编语言。Jaspera 使用 LangJAL 将 JAL 源代码编译为类文件。",
   "help.langjal.website": "官方网站",
-  "help.langjal.repository": "GitHub 仓库"
+  "help.langjal.repository": "GitHub 仓库",
+  "help.licenses.title": "开源许可证",
+  "help.licenses.notices": "第三方软件声明",
+  "help.licenses.loading": "加载中…",
+  "help.licenses.error": "无法加载许可证。请重新选择以重试。"
 }
