@@ -741,7 +741,7 @@ dialog input {
     gap: 5px;
   }
   .menu > button {
-    padding: 0 10px;
+    padding: 0 8px;
   }
   .menu-popup {
     position: fixed;
