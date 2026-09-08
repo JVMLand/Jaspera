@@ -113,7 +113,7 @@ MyProject/
 
 ## 開発環境
 
-必要なものは Node.js 22 以降，pnpm 10.13.1，JDK 21 以降，Git，Python 3，CMake 3.15〜3.31，Ninja です。
+必要なものは Node.js 22 以降，pnpm 10.13.1，JDK 23 以降，Git，Python 3，CMake 3.15〜3.31，Ninja です。
 
 ```sh
 pnpm install --frozen-lockfile
