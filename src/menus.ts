@@ -5,6 +5,14 @@ export interface Item {
   shortcut?: string;
   action: () => void;
 }
+const menuKeys: Record<string, string> = {
+  File: 'f',
+  Edit: 'e',
+  View: 'v',
+  Build: 'b',
+  Debug: 'd',
+  Help: 'h',
+};
 interface Menu {
   label: string;
   items: (Item | null)[];
@@ -45,6 +53,11 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
     button.id = 'menu-' + menu.label.toLowerCase();
     const key = ('chrome.' + menu.label) as Parameters<typeof bindMessage>[1];
     bindMessage(button, key);
+    const accelerator = menuKeys[menu.label];
+    if (accelerator) {
+      button.setAttribute('aria-keyshortcuts', 'Alt+' + accelerator.toUpperCase());
+      button.title = 'Alt+' + accelerator.toUpperCase();
+    }
     button.setAttribute('role', 'menuitem');
     button.setAttribute('aria-haspopup', 'menu');
     button.setAttribute('aria-expanded', 'false');
@@ -134,6 +147,31 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
     wrapper.append(button, panel);
     container.append(wrapper);
   });
+  // Capture before Monaco or browser-default menu handling consumes Alt shortcuts.
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (
+        !event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.isComposing ||
+        event.repeat ||
+        event.defaultPrevented ||
+        document.querySelector('dialog[open]')
+      )
+        return;
+      const index = definitions.findIndex(
+        (menu) => menuKeys[menu.label] === event.key.toLowerCase(),
+      );
+      if (index < 0 || buttons[index].disabled || !buttons[index].getClientRects().length) return;
+      event.preventDefault();
+      event.stopPropagation();
+      show(index, true);
+    },
+    true,
+  );
   container.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
