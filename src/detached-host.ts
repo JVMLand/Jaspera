@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type { RevealMode } from './editor-reveal';
 import type { DebugCommand, DebugFrame } from './debug-protocol';
 import type { AnalysisProgress } from './protocol';
@@ -304,7 +305,7 @@ export function createDetachedHost(
       )
         return false;
       const id = crypto.randomUUID(),
-        url = new URL('detached.html', location.href);
+        url = new URL('detached.html', new URL(import.meta.env.BASE_URL, location.href));
       url.searchParams.set('editor', id);
       const popup = source.popup.open(url.href, 'jalweb-' + id, 'popup,width=900,height=680');
       if (!popup) return false;
@@ -332,7 +333,7 @@ export function createDetachedHost(
     compilation(id, version) {
       const entry = entries.get(id);
       if (!entry || entry.model.isDisposed() || entry.model.getVersionId() !== version)
-        return Promise.reject(new Error('文書の版が変更されています。'));
+        return Promise.reject(new Error(msg('ma83c65038a5b')));
       return options.compile(entry.model);
     },
     async openFiles(files, group) {
@@ -418,7 +419,7 @@ export function createDetachedHost(
     );
     if (!docs.length && !panels.length) return true;
     const id = crypto.randomUUID(),
-      url = new URL('detached.html', location.href);
+      url = new URL('detached.html', new URL(import.meta.env.BASE_URL, location.href));
     url.searchParams.set('editor', id);
     const width = Math.min(layout.width, screen.availWidth),
       height = Math.min(layout.height, screen.availHeight);
@@ -526,7 +527,7 @@ export function createDetachedHost(
         return true;
       }
       const id = crypto.randomUUID(),
-        url = new URL('detached.html', location.href);
+        url = new URL('detached.html', new URL(import.meta.env.BASE_URL, location.href));
       url.searchParams.set('editor', id);
       const popup = window.open(url.href, 'jalweb-' + id, 'popup,width=900,height=680');
       if (!popup) return false;
@@ -579,7 +580,7 @@ export function createDetachedHost(
         return true;
       }
       const id = crypto.randomUUID(),
-        url = new URL('detached.html', location.href);
+        url = new URL('detached.html', new URL(import.meta.env.BASE_URL, location.href));
       url.searchParams.set('editor', id);
       const popup = window.open(url.href, 'jalweb-' + id, 'popup,width=900,height=680');
       if (!popup) return false;

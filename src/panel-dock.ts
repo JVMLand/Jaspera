@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type { ContextItem } from './context-menu';
 import { layoutPanels, type DockLayout } from './workspace-layout';
 import './panel-dock.css';
@@ -176,21 +177,21 @@ export function installPanelDock(
     nodes[name] = wrapper;
     pane.contextItems = () => [
       ...contextItems(name),
-      { label: 'PROJECT グループへ移動', action: () => move(name, 'project') },
+      { label: msg('m5f6a87a981fd'), action: () => move(name, 'project') },
       {
-        label: '左側へ移動',
+        label: msg('m8b9b9cb54504'),
         action: () =>
           move(name, workspace.classList.contains('dock-swapped') ? 'output' : 'source'),
       },
       {
-        label: '右側へ移動',
+        label: msg('m5a71218a3669'),
         action: () =>
           move(name, workspace.classList.contains('dock-swapped') ? 'source' : 'output'),
       },
-      { label: '小窓で開く', action: () => detach(name) },
+      { label: msg('m8af85266ba4f'), action: () => detach(name) },
       null,
-      { label: 'このタブを閉じる', action: () => close(name) },
-      { label: '他のタブを閉じる', action: () => closeOthers(name) },
+      { label: msg('m75b77204a6c9'), action: () => close(name) },
+      { label: msg('mad5f178303ff'), action: () => closeOthers(name) },
     ];
   }
   workspace.classList.add('dock-arranged');

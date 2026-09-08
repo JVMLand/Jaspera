@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { installDebugPanel } from './debug-panel';
 import type { DebugState } from './debug-protocol';
 import { installInstructionGraph } from './instruction-graph';
@@ -20,8 +21,7 @@ export function installDetachedTools(
   const container = document.createElement('section');
   container.className = 'detached-tools';
   container.hidden = true;
-  container.innerHTML =
-    '<section id="popup-project"><div id="file-list"></div></section><section id="popup-console"><pre id="popup-output"></pre><label>標準入力<textarea id="popup-stdin"></textarea></label><button id="popup-clear">Console を消去</button></section><section id="popup-problems"><p class="empty-problems">問題は見つかりませんでした。</p><ul id="problems"></ul></section><section id="instructions-panel"></section><section id="graph-panel"></section><section id="debug-panel"></section>';
+  container.innerHTML = msg('m13181c191a75');
   document.body.append(container);
   const get = (id: string) => container.querySelector<HTMLElement>('#' + id)!;
   const collapsed = new Set<string>();
@@ -41,16 +41,14 @@ export function installDetachedTools(
     reveal: (f) => bridge?.debugReveal(f),
   });
   const instructions = installInstructionsPanel(panels.instructions, (source) =>
-    bridge
-      ? bridge.compileUsage(source)
-      : Promise.reject(new Error('元のワークスペースに接続できません。')),
+    bridge ? bridge.compileUsage(source) : Promise.reject(new Error(msg('md8e230ba93da'))),
   );
   const graph = installInstructionGraph(
     panels.graph,
     (doc, onProgress) =>
       bridge
         ? bridge.graphCompilation(doc, onProgress)
-        : Promise.reject(new Error('元のワークスペースに接続できません。')),
+        : Promise.reject(new Error(msg('md8e230ba93da'))),
     (doc, line, column) => bridge?.graphNavigate(doc, line, column),
   );
   const contexts = [
@@ -114,7 +112,7 @@ export function installDetachedTools(
           const items = pane.contextItems.bind(pane);
           pane.contextItems = () => [
             {
-              label: '新規 JAL ファイル…',
+              label: msg('md3a91edcf75f'),
               action: () => bridge?.projectAction('create', 'src', true),
             },
             null,

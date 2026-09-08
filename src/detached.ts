@@ -1,3 +1,5 @@
+import { languageMenuItem } from './localization';
+import { msg } from './messages.js';
 import { revealEditorPosition } from './editor-reveal';
 import { installFeatureGuides } from './feature-guides';
 import { debugMenuItems, installDebugKeys } from './debug-panel';
@@ -76,7 +78,7 @@ const stackHover = installStackHover(editor, (model) => {
   const tab = [...tabs.values()].find((t) => t.model === model);
   return tab && bridge
     ? bridge.compilation(tab.state.id, tab.state.version)
-    : Promise.reject(new Error('元のワークスペースに接続できません。'));
+    : Promise.reject(new Error(msg('md8e230ba93da')));
 });
 const syncTheme = () => (overlays.className = editor.getDomNode()!.className);
 const observer = new MutationObserver(syncTheme);
@@ -271,7 +273,13 @@ function updateActions() {
   menus.disabled('save-file-as', !tab);
   menus.disabled('find', !tab);
   menus.disabled('download', !tab || tab.state.readOnly);
-  menus.label('menu-run', workspace.running ? '停止' : '実行');
+  const reason =
+    workspace.runAvailability?.[tab?.state.uri ?? ''] ??
+    workspace.runAvailability?.[tab ? 'project' : ''] ??
+    '';
+  menus.disabled('menu-run', !workspace.running && !!reason);
+  menus.disabled('debug-start', workspace.running || !!reason);
+  menus.label('menu-run', workspace.running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
 }
 const action = (id: string) => {
   editor.focus();
@@ -297,7 +305,7 @@ async function downloadClass() {
   if (!active) return;
   const result = await bridge?.classFile(active);
   if (!result) {
-    showHelpMessage('class を保存できませんでした', 'ソースのコンパイル結果を確認してください。');
+    showHelpMessage(msg('m610c9cb03faf'), msg('m2707c2791337'));
     return;
   }
   const bytes = Uint8Array.from(atob(result.bytecode), (c) => c.charCodeAt(0)),
@@ -328,13 +336,18 @@ const menus = installMenus(el('menus'), [
   {
     label: 'File',
     items: [
-      { id: 'open-files', label: '開く…', shortcut: 'Ctrl+O', action: filePicker.open },
-      { id: 'open-workspace-file', label: 'プロジェクト内のファイル…', action: openFile },
+      {
+        id: 'open-files',
+        label: msg('mba31551c9cbe'),
+        shortcut: 'Ctrl+O',
+        action: filePicker.open,
+      },
+      { id: 'open-workspace-file', label: msg('ma8538563e6b2'), action: openFile },
       null,
-      { id: 'save-project', label: '保存', shortcut: 'Ctrl+S', action: save },
+      { id: 'save-project', label: msg('ma3030bf8f16d'), shortcut: 'Ctrl+S', action: save },
       {
         id: 'save-file-as',
-        label: 'JAL に書き出す…',
+        label: msg('m55345dd68b3a'),
         action: () => {
           const tab = current();
           if (!tab) return;
@@ -355,7 +368,7 @@ const menus = installMenus(el('menus'), [
       null,
       {
         id: 'close-tab',
-        label: 'このタブを閉じる',
+        label: msg('m75b77204a6c9'),
         action: () => {
           if (toolTabs?.active) bridge?.closePanel(group, toolTabs.active);
           else if (active) closeTab(active);
@@ -363,12 +376,12 @@ const menus = installMenus(el('menus'), [
       },
       {
         id: 'close-others',
-        label: '他のタブを閉じる',
+        label: msg('mad5f178303ff'),
         action: () => {
           if (active) closeTab(active, true);
         },
       },
-      { id: 'close-window', label: 'ウィンドウを閉じる', action: () => window.close() },
+      { id: 'close-window', label: msg('m286b5f7afa80'), action: () => window.close() },
     ],
   },
   {
@@ -384,7 +397,7 @@ const menus = installMenus(el('menus'), [
     items: [
       {
         id: 'wrap',
-        label: '折り返し',
+        label: msg('md3eca11714b3'),
         action: () =>
           editor.updateOptions({
             wordWrap: editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on',
@@ -392,12 +405,13 @@ const menus = installMenus(el('menus'), [
       },
       {
         id: 'theme',
-        label: 'テーマ…',
+        label: msg('maa77a98a507d'),
         action: () => {
           el<HTMLSelectElement>('themes').value = workspace.theme;
           el<HTMLDialogElement>('theme-picker').showModal();
         },
       },
+      languageMenuItem(),
       null,
       ...(['project', 'console', 'problems', 'instructions', 'graph', 'debug'] as const).map(
         (name) => ({
@@ -411,13 +425,13 @@ const menus = installMenus(el('menus'), [
   {
     label: 'Build',
     items: [
-      { id: 'check', label: '検査', action: () => bridge?.check(active) },
-      { id: 'menu-run', label: '実行', shortcut: 'Ctrl+Enter', action: run },
-      { id: 'download', label: 'class に書き出す…', action: () => void downloadClass() },
+      { id: 'check', label: msg('m8e28a92e2d4d'), action: () => bridge?.check(active) },
+      { id: 'menu-run', label: msg('m77721d5dea60'), shortcut: 'Ctrl+Enter', action: run },
+      { id: 'download', label: msg('m99847859379a'), action: () => void downloadClass() },
     ],
   },
   { label: 'Debug', items: debugMenuItems(debugActions) },
-  { label: 'Help', items: helpMenuItems(true, () => workspace.canSave) },
+  { label: 'Help', items: helpMenuItems() },
 ]);
 el<HTMLDialogElement>('open-file').addEventListener('close', () => {
   if (el<HTMLDialogElement>('open-file').returnValue === 'open') {
@@ -458,7 +472,7 @@ const initial = bridge?.attach(group, {
     toolTabs?.update(state.tools, state.files, state.graphDocument, state.debug);
     debugEditor.update();
     applyTheme(state.theme, false);
-    el('status').textContent = state.status || '編集内容は元のワークスペースと共有されます。';
+    el('status').textContent = state.status || msg('mb1e61e3ff112');
     updateActions();
   },
   reveal: (selection, id, revealMode) => {
@@ -475,13 +489,12 @@ const initial = bridge?.attach(group, {
 });
 for (const snapshot of bridge?.tabs(group) ?? []) update(snapshot);
 if (initial) select(initial.id);
-else if (!bridge) el('status').textContent = '元のワークスペースに接続できません。';
+else if (!bridge) el('status').textContent = msg('md8e230ba93da');
 updateActions();
 for (const name of bridge?.panels(group) ?? []) toolTabs?.show(name);
 bridge?.ready(group);
 const exitDrag = paneWindowExit(bridge?.workspaceId ?? '', (key) => {
-  if (!bridge?.detach(group, key))
-    showHelpMessage('小窓を開けませんでした', 'ブラウザのポップアップ設定を確認してください。');
+  if (!bridge?.detach(group, key)) showHelpMessage(msg('m0b55b1e7085e'), msg('md8421f8771f0'));
 });
 const dropFiles = paneDrop(document.body, bridge?.workspaceId ?? '', (key, event) => {
   const pane = paneIdentity(key);
@@ -502,7 +515,7 @@ const searchEverywhere = installSearchEverywhere(
   () => bridge?.searchTargets() ?? Promise.resolve([]),
   async (target) => {
     const result = await bridge?.searchDefinition(target);
-    if (!result) throw new Error('定義が見つかりません。');
+    if (!result) throw new Error(msg('m46a9300a9063'));
     return async () => {
       await bridge?.openDefinition(group, result.uri, result.range);
     };

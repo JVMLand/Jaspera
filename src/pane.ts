@@ -1,3 +1,5 @@
+import { msg, displayMessage, displayText } from './messages.js';
+import { bindTranslation } from './localization';
 import { installContextMenu, type ContextItem } from './context-menu';
 import { paneDrag } from './tab-interactions';
 import { layoutPanels, type LayoutPanel } from './workspace-layout';
@@ -26,8 +28,8 @@ export abstract class Pane {
   ) {}
   contextItems(): ContextItem[] {
     return [
-      { label: 'このタブを閉じる', action: () => this.close() },
-      { label: '他のタブを閉じる', action: () => this.close(true) },
+      { label: msg('m75b77204a6c9'), action: () => this.close() },
+      { label: msg('mad5f178303ff'), action: () => this.close(true) },
     ];
   }
   select() {
@@ -67,7 +69,18 @@ export function paneTab(
   const tab = button ?? document.createElement('button');
   tab.classList.add(button ? 'dock-tab-button' : 'file-tab');
   if (!button) tab.textContent = label;
-  tab.title = pane.title + '（ドラッグ: 移動 / Alt＋クリック: 他のタブを閉じる）';
+  bindTranslation(tab, () => {
+    if (!button) tab.textContent = pane.kind === 'tool' ? displayText(label) : label;
+    else if (pane.kind === 'tool') {
+      const text = [...tab.childNodes].find(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      );
+      if (text) text.textContent = displayText(label) + (tab.children.length ? ' ' : '');
+    }
+    tab.title =
+      (pane.kind === 'tool' ? displayText(pane.title) : pane.title) +
+      displayMessage('md7e0aafb1eb8');
+  });
   tab.setAttribute('role', 'tab');
   tab.setAttribute('aria-selected', String(selected));
   tab.tabIndex = selected ? 0 : -1;
@@ -101,8 +114,14 @@ export function paneTab(
   const close = document.createElement('button');
   close.className = button ? 'dock-tab-close' : 'tab-close';
   close.textContent = '×';
-  close.setAttribute('aria-label', pane.title + ' のタブを閉じる');
-  close.title = '閉じる（Alt＋クリック: 他のタブを閉じる）';
+  bindTranslation(close, () => {
+    close.setAttribute(
+      'aria-label',
+      (pane.kind === 'tool' ? displayText(pane.title) : pane.title) +
+        displayMessage('m9523f5ce6ba6'),
+    );
+    close.title = displayMessage('m60a3d26b433c');
+  });
   close.onclick = (e) => pane.close(e.altKey);
   wrapper.append(tab, close);
   return { wrapper, button: tab };

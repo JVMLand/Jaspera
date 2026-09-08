@@ -1,3 +1,4 @@
+import { bindMessage } from './localization';
 export interface Item {
   id: string;
   label: string;
@@ -42,7 +43,8 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
     wrapper.setAttribute('role', 'none');
     const button = document.createElement('button');
     button.id = 'menu-' + menu.label.toLowerCase();
-    button.textContent = menu.label;
+    const key = ('chrome.' + menu.label) as Parameters<typeof bindMessage>[1];
+    bindMessage(button, key);
     button.setAttribute('role', 'menuitem');
     button.setAttribute('aria-haspopup', 'menu');
     button.setAttribute('aria-expanded', 'false');

@@ -9,6 +9,7 @@ export interface WorkspaceState {
   debug?: DebugState;
   graphDocument?: GraphDocument;
   tools: ToolState;
+  runAvailability?: Record<string, string>;
   canSave: boolean;
   running: boolean;
   status: string;
