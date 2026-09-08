@@ -14,6 +14,7 @@ function stop() {
   ++generation;
   document.documentElement.removeAttribute('data-presentation');
   document.documentElement.removeAttribute('data-presentation-project');
+  window.dispatchEvent(new Event('jaspera:presentation'));
   setTemporaryTextSize();
   exitButton?.remove();
   exitButton = undefined;
@@ -25,8 +26,9 @@ function start() {
   active = true;
   const ticket = ++generation;
   const size = textSize();
-  setTemporaryTextSize({ editor: Math.max(24, size.editor), ui: Math.max(18, size.ui) });
+  setTemporaryTextSize({ editor: Math.max(28, size.editor), ui: Math.max(20, size.ui) });
   document.documentElement.setAttribute('data-presentation', '');
+  window.dispatchEvent(new Event('jaspera:presentation'));
   exitButton = document.createElement('button');
   exitButton.id = 'presentation-exit';
   exitButton.type = 'button';

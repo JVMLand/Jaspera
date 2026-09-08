@@ -1,14 +1,7 @@
 /* Temporary presentation geometry never changes the saved dock layout. */
 :root[data-presentation] #app .workspace-summary,
-:root[data-presentation] .feature-guide,
-:root[data-presentation] .group-separator {
+:root[data-presentation] .feature-guide {
   display: none !important;
-}
-:root[data-presentation] #app .workspace.dock-arranged {
-  grid-template-columns: minmax(0, var(--group-0)) 0 minmax(0, var(--group-1)) 0 minmax(
-      0,
-      var(--group-2)
-    ) !important;
 }
 /* Only collapse a dedicated project group; never hide editors docked there. */
 :root[data-presentation]:not([data-presentation-project])
@@ -16,7 +9,10 @@
   .workspace.dock-arranged:has(> .project-pane #project-panel:not([hidden])):not(
     :has(> .project-pane [data-tab-key])
   ) {
-  grid-template-columns: 0 0 minmax(0, 2fr) 0 minmax(0, 1fr) !important;
+  grid-template-columns: 0 0 minmax(0, var(--presentation-group-1)) 6px minmax(
+      0,
+      var(--presentation-group-2)
+    ) !important;
 }
 :root[data-presentation]:not([data-presentation-project])
   #app
@@ -46,29 +42,24 @@
   font-size: 12px;
 }
 @media (max-width: 800px) {
-  :root[data-presentation] #app .workspace.dock-arranged {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto minmax(0, var(--group-0)) 0 minmax(0, var(--group-1)) 0 minmax(
-        0,
-        var(--group-2)
-      ) !important;
-  }
   :root[data-presentation]:not([data-presentation-project])
     #app
     .workspace.dock-arranged:has(> .project-pane #project-panel:not([hidden])):not(
       :has(> .project-pane [data-tab-key])
     ) {
     grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto 0 0 minmax(0, 2fr) 0 minmax(0, 1fr) !important;
+    grid-template-rows: auto 0 0 minmax(0, var(--presentation-group-1)) 6px minmax(
+        0,
+        var(--presentation-group-2)
+      ) !important;
   }
 }
 
-@media (min-width: 801px) {
-  :root[data-presentation]:not([data-presentation-project])
-    #app
-    .workspace.dock-arranged.dock-swapped:has(> .project-pane #project-panel:not([hidden])):not(
-      :has(> .project-pane [data-tab-key])
-    ) {
-    grid-template-columns: 0 0 minmax(0, 1fr) 0 minmax(0, 2fr) !important;
-  }
+:root[data-presentation]:not([data-presentation-project])
+  #app
+  .workspace:has(> .project-pane #project-panel:not([hidden])):not(
+    :has(> .project-pane [data-tab-key])
+  )
+  > .separator-0 {
+  display: none;
 }

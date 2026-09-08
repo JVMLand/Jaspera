@@ -40,12 +40,25 @@ test(
     await toggle(page);
     await page.locator('html[data-presentation]').waitFor();
     await page.waitForFunction(() => !!document.fullscreenElement);
-    assert.equal((await state(page)).font, '24px');
+    assert.equal((await state(page)).font, '28px');
     assert.equal((await state(page)).saved, before.saved);
     assert.equal(await page.locator('.project-pane').isVisible(), false);
     assert.ok((await page.locator('.source-pane').boundingBox()).width > width);
     const output = await page.locator('.output-pane').boundingBox();
     assert.ok(output.x + output.width > 1400, 'presentation must fill the available width');
+    const splitter = page.locator('.separator-1');
+    const handle = await splitter.boundingBox();
+    const priorWidth = (await page.locator('.source-pane').boundingBox()).width;
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle.x - 100, handle.y + handle.height / 2, { steps: 8 });
+    await page.mouse.up();
+    assert.ok((await page.locator('.source-pane').boundingBox()).width < priorWidth - 60);
+    assert.equal(
+      (await state(page)).groups,
+      before.groups,
+      'presentation resizing must not persist',
+    );
     await page.screenshot({ path: '.cache/presentation.png' });
     await page.locator('#menu-view').click();
     await page.locator('#show-project').click();
@@ -67,7 +80,7 @@ test(
         Promise.reject(new DOMException('Denied', 'NotAllowedError'));
     });
     await toggle(page);
-    assert.equal((await state(page)).font, '24px');
+    assert.equal((await state(page)).font, '28px');
     await page.keyboard.press('Escape');
     assert.deepEqual(await state(page), before);
     // Detached windows have their own presentation session and leave the main window alone.
@@ -76,7 +89,7 @@ test(
     const popup = await event;
     await popup.locator('.view-lines').first().waitFor();
     await toggle(popup);
-    assert.equal((await state(popup)).font, '24px');
+    assert.equal((await state(popup)).font, '28px');
     assert.equal(await page.locator('html[data-presentation]').count(), 0);
     await popup.locator('#presentation-exit').click();
     assert.equal((await state(popup)).font, '17px');

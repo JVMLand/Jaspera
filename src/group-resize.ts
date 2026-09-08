@@ -12,12 +12,19 @@ export function installGroupResize(workspace: HTMLElement, onLayout: () => void)
       weights = stored.map((n) => n / sum);
     }
   } catch {}
+  let ordinaryWeights: number[] | undefined;
   const controller = new AbortController(),
     options = { signal: controller.signal };
   const handles: HTMLElement[] = [];
   const vertical = () => matchMedia('(max-width:800px)').matches;
   function apply() {
-    weights.forEach((n, i) => workspace.style.setProperty('--group-' + i, n + 'fr'));
+    weights.forEach((n, i) => {
+      workspace.style.setProperty('--group-' + i, n + 'fr');
+      workspace.style.setProperty(
+        '--presentation-group-' + i,
+        (2 * n) / (weights[1] + weights[2]) + 'fr',
+      );
+    });
     handles.forEach((h, i) => {
       h.setAttribute('aria-orientation', vertical() ? 'horizontal' : 'vertical');
       h.setAttribute('aria-valuenow', String(Math.round(weights[i] * 100)));
@@ -60,7 +67,8 @@ export function installGroupResize(workspace: HTMLElement, onLayout: () => void)
         const end = () => {
           drag.abort();
           try {
-            localStorage.setItem('jalweb.group-sizes', JSON.stringify(weights));
+            if (!ordinaryWeights)
+              localStorage.setItem('jalweb.group-sizes', JSON.stringify(weights));
           } catch {}
         };
         handle.addEventListener('pointerup', end, { signal: drag.signal });
@@ -76,19 +84,38 @@ export function installGroupResize(workspace: HTMLElement, onLayout: () => void)
         e.preventDefault();
         adjust(weights[i], ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -24 : 24);
         try {
-          localStorage.setItem('jalweb.group-sizes', JSON.stringify(weights));
+          if (!ordinaryWeights) localStorage.setItem('jalweb.group-sizes', JSON.stringify(weights));
         } catch {}
       },
       options,
     );
   }
+  window.addEventListener(
+    'jaspera:presentation',
+    () => {
+      if (document.documentElement.hasAttribute('data-presentation')) {
+        if (!ordinaryWeights) {
+          ordinaryWeights = [...weights];
+          const available = weights[1] + weights[2];
+          weights[1] = available * (workspace.classList.contains('dock-swapped') ? 1 / 3 : 2 / 3);
+          weights[2] = available - weights[1];
+        }
+      } else if (ordinaryWeights) {
+        weights = ordinaryWeights;
+        ordinaryWeights = undefined;
+      }
+      apply();
+    },
+    options,
+  );
   const observer = new ResizeObserver(apply);
   observer.observe(workspace);
   apply();
   return {
-    snapshot: () => [...weights],
+    snapshot: () => [...(ordinaryWeights ?? weights)],
     restore(sizes: number[]) {
       weights = [...sizes];
+      if (ordinaryWeights) ordinaryWeights = [...sizes];
       apply();
     },
     dispose() {
