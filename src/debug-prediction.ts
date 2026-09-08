@@ -8,6 +8,12 @@ export function predictDebugFrame(frame:DebugFrame):FrameTransition {
  const insn=frame.instruction;if(!insn){result.terminal='命令情報がありません';return result;}
  const op=insn.opcode.toLowerCase().replace(/_resolved$/,'').replace(/^(getfield|putfield|getstatic|putstatic)_[bcsijfdzl]$/,'$1');
  const unknown=(label:string)=>label+'（未確定）';
+ const fieldType=()=>{
+  const match=insn.fieldDescriptor?.match(/^(\[*)(?:L([^;]+);|([ZBCSIJFD]))$/);
+  if(!match)return unknown('フィールド値');
+  const primitives:Record<string,string>={Z:'boolean',B:'byte',C:'char',S:'short',I:'int',J:'long',F:'float',D:'double'};
+  return (match[2]??primitives[match[3]])+'[]'.repeat(match[1].length);
+ };
  const replace=(count:number,values:string[])=>{if(count>before.length)throw Error('スタック情報が不足しています');result.consumed=count;result.produced=values.length;result.after=[...before.slice(0,before.length-count),...values];};
  const top=()=>before.at(-1)!;
  const local=()=>{if(insn.local<0)throw Error('ローカル変数の位置が不明です');return insn.local;};
@@ -24,8 +30,8 @@ export function predictDebugFrame(frame:DebugFrame):FrameTransition {
   }
   else if(op==='return'||/^[ilfda]return$/.test(op)){replace(op==='return'?0:1,[]);terminal('呼び出し元へ戻る');}
   else if(op==='athrow'){replace(1,[]);terminal('例外ハンドラーへ移る');}
-  else if(op==='getstatic'){replace(0,[unknown('フィールド値')]);}
-  else if(op==='getfield'){replace(1,[unknown('フィールド値')]);if(top()==='null')terminal('NullPointerException');}
+  else if(op==='getstatic'){replace(0,[fieldType()]);}
+  else if(op==='getfield'){replace(1,[fieldType()]);if(top()==='null')terminal('NullPointerException');}
   else if(op==='putstatic'){replace(1,[]);}
   else if(op==='putfield'){replace(2,[]);if(before.at(-2)==='null')terminal('NullPointerException');}
   else if(/^[ilfdabcs]aload$/.test(op)){replace(2,[unknown('配列要素')]);if(before.at(-2)==='null')terminal('NullPointerException');}

@@ -115,10 +115,19 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  } }`);phase='self';const selfRun=vm.run(self,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]}).catch(e=>e.message);
    const selfBefore=await next(),selfAfter=await advance('over');vm.stop();await selfRun;
 
+   phase='field-types';const fields=await compile(`public class Main { public static main([Ljava/lang/String;)V {
+ Loop:
+ getstatic java/lang/System->out:Ljava/io/PrintStream;
+ pop
+ goto Loop
+ } }`);
+   const fieldRun=vm.run(fields,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]}).catch(e=>e.message);
+   const unresolvedField=(await next()).frames[0];await advance('over');await advance('over');const resolvedField=(await advance('over')).frames[0];vm.stop();await fieldRun;
    const {predictDebugFrame}=await import('/src/debug-prediction.ts');const predictions=states.slice(0,-1).map(s=>predictDebugFrame(s.frames[0]));
-   return {entry,predictions,states:states.map(s=>s.frames[0]),call,into,inside,out,stored,first,second,paused,stopped,normal,parentThread,childThread,childValue,selfBefore,selfAfter,caught,loadedHelper,returnedHelper};
+   return {unresolvedField,resolvedField,entry,predictions,states:states.map(s=>s.frames[0]),call,into,inside,out,stored,first,second,paused,stopped,normal,parentThread,childThread,childValue,selfBefore,selfAfter,caught,loadedHelper,returnedHelper};
   }catch(e){throw Error(phase+' '+trace.join(',')+' '+e.message);}finally{vm.stop();}
  });
+ assert.equal(result.unresolvedField.instruction.fieldDescriptor,'Ljava/io/PrintStream;');assert.equal(result.resolvedField.instruction.fieldDescriptor,'Ljava/io/PrintStream;');assert.equal(result.resolvedField.instruction.opcode,'getstatic_L');
  for(let i=0;i<result.predictions.length;i++)assert.deepEqual(result.predictions[i].after,result.states[i+1].stack,'Prediction for '+result.states[i].instruction.opcode);
  assert.equal(result.entry.frames[0].instruction.opcode,'ldc');assert.equal(result.call.frames[0].instruction.arguments,2);assert.equal(result.call.frames[0].instruction.returns,true);assert.equal(result.entry.reason,'entry');assert.equal(result.entry.location.pc,0);
  assert.ok(result.states.some(f=>f.stack.includes('"日本語🙂"')));

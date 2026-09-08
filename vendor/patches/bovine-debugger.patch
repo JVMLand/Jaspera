@@ -98,7 +98,7 @@
        if (!ent->catch_type || instanceof(exception_type, ent->catch_type->classdesc)) {
 --- /dev/null
 +++ b/vm/jaspera_debugger.c
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,116 @@
 +// Jaspera's cooperative instruction debugger. No Java calls or GC allocation
 +// are allowed while copying a suspended frame into JavaScript.
 +#include "debugger.h"
@@ -117,6 +117,10 @@
 +EM_JS(void, jaspera_instruction, (const char *opcode,int local,int increment,int argc,int returns,int dimensions,const char *constant,const char *string,int length), {
 +  const frames=Module.jasperaDebugger.frames;
 +  frames[frames.length-1].instruction={opcode:UTF8ToString(opcode),local,increment,arguments:argc,returns:!!returns,dimensions,constant:string?JSON.stringify(UTF8ToString(string,length)):constant?UTF8ToString(constant):undefined};
++});
++EM_JS(void, jaspera_field_type, (const char *descriptor,int length), {
++  const frames=Module.jasperaDebugger.frames;
++  frames[frames.length-1].instruction.fieldDescriptor=UTF8ToString(descriptor,length);
 +});
 +static void emit_instruction(bytecode_insn *insn) {
 +  const char *opcode=insn_code_to_string(insn->kind),*string=nullptr;int local=-1,increment=0,argc=-1,returns=0,dimensions=0,length=0;char value[128]={0};
@@ -138,6 +142,11 @@
 +    default:break;
 +  }
 +  jaspera_instruction(opcode,local,increment,argc,returns,dimensions,value[0]?value:nullptr,string,length);
++  // Resolution caches the field address in ic; the original constant-pool reference is retained.
++  if(strncmp(opcode,"getstatic",9)==0||strncmp(opcode,"getfield",8)==0){
++    slice descriptor=insn->cp->field.nat->descriptor;
++    jaspera_field_type(descriptor.chars,descriptor.len);
++  }
 +}
 +EM_JS(void, jaspera_value, (int local,const char *text), {
 +  const frames=Module.jasperaDebugger.frames;

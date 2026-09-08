@@ -5,3 +5,12 @@ test('println consumes the current receiver and argument, retaining unchanged lo
 test('arithmetic uses runtime values and JVM integer overflow, division and long semantics',()=>{for(const [op,values,result] of [['iadd',['2','3'],'5'],['iadd',['2147483647','1'],'-2147483648'],['idiv',['-7','2'],'-3'],['ldiv',['-9223372036854775808L','-1L'],'-9223372036854775808L'],['iushr',['-1','1'],'2147483647'],['lshl',['1L','65'],'2L']])assert.deepEqual(predict(frame(op,values)).after,[result]);assert.equal(predict(frame('idiv',['1','0'])).terminal,'ArithmeticException');});
 test('stores mark changed local slots and unchanged locals retain their contents',()=>{const p=predict(frame('istore',['5'],['3','2'],{local:1}));assert.deepEqual(p.after,[]);assert.deepEqual(p.locals,{before:['2'],after:['5'],labels:['#1'],changed:[0]});assert.deepEqual(predict(frame('istore',['2'],['3','2'],{local:1})).locals,{before:['3','2'],after:['3','2'],changed:[]});assert.deepEqual(predict(frame('iload',[],['3','2'],{local:1})).after,['2']);assert.deepEqual(predict(frame('iload',[],['3','2'],{local:1})).locals,{before:['3','2'],after:['3','2'],changed:[]});});
 test('resolved calls, duplicate references and unknown results retain honest effects',()=>{assert.deepEqual(predict(frame('invokevtable_monomorphic',['obj @12','7'],[],{arguments:2,returns:true})).after,['戻り値（未確定）']);assert.deepEqual(predict(frame('dup_x1',['a @1','b @2'])).after,['b @2','a @1','b @2']);assert.deepEqual(predict(frame('getfield_L',['obj @12'])).after,['フィールド値（未確定）']);assert.deepEqual(predict(frame('return',[],['3'])).locals,{before:['3'],after:['3'],changed:[]});});
+
+test('field reads retain declared reference, primitive and array types',()=>{
+ for(const [descriptor,type] of [['Ljava/io/PrintStream;','java/io/PrintStream'],['I','int'],['Z','boolean'],['[[Ljava/lang/String;','java/lang/String[][]'],['[B','byte[]']]){
+  for(const opcode of ['getstatic','getstatic_L','getfield','getfield_L']){
+   const p=predict(frame(opcode,opcode.startsWith('getfield')?['object @12']:[],[],{fieldDescriptor:descriptor}));assert.deepEqual(p.after,[type]);
+  }
+ }
+ assert.equal(predict(frame('getfield',['null'],[],{fieldDescriptor:'I'})).terminal,'NullPointerException');
+});
