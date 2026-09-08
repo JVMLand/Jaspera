@@ -58,10 +58,11 @@ export function installWindowCommands(commands: { save: () => void; open: () => 
       else commands.open();
     }
   };
-  window.addEventListener('keydown', keydown);
+  // Handle application shortcuts before Monaco consumes editor key events.
+  window.addEventListener('keydown', keydown, true);
   return {
     dispose() {
-      window.removeEventListener('keydown', keydown);
+      window.removeEventListener('keydown', keydown, true);
     },
   };
 }
