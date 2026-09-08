@@ -1,24 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { createServer } from 'vite';
 import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'instruction selection is transient, diagrams align, and clicks follow across detached tools',
   { timeout: 90000 },
   async (t) => {
-    const server = spawn(
-      process.execPath,
-      ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5198', '--strictPort'],
-      { stdio: 'pipe', windowsHide: true },
-    );
-    t.after(() => server.kill());
-    const base = 'http://127.0.0.1:5198';
-    for (let i = 0; i < 100; i++) {
-      try {
-        if ((await fetch(base)).ok) break;
-      } catch {}
-      await new Promise((r) => setTimeout(r, 100));
-    }
+    const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
+    await server.listen();
+    t.after(() => server.close());
+    const base = server.resolvedUrls.local[0];
     const browser = await launchBrowser({
       headless: true,
     });
