@@ -34,7 +34,24 @@ pnpm run deploy:cloudflare
 
 変更を公開するたびに `build:cloudflare` を実行してください。`deploy:cloudflare` は直前に生成した成果物をアップロードします。
 
-## GitHub Actions から公開する
+## Cloudflare の Git 連携で自動公開する
+
+Workers & Pages の Create application → Continue with GitHub で `JVMLand/Jaspera` を選択します。
+
+| 項目              | 設定                                      |
+| ----------------- | ----------------------------------------- |
+| Project name      | `jaspera`                                 |
+| Production branch | `main`                                    |
+| Build command     | `bash scripts/build-cloudflare.sh`        |
+| Deploy command    | `pnpm run deploy:cloudflare`              |
+| Path              | `/`                                       |
+| Build variable    | `NODE_VERSION=22`，`PNPM_VERSION=10.13.1` |
+
+ビルドスクリプトは JDK 23，CMake，Ninja を取得し，JVM のビルドと圧縮まで実行します。Cloudflare の標準環境に Java があることは前提にしていません。GitHub Actions 用の secrets や，手元の Wrangler ログインは不要です。
+
+連携後は `main` への push が自動公開のきっかけになります。本番以外のブランチのビルドは，必要になってから有効にしてください。
+
+## GitHub Actions から手動公開する（別の方法）
 
 リポジトリの Actions secrets に次の値を登録します。
 
