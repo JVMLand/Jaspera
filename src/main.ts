@@ -1,3 +1,4 @@
+import {installFeatureGuides} from './feature-guides';
 import {BreakpointStore} from './breakpoint-store';
 import {installDebugPanel,debugMenuItems,installDebugKeys} from './debug-panel';
 import {installDebugEditor} from './debug-editor';
@@ -781,3 +782,5 @@ const windowCommands=installWindowCommands({save:()=>void saveProject(),open:fil
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{disposed=true;unsubscribeDebug();breakpoints.dispose();debugPanel.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
 void installProject(project).then(()=>{ensureExample('example/HelloWorld.jal');selectClassPreview('example:example/HelloWorld.jal');});
+
+installFeatureGuides();

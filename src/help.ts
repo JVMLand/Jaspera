@@ -1,3 +1,4 @@
+import {resetFeatureGuides} from './feature-guides';
 import {APP_NAME,APP_TAGLINE} from './brand';
 import './help.css';
 
@@ -18,6 +19,7 @@ export function showHelpMessage(title:string,text:string){openHelp(title,[elemen
 
 export function helpMenuItems(detached=false,canSave=()=>true){
   return [
+    {id:'help-guides',label:'機能ガイドを再表示',action:resetFeatureGuides},
     {id:'help-offline',label:'オフラインの準備…',action:()=>{void import('./offline').then(m=>m.openOfflinePreparation());}},
     ...(!detached?[{id:'help-project',label:'プロジェクト',action:()=>openHelp('プロジェクト',[
       element('p','プロジェクトは，設定ファイル（.jalprj）とソースをまとめたフォルダーです。File → フォルダーを開くから選んでください。'),

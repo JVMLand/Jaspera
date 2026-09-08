@@ -1,3 +1,4 @@
+import {installFeatureGuides} from './feature-guides';
 import {debugMenuItems,installDebugKeys} from './debug-panel';
 import {installDebugEditor} from './debug-editor';
 import {APP_NAME} from './brand';
@@ -115,3 +116,5 @@ const definitionUI=installDefinitionUI((model,offset,labelsOnly)=>{const tab=[..
 const editorCommands=installEditorCommands(editor,run,redo=>{if(active)bridge?.undo(active,redo);});
 const windowCommands=installWindowCommands({save,open:filePicker.open});
 window.addEventListener('pagehide',()=>{debugEditor.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();filePicker.dispose();dropFiles.dispose();exitDrag.dispose();instructionClicks.dispose();toolTabs?.dispose();stackHover.dispose();definitionUI.dispose();bridge?.release(group);observer.disconnect();overlays.remove();sourceAnalysis.dispose();editor.dispose();for(const tab of tabs.values()){tab.model.dispose();}});
+
+installFeatureGuides();
