@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  detachAt,
+  createTestProject,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'parameter inlays update without a JVM and render in both windows without editing source',
   { timeout: 60000 },
@@ -19,14 +25,15 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 950 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1400, height: 950 } }),
       page = await context.newPage(),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await context.route('**/runtime/**', (route) => route.abort());
     await page.goto(base);
+    await createTestProject(page);
     const source =
       'public class Main {\n public static calc(II)V { return }\n public mixed(JD[I)V { return }\n}';
     await page.evaluate(async (source) => {
@@ -85,13 +92,9 @@ test(
     );
     await page.evaluate(async () => (await import('/src/themes.ts')).applyTheme('vs', false));
     await page.screenshot({ path: '.cache/parameter-slots-light.png' });
-    const tab = await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).boundingBox(),
+    const tab = await page.getByRole('tab', { name: 'Main', exact: true }).boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, tab);
     const popup = await event;
     popup.on('pageerror', (e) => errors.push(e.message));
     await labels(popup).first().waitFor();

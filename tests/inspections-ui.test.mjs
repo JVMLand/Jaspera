@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'live inspections and keyboard Quick Fix work without JVM and support Undo',
   { timeout: 60000 },
@@ -19,16 +19,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 900 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (route) => route.abort());
     await page.goto(base);
+    await createTestProject(page);
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.setValue(

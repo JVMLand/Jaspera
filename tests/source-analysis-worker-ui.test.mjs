@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'shared syntax snapshots work over Comlink and recover after incomplete edits',
   { timeout: 40000 },
@@ -19,9 +19,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage();
+    const page = await newAppPage(browser);
     await page.goto(base + '/tests/harness.html');
     const result = await page.evaluate(async () => {
       const { WorkerRpc } = await import('/src/worker-rpc.ts'),

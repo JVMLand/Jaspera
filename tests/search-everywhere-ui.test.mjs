@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'double Shift searches files and OpenJDK definitions; chords do not open it',
   { timeout: 150000 },
@@ -19,14 +19,15 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const context = await browser.newContext();
+    const context = await newAppContext(browser);
     await context.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#editor .monaco-editor').waitFor();
     const dialog = page.getByRole('dialog', { name: 'どこでも検索' }),
       input = dialog.getByRole('combobox');

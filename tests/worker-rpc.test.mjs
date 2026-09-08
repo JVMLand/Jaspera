@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'Comlink RPC handles concurrent results, transfers, failures, stop, timeout and restart',
   { timeout: 40000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage();
+    const page = await newAppPage(browser);
     await page.goto(base + '/tests/harness.html');
     const result = await page.evaluate(async () => {
       const { WorkerRpc } = await import('/src/worker-rpc.ts');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 const source = `public class Main {
  public static main([Ljava/lang/String;)V {
   goto End
@@ -34,13 +34,14 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const page = await newAppPage(browser, { viewport: { width: 1280, height: 900 } });
     page.setDefaultTimeout(60000);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
     );

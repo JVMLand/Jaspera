@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'small and standard heaps share analysis/disassembly, release idle workers, and restart safely',
   { timeout: 240000 },
@@ -19,11 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
     for (const capacity of [4, 16])
       await t.test('deviceMemory=' + capacity, async () => {
-        const page = await browser.newPage(),
+        const page = await newAppPage(browser),
           errors = [];
         page.on('pageerror', (e) => errors.push(e.message));
         page.setDefaultTimeout(60000);
@@ -32,6 +32,7 @@ test(
           capacity,
         );
         await page.goto(base);
+        await createTestProject(page);
         await page.waitForFunction(
           () => document.querySelector('#state')?.textContent === '実行できます',
         );

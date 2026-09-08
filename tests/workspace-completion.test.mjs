@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  createTestProject,
+  detachAt,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'unbuilt workspace members complete across files and detached editors',
   { timeout: 60000 },
@@ -19,12 +25,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1400, height: 900 } }),
       page = await context.newPage(),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
@@ -32,6 +37,7 @@ test(
     await context.route('**/runtime/**', (r) => r.abort());
     await context.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#add-file').click();
     await page.locator('#dialog-input').fill('src/Helper.jal');
     await page.locator('#dialog-ok').click();
@@ -101,11 +107,7 @@ test(
     await page.keyboard.press('Escape');
     const tab = await page.getByRole('tab', { name: 'Main', exact: true }).boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, tab);
     const popup = await event;
     await popup.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     await suggest(popup, 'invokestatic', '/src/detached.ts');
