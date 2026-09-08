@@ -84,7 +84,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 </main>
 <footer class="statusbar"><div><span id="state-dot" class="status-dot loading"></span><span id="state" role="status" aria-live="polite">JVM を読み込み中…</span></div><span id="instruction-hint">命令ホバーでスタックの変化を表示</span><span id="timing"></span></footer>`;
 const el = <T extends HTMLElement = HTMLElement>(id:string) => document.getElementById(id) as T;
-let project=defaultProject();
+let project=defaultProject(false);
 const workspaceState=new WorkspaceStateStore();
 workspaceState.update({debug:{status:'idle',breakpoints:[]}});
 const debugSources=new Map<string,string>();
@@ -773,4 +773,4 @@ const editorCommands=installEditorCommands(editor,()=>void run());
 const windowCommands=installWindowCommands({save:()=>void saveProject(),open:filePicker.open});
 window.addEventListener('beforeunload',e=>{if(dirty||storageBusy){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{disposed=true;unsubscribeDebug();breakpoints.dispose();debugPanel.dispose();debugKeys.dispose();editorCommands.dispose();windowCommands.dispose();searchEverywhere.dispose();document.removeEventListener('visibilitychange',visibilityChanged);filePicker.dispose();unsubscribeTheme();unsubscribeGraph();graphPanel.dispose();for(const resource of groupResources)resource.dispose();for(const view of groupEditors.values())if(view!==editor)view.dispose();instructionClicks.dispose();instructionPanel.dispose();panelDock?.dispose();stackHover.dispose();definitionUI.dispose();navigation.dispose();detached.dispose();previewEpoch++;for(const p of classPreviews.values())p.model.dispose();overlayThemeObserver.disconnect();editorOverlays.remove();sourceAnalysis.dispose();clearInterval(folderWatch);clearTimeout(analysisTimer);compilationService.dispose();runner?.stop();editor.dispose();for(const model of models.values())model.dispose();});
-void installProject(project);
+void installProject(project).then(()=>{ensureExample('example/HelloWorld.jal');selectClassPreview('example:example/HelloWorld.jal');});

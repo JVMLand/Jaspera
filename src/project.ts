@@ -42,4 +42,4 @@ export function validateProject(project:Project):Project {
   }
   return {name:data.name.trim(),files,workspace:{activeFile,entryFile,stdin,panel,wordWrap,views,...(w.layout?{layout:readWorkspaceLayout(w.layout)}:{})}};
 }
-export function defaultProject():Project { return {name:'Main',files:[{path:'src/Main.jal',source:hello}],workspace:{activeFile:'src/Main.jal',entryFile:'src/Main.jal',stdin:'',panel:'console',wordWrap:false,views:{}}}; }
+export function defaultProject(withMain=true):Project { return {name:'Main',files:withMain?[{path:'src/Main.jal',source:hello}]:[],workspace:{activeFile:withMain?'src/Main.jal':'',entryFile:'src/Main.jal',stdin:'',panel:'console',wordWrap:false,views:{}}}; }
