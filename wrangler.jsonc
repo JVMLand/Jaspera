@@ -1,18 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "jaspera",
-  "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-08",
-  "workers_dev": true,
-  "routes": [
-    { "pattern": "jal.yamad.jp/jaspera", "zone_name": "yamad.jp" },
-    { "pattern": "jal.yamad.jp/jaspera/*", "zone_name": "yamad.jp" },
-  ],
-  "assets": {
-    "directory": ".cache/cloudflare/assets",
-    "binding": "ASSETS",
-    "run_worker_first": true,
-    "html_handling": "none",
-    "not_found_handling": "none",
-  },
+  "pages_build_output_dir": "./dist",
 }

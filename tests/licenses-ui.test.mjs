@@ -13,7 +13,7 @@ test(
     const browser = await launchBrowser();
     t.after(() => browser.close());
     const page = await newAppPage(browser, { locale: 'en-US' });
-    await page.goto('http://127.0.0.1:5274/jaspera/');
+    await page.goto('http://127.0.0.1:5274/');
     await page.locator('#menu-help').click();
     await page.locator('#help-licenses').click();
     const dialog = page.locator('#licenses-dialog');

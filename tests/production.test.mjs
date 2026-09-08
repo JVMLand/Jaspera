@@ -5,7 +5,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { launchBrowser, newAppContext, newAppPage, runHello } from './helpers/browser.mjs';
 test(
-  'Production static build works under a subdirectory and on mobile',
+  'Production static build works at the domain root and on mobile',
   { timeout: 90000 },
   async (t) => {
     const root = resolve('dist');
@@ -17,13 +17,12 @@ test(
       '.json': 'application/json',
       '.svg': 'image/svg+xml',
     };
+    const runtimeRequests = [];
     const server = createServer(async (req, res) => {
       const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-      if (!pathname.startsWith('/jaspera/')) {
-        res.writeHead(404).end();
-        return;
-      }
-      const path = resolve(root, pathname.slice('/jaspera/'.length) || 'index.html');
+      if (pathname.includes('/runtime/'))
+        runtimeRequests.push(new URL(req.url, 'http://localhost').href);
+      const path = resolve(root, pathname.slice(1) || 'index.html');
       if (!path.startsWith(root)) {
         res.writeHead(403).end();
         return;
@@ -48,7 +47,7 @@ test(
     });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://127.0.0.1:${server.address().port}/jaspera/`);
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor({ timeout: 60000 });
     await page.waitForFunction(
       () =>
@@ -57,10 +56,16 @@ test(
     );
     await runHello(page);
     assert.equal(await page.locator('#output').textContent(), 'Hello, JAL!\n');
+    assert.ok(runtimeRequests.some((url) => new URL(url).pathname.endsWith('/modules.gzip')));
+    assert.ok(!runtimeRequests.some((url) => new URL(url).pathname.endsWith('/modules')));
     await page.locator('#console-tab').click();
     await page.setViewportSize({ width: 390, height: 844 });
     assert.ok(await page.locator('#run').isVisible());
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.waitForFunction(
+      () => document.documentElement.scrollWidth <= innerWidth,
+      undefined,
+      { timeout: 5000 },
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator('#menu-view').click();
     await page.locator('#theme-settings').click();
@@ -87,7 +92,7 @@ test(
     const popup = await popupEvent;
     popup.on('pageerror', (e) => errors.push(e.message));
     await popup.locator('.instruction-detail').waitFor();
-    assert.match(popup.url(), /\/jaspera\/detached\.html/);
+    assert.match(popup.url(), /\/detached\.html/);
     await popup.close();
     await page.locator('#instructions-tab').waitFor();
     assert.deepEqual(errors, []);

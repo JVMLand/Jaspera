@@ -1,77 +1,51 @@
-# Cloudflare への公開
+# Cloudflare Pages への公開
 
-`jal.yamad.jp` の既存サイトは GitHub Pages で配信し，`/jaspera` と `/jaspera/*` だけを Cloudflare Worker に振り分けます。公開パスは `https://jal.yamad.jp/jaspera/` です。
+Jaspera はドメイン直下 `/` で動く静的サイトです。公開先は `https://jaspera.yamad.jp/` を予定しています。配信に Worker や Pages Functions は使いません。
 
-## DNS とルート
+## GitHub 連携
 
-1. `yamad.jp` を管理する Cloudflare アカウントで，`jal.yamad.jp` の DNS レコードを確認します。
-2. レコードの接続先は GitHub Pages のままにして，プロキシを有効（オレンジの雲）にします。GitHub Pages 側のカスタムドメイン設定も維持します。
-3. 下記の手順で Worker をデプロイします。`wrangler.jsonc` の設定により，`jal.yamad.jp/jaspera` と `jal.yamad.jp/jaspera/*` の Route が登録されます。
+Cloudflare の Workers & Pages から Pages を作成し，GitHub の `JVMLand/Jaspera` を選びます。
 
-`jal.yamad.jp` 全体を Worker の Custom Domain に登録する必要はありません。`/` など，指定したパス以外は従来どおり GitHub Pages に届きます。`/jaspera` は `/jaspera/` に転送します。
+| 項目                   | 設定                                      |
+| ---------------------- | ----------------------------------------- |
+| Production branch      | `main`                                    |
+| Framework preset       | None                                      |
+| Build command          | `bash scripts/build-pages.sh`             |
+| Build output directory | `dist`                                    |
+| Root directory         | リポジトリ直下（空欄）                    |
+| Environment variables  | `NODE_VERSION=22`，`PNPM_VERSION=10.13.1` |
 
-Route には Cloudflare でプロキシされた DNS レコードが必要です。現在の DNS が Cloudflare 管理でない場合は，先にその設定が必要になります。既存の DNS レコードを削除したり，GitHub Pages の接続先を Worker に置き換えたりしないでください。
+Pages の Git 連携がビルドと公開を行います。Deploy command や GitHub Actions 用の Cloudflare API トークンは不要です。ビルドスクリプトは JDK 23，CMake，Ninja を取得し，実行環境とサイトをビルドします。
 
-- [Cloudflare の Route](https://developers.cloudflare.com/workers/configuration/routing/routes/)
-- [Custom Domain との違い](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+まず `pages.dev` で実行・デバッグ・小窓・ファイル操作・オフライン利用を確認してください。その後，Pages の Custom domains から `jaspera.yamad.jp` を接続し，HTTPS で再確認します。
 
-## ローカルから公開する
+## ローカルで確認する
 
-README の開発環境を用意し，初回は `pnpm install --frozen-lockfile` と `pnpm run setup` を実行します。
-
-```sh
-pnpm run build:cloudflare
-pnpm exec wrangler deploy --dry-run
-pnpm run preview:cloudflare
-```
-
-ローカルの確認先は `http://localhost:8787/jaspera/` です。確認後，Cloudflare にログインして公開します。
+README に従って開発環境を用意し，初回は `pnpm install --frozen-lockfile` と `pnpm run setup` を実行します。
 
 ```sh
-pnpm exec wrangler login
-pnpm run deploy:cloudflare
+pnpm run build:pages
+pnpm run preview:pages
 ```
 
-変更を公開するたびに `build:cloudflare` を実行してください。`deploy:cloudflare` は直前に生成した成果物をアップロードします。
+確認先は Wrangler が表示するローカル URL の `/` です。通常は `http://localhost:8788/` です。`dist` がそのまま Pages の公開物になります。
 
-## Cloudflare の Git 連携で自動公開する
+## JDK の圧縮とキャッシュ
 
-Workers & Pages の Create application → Continue with GitHub で `JVMLand/Jaspera` を選択します。
+JDK の `modules` は約 28.35 MiB あり，Pages の 1 ファイル 25 MiB 制限を超えます。ビルド時に `modules.gzip`（約 9.42 MiB）を生成し，JVM が読み込む際にブラウザ内で展開します。元のファイルはローカルのテスト用に残し，公開物からは除外します。
 
-| 項目              | 設定                                      |
-| ----------------- | ----------------------------------------- |
-| Project name      | `jaspera`                                 |
-| Production branch | `main`                                    |
-| Build command     | `bash scripts/build-cloudflare.sh`        |
-| Deploy command    | `pnpm run deploy:cloudflare`              |
-| Path              | `/`                                       |
-| Build variable    | `NODE_VERSION=22`，`PNPM_VERSION=10.13.1` |
+この gzip はファイル自体の形式です。`Content-Encoding: gzip` は設定しません。JavaScript や CSS などの HTTP 圧縮は Pages に任せます。公開物のサイズとファイル数はビルド時に検査します。
 
-ビルドスクリプトは JDK 23，CMake，Ninja を取得し，JVM のビルドと圧縮まで実行します。Cloudflare の標準環境に Java があることは前提にしていません。GitHub Actions 用の secrets や，手元の Wrangler ログインは不要です。
+Service Worker の対象範囲は `/` です。オフライン保存でも圧縮された JDK を保存し，同じ処理で展開します。`_headers` でハッシュ付きアセットの長期キャッシュと，実行環境・Service Worker の更新確認を設定します。存在しないファイルは `404.html` により 404 を返します。
 
-連携後は `main` への push が自動公開のきっかけになります。本番以外のブランチのビルドは，必要になってから有効にしてください。
+- [Pages の制限](https://developers.cloudflare.com/pages/platform/limits/)
+- [静的ファイルの配信](https://developers.cloudflare.com/pages/configuration/serving-pages/)
+- [ヘッダー設定](https://developers.cloudflare.com/pages/configuration/headers/)
 
-## GitHub Actions から手動公開する（別の方法）
+## 旧 Worker からの切り替え
 
-リポジトリの Actions secrets に次の値を登録します。
+この構成への変更だけでは，公開中の Worker やルートは変わりません。旧 Worker 向けのデプロイスクリプトと GitHub Actions の公開ワークフローは削除しています。
 
-| 名前                    | 値                                                                                                                     |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID` | `yamad.jp` を管理するアカウントの ID                                                                                   |
-| `CLOUDFLARE_API_TOKEN`  | 対象アカウントの Workers Scripts の編集と，`yamad.jp` の Workers Routes の編集・Zone の読み取りを許可した API トークン |
+新サイトの確認後，LangJAL 側に旧 `/jaspera` からの永久リダイレクトを配置し，旧 Worker のルートを解除します。旧 URL からの転送を確認するまでは Worker 自体を残してください。旧構成は Git の `2026.2` タグで参照できます。
 
-Actions の **Deploy Jaspera to Cloudflare** を開き，**Run workflow** で公開するブランチを選びます。自動公開やリリースタグの作成は行いません。実行環境のビルドも含むため，初回は時間がかかります。
-
-## 圧縮配信
-
-128 KiB 以上のファイルはビルド時に Brotli（品質 11）と gzip を生成します。Worker はブラウザの対応形式に合わせて選びます。どちらも受け取れないクライアントには，gzip をストリーム展開して返します。
-
-元の URL と展開後の内容は変わりません。小窓やオフライン保存でも同じファイルを利用します。圧縮済みファイルは `.cache/cloudflare/` に保存し，同じ内容なら次回ビルドで再利用します。過去のファイルはアップロード対象から除外します。
-
-今回のビルドでは，全ファイル合計が約 65.1 MiB から 33.6 MiB になりました。これは全体を取得した場合の値で，初回表示時の通信量ではありません。特に JVM の `modules` は約 28.35 MiB から 6.61 MiB に縮小します。
-
-Cloudflare Static Assets の 1 ファイル 25 MiB 制限に収まることを，Brotli・gzip の両方についてビルド時に確認します。圧縮形式の選択は Worker で行うため，このパスへのアクセスは Workers のリクエスト枠を使います。
-
-`/jaspera/` のみを対象とする Service Worker を配信します。ただし，既存の GitHub サイトにも `/` を対象とする Service Worker がある場合は，そちらが `/jaspera/` を横取りしないよう，既存サイト側の設定も確認してください。
-
-クローラー向けの指定はドメイン直下の `/robots.txt` が対象です。既存の GitHub サイト側で `/jaspera/` を禁止していないことを確認してください。
+ドメインが変わるため，ブラウザ内のプロジェクト・設定・フォルダーのアクセス権は自動では移りません。旧 Service Worker がキャッシュした画面を返す場合もあります。ルート解除前に，旧サイトでの移行案内と保存データの持ち出し方法を用意してください。

@@ -3,7 +3,7 @@ import { join, resolve, delimiter } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
-// Workers Builds needs a local Java/CMake toolchain. Nothing is installed system-wide.
+// Pages builds need a local Java/CMake toolchain. Nothing is installed system-wide.
 const tools = resolve('.cache/cloudflare-tools');
 const jdk = join(tools, 'jdk');
 await mkdir(jdk, { recursive: true });
@@ -40,5 +40,4 @@ run('python3', [
 ]);
 run('java', ['-version']);
 run('pnpm', ['run', 'setup']);
-run(process.execPath, ['--test', 'tests/cloudflare.test.mjs']);
-run('pnpm', ['run', 'build:cloudflare']);
+run('pnpm', ['run', 'build:pages']);

@@ -12,7 +12,7 @@ async function inventory(
       files.push(...(await inventory(join(directory, entry.name), relative + '/')));
     else if (
       !entry.name.startsWith('.') &&
-      !['sw.js', 'offline-manifest.json'].includes(entry.name) &&
+      !['sw.js', 'offline-manifest.json', '_headers', '_redirects'].includes(entry.name) &&
       !entry.name.endsWith('.map')
     )
       files.push({ url: relative, bytes: (await stat(join(directory, entry.name))).size });
@@ -23,7 +23,7 @@ const files = await inventory('dist');
 const manifestOptions = {
   globDirectory: 'dist',
   globPatterns: ['**/*'],
-  globIgnores: ['**/*.map', '**/.*', 'sw.js', 'offline-manifest.json'],
+  globIgnores: ['**/*.map', '**/.*', '_headers', '_redirects', 'sw.js', 'offline-manifest.json'],
   maximumFileSizeToCacheInBytes: 64 * 1024 * 1024,
 };
 const { manifestEntries, warnings } = await getManifest(manifestOptions);
@@ -45,7 +45,7 @@ const result = await generateSW({
   cacheId,
   globDirectory: 'dist',
   globPatterns: ['**/*'],
-  globIgnores: ['**/*.map', '**/.*', 'sw.js'],
+  globIgnores: ['**/*.map', '**/.*', '_headers', '_redirects', 'sw.js'],
   swDest: 'dist/sw.js',
   maximumFileSizeToCacheInBytes: 64 * 1024 * 1024,
   inlineWorkboxRuntime: true,

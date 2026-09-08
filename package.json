@@ -10,19 +10,18 @@
     "generate": "tsx scripts/generate.ts",
     "typecheck": "pnpm run generate && tsc --noEmit && pnpm run typecheck:scripts",
     "perf": "tsx scripts/measure-workspace-performance.ts",
-    "build": "pnpm run typecheck && vite build && tsx scripts/build-offline.ts",
+    "build": "pnpm run typecheck && vite build && tsx scripts/prepare-pages.ts && tsx scripts/build-offline.ts",
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "prebuild": "tsx scripts/check-runtime.ts",
     "build:runtime": "tsx scripts/build-runtime.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build:cloudflare": "pnpm run build && tsx scripts/prepare-cloudflare.ts",
-    "preview:cloudflare": "wrangler dev",
-    "deploy:cloudflare": "wrangler deploy",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json",
     "predev": "pnpm run generate",
-    "pretest": "pnpm run generate"
+    "pretest": "pnpm run generate",
+    "build:pages": "pnpm run build",
+    "preview:pages": "wrangler pages dev dist"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",

@@ -6,7 +6,7 @@ test(
   'prepared production build restarts, shows lazy panels and runs Java without network',
   { timeout: 180000 },
   async (t) => {
-    const base = 'http://127.0.0.1:5230/jaspera/';
+    const base = 'http://127.0.0.1:5230/';
     const server = spawn(
       process.execPath,
       [

@@ -1,5 +1,5 @@
 // Count visits to the main application only, excluding local previews and detached editors.
-if (import.meta.env.PROD && ['jal.yamad.jp', 'jal.peya.tokyo'].includes(window.location.hostname)) {
+if (import.meta.env.PROD && window.location.hostname === 'jaspera.yamad.jp') {
   const measurementId = 'G-2SXGWK2ZNV';
   const analyticsWindow = window as typeof window & { dataLayer?: unknown[] };
   const dataLayer = (analyticsWindow.dataLayer ??= []);

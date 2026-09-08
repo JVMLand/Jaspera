@@ -14,7 +14,7 @@ test(
     const page = await newAppPage(browser);
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto('http://127.0.0.1:5291/jaspera/');
+    await page.goto('http://127.0.0.1:5291/');
     const tab = page.getByRole('tab', { name: 'HelloWorld', exact: true });
     await tab.waitFor();
     const fontSize = (view) =>

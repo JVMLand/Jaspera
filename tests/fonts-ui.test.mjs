@@ -14,7 +14,7 @@ test(
     const page = await newAppPage(browser);
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto('http://127.0.0.1:5290/jaspera/');
+    await page.goto('http://127.0.0.1:5290/');
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
     async function checkFonts(view) {
       await view.locator('.view-lines').first().waitFor();

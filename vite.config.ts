@@ -16,8 +16,8 @@ try {
   /* Source archives may not contain Git metadata. */
 }
 
-export default defineConfig(({ command, isPreview }) => ({
-  base: command === 'serve' && !isPreview ? '/' : '/jaspera/',
+export default defineConfig({
+  base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __APP_BUILD_COMMIT__: JSON.stringify(buildCommit),
@@ -42,4 +42,4 @@ export default defineConfig(({ command, isPreview }) => ({
       input: { main: 'index.html', detached: 'detached.html' },
     },
   },
-}));
+});
