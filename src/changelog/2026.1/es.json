@@ -1,0 +1,19 @@
+{
+  "title": "Escribe y ejecuta JAL en el navegador",
+  "introduction": "Jaspera permite editar y ejecutar JAL, un lenguaje ensamblador para la JVM. Modifica los ejemplos para explorar las instrucciones y la pila.",
+  "imageAlt": "Código de HelloWorld con resaltado de instrucciones y desplazamientos de bytecode.",
+  "sections": [
+    {
+      "title": "De la edición a la ejecución",
+      "body": "Incluye autocompletado de instrucciones, tipos y métodos, diagnósticos y formato de código. Los programas se ejecutan en una JVM dentro del navegador."
+    },
+    {
+      "title": "Sigue los valores",
+      "body": "Detén el programa en puntos de interrupción y avanza paso a paso para consultar la pila y las variables locales. La referencia incluye ejemplos y el grafo muestra dependencias de datos y flujo de control."
+    },
+    {
+      "title": "Abre tus archivos",
+      "body": "Abre y edita archivos JAL, class y JAR. Reordena los paneles o sepáralos en ventanas. La interfaz está disponible en siete idiomas."
+    }
+  ]
+}

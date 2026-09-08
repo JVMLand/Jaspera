@@ -1,0 +1,19 @@
+{
+  "title": "Write and run JAL in your browser",
+  "introduction": "Jaspera is an editor and runtime for JAL, a JVM assembly language. Edit the examples to explore instructions and the operand stack.",
+  "imageAlt": "HelloWorld source with instruction highlighting and bytecode offsets.",
+  "sections": [
+    {
+      "title": "From editing to execution",
+      "body": "Instruction, type and method completion, diagnostics and formatting are available. Programs run on a JVM inside the browser."
+    },
+    {
+      "title": "Follow the values",
+      "body": "Pause at breakpoints and step through stack and local-variable changes. The instruction reference includes examples; the graph shows data dependencies and control flow."
+    },
+    {
+      "title": "Open your files",
+      "body": "Open and edit JAL, class and JAR files. Rearrange panels or detach them into separate windows. The interface supports seven languages."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Presentazioni e comandi più pratici",
+  "introduction": "Arrivano la modalità presentazione, la scelta del tipo di esecuzione e i menu accessibili da tastiera.",
+  "imageAlt": "Debug in pausa con Googol Light e barra mobile nella parte inferiore.",
+  "sections": [
+    {
+      "title": "Presenta il tuo lavoro",
+      "body": "La modalità presentazione nel menu Visualizza ingrandisce il testo dell’editor e dell’interfaccia. I pannelli restano ridimensionabili e il testo si adatta allo spazio. All’uscita vengono ripristinate le impostazioni precedenti."
+    },
+    {
+      "title": "Debug o esecuzione completa",
+      "body": "La freccia accanto a Esegui offre Debug ed Esegui. Esegui ignora i breakpoint per quella sola esecuzione, senza eliminarli. I comandi di debug non disponibili sono disattivati."
+    },
+    {
+      "title": "Menu e temi",
+      "body": "Apri i menu con Alt+F e scorciatoie analoghe. Le voci sono ordinate per frequenza d’uso. Googol Light e Night adottano pulsanti divisi, una barra di debug e filtri del grafo ispirati a Material 3 Expressive. Sono stati corretti anche gli stati di selezione e passaggio del puntatore."
+    }
+  ]
+}

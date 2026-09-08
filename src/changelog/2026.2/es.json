@@ -1,0 +1,19 @@
+{
+  "title": "Presentaciones y controles más cómodos",
+  "introduction": "Se añade el modo presentación, la selección del modo de ejecución y el acceso a los menús con el teclado.",
+  "imageAlt": "Depuración en pausa con Googol Light y la barra flotante en la parte inferior.",
+  "sections": [
+    {
+      "title": "Presenta tu trabajo",
+      "body": "El modo presentación del menú Ver amplía el texto del editor y de la interfaz. Puedes seguir ajustando los paneles; su texto se adapta al espacio disponible. Al salir se restaura la configuración anterior."
+    },
+    {
+      "title": "Depura o ejecuta hasta el final",
+      "body": "La flecha junto a Ejecutar ofrece Depurar y Ejecutar. Ejecutar ignora los puntos de interrupción solo durante esa ejecución, sin borrarlos. Las órdenes de depuración no disponibles aparecen desactivadas."
+    },
+    {
+      "title": "Menús y temas",
+      "body": "Abre los menús con Alt+F y atajos similares. Las opciones se ordenan por frecuencia de uso. Googol Light y Night incorporan botones divididos, una barra de depuración y filtros del grafo inspirados en Material 3 Expressive. También se corrigen los estados de selección y del puntero."
+    }
+  ]
+}
