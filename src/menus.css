@@ -1,0 +1,19 @@
+/* Treat the parentheses and key as one typographic unit. */
+.menu > button .menu-access-key {
+  display: inline-block;
+  margin-inline-start: 0.12em;
+  font: inherit;
+  line-height: 1;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+/* Latin glyphs have a smaller visible height than kana/kanji at the same em size. */
+:lang(ja) .menu > button .menu-access-key,
+:lang(zh) .menu > button .menu-access-key {
+  font-size: 1.12em;
+}
+.menu-access-key u {
+  font: inherit;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.12em;
+}

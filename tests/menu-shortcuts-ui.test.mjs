@@ -57,6 +57,7 @@ test(
       await view.keyboard.press('Escape');
     }
     await verify(page, '/src/main.ts');
+    await page.locator('#menus').screenshot({ path: '.cache/menu-access-keys.png' });
     const event = page.waitForEvent('popup');
     await detachAt(page, await tab.boundingBox());
     const popup = await event;

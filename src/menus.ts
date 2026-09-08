@@ -1,3 +1,4 @@
+import './menus.css';
 import { bindTranslation, localizedMessage } from './localization';
 export interface Item {
   id: string;
@@ -58,6 +59,7 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
       button.setAttribute('aria-label', label);
       if (accelerator) {
         const hint = document.createElement('span');
+        hint.className = 'menu-access-key';
         hint.setAttribute('aria-hidden', 'true');
         const letter = document.createElement('u');
         letter.textContent = accelerator.toUpperCase();
