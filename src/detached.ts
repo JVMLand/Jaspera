@@ -1,3 +1,4 @@
+import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
 import { textSizeMenuItem } from './text-size';
 import { codeFontFamily } from './fonts';
@@ -266,6 +267,7 @@ function remove(id: string) {
   updateActions();
 }
 function updateActions() {
+  updateDebugMenu(menus, workspace.debug);
   const tab = current();
   document.title = (toolTabs?.active ?? tab?.state.title ?? 'Editor') + ' — ' + APP_NAME;
   menus.hidden('save-project', !workspace.canSave);
@@ -330,7 +332,7 @@ const debugActions = {
   stop: () => bridge?.stop(),
   reveal: (f: import('./debug-protocol').DebugFrame) => bridge?.debugReveal(f),
 };
-const debugKeys = installDebugKeys(debugActions);
+const debugKeys = installDebugKeys(debugActions, () => workspace.debug);
 const debugEditor = installDebugEditor(
   editor,
   () => workspace.debug,

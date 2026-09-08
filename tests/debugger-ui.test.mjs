@@ -36,6 +36,15 @@ test(
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
     );
+    for (const id of [
+      'debug-continue',
+      'debug-over',
+      'debug-into',
+      'debug-out',
+      'debug-pause',
+      'debug-stop',
+    ])
+      assert.equal(await page.locator('#' + id).isDisabled(), true, id + ' before starting');
     await page.locator('#menu-file').click();
     await page.locator('#new-project').click();
     await page.locator('#instructions-tab').click();
@@ -141,6 +150,11 @@ test(
     popup.setDefaultTimeout(60000);
     await popup.waitForLoadState();
     await popup.locator('.debug-toolbar [data-command=debug-over]').waitFor();
+    for (const view of [page, popup]) {
+      for (const id of ['debug-continue', 'debug-over', 'debug-into', 'debug-out', 'debug-stop'])
+        assert.equal(await view.locator('#' + id).isDisabled(), false, id + ' while paused');
+      assert.equal(await view.locator('#debug-pause').isDisabled(), true);
+    }
     await popup.evaluate(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10' }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10' }));
@@ -155,6 +169,16 @@ test(
       document.querySelector('.debug-status')?.textContent.includes('デバッガは待機中です。'),
     );
     await page.waitForFunction(() => document.querySelector('.debug-toolbar')?.hidden === true);
+    for (const view of [page, popup])
+      for (const id of [
+        'debug-continue',
+        'debug-over',
+        'debug-into',
+        'debug-out',
+        'debug-pause',
+        'debug-stop',
+      ])
+        assert.equal(await view.locator('#' + id).isDisabled(), true, id + ' after finishing');
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.setPosition({ lineNumber: 7, column: 1 });

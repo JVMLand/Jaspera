@@ -9,6 +9,27 @@ export interface DebugActions {
   stop(): void;
   reveal(frame: DebugFrame): void;
 }
+export function debugCommandEnabled(state: DebugState | undefined, id: string) {
+  const status = state?.status;
+  if (id === 'debug-stop')
+    return status === 'starting' || status === 'running' || status === 'paused';
+  if (id === 'debug-pause') return status === 'running';
+  return status === 'paused';
+}
+export function updateDebugMenu(
+  menus: { disabled(id: string, value: boolean): void },
+  state: DebugState | undefined,
+) {
+  for (const id of [
+    'debug-continue',
+    'debug-over',
+    'debug-into',
+    'debug-out',
+    'debug-pause',
+    'debug-stop',
+  ])
+    menus.disabled(id, !debugCommandEnabled(state, id));
+}
 export function debugMenuItems(actions: DebugActions) {
   return [
     { id: 'debug-start', label: msg('m2f13ffc43a6d'), shortcut: 'Shift+F5', action: actions.start },
@@ -40,7 +61,7 @@ export function debugMenuItems(actions: DebugActions) {
     { id: 'debug-stop', label: msg('mca4d973c0b00'), action: actions.stop },
   ];
 }
-export function installDebugKeys(actions: DebugActions) {
+export function installDebugKeys(actions: DebugActions, state: () => DebugState | undefined) {
   const listener = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     const key = e.key;
@@ -61,7 +82,7 @@ export function installDebugKeys(actions: DebugActions) {
               ? 'out'
               : 'into'
             : undefined;
-    if (command) {
+    if (command && debugCommandEnabled(state(), 'debug-' + command)) {
       e.preventDefault();
       e.stopImmediatePropagation();
       actions.command(command);
@@ -139,11 +160,10 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
       : state.status === 'starting'
         ? msg('m9e305eab23dd')
         : msg('md82113a7a9c6');
-    const running = state.status === 'running';
     buttons.forEach((b) => {
       const id = b.dataset.command;
       b.hidden = id === 'debug-continue' ? !paused : id === 'debug-pause' ? paused : false;
-      b.disabled = id === 'debug-stop' ? !active : id === 'debug-pause' ? !running : !paused;
+      b.disabled = !debugCommandEnabled(state, id!);
     });
     list.replaceChildren();
     content.replaceChildren();

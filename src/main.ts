@@ -1,3 +1,4 @@
+import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
 import { textSizeMenuItem } from './text-size';
 import { codeFontFamily } from './fonts';
@@ -771,6 +772,7 @@ function publishWorkspaceAvailability() {
   });
 }
 function updateActions() {
+  updateDebugMenu(menus, workspaceState.value.debug);
   menus.disabled('download-jar', !jar || jarBusy);
   menus.disabled('close-jar', !jar || jarBusy);
   publishWorkspaceAvailability();
@@ -2080,8 +2082,9 @@ function output(text: string, stream = 'stdout') {
 }
 const instructionPanel = installInstructionsPanel(el('instructions-panel'), compileUsage);
 const debugPanel = installDebugPanel(el('debug-panel'), debugActions);
-const debugKeys = installDebugKeys(debugActions);
+const debugKeys = installDebugKeys(debugActions, () => workspaceState.value.debug);
 const unsubscribeDebug = workspaceState.subscribe(() => {
+  updateDebugMenu(menus, workspaceState.value.debug);
   debugPanel.update(workspaceState.value.debug);
   for (const view of debugEditors) view.update();
 });
