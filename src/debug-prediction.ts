@@ -3,7 +3,7 @@ import type {FrameTransition} from './frame-transition';
 /** Pure preview: never resumes the VM or calls a Java method. Values are logical JVM values (category 2 is one entry). */
 export function predictDebugFrame(frame:DebugFrame):FrameTransition {
  const before=[...frame.stack],localsBefore=[...frame.locals],localsAfter=[...frame.locals];
- const result:FrameTransition={before,after:[...before],consumed:0,produced:0,beforeLabel:'現在',afterLabel:'実行後（予測）',limit:65536};
+ const result:FrameTransition={before,after:[...before],consumed:0,produced:0,beforeLabel:'現在',afterLabel:'実行後',limit:65536};
  if(localsBefore.length)result.locals={before:localsBefore,after:[...localsBefore],changed:[]};
  const insn=frame.instruction;if(!insn){result.terminal='命令情報がありません';return result;}
  const op=insn.opcode.toLowerCase().replace(/_resolved$/,'').replace(/^(getfield|putfield|getstatic|putstatic)_[bcsijfdzl]$/,'$1');
