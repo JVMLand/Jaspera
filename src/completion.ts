@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 export type Member = { name: string; kind: 'field' | 'method'; static: boolean };
 export type Catalog = Record<string, Member[]>;
 export interface Candidate {
@@ -86,7 +87,11 @@ export function completeOperand(
           label,
           insertText: label,
           kind: m.kind,
-          detail: `${m.static ? 'static ' : ''}${m.kind === 'field' ? 'フィールド' : 'メソッド'} · ${origin}`,
+          detail: msg('mcf421717d49d', [
+            m.static ? 'static ' : '',
+            m.kind === 'field' ? msg('mdb132d621cb1') : msg('m99942ce88f0b'),
+            origin,
+          ]),
         },
         score: matched * 1000 + e.priority,
       });
@@ -102,7 +107,7 @@ export function completeOperand(
           insertText: owner + (isMember ? '->' : ''),
           kind: 'class',
           continue: isMember,
-          detail: `クラス · ${origin}`,
+          detail: msg('m83ff6788f44f', [origin]),
         },
         score: matched * 1000 + (isMember ? 200 : 0),
       });
@@ -129,7 +134,10 @@ export function consoleCompletions(typed: string): Candidate[] {
         label,
         kind: 'snippet',
         snippet: true,
-        detail: `標準${stream === 'out' ? '出力' : 'エラー'}に文字列を${name === 'println' ? '改行付きで' : ''}表示（3 命令）`,
+        detail: msg('m033d06269686', [
+          stream === 'out' ? msg('md38a2a54cf74') : msg('m8f2ead9ae16c'),
+          name === 'println' ? msg('m3c94951da277') : '',
+        ]),
         insertText: `getstatic java/lang/System->${stream}:Ljava/io/PrintStream;\nldc "\${1:Hello, World!}"\ninvokevirtual java/io/PrintStream->${name}(Ljava/lang/String;)V`,
       });
     }

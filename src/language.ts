@@ -1,9 +1,11 @@
+import { displayMessage as msg } from './messages.js';
 import { inlayHintColors } from './inlay-hint-style';
 import { instructionHighlightGroups, instructionColorRules } from './instruction-colors';
 import * as monaco from './editor-platform';
 import { instructionCategory } from './instruction-categories';
 import language from './generated/language-core.json';
 import { completeOperand, consoleCompletions, type Member, type Catalog } from './completion';
+import { descriptorContext, completeDescriptor } from './descriptor-completion';
 export const instructionNames = language.instructions;
 const snippets: Record<string, string> = {
   getstatic: 'getstatic ${1:java/lang/System}->${2:out}:${3:Ljava/io/PrintStream;}',
@@ -90,7 +92,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
     },
   });
   monaco.languages.registerCompletionItemProvider('jal', {
-    triggerCharacters: [' ', '/', '>', '.'],
+    triggerCharacters: [' ', '/', '>', '.', '(', '[', ';', ')'],
     async provideCompletionItems(model, position) {
       const word = model.getWordUntilPosition(position);
       const range = new monaco.Range(
@@ -100,17 +102,45 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
         word.endColumn,
       );
       const prefix = model.getLineContent(position.lineNumber).slice(0, position.column - 1);
+      const context = descriptorContext(model.getValue().slice(0, model.getOffsetAt(position)));
+      if (context) {
+        const [workspace, jdk] = await Promise.all([workspaceCatalog(), getJdk()]);
+        const start = model.getPositionAt(context.start);
+        const tail = model
+          .getLineContent(position.lineNumber)
+          .slice(position.column - 1)
+          .match(/^[\w$/.]*;?/)![0];
+        const typeRange = new monaco.Range(
+          start.lineNumber,
+          start.column,
+          position.lineNumber,
+          position.column + tail.length,
+        );
+        return {
+          incomplete: true,
+          suggestions: completeDescriptor(context.partial, context.returns, {
+            ...jdk,
+            ...workspace,
+          }).map((candidate, index) => ({
+            label: candidate.label,
+            insertText: candidate.insertText,
+            detail: candidate.detail,
+            kind: monaco.languages.CompletionItemKind.Class,
+            range: typeRange,
+            filterText: context.partial + ' ' + candidate.label,
+            sortText: String(index).padStart(4, '0'),
+          })),
+        };
+      }
       const operand = prefix.match(
         /^\s*(getstatic|putstatic|getfield|putfield|invokevirtual|invokestatic|invokespecial|invokeinterface|new|anewarray|checkcast|instanceof)(?:\s+(.*)|$)$/,
       );
       const lineStart = !operand && prefix.trim().match(/^[\w]*$/);
       const suggestions: monaco.languages.CompletionItem[] = [];
       if (lineStart) {
-        const docs = (await import('./generated/language.json')).default.documents as Record<
-          string,
-          { title: string; markdown: string }
-        >;
-        for (const label of language.instructions.filter((i) => i !== 'aload_4'))
+        const { guide } = await import('./instruction-guide');
+        for (const label of language.instructions.filter((i) => i !== 'aload_4')) {
+          const doc = guide(label);
           suggestions.push({
             label: { label, description: instructionCategory(label) },
             kind: monaco.languages.CompletionItemKind.Function,
@@ -121,14 +151,15 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
                 ? label + ' '
                 : (snippets[label] ?? label),
             command: /^(get|put|invoke|new|anewarray|checkcast|instanceof)/.test(label)
-              ? { id: 'editor.action.triggerSuggest', title: 'オペランド補完' }
+              ? { id: 'editor.action.triggerSuggest', title: msg('m58164bcfe386') }
               : undefined,
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             range,
-            detail: docs[label]?.title,
-            documentation: { value: docs[label]?.markdown ?? label },
+            detail: doc.title,
+            documentation: { value: doc.summary + '\n\n' + doc.markdown },
             sortText: `0${label}`,
           });
+        }
         for (const label of language.keywords)
           suggestions.push({
             label,
@@ -143,7 +174,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
           kind: monaco.languages.CompletionItemKind.Reference,
           insertText: match[1],
           range,
-          detail: 'ジャンプラベル',
+          detail: msg('mf0d815812e5d'),
         });
       for (const match of model.getValue().matchAll(/\[\s*->\s*([\w$]+)\s*\]/g))
         suggestions.push({
@@ -151,7 +182,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
           kind: monaco.languages.CompletionItemKind.Variable,
           insertText: match[1],
           range,
-          detail: 'ローカル変数',
+          detail: msg('m9bf67764bae7'),
         });
       const kinds = {
         field: monaco.languages.CompletionItemKind.Field,
@@ -173,7 +204,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
         const input = bare ? opcode : typed;
         const [workspace, jdk] = await Promise.all([workspaceCatalog(), getJdk()]);
         const candidates = [
-          ...completeOperand(opcode, typed, workspace, 'ワークスペース'),
+          ...completeOperand(opcode, typed, workspace, msg('mcae6357e5163')),
           ...completeOperand(opcode, typed, jdk).filter(
             (c) => !Object.hasOwn(workspace, c.label.split('->')[0]),
           ),
@@ -189,7 +220,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
             filterText: input + ' ' + c.label,
             sortText: String(i).padStart(4, '0'),
             command: c.continue
-              ? { id: 'editor.action.triggerSuggest', title: 'メンバー補完' }
+              ? { id: 'editor.action.triggerSuggest', title: msg('mb7decc116c64') }
               : undefined,
           }),
         );
