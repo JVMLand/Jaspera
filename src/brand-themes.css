@@ -378,6 +378,62 @@
 :root[data-theme-family='googol'] #file-list button.selected:hover {
   background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
 }
+:root[data-theme-family='googol'] .graph-filters {
+  gap: 8px;
+  padding: 12px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
+}
+:root[data-theme-family='googol'] .graph-filters label {
+  position: relative;
+  min-height: 32px;
+  padding: 6px 12px;
+  gap: 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text);
+  cursor: pointer;
+  user-select: none;
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked) {
+  border-color: transparent;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] .graph-filters label:hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--theme-surface));
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked):hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:focus-visible) {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+:root[data-theme-family='googol'] .graph-filters input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+:root[data-theme-family='googol'] .graph-filters label::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  background: currentColor;
+  clip-path: polygon(9% 47%, 0 58%, 36% 93%, 100% 20%, 89% 10%, 35% 71%);
+  visibility: hidden;
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked)::before {
+  visibility: visible;
+}
+:root[data-theme-family='googol'] .graph-filters label::after {
+  flex-shrink: 0;
+}
 :root[data-theme-family='googol'] dialog {
   border: 0;
   border-radius: 28px;
