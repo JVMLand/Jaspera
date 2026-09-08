@@ -20,7 +20,7 @@ export function predictDebugFrame(frame:DebugFrame):FrameTransition {
   else if(/^[ilfda]const$/.test(op)||op==='aconst_null'||op==='ldc'){replace(0,[insn.constant??unknown('定数')]);}
   else if(op.startsWith('invoke')){
    if(insn.arguments<0)throw Error('呼び出しの情報が不足しています');
-   replace(insn.arguments,insn.returns?[unknown('戻り値')]:[]);result.note='呼び出しが正常に戻った場合。';
+   replace(insn.arguments,insn.returns?[unknown('戻り値')]:[]);
   }
   else if(op==='return'||/^[ilfda]return$/.test(op)){replace(op==='return'?0:1,[]);terminal('呼び出し元へ戻る');}
   else if(op==='athrow'){replace(1,[]);terminal('例外ハンドラーへ移る');}
