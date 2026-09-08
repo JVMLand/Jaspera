@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 await mkdir('.cache/offset-parser', { recursive: true });
 await mkdir('src/generated/offset-parser', { recursive: true });
@@ -21,6 +21,12 @@ const result = spawnSync(
   { stdio: 'inherit' },
 );
 if (result.status !== 0) throw new Error('ANTLR generation failed');
+// The browser imports only the generated JavaScript lexer and parser.
+await Promise.all(
+  ['JAL.tokens', 'JAL.interp', 'JALLexer.tokens', 'JALLexer.interp'].map((name) =>
+    rm('src/generated/offset-parser/' + name, { force: true }),
+  ),
+);
 const opcodes = await readFile(
   'vendor/langjal/java/tokyo/peya/langjal/compiler/jvm/EOpcodes.java',
   'utf8',
