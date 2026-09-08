@@ -28,6 +28,7 @@ test(
     page.on('pageerror', (e) => errors.push(e.message));
     await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     await page.goto(base);
+    await page.locator('.feature-guide-skip:visible').click();
     await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
@@ -151,12 +152,16 @@ test(
     });
     await t.test(
       'a detached editor can preview and open a definition in the workspace',
-      async () => {
+      async (t) => {
         await main();
         const event = page.waitForEvent('popup');
         await page.locator('#instructions-tab').click({ button: 'right' });
         await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();
         const popup = await event;
+        t.after(async () => {
+          if (!popup.isClosed()) await popup.close();
+          await page.getByRole('tab', { name: 'Main', exact: true }).waitFor();
+        });
         popup.on('pageerror', (e) => errors.push(e.message));
         await popup.waitForFunction(() => document.querySelector('#file-tabs [role=tab]') !== null);
         const payload = await page
@@ -177,8 +182,14 @@ test(
           );
         }, payload);
         await popup.getByRole('tab', { name: 'Main', exact: true }).waitFor();
+        await popup.bringToFront();
         const at = await popup.evaluate(async () => {
+          await document.fonts.ready;
           const { editor } = await import('/src/detached.ts');
+          editor.focus();
+          await new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          );
           const p = editor.getModel().getPositionAt(editor.getValue().indexOf('->foo') + 3);
           editor.revealPositionInCenter(p);
           const q = editor.getScrolledVisiblePosition(p),
