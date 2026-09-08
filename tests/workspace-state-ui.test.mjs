@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'detached console receives output, input, diagnostics and theme changes from workspace commands',
   { timeout: 90000 },
@@ -19,16 +19,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext(),
+    const context = await newAppContext(browser),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
     const page = await context.newPage();
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       null,
@@ -75,7 +75,7 @@ test(
     await popup.locator('#show-problems').click();
     await popup.getByRole('button').filter({ hasText: 'iconst_1' }).waitFor();
     const problemNode = await popup.locator('#problems li').first().elementHandle();
-    await popup.getByRole('tab', { name: 'Console', exact: true }).click();
+    await popup.getByRole('tab', { name: 'コンソール', exact: true }).click();
     await popup.locator('#popup-stdin').fill('keep problems');
     await popup.waitForFunction(
       () => document.querySelector('#popup-stdin').value === 'keep problems',

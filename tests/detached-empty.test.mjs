@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'empty detached windows close after source and tool removals or transfers',
   { timeout: 60000 },
@@ -19,18 +19,18 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext(),
+    const context = await newAppContext(browser),
       page = await context.newPage(),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
     page.on('pageerror', (e) => errors.push(e.message));
     await context.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     const open = async (name) => {
       const popup = page.waitForEvent('popup');
       await page.locator('#' + name + '-tab').click({ button: 'right' });
@@ -41,7 +41,7 @@ test(
     };
     const first = await open('instructions'),
       firstClosed = first.waitForEvent('close');
-    await first.getByRole('button', { name: 'Instructions のタブを閉じる', exact: true }).click();
+    await first.getByRole('button', { name: '命令辞書 のタブを閉じる', exact: true }).click();
     await firstClosed;
     await page.locator('#instructions-tab').waitFor();
     const mixed = await open('instructions');
@@ -51,14 +51,14 @@ test(
         state = b.openTab(g, 'source:src/Main.jal');
       return b.openDefinition(g, state.uri, { lineNumber: 1, column: 1 });
     });
-    await mixed.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
-    await mixed.getByRole('button', { name: 'Instructions のタブを閉じる', exact: true }).click();
+    await mixed.getByRole('tab', { name: 'Main', exact: true }).waitFor();
+    await mixed.getByRole('button', { name: '命令辞書 のタブを閉じる', exact: true }).click();
     assert.equal(mixed.isClosed(), false);
-    await mixed.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
+    await mixed.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     const closing = mixed.waitForEvent('close');
     await mixed.getByRole('button', { name: 'src/Main.jal のタブを閉じる', exact: true }).click();
     await closing;
-    await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     const source = await open('instructions'),
       target = await open('problems'),
       sourceClosed = source.waitForEvent('close');
@@ -70,7 +70,7 @@ test(
     );
     await sourceClosed;
     assert.equal(target.isClosed(), false);
-    await target.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await target.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     await target.close();
     assert.deepEqual(errors, []);
   },

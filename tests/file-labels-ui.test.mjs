@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  detachAt,
+  createTestProject,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'tab labels update on collisions and close; popup and tree share the rules',
   { timeout: 60000 },
@@ -19,11 +25,12 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 950 } });
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 950 } });
     await page.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     const tab = (target, path) => target.locator(`[data-tab-key="source:${path}"] [role=tab]`);
     await page.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     assert.equal(
@@ -48,11 +55,7 @@ test(
     assert.equal(await tab(page, 'src/b/common/Helper.jal').textContent(), 'b/common/Helper');
     const rect = await tab(page, 'src/a/common/Helper.jal').boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, rect);
     const popup = await event;
     await popup.getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     assert.equal(await tab(page, 'src/b/common/Helper.jal').textContent(), 'Helper');

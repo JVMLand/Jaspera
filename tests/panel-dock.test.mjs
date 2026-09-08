@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'tool tabs dock independently, close and reopen with state, and swap sides',
   { timeout: 90000 },
@@ -19,16 +19,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1450, height: 950 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1450, height: 950 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#instructions-tab').click();
     await page.getByLabel('命令を検索').fill('iinc');
     async function drag(name, side) {
@@ -45,19 +45,17 @@ test(
     assert.equal(await page.locator('#editor').isVisible(), false);
     assert.equal(await page.locator('.output-pane #console-panel').isVisible(), true);
     assert.equal(await page.getByLabel('命令を検索').inputValue(), 'iinc');
-    await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).click();
+    await page.getByRole('tab', { name: 'Main', exact: true }).click();
     assert.equal(await page.locator('#editor').isVisible(), true);
     await page.locator('#instructions-tab').click();
-    await page.getByRole('button', { name: 'Instructions のタブを閉じる', exact: true }).click();
+    await page.getByRole('button', { name: '命令辞書 のタブを閉じる', exact: true }).click();
     assert.equal(await page.locator('#editor').isVisible(), true);
     assert.equal(
-      await page
-        .getByRole('tab', { name: 'src/Main.jal', exact: true })
-        .getAttribute('aria-selected'),
+      await page.getByRole('tab', { name: 'Main', exact: true }).getAttribute('aria-selected'),
       'true',
     );
-    await page.getByRole('menuitem', { name: 'View', exact: true }).click();
-    await page.getByRole('menuitem', { name: 'Instructions', exact: true }).click();
+    await page.getByRole('menuitem', { name: '表示', exact: true }).click();
+    await page.getByRole('menuitem', { name: '命令辞書', exact: true }).click();
     assert.equal(await page.getByLabel('命令を検索').inputValue(), 'iinc');
     await drag('instructions', 'output');
     assert.equal(await page.locator('.output-pane #instructions-panel').isVisible(), true);
@@ -67,23 +65,22 @@ test(
     assert.equal(await page.locator('.source-pane #stdin').inputValue(), 'keep input');
     assert.equal(await page.locator('.source-pane #clear').isVisible(), true);
     assert.equal(await page.locator('.output-pane #problems-panel').isVisible(), true);
-    await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).click();
-    await page.getByRole('menuitem', { name: 'View', exact: true }).click();
+    await page.getByRole('tab', { name: 'Main', exact: true }).click();
+    await page.getByRole('menuitem', { name: '表示', exact: true }).click();
     await page.getByRole('menuitem', { name: '左右のペインを入れ替える', exact: true }).click();
     const left = await page.locator('.output-pane').boundingBox(),
       right = await page.locator('.source-pane').boundingBox();
     assert.ok(left.x < right.x);
-    const styles = await page
-      .locator('.output-header .tabs')
-      .evaluate((n) => ({
-        y: getComputedStyle(n).overflowY,
-        bar: getComputedStyle(n).scrollbarWidth,
-      }));
+    const styles = await page.locator('.output-header .tabs').evaluate((n) => ({
+      y: getComputedStyle(n).overflowY,
+      bar: getComputedStyle(n).scrollbarWidth,
+    }));
     assert.deepEqual(styles, { y: 'hidden', bar: 'none' });
     await page.screenshot({ path: '.cache/panel-dock.png' });
     assert.deepEqual(errors, []);
-    const live = await browser.newPage();
+    const live = await newAppPage(browser);
     await live.goto(base);
+    await createTestProject(live);
     await live.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       null,
@@ -91,7 +88,7 @@ test(
     );
     await live.locator('#console-tab').click({ button: 'right' });
     await live.getByRole('menuitem', { name: '左側へ移動', exact: true }).click();
-    await live.getByRole('button', { name: 'Console のタブを閉じる', exact: true }).click();
+    await live.getByRole('button', { name: 'コンソール のタブを閉じる', exact: true }).click();
     await live.locator('#run').click();
     await live.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行が完了しました',

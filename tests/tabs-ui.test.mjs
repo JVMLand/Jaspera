@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'close tabs, reopen edited source, and Alt-click to close others',
   { timeout: 45000 },
@@ -19,16 +19,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 900 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (route) => route.abort());
     await page.goto(base);
+    await createTestProject(page);
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.executeEdits('test', [
@@ -42,21 +42,29 @@ test(
       await page.locator('#add-file').click();
       await page.locator('#dialog-input').fill(path);
       await page.locator('#dialog-ok').click();
-      await page.getByRole('tab', { name: path, exact: true }).waitFor();
+      await page
+        .getByRole('tab', {
+          name: path
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .waitFor();
     }
     const sourceFolder = page.locator('#file-list summary[title="src"]'),
       mainFile = page.locator('#file-list button[title="src/Main.jal"]');
     assert.equal(await sourceFolder.textContent(), 'src');
-    assert.equal(await mainFile.textContent(), 'Main.jal');
+    assert.equal(await mainFile.textContent(), 'Main');
     await sourceFolder.click();
     assert.equal(await mainFile.isVisible(), false);
-    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).click();
+    await page.getByRole('tab', { name: 'A', exact: true }).click();
     assert.equal(await mainFile.isVisible(), false);
     await sourceFolder.click();
     assert.equal(await mainFile.isVisible(), true);
     await page.getByRole('button', { name: 'src/Main.jal のタブを閉じる', exact: true }).click();
     assert.equal(await page.locator('#file-tabs [role=tab]').count(), 2);
-    assert.equal(await page.locator('#file-list button').count(), 3);
+    assert.equal(await page.locator('#file-list button[title^="src/"]').count(), 3);
     await page.locator('#file-list button[title="src/Main.jal"]').click();
     assert.match(
       await page.evaluate(async () => {
@@ -65,15 +73,15 @@ test(
       }),
       /^\/\/ unsaved/,
     );
-    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).click({ modifiers: ['Alt'] });
+    await page.getByRole('tab', { name: 'A', exact: true }).click({ modifiers: ['Alt'] });
     assert.equal(await page.locator('#file-tabs [role=tab]').count(), 1);
-    assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'src/A.jal');
+    assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'A');
     await page.locator('#file-list button[title="src/B.jal"]').click();
     await page
       .getByRole('button', { name: 'src/A.jal のタブを閉じる', exact: true })
       .click({ modifiers: ['Alt'] });
     assert.equal(await page.locator('#file-tabs [role=tab]').count(), 1);
-    assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'src/A.jal');
+    assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'A');
     await page.getByRole('button', { name: 'src/A.jal のタブを閉じる', exact: true }).click();
     assert.equal(await page.locator('#file-tabs [role=tab]').count(), 0);
     assert.equal(
@@ -92,11 +100,8 @@ test(
       /^\/\/ unsaved/,
     );
     await page.locator('#file-list button[title="src/B.jal"]').click();
-    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).press('ArrowLeft');
-    assert.equal(
-      await page.locator('#file-tabs [aria-selected=true]').textContent(),
-      'src/Main.jal',
-    );
+    await page.getByRole('tab', { name: 'B', exact: true }).press('ArrowLeft');
+    assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'Main');
     await page.screenshot({ path: '.cache/editor-tab-close.png' });
     assert.deepEqual(errors, []);
   },

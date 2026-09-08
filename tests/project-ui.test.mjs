@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 import { unzipSync, strFromU8 } from 'fflate';
 test(
   'Folder project UI: real browser file handles, save, reopen and export',
@@ -26,12 +26,11 @@ test(
       await new Promise((r) => setTimeout(r, 100));
     }
     assert.ok(ready);
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage();
+    const page = await newAppPage(browser);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     // Only the OS picker is substituted. Reads/writes use actual browser File System handles in OPFS.
@@ -45,6 +44,7 @@ test(
       };
     });
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state').textContent === '実行できます',
       null,
@@ -79,10 +79,7 @@ test(
       );
     }
     await t.test('first save creates settings-only jalprj and src/Main.jal', async () => {
-      assert.equal(
-        await page.locator('#file-tabs [aria-selected=true]').textContent(),
-        'src/Main.jal',
-      );
+      assert.equal(await page.locator('#file-tabs [aria-selected=true]').textContent(), 'Main');
       await page.keyboard.press('ControlOrMeta+S');
       await saved();
       const config = JSON.parse(await disk('project.jalprj'));
@@ -120,7 +117,7 @@ test(
     });
     await t.test('add, rename and delete update disk on Save', async () => {
       await menu('file', 'new-file');
-      assert.equal(await page.locator('#dialog-input').inputValue(), 'src/Helper.jal');
+      assert.equal(await page.locator('#dialog-input').inputValue(), 'src/Helper');
       await page.locator('#dialog-ok').click();
       await page.waitForFunction(
         () => document.querySelectorAll('#file-tabs [role=tab]').length === 2,
@@ -129,12 +126,10 @@ test(
       await saved();
       assert.match(await disk('src/Helper.jal'), /public class Helper/);
       await menu('file', 'rename-file');
-      await page.locator('#dialog-input').fill('src/util/Renamed.jal');
+      await page.locator('#dialog-input').fill('util/Renamed');
       await page.locator('#dialog-ok').click();
       await page.waitForFunction(
-        () =>
-          document.querySelector('#file-tabs [aria-selected=true]').textContent ===
-          'src/util/Renamed.jal',
+        () => document.querySelector('#file-tabs [aria-selected=true]').textContent === 'Renamed',
       );
       await page.keyboard.press('ControlOrMeta+S');
       await saved();
@@ -270,8 +265,7 @@ test(
           await w.close();
         });
         await page.waitForFunction(
-          () =>
-            document.querySelector('#file-tabs [aria-selected=true]')?.textContent === 'Main.jal',
+          () => document.querySelector('#file-tabs [aria-selected=true]')?.textContent === 'Main',
         );
         await page.evaluate(async () => {
           const { editor } = await import('/src/main.ts');

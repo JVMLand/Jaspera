@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  detachAt,
+  createTestProject,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'project context actions use the clicked file and preserve detached editors',
   { timeout: 60000 },
@@ -19,13 +25,14 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 1000 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     const file = (path) => page.locator(`#file-list button[title="${path}"]`),
       folder = (path) => page.locator(`#file-list summary[title="${path}"]`),
       menu = page.locator('.panel-context-menu');
@@ -63,11 +70,7 @@ test(
         .locator('[data-tab-key="source:src/tools/Helper.jal"] [role=tab]')
         .boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, rect);
     const popup = await event;
     await popup.getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     await folder('src/tools').click({ button: 'right' });

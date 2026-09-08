@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'Open routes source, class and project files and works in detached windows',
   { timeout: 120000 },
@@ -43,16 +43,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1400, height: 900 } }),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
     const page = await context.newPage();
     await page.goto(base);
+    await createTestProject(page);
     const open = async (target, name, buffer) => {
       const event = target.waitForEvent('filechooser');
       await target.locator('#menu-file').click();
@@ -63,7 +63,7 @@ test(
     };
     assert.equal(await page.locator('#open-class,#open-project-file').count(), 0);
     await open(page, 'Helper.JAL', 'public class Helper {}');
-    await page.getByRole('tab', { name: 'src/Helper.jal', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     assert.equal(
       await page.evaluate(async () => (await import('/src/main.ts')).editor.getValue()),
       'public class Helper {}',
@@ -98,7 +98,7 @@ test(
     await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();
     const popup = await event;
     await open(popup, 'Popup.jal', 'public class Popup {}');
-    await popup.getByRole('tab', { name: 'src/Popup.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'Popup', exact: true }).waitFor();
     assert.equal(
       await popup.evaluate(async () => (await import('/src/detached.ts')).editor.getValue()),
       'public class Popup {}',

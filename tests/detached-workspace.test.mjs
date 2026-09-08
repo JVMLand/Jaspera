@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, detachAt, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'detached menus, multiple tabs, and save only to an already selected folder',
   { timeout: 60000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    const context = await newAppContext(browser, { viewport: { width: 1400, height: 900 } });
     await context.route('**/runtime/**', (r) => r.abort());
     const page = await context.newPage(),
       errors = [];
@@ -44,17 +43,21 @@ test(
       await page.locator('#add-file').click();
       await page.locator('#dialog-input').fill(path);
       await page.locator('#dialog-ok').click();
-      await page.getByRole('tab', { name: path, exact: true }).waitFor();
+      await page
+        .getByRole('tab', {
+          name: path
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .waitFor();
     }
-    const tab = await page.getByRole('tab', { name: 'src/A.jal', exact: true }).boundingBox(),
+    const tab = await page.getByRole('tab', { name: 'A', exact: true }).boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, tab);
     const popup = await event;
-    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'A', exact: true }).waitFor();
     for (const menu of ['file', 'edit', 'build', 'help'])
       assert.ok(await popup.locator('#menu-' + menu).isVisible());
     assert.equal(await popup.locator('#dock').count(), 0);
@@ -70,23 +73,31 @@ test(
       await popup.locator('#open-workspace-file').click();
       await popup.locator('#workspace-files').selectOption({ label: name });
       await popup.getByRole('button', { name: '開く', exact: true }).click();
-      await popup.getByRole('tab', { name, exact: true }).waitFor();
+      await popup
+        .getByRole('tab', {
+          name: name
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .waitFor();
     };
     await open('src/B.jal');
     assert.equal(await popup.locator('#file-tabs [role=tab]').count(), 2);
-    assert.equal(await page.getByRole('tab', { name: 'src/B.jal', exact: true }).count(), 0);
+    assert.equal(await page.getByRole('tab', { name: 'B', exact: true }).count(), 0);
     await popup.evaluate(async () => {
       const { editor } = await import('/src/detached.ts');
       editor.setValue('public class B { /* first edit */ }');
     });
-    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).click();
+    await popup.getByRole('tab', { name: 'A', exact: true }).click();
     await popup.evaluate(async () => {
       const { editor } = await import('/src/detached.ts');
       editor.setValue('public class A { /* keep this edit */ }');
     });
     await popup.getByRole('button', { name: 'src/A.jal のタブを閉じる', exact: true }).click();
-    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).waitFor();
-    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).click();
+    await page.getByRole('tab', { name: 'A', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'A', exact: true }).click();
     assert.match(
       await page.evaluate(async () => {
         const { editor } = await import('/src/main.ts');
@@ -126,13 +137,13 @@ test(
       /keep this edit/,
     );
     await open('src/B.jal');
-    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).click({ modifiers: ['Alt'] });
+    await popup.getByRole('tab', { name: 'A', exact: true }).click({ modifiers: ['Alt'] });
     assert.equal(await popup.locator('#file-tabs [role=tab]').count(), 1);
     await open('src/B.jal');
     await popup.locator('#menu-edit').click();
     await popup.screenshot({ path: '.cache/detached-menus-tabs.png' });
     await popup.close();
-    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'B', exact: true }).waitFor();
     assert.deepEqual(errors, []);
   },
 );

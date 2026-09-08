@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test('panels own contextual commands in both windows', { timeout: 90000 }, async (t) => {
   const base = 'http://127.0.0.1:5213',
     server = spawn(
@@ -16,9 +16,9 @@ test('panels own contextual commands in both windows', { timeout: 90000 }, async
     } catch {}
     await new Promise((r) => setTimeout(r, 100));
   }
-  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const browser = await launchBrowser({ headless: true });
   t.after(() => browser.close());
-  const context = await browser.newContext({
+  const context = await newAppContext(browser, {
       permissions: ['clipboard-read', 'clipboard-write'],
       viewport: { width: 1400, height: 950 },
     }),
@@ -27,6 +27,7 @@ test('panels own contextual commands in both windows', { timeout: 90000 }, async
   context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(base);
+  await createTestProject(page);
   await page.waitForFunction(
     () => document.querySelector('#state')?.textContent === '実行できます',
     null,
@@ -89,7 +90,7 @@ test('panels own contextual commands in both windows', { timeout: 90000 }, async
   const popupMenu = popup.locator('.panel-context-menu');
   await popupMenu.getByText('書き方の例をコピー', { exact: true }).click();
   assert.match(await popup.evaluate(() => navigator.clipboard.readText()), /iadd/);
-  await popup.getByRole('tab', { name: 'Instructions', exact: true }).click({ button: 'right' });
+  await popup.getByRole('tab', { name: '命令辞書', exact: true }).click({ button: 'right' });
   assert.deepEqual(await popupMenu.getByRole('menuitem').allTextContents(), [
     'このタブを閉じる',
     '他のタブを閉じる',

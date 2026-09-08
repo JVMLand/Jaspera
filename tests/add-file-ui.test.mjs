@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'Enter adds package paths with a fixed extension; Cancel and other dialogs keep their behavior',
   { timeout: 60000 },
@@ -19,9 +19,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 950 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 950 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (r) => r.abort());

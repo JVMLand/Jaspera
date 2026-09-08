@@ -1,109 +1,139 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
-test(
-  'tabs detach at viewport exit without waiting for release, in both hosts',
-  { timeout: 60000 },
-  async (t) => {
-    const base = 'http://127.0.0.1:5240',
-      server = spawn(
-        process.execPath,
-        ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5240', '--strictPort'],
-        { stdio: 'pipe', windowsHide: true },
-      );
-    t.after(() => server.kill());
-    for (let i = 0; i < 100; i++) {
-      try {
-        if ((await fetch(base)).ok) break;
-      } catch {}
-      await new Promise((r) => setTimeout(r, 100));
-    }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
-    t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1200, height: 850 } });
-    await context.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
-    await context.route('**/runtime/**', (r) => r.abort());
-    const page = await context.newPage();
-    await page.goto(base);
-    await page.locator('#project-tab').waitFor();
-    const source = page.locator('[data-pane-key="source:src/Main.jal"] [role=tab]');
-    await source.evaluate((node) => (window.draggedTab = node));
-    const box = await source.boundingBox();
-    await page.mouse.move(box.x + 20, box.y + 15);
-    await page.mouse.down();
-    await page.mouse.move(box.x + 40, box.y + 20, { steps: 4 });
-    await page.evaluate(() =>
+import { build } from 'esbuild';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
+
+test('tabs detach at release only; an accepted cross-window drop wins', async (t) => {
+  const { outputFiles } = await build({
+    entryPoints: ['src/tab-interactions.ts'],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    globalName: 'Tabs',
+  });
+  const browser = await launchBrowser({
+    headless: true,
+  });
+  t.after(() => browser.close());
+  const context = await newAppContext(browser, { viewport: { width: 800, height: 600 } });
+  const main = await context.newPage(),
+    child = await context.newPage();
+  for (const page of [main, child]) {
+    await page.setContent(
+      '<div id="tab" data-pane-key="source:src/Main.jal"><button>Tab</button></div><div id="target">Drop here</div>',
+    );
+    await page.addScriptTag({ content: outputFiles[0].text });
+    await page.evaluate(() => {
+      window.detached = [];
+      window.received = [];
+      Tabs.paneDrag(document.querySelector('#tab'), 'workspace', 'source:src/Main.jal');
+      Tabs.paneDrop(document.querySelector('#target'), 'workspace', (key) => received.push(key));
+      window.exit = Tabs.paneWindowExit('workspace', (key) => detached.push(key));
+    });
+  }
+  const start = (page) =>
+    page.evaluate(() => {
+      window.transfer = new DataTransfer();
+      document
+        .querySelector('#tab button')
+        .dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: transfer }));
+      return transfer.getData('application/x-jalweb-tab');
+    });
+  const leave = (page) =>
+    page.evaluate(() =>
       document.dispatchEvent(
-        new DragEvent('dragleave', { bubbles: true, clientX: 500, clientY: 400 }),
+        new DragEvent('dragleave', { bubbles: true, clientX: 900, clientY: 100 }),
       ),
     );
-    assert.equal(context.pages().length, 1, 'moving inside the page must not detach');
-    const firstEvent = context.waitForEvent('page');
-    await page.mouse.move(1205, 200, { steps: 10 });
-    const first = await firstEvent;
-    await first.locator('#file-tabs [role=tab]').first().waitFor();
-    assert.equal(await source.count(), 0);
-    assert.match(
-      await first.evaluate(async () => (await import('/src/detached.ts')).editor.getValue()),
-      /Hello, World/,
-    );
-    await page.evaluate(() => {
-      document.dispatchEvent(
-        new DragEvent('dragleave', { bubbles: true, clientX: innerWidth + 1, clientY: 200 }),
-      );
-      window.draggedTab.dispatchEvent(new DragEvent('dragend', { bubbles: true }));
-    });
-    assert.equal(context.pages().length, 2, 'one popup per drag');
-    // Split an existing popup; its sole tab moves and the empty source closes.
-    const secondEvent = context.waitForEvent('page');
-    await first
-      .locator('#file-tabs [role=tab]')
-      .first()
-      .evaluate((node) => {
-        const data = new DataTransfer();
-        node.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
-        document.dispatchEvent(
-          new DragEvent('dragleave', { bubbles: true, clientX: 100, clientY: -1 }),
+  const end = (page, x, y, effect = 'none') =>
+    page.evaluate(
+      ({ x, y, effect }) => {
+        Object.defineProperty(transfer, 'dropEffect', { value: effect, configurable: true });
+        document.querySelector('#tab button').dispatchEvent(
+          new DragEvent('dragend', {
+            bubbles: true,
+            clientX: x,
+            clientY: y,
+            dataTransfer: transfer,
+          }),
         );
-      });
-    const second = await secondEvent;
-    await second.locator('#file-tabs [role=tab]').first().waitFor();
-    if (!first.isClosed()) await first.waitForEvent('close');
-    assert.ok(first.isClosed());
-    assert.match(
-      await second.evaluate(async () => (await import('/src/detached.ts')).editor.getValue()),
-      /Hello, World/,
+      },
+      { x, y, effect },
     );
-    // A panel uses the same exit path. No drop or mouse release is sent.
-    const panelEvent = context.waitForEvent('page');
-    await page.locator('#instructions-tab').evaluate((node) => {
+  for (const [source, target] of [
+    [child, main],
+    [main, child],
+  ]) {
+    const payload = await start(source);
+    assert.equal(JSON.parse(payload).key, 'source:src/Main.jal');
+    await leave(source);
+    assert.deepEqual(
+      await source.evaluate(() => detached),
+      [],
+      'crossing the viewport must not detach',
+    );
+    const effect = await target.evaluate((payload) => {
       const data = new DataTransfer();
-      node.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
-      document.dispatchEvent(
-        new DragEvent('dragleave', { bubbles: true, clientX: -1, clientY: 200 }),
-      );
-    });
-    const panel = await panelEvent;
-    await panel.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
-    // Existing-window drops still transfer the payload, including after auto-detach.
-    const payload = await second
-      .locator('#file-tabs [role=tab]')
-      .first()
-      .evaluate((node) => {
-        const data = new DataTransfer();
-        node.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: data }));
-        const payload = data.getData('application/x-jalweb-tab');
-        node.dispatchEvent(new DragEvent('dragend', { bubbles: true, dataTransfer: data }));
-        return payload;
-      });
-    await panel.locator('#file-tabs').evaluate((node, payload) => {
-      const data = new DataTransfer();
+      Object.defineProperty(data, 'dropEffect', { value: 'none', writable: true });
       data.setData('application/x-jalweb-tab', payload);
-      node.dispatchEvent(
-        new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }),
-      );
+      document
+        .querySelector('#target')
+        .dispatchEvent(
+          new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }),
+        );
+      return data.dropEffect;
     }, payload);
-    await panel.locator('[data-pane-key="source:src/Main.jal"]').waitFor();
-  },
-);
+    assert.equal(effect, 'move');
+    await end(source, 900, 100, effect);
+    assert.deepEqual(
+      await source.evaluate(() => detached),
+      [],
+      'successful transfer must not detach again',
+    );
+    assert.deepEqual(await target.evaluate(() => received), ['source:src/Main.jal']);
+  }
+  await start(child);
+  await leave(child);
+  await end(child, 300, 200);
+  assert.deepEqual(
+    await child.evaluate(() => detached),
+    [],
+    'returning inside before release cancels detachment',
+  );
+  await start(child);
+  await leave(child);
+  await child.evaluate(() =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
+  );
+  await end(child, 900, 100);
+  assert.deepEqual(await child.evaluate(() => detached), [], 'Escape cancels detachment');
+  await start(child);
+  await leave(child);
+  await end(child, 0, 0);
+  assert.deepEqual(
+    await child.evaluate(() => detached),
+    [],
+    'cancelled native drag coordinates do not detach',
+  );
+  await start(child);
+  await leave(child);
+  await end(child, 900, 100);
+  await end(child, 900, 100);
+  assert.deepEqual(
+    await child.evaluate(() => detached),
+    ['source:src/Main.jal'],
+    'outside release detaches once',
+  );
+  await main.evaluate(() => {
+    document.querySelector('#tab').dataset.paneKey = 'tool:instructions';
+    Tabs.paneDrag(document.querySelector('#tab'), 'workspace', 'tool:instructions');
+  });
+  await start(main);
+  await leave(main);
+  await end(main, -20, 100);
+  assert.deepEqual(
+    await main.evaluate(() => detached),
+    ['tool:instructions'],
+    'tool tabs use the same release rule',
+  );
+});

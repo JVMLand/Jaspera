@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'project saves and restores groups, hidden tabs, popup contents and views silently',
   { timeout: 90000 },
@@ -27,12 +27,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1450, height: 1000 } });
+    const context = await newAppContext(browser, { viewport: { width: 1450, height: 1000 } });
     await context.route('**/runtime/**', (r) => r.abort());
     const page = await context.newPage(),
       errors = [];
@@ -45,6 +44,7 @@ test(
         });
     });
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#project-tab').waitFor();
     const menu = async (group, item) => {
       await page.locator('#menu-' + group).click();
@@ -71,7 +71,15 @@ test(
       await page.locator('#add-file').click();
       await page.locator('#dialog-input').fill(name);
       await page.locator('#dialog-ok').click();
-      await page.getByRole('tab', { name, exact: true }).waitFor();
+      await page
+        .getByRole('tab', {
+          name: name
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .waitFor();
     }
     await page.getByRole('button', { name: 'src/Closed.jal のタブを閉じる', exact: true }).click();
     await page
@@ -84,7 +92,7 @@ test(
     await page.locator('#instructions-tab').click({ button: 'right' });
     await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();
     const popup = await popupPromise;
-    await popup.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     const payload = await page
       .locator('#file-list button[title="src/Helper.jal"]')
       .evaluate((node) => {
@@ -99,14 +107,14 @@ test(
         new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }),
       );
     }, payload);
-    await popup.getByRole('tab', { name: 'src/Helper.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     await popup.evaluate(async () => {
       const { editor } = await import('/src/detached.ts');
       editor.setPosition({ lineNumber: 1, column: 7 });
     });
     await popup
-      .getByRole('tab', { name: 'Instructions', exact: true })
-      .dragTo(popup.getByRole('tab', { name: 'src/Helper.jal', exact: true }), {
+      .getByRole('tab', { name: '命令辞書', exact: true })
+      .dragTo(popup.getByRole('tab', { name: 'Helper', exact: true }), {
         targetPosition: { x: 2, y: 12 },
       });
     await save();
@@ -125,38 +133,35 @@ test(
     const reopenedPromise = page.waitForEvent('popup');
     await menu('file', 'open-project');
     const reopened = await reopenedPromise;
-    await reopened.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await reopened.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     await page.waitForTimeout(250);
     assert.equal(
-      await page
-        .locator('.output-pane')
-        .getByRole('tab', { name: 'src/Main.jal', exact: true })
-        .count(),
+      await page.locator('.output-pane').getByRole('tab', { name: 'Main', exact: true }).count(),
       1,
     );
-    assert.equal(await page.getByRole('tab', { name: 'src/Closed.jal', exact: true }).count(), 0);
+    assert.equal(await page.getByRole('tab', { name: 'Closed', exact: true }).count(), 0);
     assert.equal(await page.locator('.workspace.dock-swapped').count(), 1);
     assert.equal(
       await reopened
-        .getByRole('tab', { name: 'Instructions', exact: true })
+        .getByRole('tab', { name: '命令辞書', exact: true })
         .getAttribute('aria-selected'),
       'true',
     );
-    await reopened.getByRole('tab', { name: 'src/Helper.jal', exact: true }).click();
+    await reopened.getByRole('tab', { name: 'Helper', exact: true }).click();
     assert.equal(
       await reopened.evaluate(
         async () => (await import('/src/detached.ts')).editor.getPosition().column,
       ),
       7,
     );
-    await reopened.getByRole('tab', { name: 'Instructions', exact: true }).click();
+    await reopened.getByRole('tab', { name: '命令辞書', exact: true }).click();
     await save();
     const after = await disk();
     assert.deepEqual(after.editor.order, before.editor.order);
     assert.deepEqual(after.editor.windows[0].order, before.editor.windows[0].order);
     assert.deepEqual(await reopened.locator('#file-tabs [role=tab]').allTextContents(), [
-      'Instructions',
-      'src/Helper.jal',
+      '命令辞書',
+      'Helper',
     ]);
     assert.deepEqual(after.editor.dock, before.editor.dock);
     assert.deepEqual(after.editor.tabs, before.editor.tabs);
@@ -218,7 +223,7 @@ test(
     }, before);
     await menu('file', 'open-project');
     await page.waitForFunction(() => document.querySelector('.workspace.dock-swapped'));
-    assert.equal(await page.getByRole('tab', { name: 'src/Helper.jal', exact: true }).count(), 1);
+    assert.equal(await page.getByRole('tab', { name: 'Helper', exact: true }).count(), 1);
     await save();
     const blocked = await disk();
     assert.equal(blocked.editor.windows.length, 2);
@@ -227,11 +232,11 @@ test(
     const firstPromise = page.waitForEvent('popup');
     await page.locator('#project-name').click();
     const first = await firstPromise;
-    await first.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await first.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     const secondPromise = page.waitForEvent('popup');
     await page.locator('#project-name').click();
     const second = await secondPromise;
-    await second.getByRole('tab', { name: 'Problems', exact: true }).waitFor();
+    await second.getByRole('tab', { name: '問題', exact: true }).waitFor();
     await save();
     assert.equal((await disk()).editor.windows.length, 2);
     assert.deepEqual(errors, []);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'shared window commands protect modal input and edits during save or popup close',
   { timeout: 90000 },
@@ -19,9 +19,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const context = await browser.newContext();
+    const context = await newAppContext(browser);
     await context.addInitScript(() => {
       localStorage.setItem('jalweb.theme', 'vs-dark');
       window.pickerCalls = 0;
@@ -50,6 +50,7 @@ test(
     });
     const page = await context.newPage();
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#editor .monaco-editor').waitFor();
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',

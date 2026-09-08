@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  detachAt,
+  createTestProject,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'long press reorders tabs and detaches a synchronized Monaco editor',
   { timeout: 65000 },
@@ -19,41 +25,57 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    const context = await newAppContext(browser, { viewport: { width: 1400, height: 900 } });
     const page = await context.newPage();
     const errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
     page.on('pageerror', (e) => errors.push(e.message));
     await context.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     for (const path of ['src/A.jal', 'src/B.jal']) {
       await page.locator('#add-file').click();
       await page.locator('#dialog-input').fill(path);
       await page.locator('#dialog-ok').click();
-      await page.getByRole('tab', { name: path, exact: true }).waitFor();
+      await page
+        .getByRole('tab', {
+          name: path
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .waitFor();
     }
     const drag = async (name, x, y) => {
-      const b = await page.getByRole('tab', { name, exact: true }).boundingBox();
+      const b = await page
+        .getByRole('tab', {
+          name: name
+            .split('/')
+            .at(-1)
+            .replace(/\.jal$/, ''),
+          exact: true,
+        })
+        .boundingBox();
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
       await page.waitForTimeout(420);
       await page.mouse.move(x, y, { steps: 8 });
       await page.mouse.up();
     };
-    const first = await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).boundingBox();
+    const first = await page.getByRole('tab', { name: 'Main', exact: true }).boundingBox();
     await drag('src/B.jal', first.x + 2, first.y + 15);
     assert.deepEqual(await page.locator('#file-tabs [role=tab]').allTextContents(), [
-      'src/B.jal',
-      'src/Main.jal',
-      'src/A.jal',
+      'B',
+      'Main',
+      'A',
     ]);
     const popupEvent = page.waitForEvent('popup');
-    await drag('src/B.jal', 1200, 15);
+    await detachAt(page, await page.getByRole('tab', { name: 'B', exact: true }).boundingBox());
     const popup = await popupEvent;
     await popup.waitForFunction(() => document.querySelector('#file-tabs [role=tab]') !== null);
     assert.equal(await page.locator('#file-tabs [role=tab]').count(), 2);
@@ -106,8 +128,8 @@ test(
     await popup.waitForFunction(() => document.documentElement.dataset.theme === 'darcula');
     await popup.screenshot({ path: '.cache/detached-editor.png' });
     await popup.close();
-    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).waitFor();
-    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).click();
+    await page.getByRole('tab', { name: 'B', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'B', exact: true }).click();
     assert.match(
       await page.evaluate(async () => {
         const { editor } = await import('/src/main.ts');
@@ -131,7 +153,7 @@ test(
     const reopened = await retryPopup;
     await reopened.waitForFunction(() => document.querySelector('#file-tabs [role=tab]') !== null);
     await reopened.close();
-    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'B', exact: true }).waitFor();
     assert.deepEqual(errors, []);
   },
 );

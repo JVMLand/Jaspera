@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'shared pane tabs move bidirectionally between main and detached windows',
   { timeout: 90000 },
@@ -19,18 +19,18 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1500, height: 1000 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1500, height: 1000 } }),
       page = await context.newPage(),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.stack)));
     page.on('pageerror', (e) => errors.push(e.stack));
     await context.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#project-tab').waitFor();
     const tab = (p, name) => p.getByRole('tab', { name, exact: true });
     const open = async (name) => {
@@ -78,7 +78,7 @@ test(
     await page.locator('#add-file').click();
     await page.locator('#dialog-input').fill('src/Helper.jal');
     await page.locator('#dialog-ok').click();
-    await tab(page, 'src/Main.jal').click();
+    await tab(page, 'Main').click();
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.executeEdits('test', [
@@ -90,8 +90,8 @@ test(
       editor.setPosition({ lineNumber: 2, column: 6 });
     });
     const first = await open('instructions');
-    await transfer(tab(page, 'src/Main.jal'), first.locator('#file-tabs'));
-    await tab(first, 'src/Main.jal').waitFor();
+    await transfer(tab(page, 'Main'), first.locator('#file-tabs'));
+    await tab(first, 'Main').waitFor();
     await page.waitForFunction(
       () => !document.querySelector('[data-tab-key="source:src/Main.jal"]'),
     );
@@ -107,15 +107,12 @@ test(
       { line: 2, column: 6, edited: true },
     );
     const second = await open('problems');
-    await transfer(tab(first, 'src/Main.jal'), second.locator('#file-tabs'));
-    await tab(second, 'src/Main.jal').waitFor();
-    assert.equal(await tab(first, 'src/Main.jal').count(), 0);
-    await transfer(tab(second, 'src/Main.jal'), page.locator('.output-header'));
-    await page
-      .locator('.output-pane')
-      .getByRole('tab', { name: 'src/Main.jal', exact: true })
-      .waitFor();
-    assert.equal(await tab(second, 'src/Main.jal').count(), 0);
+    await transfer(tab(first, 'Main'), second.locator('#file-tabs'));
+    await tab(second, 'Main').waitFor();
+    assert.equal(await tab(first, 'Main').count(), 0);
+    await transfer(tab(second, 'Main'), page.locator('.output-header'));
+    await page.locator('.output-pane').getByRole('tab', { name: 'Main', exact: true }).waitFor();
+    assert.equal(await tab(second, 'Main').count(), 0);
     assert.deepEqual(
       await page.evaluate(async () => {
         const { editor } = await import('/src/main.ts');
@@ -135,27 +132,24 @@ test(
       false,
     );
     // Tool tabs and tree files use exactly the same transfer path.
-    await transfer(tab(first, 'Instructions'), page.locator('.source-header'));
+    await transfer(tab(first, '命令辞書'), page.locator('.source-header'));
     await page.locator('.source-pane #instructions-tab').waitFor();
     assert.ok(first.isClosed());
     await transfer(page.locator('#project-tab'), second.locator('#file-tabs'));
-    await tab(second, 'Project').waitFor();
+    await tab(second, 'プロジェクト').waitFor();
     await transfer(
       second.locator('#file-list button[title="src/Helper.jal"]'),
       page.locator('.project-heading'),
     );
-    await page
-      .locator('.project-pane')
-      .getByRole('tab', { name: 'src/Helper.jal', exact: true })
-      .waitFor();
+    await page.locator('.project-pane').getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     await transfer(page.locator('#instructions-tab'), second.locator('#file-tabs'));
-    await tab(second, 'Instructions').waitFor();
-    await transfer(tab(second, 'Project'), page.locator('.project-heading'));
+    await tab(second, '命令辞書').waitFor();
+    await transfer(tab(second, 'プロジェクト'), page.locator('.project-heading'));
     await page.locator('.project-pane #project-tab').waitFor();
-    await transfer(tab(second, 'Instructions'), page.locator('.output-header'));
+    await transfer(tab(second, '命令辞書'), page.locator('.output-header'));
     await page.locator('.output-pane #instructions-tab').waitFor();
     const close = second.waitForEvent('close');
-    await transfer(tab(second, 'Problems'), page.locator('.source-header'));
+    await transfer(tab(second, '問題'), page.locator('.source-header'));
     await close;
     assert.ok(second.isClosed());
     // Actual native dragging in one window retains arbitrary mixed tab order.
@@ -191,7 +185,7 @@ test(
         .getAttribute('aria-selected'),
       'true',
     );
-    await tab(page, 'src/Main.jal').click({ modifiers: ['Alt'] });
+    await tab(page, 'Main').click({ modifiers: ['Alt'] });
     assert.equal(
       await page
         .locator('.output-header [data-pane-key]')
