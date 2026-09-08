@@ -1,3 +1,5 @@
+import { languageMenuItem } from './localization';
+import { msg } from './messages.js';
 import { revealEditorPosition, type RevealMode } from './editor-reveal';
 import { installFeatureGuides } from './feature-guides';
 import { BreakpointStore } from './breakpoint-store';
@@ -15,7 +17,14 @@ import { installInstructionGraph } from './instruction-graph';
 import type { GraphDocument } from './protocol';
 import { planPathChange } from './project-paths';
 import { tabLabels } from './file-labels';
-import { examples, exampleSource, rememberExample, withoutExampleLayout } from './example-library';
+import {
+  examples,
+  exampleSource,
+  rememberExample,
+  withoutExampleLayout,
+  isEditedExample,
+  translatedExample,
+} from './example-library';
 import { inlayHintOptions } from './inlay-hint-style';
 import { installConsoleContextMenu } from './console-panel';
 import { installProblemsContextMenu } from './problems-panel';
@@ -70,41 +79,10 @@ import {
 } from './themes';
 
 registerLanguage(() => navigation.completionCatalog());
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<header class="toolbar">
-  <div class="brand"><img class="brand-logo" src="./favicon.svg" alt="Javasm ロゴ" width="40" height="40"><h1>${APP_NAME}</h1><span class="brand-caption">${APP_TAGLINE}</span></div>
-  <button id="header-search" class="header-search" type="button" aria-haspopup="dialog" title="どこでも検索（Shift を2回）"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="m12 12 5 5"/></svg><span>ファイル・クラス・メソッドを検索</span><kbd>Shift ×2</kbd></button>
-  <div class="toolbar-actions"><button id="run" class="run" title="実行（Ctrl+Enter / F5）"><span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd></button></div>
-</header>
-<nav class="menubar" aria-label="メインメニュー"><div id="menus" role="menubar" aria-label="アプリケーションメニュー"></div><span id="project-name"></span></nav>
-
-<dialog id="dialog"><form method="dialog"><h2 id="dialog-title"></h2><p id="dialog-message"></p><div id="dialog-input-row"><input id="dialog-input" aria-labelledby="dialog-title" autocomplete="off"><span id="dialog-suffix" hidden></span></div><div class="dialog-actions"><button type="button" id="dialog-cancel">キャンセル</button><button type="submit" value="ok" id="dialog-ok">OK</button></div></form></dialog>
-<dialog id="project-properties" aria-labelledby="properties-title"><form id="properties-form" method="dialog">
-  <h2 id="properties-title">プロジェクトのプロパティ</h2>
-  <label for="properties-name">プロジェクト名</label><input id="properties-name" required maxlength="128" autocomplete="off">
-  <label for="entry-file">実行するファイル</label><select id="entry-file" required></select>
-  <p class="properties-hint">初期設定は src/Main.jal です。main メソッドを持つファイルを選択してください。</p>
-  <div class="dialog-actions"><button type="button" id="properties-cancel">キャンセル</button><button type="submit" id="properties-save">適用</button></div>
-</form></dialog>
-<dialog id="theme-dialog" aria-labelledby="theme-title"><form method="dialog"><h2 id="theme-title">テーマとレイアウト</h2><label for="theme-select">テーマ</label><select id="theme-select"></select><p>変更はすぐに反映され，このブラウザに保存されます。</p><div class="dialog-actions"><button>閉じる</button></div></form></dialog>
-<main class="workspace">
-  <section class="workspace-summary" aria-label="ワークスペース概要"><div><span class="summary-eyebrow"></span><h2 id="summary-project-name">Main</h2><p>ソースを編集し，ブラウザでビルド・実行。</p></div><button id="summary-properties">プロジェクト設定 ↗</button></section>
-  <aside class="project-pane" aria-label="プロジェクト"><div class="project-heading">PROJECT <button id="add-file" class="icon-button" title="ファイルを追加" aria-label="ファイルを追加">+</button></div><div id="file-list" aria-label="ファイル一覧"></div></aside>
-  <section class="source-pane" aria-label="JAL ソースエディタ">
-    <div class="pane-header source-header"><div id="file-tabs" role="tablist" aria-label="ソースファイル"></div></div>
-    <div id="editor"></div>
-    <div class="editor-footer"><span id="cursor">Ln 1, Col 1</span><span>UTF-8 <span class="separator">/</span> JAL</span></div>
-  </section>
-  <section class="output-pane" aria-label="実行結果">
-    <div class="pane-header output-header"><div class="tabs" role="tablist" aria-label="実行パネル"><button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">Console</button><button role="tab" id="problems-tab" aria-controls="problems-panel" aria-selected="false" tabindex="-1">Problems <span id="problem-count">0</span></button><button role="tab" id="instructions-tab" aria-controls="instructions-panel" aria-selected="false" tabindex="-1">Instructions</button><button role="tab" id="graph-tab" aria-controls="graph-panel" aria-selected="false" tabindex="-1">Graph</button><button role="tab" id="debug-tab" aria-controls="debug-panel" aria-selected="false" tabindex="-1">Debug</button></div><button id="clear" class="icon-button" title="コンソールを消去" aria-label="コンソールを消去">⌫</button></div>
-    <div id="console-panel" role="tabpanel" aria-labelledby="console-tab"><div id="console-empty"><span class="terminal-symbol" aria-hidden="true">&gt;_</span><p>コードを書いて，実行しよう。</p><span>Run または Ctrl + Enter</span></div><pre id="output" aria-label="標準出力と標準エラー" tabindex="0"></pre></div>
-    <div id="problems-panel" role="tabpanel" aria-labelledby="problems-tab" hidden><p class="empty-problems">文法とスタックを検査しています…</p><ul id="problems"></ul></div>
-    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div><div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div><div id="debug-panel" role="tabpanel" aria-labelledby="debug-tab" hidden></div>
-    <div class="stdin-section"><label for="stdin">STANDARD INPUT <span>実行開始時に読み込み</span></label><textarea id="stdin" spellcheck="false" placeholder="標準入力（任意）" aria-label="標準入力"></textarea></div>
-    <div class="runtime-card"><span class="runtime-dot"></span><div><strong>WebAssembly JVM</strong><span>OpenJDK 23 · ブラウザ内で実行</span></div><span class="runtime-label">LOCAL</span></div>
-  </section>
-</main>
-<footer class="statusbar"><div><span id="state-dot" class="status-dot loading"></span><span id="state" role="status" aria-live="polite">JVM を読み込み中…</span></div><span id="instruction-hint">命令ホバーでスタックの変化を表示</span><span id="timing"></span></footer>`;
+document.querySelector<HTMLDivElement>('#app')!.innerHTML = msg('m6d5204937715', [
+  APP_NAME,
+  APP_TAGLINE,
+]);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 let project = defaultProject(false);
 const workspaceState = new WorkspaceStateStore();
@@ -211,6 +189,15 @@ const classPreviews = new Map<string, ClassPreview>();
 let activePreview: string | undefined,
   previewEpoch = 0,
   dropSequence = 0;
+window.addEventListener('jaspera:locale', () => {
+  if (workspaceState.value.running) return;
+  for (const preview of classPreviews.values())
+    if (preview.example && !isEditedExample(preview.title)) {
+      const source = translatedExample(preview.title);
+      if (source !== undefined && source !== preview.model.getValue())
+        breakpoints.replaceTranslatedSource(preview.model, source);
+    }
+});
 let classQueue = Promise.resolve();
 let folder: FolderBinding | undefined,
   storageBusy = false,
@@ -281,7 +268,7 @@ const graphCompilation = (
   const model = graphModel(doc);
   return model
     ? compilationService.compile(model, model.getValue(), onProgress, { graphs: true })
-    : Promise.reject(new Error('文書の版が変更されています。'));
+    : Promise.reject(new Error(msg('ma83c65038a5b')));
 };
 const graphNavigate = (doc: GraphDocument, line: number, column: number) => {
   if (graphModel(doc)) void openDefinition(doc.uri, { lineNumber: line, column });
@@ -314,7 +301,7 @@ export let editor = monaco.editor.create(el('editor'), {
   folding: true,
   glyphMargin: false,
   wordWrap: 'off',
-  ariaLabel: 'JAL ソースコード',
+  ariaLabel: msg('mb6b9cb49c13c'),
   quickSuggestions: { other: true, comments: false, strings: false },
 });
 const groupEditors = new Map<Side, monaco.editor.IStandaloneCodeEditor>([['source', editor]]);
@@ -469,7 +456,7 @@ const searchEverywhere = installSearchEverywhere(
   () => navigation.searchTargets(),
   async (target) => {
     const result = await navigation.searchDefinition(target);
-    if (!result) throw new Error('定義が見つかりません。');
+    if (!result) throw new Error(msg('m46a9300a9063'));
     return async () => {
       await openDefinition(result.uri, result.range);
     };
@@ -518,7 +505,9 @@ async function checkDocument(model: monaco.editor.ITextModel | null = editor.get
   try {
     const result = await compileExample(model);
     status(
-      result.diagnostics.some((d) => d.severity === 'error') ? 'コンパイルエラー' : '実行できます',
+      result.diagnostics.some((d) => d.severity === 'error')
+        ? msg('m428b24c11fc6')
+        : msg('mc2c1724a78a8'),
       result.diagnostics.some((d) => d.severity === 'error') ? 'error' : 'ready',
     );
   } catch (error) {
@@ -624,18 +613,28 @@ const menus = installMenus(el('menus'), [
   {
     label: 'File',
     items: [
-      { id: 'new-file', label: '新規ファイル…', action: () => void addFile() },
-      { id: 'new-project', label: '新規プロジェクト', action: () => void newProject() },
+      { id: 'new-file', label: msg('m79e3104df1cf'), action: () => void addFile() },
+      { id: 'new-project', label: msg('ma582ee597220'), action: () => void newProject() },
       null,
-      { id: 'open-files', label: '開く…', shortcut: 'Ctrl+O', action: filePicker.open },
-      { id: 'open-project', label: 'フォルダーを開く…', action: () => void openProjectFolder() },
+      {
+        id: 'open-files',
+        label: msg('mba31551c9cbe'),
+        shortcut: 'Ctrl+O',
+        action: filePicker.open,
+      },
+      { id: 'open-project', label: msg('m3e527b2cb344'), action: () => void openProjectFolder() },
       null,
-      { id: 'save-project', label: '保存', shortcut: 'Ctrl+S', action: () => void saveProject() },
-      { id: 'save-project-as', label: '別の場所に保存…', action: () => void saveProject(true) },
-      { id: 'export-project', label: 'ZIP に書き出す…', action: () => void exportProject() },
+      {
+        id: 'save-project',
+        label: msg('ma3030bf8f16d'),
+        shortcut: 'Ctrl+S',
+        action: () => void saveProject(),
+      },
+      { id: 'save-project-as', label: msg('m97b4e8936a4b'), action: () => void saveProject(true) },
+      { id: 'export-project', label: msg('m36581f447816'), action: () => void exportProject() },
       {
         id: 'save-class-source',
-        label: 'JAL に書き出す…',
+        label: msg('m55345dd68b3a'),
         action: () => {
           const p = activePreview ? classPreviews.get(activePreview) : undefined;
           if (p)
@@ -651,16 +650,16 @@ const menus = installMenus(el('menus'), [
       null,
       {
         id: 'close-tab',
-        label: 'ファイルを閉じる',
+        label: msg('m7e4105690e2c'),
         action: () => {
           const tab = visibleTabs().find((t) => t.active);
           if (tab) closeEditorTabs(tab.key);
         },
       },
-      { id: 'rename-file', label: '名前を変更…', action: () => void renameFile() },
-      { id: 'remove-file', label: '削除…', action: () => void removeFile() },
+      { id: 'rename-file', label: msg('m845f8265321f'), action: () => void renameFile() },
+      { id: 'remove-file', label: msg('ma270f3c87416'), action: () => void removeFile() },
       null,
-      { id: 'project-properties-menu', label: 'プロジェクトのプロパティ…', action: openProperties },
+      { id: 'project-properties-menu', label: msg('mba06c39028c1'), action: openProperties },
     ],
   },
   { label: 'Edit', items: editMenuItems(editAction) },
@@ -669,14 +668,15 @@ const menus = installMenus(el('menus'), [
     items: [
       {
         id: 'wrap',
-        label: '折り返し',
+        label: msg('md3eca11714b3'),
         action: () => {
           project.workspace.wordWrap = !project.workspace.wordWrap;
           editor.updateOptions({ wordWrap: project.workspace.wordWrap ? 'on' : 'off' });
           setDirty();
         },
       },
-      { id: 'theme-settings', label: 'テーマ…', action: openThemePicker },
+      { id: 'theme-settings', label: msg('maa77a98a507d'), action: openThemePicker },
+      languageMenuItem(),
       null,
       ...(['project', 'console', 'problems', 'instructions', 'graph', 'debug'] as const).map(
         (name) => ({
@@ -685,15 +685,20 @@ const menus = installMenus(el('menus'), [
           action: () => selectTab(name),
         }),
       ),
-      { id: 'swap-panes', label: '左右のペインを入れ替える', action: () => panelDock?.swap() },
+      { id: 'swap-panes', label: msg('mcd86386ee2e5'), action: () => panelDock?.swap() },
     ],
   },
   {
     label: 'Build',
     items: [
-      { id: 'check-project', label: '検査', action: () => void checkDocument() },
-      { id: 'menu-run', label: '実行', shortcut: 'Ctrl+Enter', action: () => void run() },
-      { id: 'download', label: 'class に書き出す…', action: downloadClass },
+      { id: 'check-project', label: msg('m8e28a92e2d4d'), action: () => void checkDocument() },
+      {
+        id: 'menu-run',
+        label: msg('m77721d5dea60'),
+        shortcut: 'Ctrl+Enter',
+        action: () => void run(),
+      },
+      { id: 'download', label: msg('m99847859379a'), action: downloadClass },
     ],
   },
   { label: 'Debug', items: debugMenuItems(debugActions) },
@@ -1046,7 +1051,7 @@ function download(blob: Blob, name: string) {
 function storageState(busy: boolean) {
   storageBusy = busy;
   publishWorkspaceAvailability();
-  if (busy) status('ファイルを処理中…', 'loading');
+  if (busy) status(msg('m8877746a8f94'), 'loading');
   for (const id of [
     'new-project',
     'open-project',
@@ -1059,7 +1064,7 @@ function storageState(busy: boolean) {
 }
 function storageError(e: unknown, title: string) {
   if (e instanceof Error && e.name === 'AbortError') {
-    status('キャンセルしました');
+    status(msg('m7d9e604e0806'));
     return;
   }
   status(title, 'error');
@@ -1072,9 +1077,9 @@ async function openProjectFolder(requireProperties = false) {
     const root = await pickFolder();
     const loaded = await openFolder(root, requireProperties);
     if (await allowReplace()) await installProject(loaded.project, loaded.binding);
-    else status('キャンセルしました');
+    else status(msg('m7d9e604e0806'));
   } catch (e) {
-    storageError(e, 'フォルダーを開けませんでした');
+    storageError(e, msg('mcdd98f9ac910'));
   } finally {
     storageState(false);
   }
@@ -1099,13 +1104,9 @@ async function saveProject(saveAs = false) {
     }
     folder = target;
     if (project === current && changeVersion === version) setDirty(false);
-    status(
-      changeVersion === version
-        ? 'フォルダーに保存しました'
-        : '保存しました（その後の変更は未保存です）',
-    );
+    status(changeVersion === version ? msg('m4ae43a307956') : msg('ma8a3484ba33d'));
   } catch (e) {
-    storageError(e, '保存できませんでした');
+    storageError(e, msg('mc5291a547bd5'));
   } finally {
     storageState(false);
   }
@@ -1117,9 +1118,9 @@ async function exportProject() {
     const bytes = await projectArchive(snapshot(), folder?.properties !== false);
     const name = project.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Project';
     download(new Blob([new Uint8Array(bytes)], { type: 'application/zip' }), name + '.zip');
-    status('ZIP をエクスポートしました');
+    status(msg('mbd11d2e72230'));
   } catch (e) {
-    storageError(e, 'エクスポートできませんでした');
+    storageError(e, msg('m38461b63a8bf'));
   } finally {
     storageState(false);
   }
@@ -1353,11 +1354,11 @@ function detachEditorTab(item: EditorTab) {
       item.previewKey !== undefined && !classPreviews.get(item.previewKey)?.example,
     )
   ) {
-    status('小窓がブロックされました。「小窓で開く」をクリックしてください。', 'error');
+    status(msg('mffebddbf6521'), 'error');
     document.getElementById('detach-retry')?.remove();
     const retry = document.createElement('button');
     retry.id = 'detach-retry';
-    retry.textContent = '小窓で開く';
+    retry.textContent = msg('m8af85266ba4f');
     retry.onclick = () => {
       retry.remove();
       detachEditorTab(item);
@@ -1377,7 +1378,7 @@ function detachEditorTab(item: EditorTab) {
   }
   renderFiles();
   updateActions();
-  status('小窓で開きました。編集内容はワークスペースと共有されます。');
+  status(msg('m79b0173358e5'));
 }
 function movePane(key: string, side: Side, event: DragEvent) {
   const pane = paneIdentity(key);
@@ -1479,16 +1480,13 @@ function queueClass(
     if (epoch !== previewEpoch) return;
     try {
       const file = await getFile();
-      if (file.size > 1024 * 1024) throw new Error('.class は 1 MiB 以下にしてください。');
+      if (file.size > 1024 * 1024) throw new Error(msg('m7c7094415719'));
       const old = classPreviews.get(key);
       if (old && old.mtime === file.lastModified && old.size === file.size) {
         if (select) selectClassPreview(key);
         return;
       }
-      if (!old && classPreviews.size >= 16)
-        throw new Error(
-          '逆アセンブルのタブは 16 個までです。File メニューからタブを閉じてください。',
-        );
+      if (!old && classPreviews.size >= 16) throw new Error(msg('ma5ae4b723858'));
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (
         bytes.length < 10 ||
@@ -1497,11 +1495,11 @@ function queueClass(
         bytes[2] !== 0xba ||
         bytes[3] !== 0xbe
       )
-        throw new Error('有効な Java class ファイルではありません。');
+        throw new Error(msg('m68b13d02975b'));
       let binary = '';
       for (let i = 0; i < bytes.length; i += 8192)
         binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-      if (!silent) status(title + ' を逆アセンブル中…', 'loading');
+      if (!silent) status(title + msg('m9374e8ba6346'), 'loading');
       const result = await compilationService.disassemble(btoa(binary));
       if (
         epoch !== previewEpoch ||
@@ -1513,7 +1511,7 @@ function queueClass(
         typeof result.source !== 'string' ||
         new TextEncoder().encode(result.source).length > 1024 * 1024
       )
-        throw new Error('逆アセンブル結果が大きすぎます。');
+        throw new Error(msg('me81bf6a4c559'));
       const model =
         old?.model ??
         monaco.editor.createModel(
@@ -1537,11 +1535,11 @@ function queueClass(
       scheduleOffsets(model);
       if (select || activePreview === key) selectClassPreview(key);
       else if (!silent) renderFiles();
-      if (!silent) status('逆アセンブルしました（閲覧専用）');
+      if (!silent) status(msg('m642ad04c5c40'));
     } catch (e) {
       if (!silent && epoch === previewEpoch) {
-        status('逆アセンブルできませんでした', 'error');
-        await dialog(title + ' を開けませんでした', e instanceof Error ? e.message : String(e));
+        status(msg('md745c6b85e47'), 'error');
+        await dialog(title + msg('mcdabe1224c3d'), e instanceof Error ? e.message : String(e));
       }
     }
   });
@@ -1563,26 +1561,26 @@ function syncClassFiles(binding: FolderBinding, files: ClassFileEntry[]) {
 async function openFiles(files: File[]): Promise<string[]> {
   if (storageBusy) return [];
   if (files.length > 64) {
-    await dialog('ファイルを開けませんでした', '一度に開けるファイルは64個までです。');
+    await dialog(msg('m5d6c611f808f'), msg('m380caa4874b5'));
     return [];
   }
   if (files.some((file) => fileKind(file.name) === 'project')) {
     if (files.length !== 1) {
-      await dialog('プロジェクトを開く', 'プロジェクトは1つずつ開いてください。');
+      await dialog(msg('m1d25ade4db27'), msg('m7373ee74be3e'));
       return [];
     }
     const file = files[0];
     try {
-      if (file.size > 65536) throw new Error('プロジェクト設定は64 KiB以下にしてください。');
+      if (file.size > 65536) throw new Error(msg('m3be3f7e999c7'));
       const text = await file.text();
       parseProperties(text);
       if (
         (await dialog(
-          'プロジェクトを開く',
-          'ソースも読み込むため，' + file.name + ' があるフォルダーを選んでください。',
+          msg('m1d25ade4db27'),
+          msg('m2acaf802780a') + file.name + msg('mfc08eaee47db'),
           undefined,
           true,
-          'フォルダーを選ぶ',
+          msg('m6985b2151ba8'),
         )) === null
       )
         return [];
@@ -1593,10 +1591,10 @@ async function openFiles(files: File[]): Promise<string[]> {
         loaded.binding.configName !== file.name ||
         loaded.binding.baseline.get(file.name) !== text
       )
-        throw new Error('選んだプロジェクトのフォルダーではありません。');
+        throw new Error(msg('m8172fe61f0fc'));
       if (await allowReplace()) await installProject(loaded.project, loaded.binding);
     } catch (e) {
-      storageError(e, 'プロジェクトを開けませんでした');
+      storageError(e, msg('m8476ce1c484f'));
     } finally {
       storageState(false);
     }
@@ -1613,14 +1611,14 @@ async function openFiles(files: File[]): Promise<string[]> {
         await queueClass(async () => file, key, file.name);
         if (project === owner && classPreviews.has(key)) opened.push('preview:' + key);
       } else if (kind === 'source') {
-        if (file.size > 1024 * 1024) throw new Error('ソースは1 MiB以下にしてください。');
+        if (file.size > 1024 * 1024) throw new Error(msg('mc1c50ef487cf'));
         const source = await file.text();
         if (project !== owner) break;
         let path = 'src/' + file.name.replace(/\.jal$/i, '.jal');
         if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase())) {
           const selected = await dialog(
-            '同じ名前のファイルがあります',
-            '読み込むファイルに別の名前を付けてください。',
+            msg('m18fdff41665a'),
+            msg('mfa292d611b8d'),
             path.replace(/\.jal$/, '_2.jal'),
           );
           if (selected === null) continue;
@@ -1629,22 +1627,20 @@ async function openFiles(files: File[]): Promise<string[]> {
         if (project !== owner) break;
         validatePath(path);
         if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase()))
-          throw new Error('同じ名前のファイルがあります。');
+          throw new Error(msg('md437709a0aed'));
         const copy = snapshot();
         copy.files.push({ path, source });
         if (copy.files.length === 1)
           copy.workspace = { ...copy.workspace, activeFile: path, entryFile: path };
         validateProject(copy);
-        project.files.push({ path, source });
-        if (project.files.length === 1) project.workspace.entryFile = path;
-        attachModel(path, source);
+        documents().add(path, source);
         switchFile(path);
         invalidate();
         setDirty();
         opened.push('source:' + path);
-      } else throw new Error('開けるファイルは .jal，.class，.jalprj です。');
+      } else throw new Error(msg('m7950add9a759'));
     } catch (e) {
-      await dialog(file.name + ' を開けませんでした', e instanceof Error ? e.message : String(e));
+      await dialog(file.name + msg('mcdabe1224c3d'), e instanceof Error ? e.message : String(e));
     }
   }
   return opened;
@@ -1679,7 +1675,7 @@ function dialog(
   message: string,
   input?: string,
   confirm = false,
-  confirmLabel = '変更を破棄して続ける',
+  confirmLabel = msg('m79a5956d251c'),
   suffix = '',
 ): Promise<string | null> {
   const d = el<HTMLDialogElement>('dialog');
@@ -1711,13 +1707,7 @@ function dialog(
 }
 async function allowReplace() {
   return (
-    !dirty ||
-    (await dialog(
-      '未保存の変更があります',
-      '現在の変更を破棄して続けますか？ 保存する場合はキャンセルし，File → 保存を選んでください。',
-      undefined,
-      true,
-    )) !== null
+    !dirty || (await dialog(msg('m946c28fb4132'), msg('m0fff9379ab08'), undefined, true)) !== null
   );
 }
 async function newProject() {
@@ -1746,7 +1736,7 @@ el('properties-form').onsubmit = (e) => {
   e.preventDefault();
   const field = el<HTMLInputElement>('properties-name'),
     name = field.value.trim();
-  field.setCustomValidity(name ? '' : 'プロジェクト名を入力してください。');
+  field.setCustomValidity(name ? '' : msg('m7578a188e521'));
   if (!field.reportValidity()) return;
   const entry = el<HTMLSelectElement>('entry-file').value;
   if (!project.files.some((f) => f.path === entry)) return;
@@ -1762,8 +1752,8 @@ el<HTMLInputElement>('properties-name').oninput = () =>
 async function addFile(directory = 'src') {
   const owner = project;
   const name = await dialog(
-    'JAL ファイルを追加',
-    'ファイル名を入力してください（例: src/com.example.Helper）。',
+    msg('m74449f8523d7'),
+    msg('mcfc10df6467e'),
     (directory ? directory + '/' : '') + 'Helper',
     false,
     '',
@@ -1776,13 +1766,13 @@ async function addFile(directory = 'src') {
       .replace(/\.jal$/i, '')
       .replaceAll('.', '/') + '.jal';
   try {
-    if (path === '.jal') throw new Error('ファイル名を入力してください。');
+    if (path === '.jal') throw new Error(msg('m4d23aa128765'));
     validatePath(path);
-    if (project.files.length >= 64) throw new Error('ファイルは 64 個までです。');
+    if (project.files.length >= 64) throw new Error(msg('mcafda533f3d0'));
     if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase()))
-      throw new Error('同じファイル名が存在します。');
+      throw new Error(msg('m0fc670fbc8c3'));
   } catch (e) {
-    await dialog('追加できませんでした', String(e instanceof Error ? e.message : e));
+    await dialog(msg('m02a8252f7eb7'), String(e instanceof Error ? e.message : e));
     return;
   }
   const className = path
@@ -1812,10 +1802,8 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
     parent = old.split('/').slice(0, -1).join('/'),
     base = old.split('/').pop()!;
   const input = await dialog(
-    move ? '移動先フォルダー' : isFolder ? 'フォルダー名を変更' : 'ファイル名を変更',
-    move
-      ? '移動先のフォルダーパスを入力してください。空欄ならルートに移動します。'
-      : 'クラス名・参照はソース内で変更してください。',
+    move ? msg('m2fd3f389d498') : isFolder ? msg('m83a637816e2f') : msg('m21ecfa3428e8'),
+    move ? msg('m214c81b69001') : msg('m90fcccddecc5'),
     move ? parent : isFolder ? base : base.replace(/\.jal$/i, ''),
     false,
     '',
@@ -1829,7 +1817,7 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
       (isFolder ? name : name.replace(/\.jal$/i, '').replaceAll('.', '/') + '.jal');
   if (destination === old) return;
   try {
-    if (!move && !name) throw new Error('名前を入力してください。');
+    if (!move && !name) throw new Error(msg('m64fa16304152'));
     const paths = project.files.map((f) => f.path),
       changes = planPathChange(paths, old, destination, isFolder);
     if (
@@ -1958,16 +1946,12 @@ panelDock = installPanelDock(
       closeEditorTabs(tab.key);
   },
   (name) => {
-    if (!detached.openPanel(name))
-      status(
-        '小窓がブロックされました。右クリックの「小窓で開く」から再度開いてください。',
-        'error',
-      );
+    if (!detached.openPanel(name)) status(msg('ma13ecae5cbbc'), 'error');
   },
   window.jalwebDetached!.workspaceId,
   () => tabOrder,
   (name) =>
-    name === 'project' ? [{ label: '新規 JAL ファイル…', action: () => void addFile() }, null] : [],
+    name === 'project' ? [{ label: msg('md3a91edcf75f'), action: () => void addFile() }, null] : [],
 );
 for (const side of ['project', 'output'] as const) {
   const container = document.createElement('div');
@@ -1978,7 +1962,7 @@ for (const side of ['project', 'output'] as const) {
     ...editor.getRawOptions(),
     model: null,
     automaticLayout: true,
-    ariaLabel: side + ' グループの JAL ソースコード',
+    ariaLabel: side + msg('m5f0e090a4cfe'),
   });
   groupEditors.set(side, view);
   bindGroupEditor(view, side);
@@ -2075,13 +2059,13 @@ function showDiagnostics() {
   el('problem-count').textContent = String(count);
   const empty = document.querySelector<HTMLElement>('.empty-problems')!;
   empty.hidden = count > 0;
-  empty.textContent = '問題は見つかりませんでした。';
+  empty.textContent = msg('mdaaed0138661');
 }
 function hasErrors() {
   return [...results.values()].some((c) => c.diagnostics.some((d) => d.severity === 'error'));
 }
 compiler.onProgress = (loaded) => {
-  if (!running) status(`JVM を読み込み中… ${(loaded / 1024 / 1024).toFixed(1)} MB`, 'loading');
+  if (!running) status(msg('m859821d20656', [(loaded / 1024 / 1024).toFixed(1)]), 'loading');
 };
 async function analyze(): Promise<void> {
   if (disposed) return;
@@ -2091,7 +2075,7 @@ async function analyze(): Promise<void> {
     while (checked !== revision && !disposed) {
       checked = revision;
       const sources = [...models].map(([path, m]) => ({ path, model: m, source: m.getValue() }));
-      if (!running) status('文法とスタックを検査中…', 'loading');
+      if (!running) status(msg('m5ca5e75fb40a'), 'loading');
       try {
         const next = new Map<string, Compilation>();
         for (const f of sources) {
@@ -2108,7 +2092,7 @@ async function analyze(): Promise<void> {
             for (const path of paths)
               next.get(path)!.diagnostics.push({
                 severity: 'error',
-                message: `クラス ${name} が重複しています: ${paths.join(', ')}`,
+                message: msg('mbd6497361b54', [name, paths.join(', ')]),
                 line: 1,
                 column: 1,
                 length: 1,
@@ -2119,7 +2103,7 @@ async function analyze(): Promise<void> {
         updateActions();
         if (!running)
           status(
-            hasErrors() ? 'コンパイルエラー' : '実行できます',
+            hasErrors() ? msg('m428b24c11fc6') : msg('mc2c1724a78a8'),
             hasErrors() ? 'error' : 'ready',
           );
       } catch (e) {
@@ -2137,7 +2121,7 @@ async function analyze(): Promise<void> {
 }
 editor.onDidChangeCursorPosition(({ position }) => {
   el('cursor').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
-  el('instruction-hint').textContent = '命令ホバーでスタックの変化を表示';
+  el('instruction-hint').textContent = msg('m90f066b614d2');
 });
 function stopRun(show = true) {
   debugState({ status: 'finished', snapshot: undefined, previous: undefined });
@@ -2146,7 +2130,7 @@ function stopRun(show = true) {
   runner = undefined;
   running = false;
   updateActions();
-  if (show) status('停止しました');
+  if (show) status(msg('m4d87a69ae687'));
 }
 async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) {
   const model = requestedModel ?? editor.getModel(),
@@ -2165,7 +2149,7 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
   el('clear').click();
   el('console-empty').hidden = true;
   selectTab('console');
-  status('コンパイル中…', 'loading');
+  status(msg('m405e2aafb5c8'), 'loading');
   try {
     let entry: Compilation | undefined, classes: Compilation[];
     if (example) {
@@ -2175,11 +2159,10 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
       clearTimeout(analysisTimer);
       await analyze();
       if (token !== runToken) return;
-      if (checkedRevision !== revision)
-        throw new Error('コンパイルを完了できませんでした。再度 Run を押してください。');
+      if (checkedRevision !== revision) throw new Error(msg('m2ebbfe857338'));
       if (hasErrors()) {
         selectTab('problems');
-        status('コンパイルエラー', 'error');
+        status(msg('m428b24c11fc6'), 'error');
         return;
       }
       entry = results.get(project.workspace.entryFile);
@@ -2187,10 +2170,7 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
     }
     if (token !== runToken) return;
     if (!entry?.bytecode)
-      throw new Error(
-        entry?.diagnostics.map((d) => d.message).join('\n') ||
-          '実行対象をコンパイルできませんでした。',
-      );
+      throw new Error(entry?.diagnostics.map((d) => d.message).join('\n') || msg('mf5cd797ea235'));
     owned = new Runtime(memory.executionHeapMiB);
     runner = owned;
     owned.onOutput = (stream, text) => {
@@ -2198,7 +2178,7 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
     };
     owned.onProgress = (loaded) => {
       if (token === runToken)
-        status(`実行用 JVM を準備中… ${(loaded / 1024 / 1024).toFixed(1)} MB`, 'loading');
+        status(msg('md6805dd1fc8f', [(loaded / 1024 / 1024).toFixed(1)]), 'loading');
     };
     if (debugging) {
       debugSources.clear();
@@ -2215,7 +2195,7 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
             m.onDidChangeContent(() => {
               if (token !== runToken) return;
               stopRun(false);
-              status('ソースが変更されたため，デバッグ実行を停止しました。');
+              status(msg('m27b0fbbf124a'));
             }),
             m.onWillDispose(() => {
               if (token === runToken) stopRun(false);
@@ -2231,7 +2211,11 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
           snapshot,
         });
         status(
-          `${snapshot.location.className}.${snapshot.location.method} · ${snapshot.location.pc} で停止中`,
+          msg('m7156a0f5bbad', [
+            snapshot.location.className,
+            snapshot.location.method,
+            snapshot.location.pc,
+          ]),
         );
         selectTab('debug');
         void revealDebugFrame(snapshot.frames[0]);
@@ -2258,13 +2242,13 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
         : undefined,
     );
     if (token === runToken) {
-      status('実行が完了しました');
+      status(msg('m55e6f907db2b'));
       el('timing').textContent = `${((performance.now() - started) / 1000).toFixed(2)} s`;
     }
   } catch (e) {
     if (token === runToken) {
       output(`${e instanceof Error ? e.message : String(e)}\n`, 'stderr');
-      status('実行に失敗しました', 'error');
+      status(msg('meefc3b522be5'), 'error');
     }
   } finally {
     for (const d of debugDisposals) d.dispose();
