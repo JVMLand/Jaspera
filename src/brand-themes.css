@@ -303,7 +303,7 @@
   padding: 10px 16px;
   font-size: calc(13px * var(--ui-font-scale, 1));
 }
-:root[data-theme-family='googol'] #file-list button.active {
+:root[data-theme-family='googol'] #file-list button.selected {
   box-shadow: none;
   background: var(--theme-selection);
   color: var(--material-on-selection);
@@ -313,6 +313,12 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
+}
+:root[data-theme-family='googol'] [data-pane-key] [role='tab'] {
+  border-radius: inherit;
+}
+:root[data-theme-family='googol'] [data-pane-key]:hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
 }
 :root[data-theme-family='googol'] [data-pane-key]:has([aria-selected='true']) {
   background: var(--theme-selection) !important;
