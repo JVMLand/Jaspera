@@ -308,28 +308,49 @@
   background: var(--theme-selection);
   color: var(--material-on-selection);
 }
-:root[data-theme-family='googol'] :is(.workspace, .detached-window) [data-pane-key] {
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key] {
   margin: 4px 2px;
   border: 0;
   border-radius: 8px;
   background: transparent;
 }
-:root[data-theme-family='googol'] [data-pane-key] [role='tab'] {
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [role='tab'] {
+  filter: none;
   border-radius: 0;
   border-start-start-radius: inherit;
   border-end-start-radius: inherit;
 }
-:root[data-theme-family='googol'] [data-pane-key]:hover {
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:hover {
   background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
 }
-:root[data-theme-family='googol'] [data-pane-key]:has([aria-selected='true']) {
-  background: var(--theme-selection) !important;
-  box-shadow: none !important;
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-selection);
+  box-shadow: none;
 }
-:root[data-theme-family='googol'] [data-pane-key] [aria-selected='true'] {
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:has([aria-selected='true']):hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [aria-selected='true'] {
   color: var(--material-on-selection);
 }
-:root[data-theme-family='googol'] [data-pane-key] [role='tab']::after {
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [role='tab']::after {
   display: none;
 }
 :root[data-theme-family='googol'] :is(#project-tabs, #file-tabs, .output-header .tabs) {
