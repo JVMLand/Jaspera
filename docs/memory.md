@@ -57,17 +57,17 @@ JSヒープはGC後の値。WASMは`WebAssembly.Memory.buffer.byteLength`で領�
 | 201命令   |             2,318.0 ms |            2,250.7 ms |
 | 1,001命令 |            14,497.3 ms |           15,172.1 ms |
 
-大きな入力では約4.7%遅い結果だった。128 MiBの2回も13.3秒と15.7秒の幅があり，この少数回の測定だけで厳密な差は断定しない。通常設定は確保量を抑える64 MiBとした。`node scripts/compare-heap-performance.mjs`で交互測定を再実行できる（5225番ポート）。
+大きな入力では約4.7%遅い結果だった。128 MiBの2回も13.3秒と15.7秒の幅があり，この少数回の測定だけで厳密な差は断定しない。通常設定は確保量を抑える64 MiBとした。`pnpm exec tsx scripts/compare-heap-performance.ts`で交互測定を再実行できる（5225番ポート）。
 
 ## 再測定
 
 ```powershell
 npm.cmd run build
-node scripts/measure-memory.mjs .cache/memory-normal.json
+pnpm exec tsx scripts/measure-memory.ts .cache/memory-normal.json
 $env:JALWEB_DEVICE_MEMORY='4'
-node scripts/measure-memory.mjs .cache/memory-low.json
+pnpm exec tsx scripts/measure-memory.ts .cache/memory-low.json
 Remove-Item Env:JALWEB_DEVICE_MEMORY
-node scripts/measure-performance.mjs .cache/performance-memory.json
+pnpm exec tsx scripts/measure-performance.ts .cache/performance-memory.json
 ```
 
 メモリ測定はWindows専用で5223番ポート，速度測定は5222番ポートを使用する。他のビルド・ブラウザテストとは同時に実行しない。メモリ測定では処理がない状態の解放タイマーだけを短縮し，`visibilitychange`を送って解放と再開を測っている。ブラウザが非表示ページを凍結する挙動は測っていない。

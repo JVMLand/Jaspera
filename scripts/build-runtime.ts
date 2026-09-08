@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve, join, delimiter } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { bundleRuntime } from './bundle-runtime.mjs';
+import { bundleRuntime } from './bundle-runtime.ts';
 const revision = '3fd56c74656602eb32efefca46f51f074bef6bca',
   sdkVersion = '4.0.2';
 const root = resolve('.'),
@@ -22,7 +22,7 @@ try {
 } catch {
   cached = false;
 }
-function run(command, args, cwd = root) {
+function run(command: string, args: string[], cwd = root) {
   const result = spawnSync(command, args, {
     cwd,
     env: process.env,

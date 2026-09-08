@@ -42,22 +42,38 @@ try {
     date: new Date().toISOString(),
     browser: browser.version(),
     profile: 'local preview',
-    timings: {},
-    memory: [],
+    timings: {} as Record<string, number>,
+    memory: [] as {
+      label: string;
+      rendererHeapBytes: number;
+      rendererBackingStorageBytes: number | null;
+      documents: number;
+      nodes: number;
+      jsEventListeners: number;
+      workers: number;
+    }[],
+    visibleGraphNodes: 0,
+    reopenGraphSamples: [] as number[],
+    environment: {} as {
+      deviceMemoryGiB: number | null;
+      hardwareConcurrency: number;
+      userAgent: string;
+    },
+    ratios: {} as Record<string, number>,
     notes: [
       'Renderer JS heap excludes JVM/WASM worker memory and is not total application RAM.',
       'Heap samples force GC to make retained renderer state comparable.',
       'Use the same machine, browser and build mode when comparing reports.',
     ],
   };
-  async function timed(name, work) {
+  async function timed<T>(name: string, work: () => Promise<T>) {
     const start = performance.now();
     const value = await work();
     report.timings[name] = Math.round(performance.now() - start);
     console.log(name + ': ' + report.timings[name] + ' ms');
     return value;
   }
-  async function sample(label) {
+  async function sample(label: string) {
     await cdp.send('HeapProfiler.collectGarbage');
     const heap = await cdp.send('Runtime.getHeapUsage'),
       dom = await cdp.send('Memory.getDOMCounters');
@@ -80,10 +96,10 @@ try {
   await timed('firstExecution', async () => {
     await page.locator('#run').click();
     await page.waitForFunction(() =>
-      document.querySelector('#output')?.textContent.includes('Hello, World!'),
+      document.querySelector('#output')?.textContent?.includes('Hello, World!'),
     );
   });
-  await page.waitForFunction(() => document.querySelector('#run')?.textContent.includes('Run'));
+  await page.waitForFunction(() => document.querySelector('#run')?.textContent?.includes('Run'));
   await sample('startup');
   async function openClass() {
     await page.keyboard.press('Shift');
@@ -102,10 +118,10 @@ try {
     await page.locator('#graph-tab').click();
     await page.waitForFunction(
       () =>
-        document.querySelector('#graph-panel .graph-status')?.textContent.includes(' · 100% · ') &&
+        document.querySelector('#graph-panel .graph-status')?.textContent?.includes(' · 100% · ') &&
         document
           .querySelector('#graph-panel .graph-status')
-          ?.textContent.includes('java/io/PrintStream') &&
+          ?.textContent?.includes('java/io/PrintStream') &&
         document.querySelectorAll('#graph-panel .graph-node').length > 0,
     );
   });
@@ -120,10 +136,10 @@ try {
     await openClass();
     await page.waitForFunction(
       () =>
-        document.querySelector('#graph-panel .graph-status')?.textContent.includes(' · 100% · ') &&
+        document.querySelector('#graph-panel .graph-status')?.textContent?.includes(' · 100% · ') &&
         document
           .querySelector('#graph-panel .graph-status')
-          ?.textContent.includes('java/io/PrintStream') &&
+          ?.textContent?.includes('java/io/PrintStream') &&
         document.querySelectorAll('#graph-panel .graph-node').length > 0,
     );
     repetitions.push(Math.round(performance.now() - start));

@@ -6,3 +6,8 @@ public/runtime/*
 !public/runtime/.gitkeep
 test-results/
 .wrangler/
+
+# Recreated by pnpm run generate
+src/generated/
+public/licenses/
+public/THIRD_PARTY_NOTICES.md

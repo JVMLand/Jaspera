@@ -2,7 +2,10 @@ import { generateSW, getManifest } from 'workbox-build';
 import { createHash } from 'node:crypto';
 import { readdir, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-async function inventory(directory, prefix = '') {
+async function inventory(
+  directory: string,
+  prefix = '',
+): Promise<{ url: string; bytes: number }[]> {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const relative = prefix + entry.name;

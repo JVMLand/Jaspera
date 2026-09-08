@@ -22,7 +22,7 @@ await mkdir('.cache/java', { recursive: true });
 await mkdir('java/build/generated', { recursive: true });
 await mkdir('java/build/classes', { recursive: true });
 await mkdir('public/runtime', { recursive: true });
-let lock = {};
+let lock: Record<string, { url: string; sha256: string }> = {};
 try {
   lock = JSON.parse(await readFile('vendor/compiler-lock.json', 'utf8'));
 } catch {}
@@ -45,7 +45,7 @@ await Promise.all(
   }),
 );
 await writeFile('vendor/compiler-lock.json', JSON.stringify(lock, null, 2) + '\n');
-function run(command, args) {
+function run(command: string, args: string[]) {
   const result = spawnSync(command, args, { stdio: 'inherit' });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} exited ${result.status}`);
@@ -59,7 +59,7 @@ run('java', [
   '-Xexact-output-dir',
   grammar,
 ]);
-async function walk(dir) {
+async function walk(dir: string): Promise<string[]> {
   const files = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const p = `${dir}/${entry.name}`;
@@ -94,7 +94,7 @@ await writeFile(
   args.map((s) => '"' + s.replaceAll('\\', '/') + '"').join('\n'),
 );
 run('javac', ['@java/build/javac.args']);
-const jar = {};
+const jar: Record<string, Uint8Array> = {};
 for (const name of Object.keys(deps).filter(
   (n) => !n.startsWith('lombok') && !n.startsWith('annotations'),
 )) {

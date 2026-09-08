@@ -10,6 +10,6 @@ HTTPS または localhost で配信した本番ビルドで利用できる。開
 
 Workbox の revision 付き precache を使い，未保存・更新されたファイルだけを取得する。更新版は使用中のタブを強制切替せず，全タブ・小窓を閉じてから反映する。事前保存を選ばない利用者のために全ファイルを自動取得することはしない（通常の初期検査による JVM 読み込みは従来どおり）。初めて開く端末で，接続なしに起動できる機能ではない。
 
-ビルドは `scripts/build-offline.mjs` で Service Worker と容量一覧を生成する。配信時は dist 全体を配置し，sw.js と HTML は再検証できるキャッシュ設定にする。ハッシュ付き assets は長期キャッシュできる。HTTP の gzip/Brotli 圧縮は配信サーバー側で有効にする。
+ビルドは `scripts/build-offline.ts` で Service Worker と容量一覧を生成する。配信時は dist 全体を配置し，sw.js と HTML は再検証できるキャッシュ設定にする。ハッシュ付き assets は長期キャッシュできる。HTTP の gzip/Brotli 圧縮は配信サーバー側で有効にする。
 
 命令辞書と説明は遅延読み込み，Monaco はアプリと別チャンクに分割している。Worker 内部のパーサー共有は今回の変更には含めない。

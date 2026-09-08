@@ -15,12 +15,12 @@ const bundle = await build({
 const api = await import(
   'data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64')
 );
-const separate = (source) => ({
+const separate = (source: string) => ({
   parameters: api.parameterSlots(source),
   offsets: api.calculateOffsets(source),
   inspections: api.inspectSource(source),
 });
-const measure = (fn, source) => {
+const measure = (fn: (source: string) => unknown, source: string) => {
   const times = [];
   for (let i = 0; i < 9; i++) {
     const start = performance.now();
@@ -43,7 +43,7 @@ const results = [];
 for (const [name, source] of sources) {
   if (compareLL) {
     const start = performance.now(),
-      slow = api.analyzeSource(source, (text) => api.parseJal(text, false));
+      slow = api.analyzeSource(source, (text: string) => api.parseJal(text, false));
     const llSharedMs = +(performance.now() - start).toFixed(2);
     assert.deepEqual(api.analyzeSource(source), slow);
     console.log(JSON.stringify({ name, llSharedMs, equivalent: true }));

@@ -1,4 +1,4 @@
-import { access, cp, mkdir, readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 for (const file of [
   'bovine.js',
   'bjvm_main.wasm',
@@ -13,10 +13,6 @@ for (const file of [
     throw new Error(`Missing runtime/${file}. Run pnpm run setup first.`);
   }
 }
-
-await mkdir('public/licenses', { recursive: true });
-await cp('licenses', 'public/licenses', { recursive: true });
-await cp('THIRD_PARTY_NOTICES.md', 'public/THIRD_PARTY_NOTICES.md');
 
 if (!(await readFile('public/runtime/bovine.js', 'utf8')).includes('jaspera_debug_enable'))
   throw new Error('Runtime has no debugger support. Run pnpm run build:runtime.');

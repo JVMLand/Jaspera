@@ -25,7 +25,13 @@ try {
   const results = [];
   for (const heap of [128, 64, 64, 128]) {
     const run = await page.evaluate(async (heap) => {
-      const { Runtime } = await import('/src/runtime.ts'),
+      const moduleUrl = '/src/runtime.ts';
+      const { Runtime } = (await import(moduleUrl)) as {
+          Runtime: new (heap: number) => {
+            compile(source: string): Promise<{ diagnostics: { severity: string }[] }>;
+            stop(): void;
+          };
+        },
         runtime = new Runtime(heap);
       try {
         await runtime.compile('public class Warm { public static x()V { return } }');

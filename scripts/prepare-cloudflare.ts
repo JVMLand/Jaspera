@@ -8,8 +8,15 @@ const brotli = promisify(brotliCompress),
 const limit = 25 * 1024 * 1024;
 const output = resolve('.cache/cloudflare');
 const assets = join(output, 'assets');
-const manifest = {};
-const mime = {
+type Asset = {
+  hash: string;
+  bytes: number;
+  type: string;
+  encodings?: Record<string, string>;
+  path?: string;
+};
+const manifest: Record<string, Asset> = {};
+const mime: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -26,7 +33,7 @@ const mime = {
 await mkdir(join(assets, '.packed'), { recursive: true });
 let originalBytes = 0,
   transferredBytes = 0;
-async function walk(dir, prefix = '') {
+async function walk(dir: string, prefix = '') {
   for (const item of await readdir(dir, { withFileTypes: true })) {
     const name = prefix + item.name,
       source = join(dir, item.name);
@@ -37,7 +44,7 @@ async function walk(dir, prefix = '') {
     if (!item.isFile() || item.name.startsWith('.') || name.endsWith('.map')) continue;
     const data = await readFile(source),
       hash = createHash('sha256').update(data).digest('hex');
-    const entry = {
+    const entry: Asset = {
       hash,
       bytes: data.length,
       type: mime[extname(name)] ?? 'application/octet-stream',

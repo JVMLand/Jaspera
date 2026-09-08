@@ -35,7 +35,7 @@ try {
         (value) => Object.defineProperty(navigator, 'deviceMemory', { value }),
         Number(process.env.JALWEB_DEVICE_MEMORY),
       );
-    const workers = [];
+    const workers: (string | undefined)[] = [];
     page.on('worker', (w) => workers.push(w.url().split('/').at(-1)));
     await page.addInitScript(() => {
       window.longTasks = [];

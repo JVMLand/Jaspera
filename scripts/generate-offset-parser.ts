@@ -1,5 +1,10 @@
-import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm, access } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+try {
+  await access('.cache/java/antlr4-4.13.2-complete.jar');
+} catch {
+  throw new Error('ANTLR is missing. Run pnpm run setup first.');
+}
 await mkdir('.cache/offset-parser', { recursive: true });
 await mkdir('src/generated/offset-parser', { recursive: true });
 const grammar = (await readFile('vendor/langjal/antlr/tokyo/peya/langjal/compiler/JAL.g4', 'utf8'))
@@ -20,6 +25,7 @@ const result = spawnSync(
   ],
   { stdio: 'inherit' },
 );
+if (result.error) throw result.error;
 if (result.status !== 0) throw new Error('ANTLR generation failed');
 // The browser imports only the generated JavaScript lexer and parser.
 await Promise.all(
@@ -31,7 +37,7 @@ const opcodes = await readFile(
   'vendor/langjal/java/tokyo/peya/langjal/compiler/jvm/EOpcodes.java',
   'utf8',
 );
-const sizes = {};
+const sizes: Record<string, number> = {};
 for (const match of opcodes.matchAll(/case ([\s\S]*?) -> ([1-5]);/g))
   for (const name of match[1].split(',').map((s) => s.trim()))
     sizes[name.toLowerCase()] = Number(match[2]);

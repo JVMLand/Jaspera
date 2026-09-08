@@ -11,7 +11,7 @@ const opcodeNames = opcodeSource.match(/String\[\] INSTRUCTION_NAMES\s*=\s*\{([\
 if (!opcodeNames) throw new Error('Compiler opcode table not found');
 const opcodes = Object.fromEntries(
   [...opcodeNames.matchAll(/"([a-z0-9_]+)"/g)]
-    .map((match, index) => [match[1], index])
+    .map((match, index): [string, number] => [match[1], index])
     .filter(([name]) => instructions.includes(name)),
 );
 for (const name of instructions)
@@ -19,7 +19,7 @@ for (const name of instructions)
     throw new Error(`Missing opcode: ${name}`);
 const keywords = [...grammar.matchAll(/^KWD_\w+:\s*'([^']+)'/gm)].map((m) => m[1]);
 const converter = new TurndownService({ codeBlockStyle: 'fenced', headingStyle: 'atx' });
-const documents = {};
+const documents: Record<string, { title: string; markdown: string }> = {};
 for (const dir of ['vendor/javasm/instructions', 'vendor/javasm/localization/ja/instructions']) {
   for (const file of await readdir(dir)) {
     if (!file.endsWith('.html')) continue;

@@ -3,7 +3,7 @@ import './brand-themes.css';
 import './vibe-theme.css';
 import { instructionColorRules, instructionColors } from './instruction-colors';
 import * as monaco from './editor-platform';
-import darcula from './darcula.json';
+import darcula from './generated/darcula.json';
 import { referenceThemes, editorTheme } from './reference-themes';
 const key = 'jalweb.theme';
 let currentTheme = 'jal-night';

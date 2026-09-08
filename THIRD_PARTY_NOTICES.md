@@ -21,9 +21,9 @@ OpenJDK upstream source: https://github.com/openjdk/jdk/tree/jdk-23%2B37
 Runtime distribution provenance: https://github.com/anematode/b-jvm/tree/3fd56c74656602eb32efefca46f51f074bef6bca/test
 The Bovine repository supplies a reduced OpenJDK class archive. Its exact binary hashes and source URLs are recorded in `vendor/runtime-lock.json`; it does not supply a complete original JDK build recipe. The upstream source link is not a claim that this checkout reproduces the original binary bit for bit.
 
-JALWeb replaces java.util.zip.Deflater, Inflater, CRC32 and Adler32 with adapters to JZlib. The complete adapter source and build procedure are included in `java/patches/` and `scripts/build-compiler.mjs`. These files are modifications by JALWeb, not unmodified OpenJDK source.
+JALWeb replaces java.util.zip.Deflater, Inflater, CRC32 and Adler32 with adapters to JZlib. The complete adapter source and build procedure are included in `java/patches/` and `scripts/build-compiler.ts`. These files are modifications by JALWeb, not unmodified OpenJDK source.
 
-Bovine is built from the pinned upstream revision with `vendor/patches/bovine-debugger.patch` by `scripts/build-runtime.mjs`. `scripts/bundle-runtime.mjs` applies UTF-8 allocation and HTTP response handling fixes to the wrapper from that checkout and bundles it with the locally built WebAssembly runtime.
+Bovine is built from the pinned upstream revision with `vendor/patches/bovine-debugger.patch` by `scripts/build-runtime.ts`. `scripts/bundle-runtime.ts` applies UTF-8 allocation and HTTP response handling fixes to the wrapper from that checkout and bundles it with the locally built WebAssembly runtime.
 
 All application execution is local to the browser; public dependency hosts are contacted by the setup process only. Runtime assets are served from the same site as the editor.
 

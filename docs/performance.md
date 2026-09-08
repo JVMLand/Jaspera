@@ -34,7 +34,7 @@ Graph を一度も開いていない状態では，Worker が4個から2個に�
 ```sh
 npm run build:compiler
 npm run build
-node scripts/measure-performance.mjs .cache/performance-report.json
+pnpm exec tsx scripts/measure-performance.ts .cache/performance-report.json
 ```
 
 5222番ポートを使用する。ほかのビルド・ブラウザテストは同時に実行しない。結果は JSON に保存される。

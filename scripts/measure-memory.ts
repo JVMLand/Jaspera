@@ -1,3 +1,16 @@
+type ChildResults = {
+  'HeapProfiler.collectGarbage': object;
+  'Runtime.getHeapUsage': {
+    usedSize: number;
+    totalSize: number;
+    embedderHeapUsedSize?: number;
+    backingStorageSize?: number;
+  };
+  'Runtime.evaluate': { result: { objectId?: string } };
+  'Runtime.queryObjects': { objects: { objectId?: string } };
+  'Runtime.callFunctionOn': { result: { value?: unknown } };
+  'Runtime.releaseObjectGroup': object;
+};
 import { chromium } from '@playwright/test';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -18,7 +31,7 @@ const server = spawn(
   ],
   { stdio: 'pipe', windowsHide: true },
 );
-let browser;
+let browser: import('@playwright/test').Browser | undefined;
 try {
   for (let i = 0; i < 100; i++) {
     try {
@@ -32,7 +45,10 @@ try {
   page.setDefaultTimeout(60000);
   const cdp = await browser.newBrowserCDPSession();
   let nextId = 0;
-  const pending = new Map();
+  const pending = new Map<
+    number,
+    { resolve: (value: unknown) => void; reject: (reason: Error) => void }
+  >();
   cdp.on('Target.receivedMessageFromTarget', (event) => {
     const message = JSON.parse(event.message),
       p = pending.get(message.id);
@@ -43,9 +59,13 @@ try {
         : p.resolve(message.result);
     }
   });
-  async function child(sessionId, method, params = {}) {
+  async function child<K extends keyof ChildResults>(
+    sessionId: string,
+    method: K,
+    params: Record<string, unknown>,
+  ) {
     const id = ++nextId;
-    return new Promise((resolve, reject) => {
+    return new Promise<unknown>((resolve, reject) => {
       pending.set(id, { resolve, reject });
       cdp
         .send('Target.sendMessageToTarget', {
@@ -53,10 +73,10 @@ try {
           message: JSON.stringify({ id, method, params }),
         })
         .catch(reject);
-    });
+    }) as Promise<ChildResults[K]>;
   }
-  const records = [];
-  async function snapshot(name) {
+  const records: unknown[] = [];
+  async function snapshot(name: string) {
     const targets = (await cdp.send('Target.getTargets')).targetInfos.filter((t) =>
       ['page', 'worker'].includes(t.type),
     );
@@ -67,8 +87,8 @@ try {
         flatten: false,
       });
       try {
-        await child(sessionId, 'HeapProfiler.collectGarbage');
-        const heap = await child(sessionId, 'Runtime.getHeapUsage');
+        await child(sessionId, 'HeapProfiler.collectGarbage', {});
+        const heap = await child(sessionId, 'Runtime.getHeapUsage', {});
         const proto = await child(sessionId, 'Runtime.evaluate', {
           expression: 'WebAssembly.Memory.prototype',
           objectGroup: 'memory-audit',
@@ -86,7 +106,7 @@ try {
           type: target.type,
           url: target.url.split('/').at(-1),
           ...heap,
-          wasmBytes: memory.result.value,
+          wasmBytes: memory.result.value as number[],
         });
         await child(sessionId, 'Runtime.releaseObjectGroup', { objectGroup: 'memory-audit' });
       } finally {
@@ -117,7 +137,7 @@ try {
     );
     await writeFile(
       process.argv[2] ?? '.cache/memory-optimized.json',
-      JSON.stringify({ browser: browser.version(), records }, null, 2),
+      JSON.stringify({ browser: browser!.version(), records }, null, 2),
     );
   }
   await snapshot('blank');
@@ -136,7 +156,7 @@ try {
   await page.locator('#graph-tab').click();
   await page.locator('.graph-node rect').first().waitFor();
   await snapshot('panels');
-  async function edit(source) {
+  async function edit(source: string) {
     await page.locator('#editor .view-lines').click();
     await page.keyboard.press('Control+Home');
     await page.keyboard.press('Control+a');
@@ -162,8 +182,8 @@ try {
   // Accelerate only the idle timer, without pending work, to keep the audit short.
   await page.evaluate(() => {
     const timer = window.setTimeout;
-    window.setTimeout = (fn, ms, ...args) =>
-      timer(fn, ms === 30000 || ms === 60000 ? 10 : ms, ...args);
+    window.setTimeout = ((fn: TimerHandler, ms?: number, ...args: unknown[]) =>
+      timer(fn, ms === 30000 || ms === 60000 ? 10 : ms, ...args)) as typeof window.setTimeout;
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
     document.dispatchEvent(new Event('visibilitychange'));
     window.setTimeout = timer;
@@ -171,7 +191,7 @@ try {
   await page.waitForTimeout(250);
   await snapshot('background-idle');
   await page.evaluate(() => {
-    delete document.visibilityState;
+    Reflect.deleteProperty(document, 'visibilityState');
     document.dispatchEvent(new Event('visibilitychange'));
   });
   const result = await page.evaluate(() =>

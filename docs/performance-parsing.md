@@ -16,9 +16,9 @@ ANTLR の SLL と BailErrorStrategy で先に解析し，完了できなけれ�
 測定の再実行：
 
 ```sh
-node scripts/measure-source-parsing.mjs
+pnpm exec tsx scripts/measure-source-parsing.ts
 # JDKラウンドトリップのテストで生成したソースがある場合
-node scripts/measure-source-parsing.mjs --compare-ll .cache/jdk-roundtrip/PrintStream.jal .cache/jdk-roundtrip/String.jal
+pnpm exec tsx scripts/measure-source-parsing.ts --compare-ll .cache/jdk-roundtrip/PrintStream.jal .cache/jdk-roundtrip/String.jal
 ```
 
 通常出力は高速予測によるパーサー単体・3回別々・1回共有の中央値。`--compare-ll` は追加で従来の LL による1回共有の実行時間を測り，結果の一致を検証する。この追加値は1回の測定で，表の9回中央値とは条件が異なる。
