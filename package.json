@@ -16,7 +16,10 @@
     "prebuild": "node scripts/check-runtime.mjs",
     "build:runtime": "node scripts/build-runtime.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:cloudflare": "pnpm run build && node scripts/prepare-cloudflare.mjs",
+    "preview:cloudflare": "wrangler dev",
+    "deploy:cloudflare": "wrangler deploy"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -36,7 +39,8 @@
     "turndown": "7.2.0",
     "typescript": "5.8.3",
     "vite": "6.4.1",
-    "workbox-build": "^7.4.1"
+    "workbox-build": "^7.4.1",
+    "wrangler": "^4.129.1"
   },
   "packageManager": "pnpm@10.13.1"
 }
