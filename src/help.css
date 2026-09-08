@@ -11,40 +11,23 @@
   line-height: 1.75;
   margin: 16px 0 0;
 }
-#help-dialog .help-shortcuts {
-  width: 100%;
-  border-collapse: collapse;
+
+#help-dialog .app-version {
+  margin-top: 4px;
+  color: var(--theme-muted, #91a19e);
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
-#help-dialog .help-shortcuts th {
-  font-weight: 400;
-  text-align: left;
-  padding: 9px 12px 9px 0;
+
+#help-dialog .help-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 0;
+  margin: 20px 0;
+  list-style: none;
 }
-#help-dialog .help-shortcuts td {
-  text-align: right;
-  padding: 9px 0;
-}
-#help-dialog .help-shortcuts tr + tr {
-  border-top: 1px solid var(--theme-border, #303640);
-}
-#help-dialog .help-key-group {
-  display: inline-block;
-  white-space: nowrap;
-  line-height: 2;
-}
-#help-dialog kbd {
-  display: inline-block;
-  min-width: 22px;
-  padding: 0 5px;
-  border: 1px solid var(--theme-border, #303640);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--theme-bg, #11161c);
-  color: var(--theme-text, #d7dce3);
-  font:
-    12px/1.7 ui-monospace,
-    Consolas,
-    monospace;
-  text-align: center;
+#help-dialog .help-links a {
+  color: var(--theme-accent);
+  text-underline-offset: 3px;
 }
