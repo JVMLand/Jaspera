@@ -10,3 +10,5 @@
 .frame-arrow{align-self:center;justify-self:center;color:var(--theme-accent,#91caba);font-size:18px}
 .frame-empty,.frame-terminal{border:1px dashed var(--theme-border,#40515c);border-radius:4px;padding:5px;text-align:center;font-size:11px;color:var(--theme-muted,#91a19e);min-height:30px;box-sizing:border-box}
 .frame-rest{text-align:center;color:var(--theme-muted,#91a19e);font-size:16px}.frame-note{font-size:12px;line-height:1.6;margin:8px 0 0;overflow-wrap:anywhere}
+
+.frame-pair.is-unchanged{grid-template-columns:minmax(0,128px)}

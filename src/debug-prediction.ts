@@ -4,6 +4,7 @@ import type {FrameTransition} from './frame-transition';
 export function predictDebugFrame(frame:DebugFrame):FrameTransition {
  const before=[...frame.stack],localsBefore=[...frame.locals],localsAfter=[...frame.locals];
  const result:FrameTransition={before,after:[...before],consumed:0,produced:0,beforeLabel:'現在',afterLabel:'実行後（予測）',limit:65536};
+ if(localsBefore.length)result.locals={before:localsBefore,after:[...localsBefore],changed:[]};
  const insn=frame.instruction;if(!insn){result.terminal='命令情報がありません';return result;}
  const op=insn.opcode.toLowerCase().replace(/_resolved$/,'').replace(/^(getfield|putfield|getstatic|putstatic)_[bcsijfdzl]$/,'$1');
  const unknown=(label:string)=>label+'（未確定）';
