@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { wrap, type Endpoint, type Remote } from 'comlink';
 // Only lifecycle management lives here; Comlink owns RPC dispatch and serialization.
 export function scopedEndpoint(target: Worker | MessagePort) {
@@ -33,16 +34,16 @@ export class WorkerRpc<T> {
   private pending = new Set<(error: Error) => void>();
   constructor(private factory: () => Worker) {}
   call<R>(invoke: (remote: Remote<T>) => Promise<R>, timeout = 60_000): Promise<R> {
-    if (this.closed) return Promise.reject(new Error('Worker は終了しています。'));
+    if (this.closed) return Promise.reject(new Error(msg('mca2922eda974')));
     if (!this.worker) {
       this.worker = this.factory();
       this.scope = scopedEndpoint(this.worker);
       this.remote = wrap<T>(this.scope.endpoint);
       this.worker.onerror = (e) => {
         e.preventDefault();
-        this.stop(e.message || 'Worker の処理に失敗しました。');
+        this.stop(e.message || msg('md1010d6a3752'));
       };
-      this.worker.onmessageerror = () => this.stop('Worker の応答を読み取れませんでした。');
+      this.worker.onmessageerror = () => this.stop(msg('m7e45bc5e2da6'));
     }
     return new Promise<R>((resolve, reject) => {
       const finish = (error?: Error, value?: R) => {
@@ -53,9 +54,7 @@ export class WorkerRpc<T> {
       };
       const cancel = (error: Error) => finish(error);
       const timer =
-        timeout > 0
-          ? setTimeout(() => this.stop('処理時間の上限を超えたため停止しました。'), timeout)
-          : undefined;
+        timeout > 0 ? setTimeout(() => this.stop(msg('m1c0ec1227c27')), timeout) : undefined;
       this.pending.add(cancel);
       try {
         invoke(this.remote!).then(
@@ -67,7 +66,7 @@ export class WorkerRpc<T> {
       }
     });
   }
-  stop(message = '停止しました。') {
+  stop(message = msg('me00bbb6d81ec')) {
     this.scope?.dispose();
     this.scope = undefined;
     if (this.worker) {
@@ -81,6 +80,6 @@ export class WorkerRpc<T> {
   }
   dispose() {
     this.closed = true;
-    this.stop('Worker は終了しています。');
+    this.stop(msg('mca2922eda974'));
   }
 }

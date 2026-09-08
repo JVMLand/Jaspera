@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type { DebugCommand, DebugBreakpoint, DebugOptions, DebugSnapshot } from './debug-protocol';
 import { expose, transfer } from 'comlink';
 import { WorkerRpc, scopedEndpoint } from './worker-rpc';
@@ -25,7 +26,7 @@ export class Runtime {
     timeout: number,
     onProgress?: (progress: AnalysisProgress) => void,
   ) {
-    if (this.active) throw new Error('JVM は処理中です。');
+    if (this.active) throw new Error(msg('mfd40741e352a'));
     const token = {};
     this.active = token;
     const channel = new MessageChannel(),
@@ -88,7 +89,7 @@ export class Runtime {
   debugBreakpoints(points: DebugBreakpoint[]) {
     return this.rpc.call((api) => api.debugBreakpoints(points));
   }
-  stop(message = '停止しました。') {
+  stop(message = msg('me00bbb6d81ec')) {
     this.active = undefined;
     this.rpc.stop(message);
   }

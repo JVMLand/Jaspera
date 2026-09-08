@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { RuntimeDebugger } from './runtime-debugger';
 import type { DebugCommand, DebugBreakpoint } from './debug-protocol';
 /// <reference lib="webworker" />
@@ -34,7 +35,7 @@ function outputText(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
   const accepted = bytes.subarray(0, remaining);
   outputBytes += accepted.length;
   buffers[stream] += decoders[stream].decode(accepted, { stream: true });
-  if (outputBytes >= 256 * 1024) buffers.stderr += '\n[出力は 256 KiB で打ち切られました]\n';
+  if (outputBytes >= 256 * 1024) buffers.stderr += msg('md67aad18906b');
   flushTimer ??= setTimeout(flush, 32);
 }
 let compiling = false,
@@ -60,7 +61,7 @@ function output(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
 }
 async function initialize(heapMiB: number) {
   if (!Number.isInteger(heapMiB) || heapMiB < 16 || heapMiB > 128)
-    throw new Error('JVM ヒープ容量が不正です。');
+    throw new Error(msg('m176f8035c187'));
   if (initialization) return initialization;
   initialization = (async () => {
     const moduleUrl = new URL('bovine.js', root).href;
@@ -86,7 +87,7 @@ async function initialize(heapMiB: number) {
 }
 function encodeText(text: string) {
   const bytes = new TextEncoder().encode(text);
-  if (bytes.length > 1024 * 1024) throw new Error('入力は 1 MiB 以下にしてください。');
+  if (bytes.length > 1024 * 1024) throw new Error(msg('m38b8f543a25f'));
   let binary = '';
   for (let i = 0; i < bytes.length; i += 8192)
     binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
@@ -103,7 +104,7 @@ function endDebug() {
 let busy = false;
 const api = {
   debugCommand(command: DebugCommand) {
-    if (!debuggerSession) throw new Error('デバッグ実行中ではありません。');
+    if (!debuggerSession) throw new Error(msg('m1eed52c6f78d'));
     debuggerSession.command(command);
   },
   debugBreakpoints(points: DebugBreakpoint[]) {
@@ -116,7 +117,7 @@ const api = {
   ): Promise<Compilation | Disassembly | void> {
     if (busy) {
       port.close();
-      throw new Error('JVM は処理中です。');
+      throw new Error(msg('mfd40741e352a'));
     }
     busy = true;
     outputBytes = 0;
@@ -139,28 +140,27 @@ const api = {
         );
         return compilation;
       } else if (data.type === 'disassemble') {
-        if (data.bytecode.length > 1400000) throw new Error('class は 1 MiB 以下にしてください。');
+        if (data.bytecode.length > 1400000) throw new Error(msg('m1a2a27fb915b'));
         return JSON.parse(await bridge.disassemble(data.bytecode));
       } else {
         const { className, bytecode } = data.compilation;
         if (!/^[\w$/]+$/.test(className) || className.includes('..') || !bytecode)
-          throw new Error('実行するクラスがありません。');
+          throw new Error(msg('m6aa343a2a105'));
         const classes = data.compilation.classes ?? [{ className, bytecode }];
         const names = new Set<string>();
-        if (!classes.length || classes.length > 64)
-          throw new Error('実行するクラスの数が不正です。');
+        if (!classes.length || classes.length > 64) throw new Error(msg('m69b19d42e14b'));
         for (const item of classes) {
           if (
             !/^[\w$]+(?:\/[\w$]+)*$/.test(item.className) ||
             !item.bytecode ||
             names.has(item.className)
           )
-            throw new Error('実行するクラスが不正または重複しています。');
+            throw new Error(msg('m284c41941c9f'));
           names.add(item.className);
         }
-        if (!names.has(className)) throw new Error('実行対象が見つかりません。');
+        if (!names.has(className)) throw new Error(msg('md7afc4fabe9c'));
         const manifest = classes.map((c) => c.className + '\t' + c.bytecode).join('\n');
-        if (manifest.length > 16 * 1024 * 1024) throw new Error('コンパイル結果が大きすぎます。');
+        if (manifest.length > 16 * 1024 * 1024) throw new Error(msg('mb1581e0f9145'));
         if (data.debug) {
           debuggerSession = new RuntimeDebugger(vm, data.debug, (snapshot) => {
             flush();

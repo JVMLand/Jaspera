@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { methodLayouts, graphDocuments, rememberGraph } from './graph-cache';
 import { observePanelVisibility } from './panel-visibility';
 import type { AnalysisProgress, Compilation, GraphDocument, MethodGraph } from './protocol';
@@ -37,10 +38,10 @@ export function installInstructionGraph(
   filters.className = 'graph-filters';
   const enabled = new Set(['stack', 'local', 'control', 'exception']);
   for (const [kind, title] of [
-    ['stack', 'スタック'],
-    ['local', 'ローカル変数'],
-    ['control', '制御フロー'],
-    ['exception', '例外'],
+    ['stack', msg('m340ecc5d5f10')],
+    ['local', msg('m9bf67764bae7')],
+    ['control', msg('md20b40cb516b')],
+    ['exception', msg('m794a49d55773')],
   ]) {
     const label = document.createElement('label'),
       input = document.createElement('input');
@@ -64,7 +65,7 @@ export function installInstructionGraph(
     if (text !== undefined) el.textContent = text;
     return el;
   };
-  const svg = ns('svg', { class: 'graph-canvas', 'aria-label': '命令グラフ' }),
+  const svg = ns('svg', { class: 'graph-canvas', 'aria-label': msg('m47f06783254a') }),
     scene = ns('g');
   svg.append(scene);
   host.append(filters, status, svg);
@@ -134,7 +135,13 @@ export function installInstructionGraph(
       percent = total
         ? Math.floor((methods.reduce((sum, m) => sum + m.step, 0) / (3 * total)) * 100)
         : 0;
-    status.textContent = `${owner} · ${percent}% · ${complete}/${total} メソッド完了${complete === total && total ? '' : stage ? ' · ' + stage : ''}`;
+    status.textContent = msg('mc14277a7c7bc', [
+      owner,
+      percent,
+      complete,
+      total,
+      complete === total && total ? '' : stage ? ' · ' + stage : '',
+    ]);
   }
   const lineNodes = new Map<number, { id: string; column: number }[]>();
   let selectedElement: SVGGElement | null = null;
@@ -197,7 +204,7 @@ export function installInstructionGraph(
     const method: MethodView = {
       name,
       step: 0,
-      phase: '解析の開始待ち',
+      phase: msg('mbd71d91cc8f0'),
       group: ns('g', { class: 'graph-method-group' }),
     };
     methods.push(method);
@@ -337,7 +344,7 @@ export function installInstructionGraph(
         class: 'graph-node' + (node.unreachable ? ' unreachable' : ''),
         role: 'button',
         tabindex: 0,
-        'aria-label': `${node.line}行: ${node.text}`,
+        'aria-label': msg('ma88de429c5d9', [node.line, node.text]),
       });
       g.dataset.id = node.id;
       g.style.setProperty(
@@ -368,13 +375,13 @@ export function installInstructionGraph(
   }
   function enqueueLayout(method: MethodView) {
     const generation = layoutTicket;
-    method.phase = '配置待ち';
+    method.phase = msg('mc99364e3fa39');
     method.step = 2;
     placeholder(method);
     reflow();
     layoutQueue = layoutQueue.then(async () => {
       if (disposed || generation !== layoutTicket || !method.graph) return;
-      method.phase = '配置中';
+      method.phase = msg('m37507d4d8758');
       placeholder(method);
       try {
         const graph = {
@@ -387,7 +394,7 @@ export function installInstructionGraph(
         if (!disposed && generation === layoutTicket) render(method, placed);
       } catch (error) {
         if (!disposed && generation === layoutTicket) {
-          method.phase = '配置できませんでした';
+          method.phase = msg('mf2f96efe5bcd');
           placeholder(method);
           failure = String(error);
           summary();
@@ -400,7 +407,7 @@ export function installInstructionGraph(
     let method = methods.find((m) => m.name === graph.name);
     if (method?.graph) return;
     if (graph.nodes.length > 600) {
-      failure = `${graph.name} は表示の上限を超えています（1メソッド600命令）。`;
+      failure = msg('mb602c04858a2', [graph.name]);
       summary();
       return;
     }
@@ -421,19 +428,19 @@ export function installInstructionGraph(
   }
   function progress(value: AnalysisProgress) {
     const labels = {
-      queued: '解析待ち',
-      loading: 'JVM を読み込み中',
-      parse: '構文解析',
-      analysis: '型・フロー解析',
-      frames: 'フレーム解析',
-      layout: '配置中',
-      complete: '解析完了',
+      queued: msg('ma77a4eedef82'),
+      loading: msg('m07547f2fe62c'),
+      parse: msg('m9604e23e9ade'),
+      analysis: msg('m6aa3c91224bd'),
+      frames: msg('mbf3fe0f5fe1d'),
+      layout: msg('m37507d4d8758'),
+      complete: msg('m82cb90f7ac1a'),
     };
     stage =
       value.phase === 'queued'
-        ? (value.waitingFor ?? '先行する解析の完了待ち')
+        ? (value.waitingFor ?? msg('m25bc2f915833'))
         : value.phase === 'loading' && value.total === 0
-          ? 'JVM を準備中'
+          ? msg('ma61da4529a80')
           : labels[value.phase];
     if ((value.phase === 'loading' || value.phase === 'parse') && value.total > 0)
       stage += ` ${Math.floor((value.completed / value.total) * 100)}%`;
@@ -442,12 +449,12 @@ export function installInstructionGraph(
     const waiting =
       value.phase === 'analysis'
         ? currentName
-          ? `${currentName} の型・フロー解析待ち`
-          : 'クラスの型・フロー解析待ち'
+          ? msg('mac04a2ceca97', [currentName])
+          : msg('m955067f3d9d0')
         : value.phase === 'frames'
           ? currentName
-            ? `${currentName} のフレーム解析待ち`
-            : 'フレーム解析の開始待ち'
+            ? msg('m670830fbd669', [currentName])
+            : msg('mf5357f7b2128')
           : stage;
     for (const pending of methods)
       if (!pending.graph && !pending.layout && pending.name !== value.method) {
@@ -460,7 +467,7 @@ export function installInstructionGraph(
       method.phase = labels[value.phase];
       if (value.phase === 'analysis' && value.finished) {
         method.step = 1;
-        method.phase = 'クラス全体の型解析の完了待ち';
+        method.phase = msg('m266dfb2f21ca');
       }
       if (value.phase === 'frames') method.step = 1;
       placeholder(method);
@@ -507,9 +514,9 @@ export function installInstructionGraph(
   });
   resize.observe(svg);
   const context = installContextMenu(host, () => [
-    { label: '全体表示', action: fit },
+    { label: msg('mb786b491243b'), action: fit },
     {
-      label: '再解析',
+      label: msg('m0e9a0de01275'),
       action: () => {
         const previous = doc;
         if (previous) graphDocuments.delete(previous.source);
@@ -537,11 +544,11 @@ export function installInstructionGraph(
     failure = '';
     autoFit = true;
     if (!next) {
-      status.textContent = 'JAL ファイルを開いてください。';
+      status.textContent = msg('m0645a45ace0c');
       return;
     }
     owner = next.uri.split('/').at(-1) ?? '';
-    stage = 'メソッドを読み取り中';
+    stage = msg('meeafbbd5208c');
     summary();
     const cached = graphDocuments.get(next.source);
     if (cached) {
@@ -564,11 +571,11 @@ export function installInstructionGraph(
         if (disposed || id !== ticket) return;
         for (const graph of result.graphs ?? []) acceptGraph(graph);
         failure = result.diagnostics.find((d) => d.severity === 'error')?.message ?? failure;
-        if (!methods.length && !failure) failure = '表示できる命令がありません。';
+        if (!methods.length && !failure) failure = msg('m4bb0cb0552df');
         if (failure)
           for (const method of methods)
             if (!method.graph) {
-              method.phase = '解析できませんでした';
+              method.phase = msg('maab839303e3d');
               placeholder(method);
             }
         summary();
