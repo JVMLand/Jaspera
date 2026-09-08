@@ -67,13 +67,18 @@ export class SourceAnalysis {
   dispose(){this.disposed=true;this.formatting.dispose();this.hints.dispose();this.hintsChanged.dispose();for(const model of this.pending.keys())this.cancel(model);this.worker.dispose();}
 }
 
+type GutterState={lines:Map<number,SourceOffset[]>;breakpoints:Set<number>;current?:number};
+const gutters=new WeakMap<monaco.editor.IStandaloneCodeEditor,GutterState>();
+function gutter(view:monaco.editor.IStandaloneCodeEditor){let state=gutters.get(view);if(!state){state={lines:new Map(),breakpoints:new Set()};gutters.set(view,state);}return state;}
+export function showDebugGutter(view:monaco.editor.IStandaloneCodeEditor,breakpoints:Set<number>,current?:number){const state=gutter(view);state.breakpoints=breakpoints;state.current=current;renderGutter(view,state);}
 export function showBytecodeOffsets(view:monaco.editor.IStandaloneCodeEditor,offsets:SourceOffset[]){
-  const lines=new Map<number,SourceOffset[]>();
-  for(const item of offsets)lines.set(item.line,[...(lines.get(item.line)??[]),item]);
-  const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-  view.updateOptions({lineNumbers:line=>{
-    const items=lines.get(line)??[],first=items[0];
-    const title=first?'バイトコードオフセット（命令解析による推定・10進数）\n'+items.map(i=>`${i.method}: ${i.offset}`).join('\n'):'';
-    return `<span class="jal-source-line">${line}</span><span class="jal-bytecode-offset" title="${escape(title)}">${first?first.offset+(items.length>1?'…':''):''}</span>`;
-  }});
+ const state=gutter(view);state.lines=new Map();for(const item of offsets)state.lines.set(item.line,[...(state.lines.get(item.line)??[]),item]);renderGutter(view,state);
+}
+function renderGutter(view:monaco.editor.IStandaloneCodeEditor,state:GutterState){
+ const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
+ view.updateOptions({lineNumbers:line=>{
+  const items=state.lines.get(line)??[],first=items[0];
+  const title=first?'バイトコードオフセット（命令解析による推定・10進数）\n'+items.map(i=>`${i.method}: ${i.offset}`).join('\n'):'';
+  return `<span class="jal-gutter-row"><span class="jal-source-line">${line}</span><span class="jal-breakpoint-slot${state.breakpoints.has(line)?' debug-breakpoint':''}${state.current===line?' debug-current-marker':''}" data-line="${line}" title="ブレークポイントを切り替える（F9）"></span><span class="jal-bytecode-offset" title="${escape(title)}">${first?first.offset+(items.length>1?'…':''):''}</span></span>`;
+ }});
 }

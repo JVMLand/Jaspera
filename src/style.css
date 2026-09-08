@@ -25,7 +25,7 @@
 
 
 
-.monaco-editor .jal-source-line{display:inline-block;width:4ch;text-align:right}.monaco-editor .jal-bytecode-offset{display:inline-block;width:6ch;padding-left:1ch;text-align:right;color:var(--theme-muted,#98a4b3);font-size:inherit;opacity:.85}
+.monaco-editor .jal-gutter-row{display:flex;width:100%;height:100%;align-items:center}.monaco-editor .jal-source-line{flex:0 0 4ch;text-align:right}.monaco-editor .jal-bytecode-offset{flex:0 0 auto;min-width:1ch;text-align:right;color:var(--theme-muted,#98a4b3);font-size:inherit;opacity:.85}
 
 /* Monaco popups escape editor/card clipping and sit above the application headers. */
 #editor-overlays{position:fixed;inset:0;z-index:100;width:0;height:0;overflow:visible;pointer-events:none;background:transparent!important}

@@ -16,11 +16,15 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  istore_1
  return
  }
-}`);editor.setPosition({lineNumber:6,column:1});editor.focus();await editor.getAction('jaspera.toggleBreakpoint').run();});
- await page.locator('.debug-breakpoint').waitFor();assert.equal(await page.locator('.debug-breakpoint').count(),1);
+}`);editor.setPosition({lineNumber:6,column:1});editor.focus();});
+ await page.locator('#editor .jal-breakpoint-slot[data-line="6"]').click();
+ await page.locator('.debug-breakpoint').waitFor();
+ const gutter=await page.locator('#editor .jal-breakpoint-slot[data-line="6"]').evaluate(node=>({left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right,numberRight:node.previousElementSibling.getBoundingClientRect().right,offsetLeft:node.nextElementSibling.getBoundingClientRect().left}));assert.ok(gutter.left>=gutter.numberRight&&gutter.right<=gutter.offsetLeft);assert.equal(await page.locator('.debug-breakpoint').count(),1);
+ assert.equal(await page.evaluate(async()=>(await import('/src/main.ts')).editor.getSelection().isEmpty()),true);
+ await page.locator('#editor .jal-breakpoint-slot[data-line="6"]').click();await page.locator('.debug-breakpoint').waitFor({state:'hidden'});await page.locator('#editor .jal-breakpoint-slot[data-line="6"]').click();await page.locator('.debug-breakpoint').waitFor();
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.executeEdits('insert-line',[{range:{startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:1},text:'// insertion before breakpoint\n'}]);});
  // Hold runtime loading so breakpoint edits during startup are deterministic.
- let release;const gate=new Promise(resolve=>release=resolve);await page.route('**/runtime/bovine.js',async route=>{await gate;await route.continue();});
+ let release;const gate=new Promise(resolve=>release=resolve);t.after(()=>release());await page.route('**/runtime/bovine.js',async route=>{await gate;await route.continue();});
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
  await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.dataset.state==='starting');
  assert.equal(await page.locator('.debug-toolbar [data-command=debug-pause]').isDisabled(),true);
@@ -40,7 +44,7 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  await popup.locator('.debug-toolbar [data-command=debug-continue]').click();await popup.waitForFunction(()=>document.querySelector('.debug-status')?.textContent==='実行が終了しました。');
  await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.hidden===true);
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
- await page.locator('.debug-breakpoint').waitFor({state:'detached'});assert.equal(await page.locator('.debug-breakpoint').count(),0);
+ await page.locator('.debug-breakpoint').waitFor({state:'hidden'});assert.equal(await page.locator('.debug-breakpoint').count(),0);
  await page.evaluate(()=>{window.__debugStops=0;const observer=new MutationObserver(()=>{if(document.querySelector('.debug-current-line'))window.__debugStops++;});observer.observe(document.querySelector('#editor'),{subtree:true,childList:true});});
  await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行が完了しました');
  assert.equal(await page.evaluate(()=>window.__debugStops),0);await page.locator('.debug-toolbar').waitFor({state:'hidden'});
