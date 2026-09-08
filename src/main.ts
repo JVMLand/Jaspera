@@ -194,6 +194,7 @@ function ensureExample(path:string){
  const source=exampleSource(path);if(source===undefined)return;
  const model=monaco.editor.createModel(source,'jal',monaco.Uri.from({scheme:'inmemory',authority:'example',path:'/'+path}));
  const preview:ClassPreview={key,title:path,model,example:true,mtime:0,size:0};classPreviews.set(key,preview);
+ if(path==='example/HelloWorld.jal'){const line=source.split(/\r?\n/).findIndex(text=>/^\s*invokevirtual\b/.test(text));if(line>=0)breakpoints.toggle(model,line+1);}
  model.onDidChangeContent(()=>{rememberExample(path,model.getValue());scheduleOffsets(model);monaco.editor.setModelMarkers(model,'jal',[]);});scheduleOffsets(model);return preview;
 }
 async function checkDocument(model:monaco.editor.ITextModel|null=editor.getModel()){
