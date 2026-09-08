@@ -108,7 +108,14 @@ async function revealDebugFrame(frame:DebugFrame){
  const snapshot=workspaceState.value.debug?.snapshot;if(!snapshot)return;
  const current=()=>workspaceState.value.debug?.status==='paused'&&workspaceState.value.debug.snapshot===snapshot;
  const uri=debugSources.get(frame.className);if(uri&&frame.line>0){if(current())await openDefinition(uri,{lineNumber:frame.line,column:1});return;}
- try{const target=await navigation.searchDefinition({kind:'method',label:frame.method,detail:frame.className,owner:frame.className,name:frame.method,descriptor:frame.descriptor});if(target&&current())await openDefinition(target.uri,target.range);}
+ try{
+  const location=frame.native?undefined:await navigation.instructionLocation(frame.className,frame.method,frame.descriptor,frame.pc);
+  if(!current())return;
+  if(location){
+   if(frame===snapshot.frames[0])debugState({instructionLocation:location});
+   await openDefinition(location.uri,{lineNumber:location.line,column:1});return;
+  }
+  const target=await navigation.searchDefinition({kind:'method',label:frame.method,detail:frame.className,owner:frame.className,name:frame.method,descriptor:frame.descriptor});if(target&&current())await openDefinition(target.uri,target.range);}
  catch(error){if(current())status(error instanceof Error?error.message:String(error),'error');}
 }
 
@@ -755,7 +762,7 @@ async function run(requestedModel?:monaco.editor.ITextModel,debugging=true) {
     if(debugging){
       debugSources.clear();if(example)debugSources.set(entry.className,model!.uri.toString());else for(const [path,c] of results){const m=models.get(path);if(m)debugSources.set(c.className,m.uri.toString());}
       for(const uri of debugSources.values()){const m=monaco.editor.getModel(monaco.Uri.parse(uri));if(m)debugDisposals.push(m.onDidChangeContent(()=>{if(token!==runToken)return;stopRun(false);status('ソースが変更されたため，デバッグ実行を停止しました。');}),m.onWillDispose(()=>{if(token===runToken)stopRun(false);}));}
-      owned.onDebug=snapshot=>{if(token!==runToken)return;debugState({status:'paused',previous:workspaceState.value.debug?.snapshot,snapshot});status(`${snapshot.location.className}.${snapshot.location.method} · ${snapshot.location.pc} で停止中`);selectTab('debug');void revealDebugFrame(snapshot.frames[0]);};
+      owned.onDebug=snapshot=>{if(token!==runToken)return;debugState({status:'paused',instructionLocation:undefined,previous:workspaceState.value.debug?.snapshot,snapshot});status(`${snapshot.location.className}.${snapshot.location.method} · ${snapshot.location.pc} で停止中`);selectTab('debug');void revealDebugFrame(snapshot.frames[0]);};
       debugState({documents:Object.fromEntries(debugSources)});
       owned.onDebugReady=async()=>{
         if(token!==runToken)return;

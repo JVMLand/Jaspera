@@ -5,8 +5,10 @@ export function installDebugEditor(editor:monaco.editor.IStandaloneCodeEditor,st
  const decorations=editor.createDecorationsCollection();
  const update=()=>{const model=editor.getModel();if(!model)return;const current=state(),uri=model.uri.toString();const points=new Set((current?.breakpoints??[]).filter(b=>b.uri===uri).map(b=>b.line));const items:monaco.editor.IModelDeltaDecoration[]=[];
  const f=current?.status==='paused'?current.snapshot?.frames[0]:undefined;
- if(f&&f.line>0&&uriForClass(f.className)===uri)items.push({range:new monaco.Range(f.line,1,f.line,1),options:{isWholeLine:true,className:'debug-current-line'}});
- showDebugGutter(editor,points,f&&f.line>0&&uriForClass(f.className)===uri?f.line:undefined);decorations.set(items);
+ const location=current?.status==='paused'?current.instructionLocation:undefined;
+ const line=location?(location.uri===uri?location.line:undefined):f&&f.line>0&&uriForClass(f.className)===uri?f.line:undefined;
+ if(line)items.push({range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,className:'debug-current-line'}});
+ showDebugGutter(editor,points,line);decorations.set(items);
  };
  editor.updateOptions({glyphMargin:false});
  let root=editor.getDomNode();

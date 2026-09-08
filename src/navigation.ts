@@ -1,3 +1,4 @@
+import type {Disassembly} from './protocol';
 import {WorkerRpc} from './worker-rpc';
 import type {NavigationApi} from './navigation.worker';
 import type {Catalog} from './completion';
@@ -35,10 +36,11 @@ export function installDefinitionUI(resolve:(model:monaco.editor.ITextModel,offs
  const created=monaco.editor.onDidCreateEditor(attach);
  return {dispose(){created.dispose();for(const listener of [...listeners.values()])listener.dispose();provider.dispose();opener.dispose();}};
 }
-interface Host {models:()=>monaco.editor.ITextModel[];classBytes:(owner:string)=>Promise<Uint8Array|undefined>;disassemble:(bytes:Uint8Array)=>Promise<{source:string;className:string}>}
+interface Host {models:()=>monaco.editor.ITextModel[];classBytes:(owner:string)=>Promise<Uint8Array|undefined>;disassemble:(bytes:Uint8Array)=>Promise<Disassembly>}
 export function createNavigation(host:Host){
  const worker=new WorkerRpc<NavigationApi>(()=>new NavigationWorker());let epoch=0;
  let cache=new WeakMap<monaco.editor.ITextModel,{version:number;promise:Promise<SymbolIndex>}>();
+ let instructionLocations=new WeakMap<monaco.editor.ITextModel,Disassembly['locations']>();
  const definitions=new Map<string,Promise<monaco.editor.ITextModel|undefined>>(),owned=new Set<monaco.editor.ITextModel>();
  const index=(model:monaco.editor.ITextModel)=>{const version=model.getVersionId(),old=cache.get(model);if(old?.version===version)return old.promise;const promise=worker.call(api=>api.analyze(model.getValue()));cache.set(model,{version,promise});return promise;};
  async function findClass(owner:string):Promise<{model:monaco.editor.ITextModel;symbol:ClassSymbol}[]>{
@@ -50,7 +52,7 @@ export function createNavigation(host:Host){
    const bytes=await host.classBytes(owner)??await worker.call(api=>api.classBytes(owner));if(!bytes||current!==epoch)return;
    const result=await host.disassemble(bytes);if(current!==epoch||result.className!==owner)return;
    const uri=monaco.Uri.from({scheme:'inmemory',authority:'definition',path:'/'+owner+'.jal'});
-   const model=monaco.editor.getModel(uri)??monaco.editor.createModel(result.source,'jal',uri);owned.add(model);return model;
+   const model=monaco.editor.getModel(uri)??monaco.editor.createModel(result.source,'jal',uri);owned.add(model);instructionLocations.set(model,result.locations);return model;
   })().catch(e=>{definitions.delete(owner);throw e;});definitions.set(owner,load);}
   const model=await load;if(!model||model.isDisposed()){definitions.delete(owner);return [];}
   return (await index(model)).classes.filter(c=>c.owner===owner).map(symbol=>({model,symbol}));
@@ -90,6 +92,11 @@ export function createNavigation(host:Host){
    if(!target.owner)return;
    const results=await lookup({kind:target.kind==='file'?'class':target.kind,owner:target.owner,name:target.name,descriptor:target.descriptor,start:0,end:0});
    const result=results[0];return result?{uri:result.model.uri.toString(),range:range(result.model,result.span)}:undefined;
+  },
+  async instructionLocation(owner:string,method:string,descriptor:string,pc:number){
+   const model=(await findClass(owner))[0]?.model;if(!model)return;
+   const location=instructionLocations.get(model)?.find(item=>item.method===method+descriptor&&item.pc===pc);
+   return location?{uri:model.uri.toString(),line:location.line}:undefined;
   },
   async classModel(owner:string){return (await findClass(owner))[0]?.model;},
   async completionCatalog():Promise<Catalog>{
