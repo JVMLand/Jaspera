@@ -4,15 +4,17 @@ export function fileKind(name: string) {
     ? 'source'
     : extension === '.class'
       ? 'class'
-      : extension === '.jalprj'
-        ? 'project'
-        : undefined;
+      : extension === '.jar'
+        ? 'jar'
+        : extension === '.jalprj'
+          ? 'project'
+          : undefined;
 }
 /** A real file input keeps picker activation in the window receiving the gesture. */
 export function installFilePicker(open: (files: File[]) => void) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.jal,.class,.jalprj';
+  input.accept = '.jal,.class,.jar,.jalprj';
   input.multiple = true;
   input.hidden = true;
   input.id = 'file-input';

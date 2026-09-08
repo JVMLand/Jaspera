@@ -265,6 +265,7 @@ function updateActions() {
   const tab = current();
   document.title = (toolTabs?.active ?? tab?.state.title ?? 'Editor') + ' — ' + APP_NAME;
   menus.hidden('save-project', !workspace.canSave);
+  menus.disabled('download-jar', !workspace.canExportJar);
   menus.disabled('close-tab', !tab && !toolTabs?.active);
   menus.disabled('close-others', !tab || tabs.size < 2);
   menus.disabled('open-workspace-file', !workspace.files.length);
@@ -343,6 +344,7 @@ const menus = installMenus(el('menus'), [
         action: filePicker.open,
       },
       { id: 'open-workspace-file', label: msg('ma8538563e6b2'), action: openFile },
+      { id: 'download-jar', label: msg('jar.download'), action: () => bridge?.exportJar() },
       null,
       { id: 'save-project', label: msg('ma3030bf8f16d'), shortcut: 'Ctrl+S', action: save },
       {

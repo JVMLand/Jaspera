@@ -11,6 +11,7 @@ export interface WorkspaceState {
   tools: ToolState;
   runAvailability?: Record<string, string>;
   canSave: boolean;
+  canExportJar?: boolean;
   running: boolean;
   status: string;
   theme: string;

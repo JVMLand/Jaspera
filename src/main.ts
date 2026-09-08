@@ -32,6 +32,7 @@ import { installConsoleContextMenu } from './console-panel';
 import { installProblemsContextMenu } from './problems-panel';
 import { editMenuItems } from './edit-menu';
 import { fileKind, installFilePicker } from './file-opening';
+import { JarArchive, jarResource } from './jar-archive';
 import { helpMenuItems } from './help';
 import * as monaco from './editor-platform';
 import { WorkspaceStateStore } from './workspace-state';
@@ -179,6 +180,8 @@ async function revealDebugFrame(frame: DebugFrame) {
 
 const unsubscribeTheme = onThemeChange((theme) => workspaceState.update({ theme }));
 interface ClassPreview {
+  jarEntry?: string;
+  editable?: boolean;
   example?: boolean;
   key: string;
   title: string;
@@ -188,6 +191,8 @@ interface ClassPreview {
   size: number;
 }
 const classPreviews = new Map<string, ClassPreview>();
+let jar: JarArchive | undefined;
+let jarBusy = false;
 let activePreview: string | undefined,
   previewEpoch = 0,
   dropSequence = 0;
@@ -394,6 +399,7 @@ const detached = createDetachedHost(
           : undefined;
     },
     openFiles,
+    exportJar: () => void downloadJar(),
     state: () => workspaceState.value,
     subscribe: (listener) => workspaceState.subscribe(listener),
     instruction: (op) => {
@@ -473,7 +479,7 @@ const definitionUI = installDefinitionUI(
   openDefinition,
 );
 function previewTitle(p: ClassPreview) {
-  return p.example ? p.title : p.title + ' (JAL)';
+  return p.example || p.jarEntry ? p.title : p.title + ' (JAL)';
 }
 function ensureExample(path: string) {
   const key = 'example:' + path;
@@ -569,7 +575,7 @@ function detachableDocument(keyOrUri: string) {
     key: 'preview:' + preview.key,
     title: previewTitle(preview),
     model: preview.model,
-    readOnly: !preview.example,
+    readOnly: !preview.example && !preview.editable,
   };
 }
 async function openDefinition(
@@ -636,6 +642,8 @@ const menus = installMenus(el('menus'), [
       },
       { id: 'save-project-as', label: msg('m97b4e8936a4b'), action: () => void saveProject(true) },
       { id: 'export-project', label: msg('m36581f447816'), action: () => void exportProject() },
+      { id: 'download-jar', label: msg('jar.download'), action: () => void downloadJar() },
+      { id: 'close-jar', label: msg('jar.close'), action: () => void closeJar() },
       {
         id: 'save-class-source',
         label: msg('m55345dd68b3a'),
@@ -744,6 +752,7 @@ function runUnavailable(model = editor.getModel()): string {
 function publishWorkspaceAvailability() {
   workspaceState.update({
     canSave: !!folder && !storageBusy,
+    canExportJar: !!jar && !jarBusy,
     running,
     runAvailability: {
       '': runUnavailable(),
@@ -757,6 +766,8 @@ function publishWorkspaceAvailability() {
   });
 }
 function updateActions() {
+  menus.disabled('download-jar', !jar || jarBusy);
+  menus.disabled('close-jar', !jar || jarBusy);
   publishWorkspaceAvailability();
   refreshOffsets();
   const model = editor.getModel(),
@@ -875,6 +886,12 @@ function renderFiles() {
         key: 'source:' + f.path,
         active: !!editor.getModel() && !activePreview && f.path === project.workspace.activeFile,
         open: () => switchFile(f.path),
+      })),
+      ...(jar?.paths ?? []).map((path) => ({
+        path: jar!.name + '/' + path,
+        key: classPreviews.has('jar:' + path) ? 'preview:jar:' + path : '',
+        active: activePreview === 'jar:' + path,
+        open: () => void openJarEntry(path),
       })),
       ...(folder?.classFiles ?? []).map((f) => ({
         path: f.path,
@@ -1308,7 +1325,7 @@ function selectClassPreview(key: string) {
   if (!preview) return;
   activePreview = key;
   editor.setModel(preview.model);
-  editor.updateOptions({ readOnly: !preview.example });
+  editor.updateOptions({ readOnly: !preview.example && !preview.editable });
   renderFiles();
   updateActions();
 }
@@ -1420,7 +1437,9 @@ function detachEditorTab(item: EditorTab) {
       item.key,
       item.label,
       model,
-      item.previewKey !== undefined && !classPreviews.get(item.previewKey)?.example,
+      item.previewKey !== undefined &&
+        !classPreviews.get(item.previewKey)?.example &&
+        !classPreviews.get(item.previewKey)?.editable,
     )
   ) {
     status(msg('mffebddbf6521'), 'error');
@@ -1534,6 +1553,112 @@ function bindGroupEditor(view: monaco.editor.IStandaloneCodeEditor, side: Side) 
     el('cursor').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
   });
   groupResources.push(installEditorCommands(view, () => void run()));
+}
+
+async function closeJar(force = false) {
+  if (!jar || jarBusy) return false;
+  if (
+    !force &&
+    jar.dirty &&
+    (await dialog(msg('jar.discard'), msg('jar.unsaved'), undefined, true)) === null
+  )
+    return false;
+  for (const preview of [...classPreviews.values()])
+    if (preview.jarEntry) {
+      detached.returnTab('preview:' + preview.key);
+      closeClassPreview(preview.key);
+    }
+  jar = undefined;
+  renderFiles();
+  updateActions();
+  return true;
+}
+async function openJar(file: File) {
+  if (jarBusy) return;
+  const archive = await JarArchive.open(file);
+  if (jar && !(await closeJar())) return;
+  jar = archive;
+  renderFiles();
+  updateActions();
+  const first = archive.paths.find((path) => path.endsWith('.class')) ?? archive.paths[0];
+  if (first) return openJarEntry(first);
+}
+async function openJarEntry(path: string) {
+  const archive = jar;
+  if (!archive || !Object.hasOwn(archive.entries, path)) return;
+  const key = 'jar:' + path;
+  if (classPreviews.has(key)) {
+    selectClassPreview(key);
+    return 'preview:' + key;
+  }
+  try {
+    if (classPreviews.size >= 16) throw Error(msg('ma5ae4b723858'));
+    const isClass = path.endsWith('.class');
+    if (isClass) status(msg('jar.opening'), 'loading');
+    const source = isClass
+      ? await archive.source(path, (bytes) => compilationService.disassemble(bytes))
+      : undefined;
+    if (archive !== jar) return;
+    // Two views may request the same entry while disassembly is pending.
+    if (!classPreviews.has(key)) {
+      const model = monaco.editor.createModel(
+        source?.source ?? jarResource(archive.entries[path]),
+        isClass ? 'jal' : 'plaintext',
+        monaco.Uri.from({
+          scheme: 'inmemory',
+          authority: 'jar',
+          path: '/' + ++dropSequence + (isClass ? '.jal' : '.txt'),
+        }),
+      );
+      classPreviews.set(key, {
+        key,
+        title: archive.name + '/' + path,
+        model,
+        jarEntry: path,
+        editable: isClass,
+        mtime: 0,
+        size: archive.entries[path].length,
+      });
+      if (source) {
+        model.onDidChangeContent(() => {
+          source.source = model.getValue();
+          scheduleOffsets(model);
+          monaco.editor.setModelMarkers(model, 'jal', []);
+          updateActions();
+        });
+        scheduleOffsets(model);
+      }
+    }
+    selectClassPreview(key);
+    status(msg('m642ad04c5c40'));
+    return 'preview:' + key;
+  } catch (error) {
+    storageError(error, path);
+  }
+}
+async function downloadJar() {
+  const archive = jar;
+  if (!archive || jarBusy) return;
+  jarBusy = true;
+  updateActions();
+  status(msg('jar.exporting'), 'loading');
+  try {
+    const result = await archive.export((document, source) =>
+      compilationService.compile(document, source, undefined, {}),
+    );
+    if (archive !== jar) return;
+    download(
+      new Blob([new Uint8Array(result.bytes)], { type: 'application/java-archive' }),
+      archive.name,
+    );
+    result.saved();
+    status(msg('m642ad04c5c40'));
+  } catch (error) {
+    storageError(error, msg('jar.exportError'));
+  } finally {
+    jarBusy = false;
+    updateActions();
+  }
 }
 
 function queueClass(
@@ -1675,7 +1800,10 @@ async function openFiles(files: File[]): Promise<string[]> {
     if (project !== owner) break;
     try {
       const kind = fileKind(file.name);
-      if (kind === 'class') {
+      if (kind === 'jar') {
+        const key = await openJar(file);
+        if (key) opened.push(key);
+      } else if (kind === 'class') {
         const key = 'drop:' + ++dropSequence;
         await queueClass(async () => file, key, file.name);
         if (project === owner && classPreviews.has(key)) opened.push('preview:' + key);
@@ -2300,7 +2428,7 @@ const windowCommands = installWindowCommands({
   open: filePicker.open,
 });
 window.addEventListener('beforeunload', (e) => {
-  if (dirty || storageBusy) {
+  if (dirty || storageBusy || jar?.dirty || jarBusy) {
     e.preventDefault();
     e.returnValue = '';
   }

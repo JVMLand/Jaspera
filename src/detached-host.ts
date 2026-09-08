@@ -83,6 +83,7 @@ export interface DetachedBridge {
     uri: string,
     range?: monaco.IRange | monaco.IPosition,
   ) => Promise<boolean>;
+  exportJar: () => void;
   save: () => void;
   run: (id?: string) => void;
   stop: () => void;
@@ -140,6 +141,7 @@ interface Group {
   panels: Set<PanelName>;
 }
 interface Options {
+  exportJar: () => void;
   debugStart: (model?: monaco.editor.ITextModel) => void;
   debugCommand: (command: DebugCommand) => void;
   toggleBreakpoint: (uri: string, line: number) => void;
@@ -400,6 +402,7 @@ export function createDetachedHost(
       options.check(id ? entries.get(id)?.model : undefined);
     },
     theme: options.theme,
+    exportJar: () => options.exportJar(),
     classFile: async (id) => {
       const e = entries.get(id);
       return e && !e.readOnly ? options.classFile(e.model) : undefined;
