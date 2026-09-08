@@ -1,11 +1,13 @@
 import { readFile, writeFile, mkdir, cp, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+import { generateFonts } from './generate-fonts.ts';
 import { generateTheme } from './generate-theme.ts';
 
 await mkdir('src/generated', { recursive: true });
 await import('./generate-language.ts');
 await import('./generate-offset-parser.ts');
 await generateTheme();
+await generateFonts();
 await mkdir('public/licenses', { recursive: true });
 await cp('licenses', 'public/licenses', { recursive: true });
 await cp('vendor/themes/LICENSE.txt', 'public/licenses/Darcula.txt');

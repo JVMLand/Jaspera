@@ -39,6 +39,9 @@ importers:
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
+      '@types/wawoff2':
+        specifier: 1.0.2
+        version: 1.0.2
       esbuild:
         specifier: 0.25.12
         version: 0.25.12
@@ -60,6 +63,9 @@ importers:
       vite:
         specifier: 6.4.1
         version: 6.4.1(@types/node@22.20.1)(terser@5.51.2)(tsx@4.23.13)
+      wawoff2:
+        specifier: 2.0.1
+        version: 2.0.1
       workbox-build:
         specifier: ^7.4.1
         version: 7.4.1
@@ -1342,6 +1348,9 @@ packages:
   '@types/turndown@5.0.6':
     resolution: {integrity: sha512-ru00MoyeeouE5BX4gRL+6m/BsDfbRayOskWqUvh7CLGW+UXxHQItqALa38kKnOiZPqJrtzJUgAC2+F0rL1S4Pg==}
 
+  '@types/wawoff2@1.0.2':
+    resolution: {integrity: sha512-UVq4NxMuBywz5gklafg1HcENrK02trh/q+ifyvO6xktflGXRtf11GYsia3/l5nxg2edFQRlnUT6ivnk898WDiw==}
+
   acorn@8.18.0:
     resolution: {integrity: sha512-lGq+9yr1/GuAWaVYIHRjvvySG5/4VfKIvC8EWxStPdcDh/Ka7FG3twP6v4d5BkravUilhIAsG4Qj83t02LWUPQ==}
     engines: {node: '>=0.4.0'}
@@ -1353,6 +1362,9 @@ packages:
   antlr4@4.13.2:
     resolution: {integrity: sha512-QiVbZhyy4xAZ17UPEuG3YTOt8ZaoeOR1CvEAqrEsDBsOqINslaB147i9xqljZqoyf5S+EUlGStaj+t22LT9MOg==}
     engines: {node: '>=16'}
+
+  argparse@2.0.1:
+    resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
   array-buffer-byte-length@1.0.2:
     resolution: {integrity: sha512-LHE+8BuR7RYGDKvnrmcuSq3tDcKv9OFEXQt/HpbZhY7V6h0zlUXutnAD82GiFx9rdieCMjkvtcsPqBwgUl1Iiw==}
@@ -2288,6 +2300,10 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  wawoff2@2.0.1:
+    resolution: {integrity: sha512-r0CEmvpH63r4T15ebFqeOjGqU4+EgTx4I510NtK35EMciSdcTxCw3Byy3JnBonz7iyIFZ0AbVo0bbFpEVuhCYA==}
+    hasBin: true
 
   web-tree-sitter@0.26.11:
     resolution: {integrity: sha512-Q5Dm3YTIXSXuH6FxX6RuzX2Qwpc4DPGiYMU87Wg5Z8OIStiQFiUex4zMDc0vBTw78EphaYJacncJghCHzbZptg==}
@@ -3567,6 +3583,10 @@ snapshots:
 
   '@types/turndown@5.0.6': {}
 
+  '@types/wawoff2@1.0.2':
+    dependencies:
+      '@types/node': 22.20.1
+
   acorn@8.18.0: {}
 
   ajv@8.20.0:
@@ -3577,6 +3597,8 @@ snapshots:
       require-from-string: 2.0.2
 
   antlr4@4.13.2: {}
+
+  argparse@2.0.1: {}
 
   array-buffer-byte-length@1.0.2:
     dependencies:
@@ -4681,6 +4703,10 @@ snapshots:
       fsevents: 2.3.3
       terser: 5.51.2
       tsx: 4.23.13
+
+  wawoff2@2.0.1:
+    dependencies:
+      argparse: 2.0.1
 
   web-tree-sitter@0.26.11: {}
 

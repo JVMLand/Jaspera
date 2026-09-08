@@ -24,8 +24,8 @@ test(
       (await readFile('THIRD_PARTY_NOTICES.md', 'utf8')).replaceAll('\r\n', '\n'),
     );
     const buttons = dialog.locator('nav button');
-    assert.equal(await buttons.count(), 17);
-    for (let i = 1; i < 17; i++) {
+    assert.equal(await buttons.count(), 18);
+    for (let i = 1; i < 18; i++) {
       const button = buttons.nth(i);
       const name = await button.textContent();
       await button.click();

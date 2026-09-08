@@ -18,6 +18,7 @@ export const licenseFiles = [
   'Monaco',
   'OpenJDK',
   'OpenJDK-classpath-exception',
+  'UDEV-Gothic',
   'Workbox',
   'fflate',
   'i18next',

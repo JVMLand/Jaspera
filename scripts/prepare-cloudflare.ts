@@ -25,6 +25,7 @@ const mime: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
   '.md': 'text/plain; charset=utf-8',
   '.wasm': 'application/wasm',
+  '.woff2': 'font/woff2',
   '.jar': 'application/java-archive',
   '.png': 'image/png',
   '.ico': 'image/x-icon',

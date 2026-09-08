@@ -37,6 +37,7 @@
     "@playwright/test": "1.56.1",
     "@types/node": "^22.20.1",
     "@types/turndown": "^5.0.6",
+    "@types/wawoff2": "1.0.2",
     "esbuild": "0.25.12",
     "prettier": "^3.9.6",
     "prettier-plugin-java": "^2.10.3",
@@ -44,6 +45,7 @@
     "turndown": "7.2.0",
     "typescript": "5.8.3",
     "vite": "6.4.1",
+    "wawoff2": "2.0.1",
     "workbox-build": "^7.4.1",
     "wrangler": "^4.129.1"
   },

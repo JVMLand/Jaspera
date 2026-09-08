@@ -1,0 +1,14 @@
+{
+  "version": "2.2.0",
+  "url": "https://github.com/yuru7/udev-gothic/releases/download/v2.2.0/UDEVGothic_v2.2.0.zip",
+  "files": [
+    {
+      "file": "UDEVGothic-Regular.ttf",
+      "sha256": "25fa0eca4be611ac125f03411d280c85494153da01dfa02ba734399c05f6289d"
+    },
+    {
+      "file": "UDEVGothic-Bold.ttf",
+      "sha256": "1a1a7188a6b10195994cde6a30cca1cc7cbbc8badf0420bd29216035baa3d541"
+    }
+  ]
+}
