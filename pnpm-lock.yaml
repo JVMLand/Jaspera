@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  monaco-editor@0.52.2:
+    hash: d963766fb30ed0553fef6c2f11153b7b8e233b107a4d0c1c5df938fce80f0415
+    path: patches/monaco-editor@0.52.2.patch
+
 importers:
 
   .:
@@ -28,7 +33,7 @@ importers:
         version: 26.4.2(typescript@5.8.3)
       monaco-editor:
         specifier: 0.52.2
-        version: 0.52.2
+        version: 0.52.2(patch_hash=d963766fb30ed0553fef6c2f11153b7b8e233b107a4d0c1c5df938fce80f0415)
     devDependencies:
       '@playwright/test':
         specifier: 1.56.1
@@ -4240,7 +4245,7 @@ snapshots:
 
   minipass@7.1.3: {}
 
-  monaco-editor@0.52.2: {}
+  monaco-editor@0.52.2(patch_hash=d963766fb30ed0553fef6c2f11153b7b8e233b107a4d0c1c5df938fce80f0415): {}
 
   ms@2.1.3: {}
 

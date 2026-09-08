@@ -1,0 +1,10 @@
+diff --git a/esm/vs/base/common/marked/marked.js b/esm/vs/base/common/marked/marked.js
+index 56333ffeb738907f144d15c6ebe44494d1b13330..d903cf1a2ee60bc519e2085e6a06c0d17fbf6612 100644
+--- a/esm/vs/base/common/marked/marked.js
++++ b/esm/vs/base/common/marked/marked.js
+@@ -2535,4 +2535,4 @@ export var use = (__marked_exports.use || exports.use);
+ export var walkTokens = (__marked_exports.walkTokens || exports.walkTokens);
+ // ESM-uncomment-end
+ 
+-//# sourceMappingURL=marked.umd.js.map
++

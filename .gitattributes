@@ -1,0 +1,3 @@
+
+# Keep pnpm patch hashes stable across Windows and Linux.
+patches/*.patch text eol=lf
