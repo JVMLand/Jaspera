@@ -944,5 +944,6 @@
   "textSize.ui": "Interfacies",
   "textSize.reset": "Restitue valores",
   "presentation.title": "Modus demonstrationis",
-  "presentation.exit": "Demonstrationem finire"
+  "presentation.exit": "Demonstrationem finire",
+  "debug.ignoreBreakpoints": "Omnia puncta sistendi ignorare"
 }

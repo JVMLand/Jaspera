@@ -44,6 +44,7 @@ export interface DetachedDocument {
 export interface DetachedBridge {
   debugStart: (id?: string) => void;
   debugCommand: (command: DebugCommand) => void;
+  toggleIgnoreBreakpoints: () => void;
   toggleBreakpoint: (uri: string, line: number) => void;
   debugReveal: (frame: DebugFrame) => void;
   graphFocus: (id: string, line: number, column: number) => void;
@@ -144,6 +145,7 @@ interface Options {
   exportJar: () => void;
   debugStart: (model?: monaco.editor.ITextModel) => void;
   debugCommand: (command: DebugCommand) => void;
+  toggleIgnoreBreakpoints: () => void;
   toggleBreakpoint: (uri: string, line: number) => void;
   debugReveal: (frame: DebugFrame) => void;
   graphFocus: (model: monaco.editor.ITextModel, line: number, column: number) => void;
@@ -389,6 +391,7 @@ export function createDetachedHost(
       options.debugStart(id ? entries.get(id)?.model : undefined);
     },
     debugCommand: options.debugCommand,
+    toggleIgnoreBreakpoints: options.toggleIgnoreBreakpoints,
     toggleBreakpoint: options.toggleBreakpoint,
     debugReveal: options.debugReveal,
     save() {

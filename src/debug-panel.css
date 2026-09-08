@@ -165,3 +165,13 @@
 .debug-current-line {
   background: color-mix(in srgb, #d6aa26 22%, transparent);
 }
+
+.debug-toolbar button[aria-pressed='true'] {
+  background: var(--theme-selection);
+  color: var(--theme-accent);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.monaco-editor.debug-breakpoints-ignored .jal-breakpoint-slot.debug-breakpoint::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--theme-muted);
+}

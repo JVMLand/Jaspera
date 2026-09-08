@@ -944,5 +944,6 @@
   "textSize.ui": "周辺 UI",
   "textSize.reset": "標準に戻す",
   "presentation.title": "プレゼンテーションモード",
-  "presentation.exit": "プレゼンテーションを終了"
+  "presentation.exit": "プレゼンテーションを終了",
+  "debug.ignoreBreakpoints": "すべてのブレークポイントを無視"
 }

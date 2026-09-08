@@ -330,6 +330,7 @@ const debugActions = {
   start: () => bridge?.debugStart(active),
   command: (c: import('./debug-protocol').DebugCommand) => bridge?.debugCommand(c),
   stop: () => bridge?.stop(),
+  toggleIgnoreBreakpoints: () => bridge?.toggleIgnoreBreakpoints(),
   reveal: (f: import('./debug-protocol').DebugFrame) => bridge?.debugReveal(f),
 };
 const debugKeys = installDebugKeys(debugActions, () => workspace.debug);

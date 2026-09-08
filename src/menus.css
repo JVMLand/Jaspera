@@ -17,3 +17,8 @@
   text-decoration-thickness: 0.06em;
   text-underline-offset: 0.12em;
 }
+
+.menu-popup button[aria-checked='true'] > span::after {
+  content: ' ✓';
+  color: var(--theme-accent);
+}

@@ -38,6 +38,7 @@ export function installDetachedTools(
     start: () => bridge?.debugStart(),
     command: (c) => bridge?.debugCommand(c),
     stop: () => bridge?.stop(),
+    toggleIgnoreBreakpoints: () => bridge?.toggleIgnoreBreakpoints(),
     reveal: (f) => bridge?.debugReveal(f),
   });
   const instructions = installInstructionsPanel(panels.instructions, (source) =>

@@ -944,5 +944,6 @@
   "textSize.ui": "Interfaccia",
   "textSize.reset": "Ripristina valori",
   "presentation.title": "Modalità presentazione",
-  "presentation.exit": "Esci dalla presentazione"
+  "presentation.exit": "Esci dalla presentazione",
+  "debug.ignoreBreakpoints": "Ignora tutti i punti di interruzione"
 }

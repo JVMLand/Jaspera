@@ -7,9 +7,11 @@ export interface DebugActions {
   start(): void;
   command(command: DebugCommand): void;
   stop(): void;
+  toggleIgnoreBreakpoints(): void;
   reveal(frame: DebugFrame): void;
 }
 export function debugCommandEnabled(state: DebugState | undefined, id: string) {
+  if (id === 'debug-ignore-breakpoints') return true;
   const status = state?.status;
   if (id === 'debug-stop')
     return status === 'starting' || status === 'running' || status === 'paused';
@@ -17,7 +19,7 @@ export function debugCommandEnabled(state: DebugState | undefined, id: string) {
   return status === 'paused';
 }
 export function updateDebugMenu(
-  menus: { disabled(id: string, value: boolean): void },
+  menus: { disabled(id: string, value: boolean): void; checked(id: string, value: boolean): void },
   state: DebugState | undefined,
 ) {
   for (const id of [
@@ -29,6 +31,7 @@ export function updateDebugMenu(
     'debug-stop',
   ])
     menus.disabled(id, !debugCommandEnabled(state, id));
+  menus.checked('debug-ignore-breakpoints', !!state?.ignoreBreakpoints);
 }
 export function debugMenuItems(actions: DebugActions) {
   return [
@@ -59,6 +62,11 @@ export function debugMenuItems(actions: DebugActions) {
       action: () => actions.command('out'),
     },
     { id: 'debug-stop', label: msg('mca4d973c0b00'), action: actions.stop },
+    {
+      id: 'debug-ignore-breakpoints',
+      label: msg('debug.ignoreBreakpoints'),
+      action: actions.toggleIgnoreBreakpoints,
+    },
   ];
 }
 export function installDebugKeys(actions: DebugActions, state: () => DebugState | undefined) {
@@ -107,6 +115,7 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
   const content = document.createElement('div');
   content.className = 'debug-values';
   const icons: Record<string, string> = {
+    'debug-ignore-breakpoints': '<circle cx="12" cy="12" r="7"/><path d="m4 20 16-16"/>',
     'debug-continue': '<path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none"/>',
     'debug-pause': '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
     'debug-over':
@@ -164,6 +173,8 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
       const id = b.dataset.command;
       b.hidden = id === 'debug-continue' ? !paused : id === 'debug-pause' ? paused : false;
       b.disabled = !debugCommandEnabled(state, id!);
+      if (id === 'debug-ignore-breakpoints')
+        b.setAttribute('aria-pressed', String(!!state?.ignoreBreakpoints));
     });
     list.replaceChildren();
     content.replaceChildren();

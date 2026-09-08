@@ -101,6 +101,7 @@ const debugActions = {
     if (!running) void run(undefined, true);
   },
   command: debugCommand,
+  toggleIgnoreBreakpoints,
   stop: () => stopRun(),
   reveal: (frame: DebugFrame) => {
     void revealDebugFrame(frame);
@@ -119,7 +120,16 @@ function toggleBreakpoint(uri: string, line: number) {
   if (model) breakpoints.toggle(model, line);
 }
 
+function toggleIgnoreBreakpoints() {
+  debugState({ ignoreBreakpoints: !workspaceState.value.debug?.ignoreBreakpoints });
+  if (runner && ['paused', 'running'].includes(workspaceState.value.debug!.status))
+    void runner
+      .debugBreakpoints(runtimeBreakpoints())
+      .catch((error) => status(String(error), 'error'));
+}
+
 function runtimeBreakpoints() {
+  if (workspaceState.value.debug?.ignoreBreakpoints) return [];
   return workspaceState.value.debug!.breakpoints.flatMap((b) => {
     const owner = [...debugSources].find(([, uri]) => uri === b.uri)?.[0];
     return owner ? [{ className: owner, line: b.line }] : [];
@@ -374,6 +384,7 @@ const detached = createDetachedHost(
       if (!running) void run(model, true);
     },
     debugCommand,
+    toggleIgnoreBreakpoints,
     toggleBreakpoint,
     debugReveal: (frame) => void revealDebugFrame(frame),
     searchTargets: () => navigation.searchTargets(),

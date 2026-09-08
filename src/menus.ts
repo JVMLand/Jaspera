@@ -200,6 +200,11 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
     if (e.relatedTarget instanceof Node && !container.contains(e.relatedTarget)) close();
   });
   return {
+    checked(id: string, value: boolean) {
+      const item = items.get(id)!;
+      item.setAttribute('role', 'menuitemcheckbox');
+      item.setAttribute('aria-checked', String(value));
+    },
     label(id: string, value: string) {
       items.get(id)!.querySelector('span')!.textContent = value;
     },

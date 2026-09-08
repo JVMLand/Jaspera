@@ -944,5 +944,6 @@
   "textSize.ui": "界面",
   "textSize.reset": "恢复默认",
   "presentation.title": "演示模式",
-  "presentation.exit": "退出演示"
+  "presentation.exit": "退出演示",
+  "debug.ignoreBreakpoints": "忽略所有断点"
 }

@@ -32,6 +32,9 @@ export function installDebugEditor(
         range: new monaco.Range(line, 1, line, 1),
         options: { isWholeLine: true, className: 'debug-current-line' },
       });
+    editor
+      .getDomNode()
+      ?.classList.toggle('debug-breakpoints-ignored', !!current?.ignoreBreakpoints);
     showDebugGutter(editor, points, line);
     decorations.set(items);
   };
