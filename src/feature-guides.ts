@@ -29,7 +29,8 @@ export function installFeatureGuides(){
  const bubble=document.createElement('aside');bubble.className='feature-guide';bubble.hidden=true;bubble.setAttribute('role','note');bubble.setAttribute('aria-labelledby','feature-guide-title');
  const title=document.createElement('h2');title.id='feature-guide-title';const text=document.createElement('p');
  const close=document.createElement('button');close.type='button';close.className='feature-guide-close';close.textContent='×';
- const tip=document.createElement('span');tip.className='feature-guide-arrow';tip.setAttribute('aria-hidden','true');bubble.append(title,close,text,tip);document.body.append(bubble);
+ const skip=document.createElement('button');skip.type='button';skip.className='feature-guide-skip';skip.textContent='すべてスキップ';
+ const tip=document.createElement('span');tip.className='feature-guide-arrow';tip.setAttribute('aria-hidden','true');bubble.append(title,close,text,skip,tip);document.body.append(bubble);
  let current:Guide|undefined,target:HTMLElement|undefined,cleanup:(()=>void)|undefined,request=0,epoch=0,preferred:string|undefined;
  const visible=(node:HTMLElement)=>{const r=node.getBoundingClientRect();return !node.closest('[hidden]')&&r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth&&getComputedStyle(node).visibility!=='hidden';};
  function hide(){epoch++;cleanup?.();cleanup=undefined;current=undefined;target=undefined;bubble.hidden=true;}
@@ -51,7 +52,9 @@ export function installFeatureGuides(){
   cleanup=autoUpdate(anchor,bubble,position);
  }
  const schedule=()=>{if(!request)request=requestAnimationFrame(refresh);};
- close.onclick=()=>{if(!current)return;const id=current.id;dismissed.add(id);try{localStorage.setItem(prefix+id,'1');}catch{}preferred=undefined;hide();schedule();};
+ function dismiss(ids:string[]){for(const id of ids){dismissed.add(id);try{localStorage.setItem(prefix+id,'1');}catch{}}preferred=undefined;hide();schedule();}
+ close.onclick=()=>{if(current)dismiss([current.id]);};
+ skip.onclick=()=>dismiss(guides.map(guide=>guide.id));
  const interact=(event:Event)=>{if(!(event.target instanceof Element)||bubble.contains(event.target))return;const guide=guides.find(g=>g.trigger&&event.target instanceof Element&&event.target.closest(g.trigger));if(guide)preferred=guide.id;schedule();};
  const storage=(event:StorageEvent)=>{if(event.key===null||event.key.startsWith(prefix)){read();schedule();}};
  const reset=()=>{for(const guide of guides){dismissed.delete(guide.id);try{localStorage.removeItem(prefix+guide.id);}catch{}}preferred=undefined;hide();schedule();};

@@ -12,3 +12,7 @@
 .feature-guide[data-side=left] .feature-guide-arrow{border-width:1px 1px 0 0}
 
 .feature-guide{pointer-events:none}.feature-guide-close{pointer-events:auto}
+
+.feature-guide-skip{display:block;margin:10px -22px -4px auto;padding:4px 6px;border:0;border-radius:3px;background:transparent;color:var(--theme-muted,#a6a6a6);font:11px/1.5 system-ui,sans-serif;cursor:pointer;pointer-events:auto}
+.feature-guide-skip:hover{color:var(--theme-text,#e4e8ee);background:color-mix(in srgb,var(--theme-text,#e4e8ee) 7%,transparent)}
+.feature-guide-skip:focus-visible{outline:2px solid var(--theme-accent,#72b7ff);outline-offset:1px}

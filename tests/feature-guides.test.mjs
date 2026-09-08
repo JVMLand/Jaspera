@@ -12,7 +12,7 @@ test('feature guides follow their targets and remember dismissal across windows'
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');
  const guide=page.locator('.feature-guide');await guide.waitFor({state:'visible'});
  const first=await guide.getAttribute('data-guide');assert.ok(first);
- await guide.locator('button').click();
+ await guide.locator('.feature-guide-close').click();
  assert.equal(await page.evaluate(id=>localStorage.getItem('jaspera.guide.dismissed.'+id),first),'1');
  await page.reload();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');
  await guide.waitFor({state:'visible'});assert.notEqual(await guide.getAttribute('data-guide'),first);
@@ -23,12 +23,12 @@ test('feature guides follow their targets and remember dismissal across windows'
  await breakpoint.click();await page.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')==='breakpoints');
  await page.waitForTimeout(100);
  const anchor=await breakpoint.boundingBox(),tip=await page.locator('.feature-guide-arrow').boundingBox();assert.ok(Math.abs(tip.x+tip.width/2-(anchor.x+anchor.width/2))<2);
- await guide.locator('button').click();
+ await guide.locator('.feature-guide-close').click();
  await page.locator('#instructions-tab').click();
  await page.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')==='instructions');
  const other=await page.context().newPage();await other.goto(base);await other.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');await other.locator('#instructions-tab').click();
  await other.locator('.feature-guide[data-guide="instructions"]').waitFor({state:'visible'});
- await guide.locator('button').click();
+ await guide.locator('.feature-guide-close').click();
  await other.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')!=='instructions');await other.close();
  await page.locator('#menu-help').click();await page.locator('#help-guides').click();
  await page.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')==='instructions');
@@ -43,4 +43,10 @@ test('feature guides follow their targets and remember dismissal across windows'
  const popup=await popupEvent;await popup.locator('.feature-guide[data-guide="instructions"]').waitFor({state:'visible'});
  await popup.locator('.feature-guide-close').click();assert.equal(await page.evaluate(()=>localStorage.getItem('jaspera.guide.dismissed.instructions')),'1');
  await popup.close();
+ await page.locator('#menu-help').click();await page.locator('#help-guides').click();await guide.waitFor({state:'visible'});
+ await guide.locator('.feature-guide-skip').click();await guide.waitFor({state:'hidden'});
+ const skipped=await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.startsWith('jaspera.guide.dismissed.')).every(key=>localStorage.getItem(key)==='1'));assert.ok(skipped);
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');
+ await page.locator('#instructions-tab').click();await guide.waitFor({state:'hidden'});
+ await page.locator('#menu-help').click();await page.locator('#help-guides').click();await guide.waitFor({state:'visible'});
 });
