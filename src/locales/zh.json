@@ -925,5 +925,16 @@
   "help.licenses.title": "开源许可证",
   "help.licenses.notices": "第三方软件声明",
   "help.licenses.loading": "加载中…",
-  "help.licenses.error": "无法加载许可证。请重新选择以重试。"
+  "help.licenses.error": "无法加载许可证。请重新选择以重试。",
+  "jar.download": "下载 JAR…",
+  "jar.close": "关闭 JAR",
+  "jar.opening": "正在打开 JAR…",
+  "jar.exporting": "正在导出 JAR…",
+  "jar.exportError": "无法导出 JAR",
+  "jar.discard": "放弃 JAR 更改？",
+  "jar.unsaved": "部分 JAR 更改尚未下载。",
+  "jar.tooLarge": "压缩包超过大小或条目数量限制，或包含无效路径。",
+  "jar.invalid": "无法读取 JAR 文件。",
+  "jar.classTooLarge": "类文件超过 1 MiB。",
+  "jar.keepClassName": "{0}: 请保留原类名，且只声明一个类。"
 }

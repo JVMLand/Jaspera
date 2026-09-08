@@ -925,5 +925,16 @@
   "help.licenses.title": "OSS ライセンス",
   "help.licenses.notices": "第三者ソフトウェアの表記",
   "help.licenses.loading": "読み込み中…",
-  "help.licenses.error": "読み込めませんでした。一覧から選び直してください。"
+  "help.licenses.error": "読み込めませんでした。一覧から選び直してください。",
+  "jar.download": "JARをダウンロード…",
+  "jar.close": "JARを閉じる",
+  "jar.opening": "JARを読み込んでいます…",
+  "jar.exporting": "JARを書き出しています…",
+  "jar.exportError": "JARを書き出せませんでした",
+  "jar.discard": "JARの変更を破棄しますか？",
+  "jar.unsaved": "JARをダウンロードしていない変更があります。",
+  "jar.tooLarge": "JARのサイズまたはファイル数が上限を超えているか，ファイル名が不正です。",
+  "jar.invalid": "JARファイルを読み込めません。",
+  "jar.classTooLarge": "クラスファイルが1 MiBを超えています。",
+  "jar.keepClassName": "{0}: クラス名を変更したり，複数のクラスを宣言したりすることはできません。"
 }

@@ -925,5 +925,16 @@
   "help.licenses.title": "Licentiae fontis aperti",
   "help.licenses.notices": "Notitiae programmatum aliorum",
   "help.licenses.loading": "Oneratur…",
-  "help.licenses.error": "Licentia onerari non potuit. Iterum elige."
+  "help.licenses.error": "Licentia onerari non potuit. Iterum elige.",
+  "jar.download": "JAR depone…",
+  "jar.close": "JAR claude",
+  "jar.opening": "JAR aperitur…",
+  "jar.exporting": "JAR exportatur…",
+  "jar.exportError": "JAR exportari non potuit",
+  "jar.discard": "Mutationes JAR abicere?",
+  "jar.unsaved": "Mutationes JAR nondum depositae sunt.",
+  "jar.tooLarge": "Archivum fines magnitudinis vel numeri excedit aut viam invalidam continet.",
+  "jar.invalid": "JAR legi non potuit.",
+  "jar.classTooLarge": "Fasciculus classis 1 MiB excedit.",
+  "jar.keepClassName": "{0}: Nomen pristinum serva et unam tantum classem declara."
 }

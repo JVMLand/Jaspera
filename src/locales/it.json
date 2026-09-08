@@ -925,5 +925,16 @@
   "help.licenses.title": "Licenze open source",
   "help.licenses.notices": "Avvisi di terze parti",
   "help.licenses.loading": "Caricamento…",
-  "help.licenses.error": "Impossibile caricare la licenza. Selezionala di nuovo per riprovare."
+  "help.licenses.error": "Impossibile caricare la licenza. Selezionala di nuovo per riprovare.",
+  "jar.download": "Scarica JAR…",
+  "jar.close": "Chiudi JAR",
+  "jar.opening": "Apertura JAR…",
+  "jar.exporting": "Esportazione JAR…",
+  "jar.exportError": "Impossibile esportare il JAR",
+  "jar.discard": "Scartare le modifiche al JAR?",
+  "jar.unsaved": "Alcune modifiche al JAR non sono state scaricate.",
+  "jar.tooLarge": "L’archivio supera il limite di dimensione o voci, oppure contiene un percorso non valido.",
+  "jar.invalid": "Impossibile leggere il file JAR.",
+  "jar.classTooLarge": "Il file della classe supera 1 MiB.",
+  "jar.keepClassName": "{0}: Mantieni il nome originale e dichiara una sola classe."
 }
