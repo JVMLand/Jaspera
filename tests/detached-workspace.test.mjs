@@ -1,16 +1,138 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import {chromium} from '@playwright/test';
-test('detached menus, multiple tabs, and save only to an already selected folder',{timeout:60000},async t=>{
- const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5190','--strictPort'],{stdio:'pipe',windowsHide:true});t.after(()=>server.kill());const base='http://127.0.0.1:5190';for(let i=0;i<100;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
- const browser=await chromium.launch({channel:process.env.JALWEB_BROWSER??(process.platform==='win32'?'msedge':'chromium'),headless:true});t.after(()=>browser.close());const context=await browser.newContext({viewport:{width:1400,height:900}});await context.route('**/runtime/**',r=>r.abort());const page=await context.newPage(),errors=[];context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{window.pickerCalls=0;window.showDirectoryPicker=async()=>{window.pickerCalls++;return (await navigator.storage.getDirectory()).getDirectoryHandle('detached-save',{create:true});};});await page.goto(base);
- for(const path of ['src/A.jal','src/B.jal']){await page.locator('#add-file').click();await page.locator('#dialog-input').fill(path);await page.locator('#dialog-ok').click();await page.getByRole('tab',{name:path,exact:true}).waitFor();}
- const tab=await page.getByRole('tab',{name:'src/A.jal',exact:true}).boundingBox(),event=page.waitForEvent('popup');await page.mouse.move(tab.x+tab.width/2,tab.y+tab.height/2);await page.mouse.down();await page.waitForTimeout(420);await page.mouse.move(1200,15,{steps:8});await page.mouse.up();const popup=await event;await popup.getByRole('tab',{name:'src/A.jal',exact:true}).waitFor();
- for(const menu of ['file','edit','build','help'])assert.ok(await popup.locator('#menu-'+menu).isVisible());assert.equal(await popup.locator('#dock').count(),0);assert.equal(await popup.locator('.detached-toolbar, #save, #run, #stop').count(),0);await popup.locator('#menu-file').click();assert.equal(await popup.locator('#save-project').isVisible(),false);await popup.keyboard.press('Escape');await popup.keyboard.press('Control+s');await page.evaluate(()=>window.jalwebDetached.save());assert.equal(await page.evaluate(()=>window.pickerCalls),0);
- const open=async name=>{await popup.locator('#menu-file').click();await popup.locator('#open-workspace-file').click();await popup.locator('#workspace-files').selectOption({label:name});await popup.getByRole('button',{name:'開く',exact:true}).click();await popup.getByRole('tab',{name,exact:true}).waitFor();};
- await open('src/B.jal');assert.equal(await popup.locator('#file-tabs [role=tab]').count(),2);assert.equal(await page.getByRole('tab',{name:'src/B.jal',exact:true}).count(),0);
- await popup.evaluate(async()=>{const {editor}=await import('/src/detached.ts');editor.setValue('public class B { /* first edit */ }');});await popup.getByRole('tab',{name:'src/A.jal',exact:true}).click();await popup.evaluate(async()=>{const {editor}=await import('/src/detached.ts');editor.setValue('public class A { /* keep this edit */ }');});await popup.getByRole('button',{name:'src/A.jal のタブを閉じる',exact:true}).click();await page.getByRole('tab',{name:'src/A.jal',exact:true}).waitFor();
- await page.getByRole('tab',{name:'src/A.jal',exact:true}).click();assert.match(await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');return editor.getValue();}),/keep this edit/);
- await page.keyboard.press('Control+s');await page.waitForFunction(()=>document.querySelector('#state').textContent==='フォルダーに保存しました');await popup.waitForFunction(()=>!document.querySelector('#save-project').hidden);assert.equal(await page.evaluate(()=>window.pickerCalls),1);
- await popup.evaluate(async()=>{const {editor}=await import('/src/detached.ts');editor.setValue('public class B { /* saved from popup */ }');});await popup.keyboard.press('Control+s');await page.waitForFunction(async()=>{const root=await (await navigator.storage.getDirectory()).getDirectoryHandle('detached-save');return (await (await (await root.getDirectoryHandle('src')).getFileHandle('B.jal')).getFile()).text().then(s=>s.includes('saved from popup'));});assert.equal(await page.evaluate(()=>window.pickerCalls),1);assert.equal(await page.locator('#dialog[open]').count(),0);
- await open('src/A.jal');await popup.getByRole('button',{name:'src/B.jal のタブを閉じる',exact:true}).click();assert.equal(await popup.locator('#file-tabs [role=tab]').count(),1);assert.match(await popup.evaluate(async()=>{const {editor}=await import('/src/detached.ts');return editor.getValue();}),/keep this edit/);await open('src/B.jal');
- await popup.getByRole('tab',{name:'src/A.jal',exact:true}).click({modifiers:['Alt']});assert.equal(await popup.locator('#file-tabs [role=tab]').count(),1);await open('src/B.jal');await popup.locator('#menu-edit').click();await popup.screenshot({path:'.cache/detached-menus-tabs.png'});await popup.close();await page.getByRole('tab',{name:'src/B.jal',exact:true}).waitFor();assert.deepEqual(errors,[]);
-});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { chromium } from '@playwright/test';
+test(
+  'detached menus, multiple tabs, and save only to an already selected folder',
+  { timeout: 60000 },
+  async (t) => {
+    const server = spawn(
+      process.execPath,
+      ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5190', '--strictPort'],
+      { stdio: 'pipe', windowsHide: true },
+    );
+    t.after(() => server.kill());
+    const base = 'http://127.0.0.1:5190';
+    for (let i = 0; i < 100; i++) {
+      try {
+        if ((await fetch(base)).ok) break;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const browser = await chromium.launch({
+      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+      headless: true,
+    });
+    t.after(() => browser.close());
+    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    await context.route('**/runtime/**', (r) => r.abort());
+    const page = await context.newPage(),
+      errors = [];
+    context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.addInitScript(() => {
+      window.pickerCalls = 0;
+      window.showDirectoryPicker = async () => {
+        window.pickerCalls++;
+        return (await navigator.storage.getDirectory()).getDirectoryHandle('detached-save', {
+          create: true,
+        });
+      };
+    });
+    await page.goto(base);
+    for (const path of ['src/A.jal', 'src/B.jal']) {
+      await page.locator('#add-file').click();
+      await page.locator('#dialog-input').fill(path);
+      await page.locator('#dialog-ok').click();
+      await page.getByRole('tab', { name: path, exact: true }).waitFor();
+    }
+    const tab = await page.getByRole('tab', { name: 'src/A.jal', exact: true }).boundingBox(),
+      event = page.waitForEvent('popup');
+    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(420);
+    await page.mouse.move(1200, 15, { steps: 8 });
+    await page.mouse.up();
+    const popup = await event;
+    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).waitFor();
+    for (const menu of ['file', 'edit', 'build', 'help'])
+      assert.ok(await popup.locator('#menu-' + menu).isVisible());
+    assert.equal(await popup.locator('#dock').count(), 0);
+    assert.equal(await popup.locator('.detached-toolbar, #save, #run, #stop').count(), 0);
+    await popup.locator('#menu-file').click();
+    assert.equal(await popup.locator('#save-project').isVisible(), false);
+    await popup.keyboard.press('Escape');
+    await popup.keyboard.press('Control+s');
+    await page.evaluate(() => window.jalwebDetached.save());
+    assert.equal(await page.evaluate(() => window.pickerCalls), 0);
+    const open = async (name) => {
+      await popup.locator('#menu-file').click();
+      await popup.locator('#open-workspace-file').click();
+      await popup.locator('#workspace-files').selectOption({ label: name });
+      await popup.getByRole('button', { name: '開く', exact: true }).click();
+      await popup.getByRole('tab', { name, exact: true }).waitFor();
+    };
+    await open('src/B.jal');
+    assert.equal(await popup.locator('#file-tabs [role=tab]').count(), 2);
+    assert.equal(await page.getByRole('tab', { name: 'src/B.jal', exact: true }).count(), 0);
+    await popup.evaluate(async () => {
+      const { editor } = await import('/src/detached.ts');
+      editor.setValue('public class B { /* first edit */ }');
+    });
+    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).click();
+    await popup.evaluate(async () => {
+      const { editor } = await import('/src/detached.ts');
+      editor.setValue('public class A { /* keep this edit */ }');
+    });
+    await popup.getByRole('button', { name: 'src/A.jal のタブを閉じる', exact: true }).click();
+    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).waitFor();
+    await page.getByRole('tab', { name: 'src/A.jal', exact: true }).click();
+    assert.match(
+      await page.evaluate(async () => {
+        const { editor } = await import('/src/main.ts');
+        return editor.getValue();
+      }),
+      /keep this edit/,
+    );
+    await page.keyboard.press('Control+s');
+    await page.waitForFunction(
+      () => document.querySelector('#state').textContent === 'フォルダーに保存しました',
+    );
+    await popup.waitForFunction(() => !document.querySelector('#save-project').hidden);
+    assert.equal(await page.evaluate(() => window.pickerCalls), 1);
+    await popup.evaluate(async () => {
+      const { editor } = await import('/src/detached.ts');
+      editor.setValue('public class B { /* saved from popup */ }');
+    });
+    await popup.keyboard.press('Control+s');
+    await page.waitForFunction(async () => {
+      const root = await (
+        await navigator.storage.getDirectory()
+      ).getDirectoryHandle('detached-save');
+      return (await (await (await root.getDirectoryHandle('src')).getFileHandle('B.jal')).getFile())
+        .text()
+        .then((s) => s.includes('saved from popup'));
+    });
+    assert.equal(await page.evaluate(() => window.pickerCalls), 1);
+    assert.equal(await page.locator('#dialog[open]').count(), 0);
+    await open('src/A.jal');
+    await popup.getByRole('button', { name: 'src/B.jal のタブを閉じる', exact: true }).click();
+    assert.equal(await popup.locator('#file-tabs [role=tab]').count(), 1);
+    assert.match(
+      await popup.evaluate(async () => {
+        const { editor } = await import('/src/detached.ts');
+        return editor.getValue();
+      }),
+      /keep this edit/,
+    );
+    await open('src/B.jal');
+    await popup.getByRole('tab', { name: 'src/A.jal', exact: true }).click({ modifiers: ['Alt'] });
+    assert.equal(await popup.locator('#file-tabs [role=tab]').count(), 1);
+    await open('src/B.jal');
+    await popup.locator('#menu-edit').click();
+    await popup.screenshot({ path: '.cache/detached-menus-tabs.png' });
+    await popup.close();
+    await page.getByRole('tab', { name: 'src/B.jal', exact: true }).waitFor();
+    assert.deepEqual(errors, []);
+  },
+);

@@ -1,18 +1,150 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import {chromium} from '@playwright/test';
-test('Hover compares nearby frames, shows only changed locals, and works in detached windows',{timeout:90000},async t=>{
- const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5193','--strictPort'],{stdio:'pipe',windowsHide:true});t.after(()=>server.kill());const base='http://127.0.0.1:5193';for(let i=0;i<100;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
- const browser=await chromium.launch({channel:process.env.JALWEB_BROWSER??(process.platform==='win32'?'msedge':'chromium'),headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1400,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます',null,{timeout:60000});
- await page.locator('.view-line span').filter({hasText:/^invokevirtual$/}).first().hover();const literalCard=page.locator('.stack-hover:visible');await literalCard.getByText('実行前',{exact:true}).waitFor({timeout:60000});assert.deepEqual(await literalCard.locator('.frame-column code').allTextContents(),['"Hello, World!"','PrintStream']);await page.keyboard.press('Escape');await page.mouse.move(1100,400);
- await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setValue('public class Main {\n public static sample(I)I {\n  iload_0\n  ifle L\n  iconst_1\n  istore_1\n  iinc 1 1\n  iload_1\n  ireturn\n L:\n  iconst_0\n  ireturn\n }\n}');});
- const instruction=(target,name)=>target.locator('.view-line span').filter({hasText:new RegExp('^'+name+'$')}).first();
- await instruction(page,'iload_0').hover();
- const card=page.locator('.stack-hover:visible');await card.getByText('実行前',{exact:true}).waitFor({timeout:60000});assert.ok((await card.textContent()).includes('実行後'));assert.ok(!(await card.textContent()).includes('ローカル変数'));assert.deepEqual(await card.locator('.frame-column code').allTextContents(),['int']);assert.equal(await card.locator('.is-produced').count(),1);assert.equal(await card.locator('.is-consumed').count(),0);const marker=await card.locator('.frame-marker').boundingBox(),cell=await card.locator('.frame-value').boundingBox();assert.ok(marker.x+marker.width<=cell.x);await page.keyboard.down('Control');assert.equal(await card.count(),0);await page.keyboard.up('Control');await card.waitFor();
- const a=await instruction(page,'iload_0').boundingBox(),b=await card.boundingBox();assert.ok(b.y>=a.y+a.height&&b.y-a.y-a.height<20);assert.ok(Math.abs(b.x-a.x)<30);
- await instruction(page,'istore_1').hover();await card.getByText('ローカル変数',{exact:true}).waitFor();assert.match(await card.textContent(),/#1 ← スタック TOP/);assert.equal(await card.locator('.frame-pair').first().locator('.is-consumed').count(),1);assert.equal(await card.locator('.frame-pair').first().locator('.is-produced').count(),0);await page.screenshot({path:'.cache/stack-hover-store.png'});
- await instruction(page,'iinc').hover();await card.getByText('#1 ← #1 + 1',{exact:true}).waitFor();await page.screenshot({path:'.cache/stack-hover-increment.png'});await page.keyboard.press('Escape');assert.equal(await card.isVisible(),false);
- await page.mouse.move(1100,400);await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setValue('public class Main {\n public static sample(I)I {\n  // iadd\n  iload_0\n  iload_0\n  iload_0\n  iadd\n  pop\n  ireturn\n }\n}');});await instruction(page,'iload_0').hover();await card.getByText('実行前',{exact:true}).waitFor({timeout:15000});await page.keyboard.press('Escape');
- await instruction(page,'iadd').hover();await card.getByText('実行前',{exact:true}).waitFor();assert.equal(await card.locator('.is-consumed').count(),2);assert.equal(await card.locator('.is-produced').count(),1);assert.equal(await card.locator('.frame-value:not(.is-consumed):not(.is-produced)').count(),2);await page.screenshot({path:'.cache/stack-hover-add.png'});
- await page.locator('.view-line span').filter({hasText:/^\/\/\s+iadd$/}).hover();await page.waitForTimeout(450);assert.equal(await card.count(),0);
- const titles=target=>target.locator('.jal-bytecode-offset[title]').evaluateAll(nodes=>nodes.map(n=>n.title).filter(Boolean));const parentOffsets=await titles(page);
- const tab=await page.getByRole('tab',{name:'src/Main.jal',exact:true}).boundingBox(),event=page.waitForEvent('popup');await page.mouse.move(tab.x+tab.width/2,tab.y+tab.height/2);await page.mouse.down();await page.waitForTimeout(420);await page.mouse.move(1200,15,{steps:8});await page.mouse.up();const popup=await event;const popupWorkers=[];popup.on('worker',worker=>popupWorkers.push(worker.url()));await popup.route('**/runtime/**',route=>route.abort());popup.on('pageerror',e=>errors.push(e.message));await popup.getByRole('tab',{name:'src/Main.jal',exact:true}).waitFor();await instruction(popup,'iload_0').hover();await popup.locator('.stack-hover:visible').getByText('実行前',{exact:true}).waitFor({timeout:60000});await popup.keyboard.press('Escape');assert.equal(await popup.locator('.stack-hover:visible').count(),0);assert.deepEqual(await titles(popup),parentOffsets,'both windows render the same offset explanations');assert.equal(popupWorkers.some(url=>url.includes('runtime.worker')),false,'popup hover uses the workspace compiler');await popup.close();assert.deepEqual(errors,[]);
-});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { chromium } from '@playwright/test';
+test(
+  'Hover compares nearby frames, shows only changed locals, and works in detached windows',
+  { timeout: 90000 },
+  async (t) => {
+    const server = spawn(
+      process.execPath,
+      ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5193', '--strictPort'],
+      { stdio: 'pipe', windowsHide: true },
+    );
+    t.after(() => server.kill());
+    const base = 'http://127.0.0.1:5193';
+    for (let i = 0; i < 100; i++) {
+      try {
+        if ((await fetch(base)).ok) break;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const browser = await chromium.launch({
+      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+      headless: true,
+    });
+    t.after(() => browser.close());
+    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } }),
+      errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(base);
+    await page.waitForFunction(
+      () => document.querySelector('#state')?.textContent === '実行できます',
+      null,
+      { timeout: 60000 },
+    );
+    await page
+      .locator('.view-line span')
+      .filter({ hasText: /^invokevirtual$/ })
+      .first()
+      .hover();
+    const literalCard = page.locator('.stack-hover:visible');
+    await literalCard.getByText('実行前', { exact: true }).waitFor({ timeout: 60000 });
+    assert.deepEqual(await literalCard.locator('.frame-column code').allTextContents(), [
+      '"Hello, World!"',
+      'PrintStream',
+    ]);
+    await page.keyboard.press('Escape');
+    await page.mouse.move(1100, 400);
+    await page.evaluate(async () => {
+      const { editor } = await import('/src/main.ts');
+      editor.setValue(
+        'public class Main {\n public static sample(I)I {\n  iload_0\n  ifle L\n  iconst_1\n  istore_1\n  iinc 1 1\n  iload_1\n  ireturn\n L:\n  iconst_0\n  ireturn\n }\n}',
+      );
+    });
+    const instruction = (target, name) =>
+      target
+        .locator('.view-line span')
+        .filter({ hasText: new RegExp('^' + name + '$') })
+        .first();
+    await instruction(page, 'iload_0').hover();
+    const card = page.locator('.stack-hover:visible');
+    await card.getByText('実行前', { exact: true }).waitFor({ timeout: 60000 });
+    assert.ok((await card.textContent()).includes('実行後'));
+    assert.ok(!(await card.textContent()).includes('ローカル変数'));
+    assert.deepEqual(await card.locator('.frame-column code').allTextContents(), ['int']);
+    assert.equal(await card.locator('.is-produced').count(), 1);
+    assert.equal(await card.locator('.is-consumed').count(), 0);
+    const marker = await card.locator('.frame-marker').boundingBox(),
+      cell = await card.locator('.frame-value').boundingBox();
+    assert.ok(marker.x + marker.width <= cell.x);
+    await page.keyboard.down('Control');
+    assert.equal(await card.count(), 0);
+    await page.keyboard.up('Control');
+    await card.waitFor();
+    const a = await instruction(page, 'iload_0').boundingBox(),
+      b = await card.boundingBox();
+    assert.ok(b.y >= a.y + a.height && b.y - a.y - a.height < 20);
+    assert.ok(Math.abs(b.x - a.x) < 30);
+    await instruction(page, 'istore_1').hover();
+    await card.getByText('ローカル変数', { exact: true }).waitFor();
+    assert.match(await card.textContent(), /#1 ← スタック TOP/);
+    assert.equal(await card.locator('.frame-pair').first().locator('.is-consumed').count(), 1);
+    assert.equal(await card.locator('.frame-pair').first().locator('.is-produced').count(), 0);
+    await page.screenshot({ path: '.cache/stack-hover-store.png' });
+    await instruction(page, 'iinc').hover();
+    await card.getByText('#1 ← #1 + 1', { exact: true }).waitFor();
+    await page.screenshot({ path: '.cache/stack-hover-increment.png' });
+    await page.keyboard.press('Escape');
+    assert.equal(await card.isVisible(), false);
+    await page.mouse.move(1100, 400);
+    await page.evaluate(async () => {
+      const { editor } = await import('/src/main.ts');
+      editor.setValue(
+        'public class Main {\n public static sample(I)I {\n  // iadd\n  iload_0\n  iload_0\n  iload_0\n  iadd\n  pop\n  ireturn\n }\n}',
+      );
+    });
+    await instruction(page, 'iload_0').hover();
+    await card.getByText('実行前', { exact: true }).waitFor({ timeout: 15000 });
+    await page.keyboard.press('Escape');
+    await instruction(page, 'iadd').hover();
+    await card.getByText('実行前', { exact: true }).waitFor();
+    assert.equal(await card.locator('.is-consumed').count(), 2);
+    assert.equal(await card.locator('.is-produced').count(), 1);
+    assert.equal(await card.locator('.frame-value:not(.is-consumed):not(.is-produced)').count(), 2);
+    await page.screenshot({ path: '.cache/stack-hover-add.png' });
+    await page
+      .locator('.view-line span')
+      .filter({ hasText: /^\/\/\s+iadd$/ })
+      .hover();
+    await page.waitForTimeout(450);
+    assert.equal(await card.count(), 0);
+    const titles = (target) =>
+      target
+        .locator('.jal-bytecode-offset[title]')
+        .evaluateAll((nodes) => nodes.map((n) => n.title).filter(Boolean));
+    const parentOffsets = await titles(page);
+    const tab = await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).boundingBox(),
+      event = page.waitForEvent('popup');
+    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(420);
+    await page.mouse.move(1200, 15, { steps: 8 });
+    await page.mouse.up();
+    const popup = await event;
+    const popupWorkers = [];
+    popup.on('worker', (worker) => popupWorkers.push(worker.url()));
+    await popup.route('**/runtime/**', (route) => route.abort());
+    popup.on('pageerror', (e) => errors.push(e.message));
+    await popup.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
+    await instruction(popup, 'iload_0').hover();
+    await popup
+      .locator('.stack-hover:visible')
+      .getByText('実行前', { exact: true })
+      .waitFor({ timeout: 60000 });
+    await popup.keyboard.press('Escape');
+    assert.equal(await popup.locator('.stack-hover:visible').count(), 0);
+    assert.deepEqual(
+      await titles(popup),
+      parentOffsets,
+      'both windows render the same offset explanations',
+    );
+    assert.equal(
+      popupWorkers.some((url) => url.includes('runtime.worker')),
+      false,
+      'popup hover uses the workspace compiler',
+    );
+    await popup.close();
+    assert.deepEqual(errors, []);
+  },
+);

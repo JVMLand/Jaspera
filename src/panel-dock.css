@@ -182,10 +182,9 @@
 
 /* Three equal-behaviour groups; theme colours and surfaces remain in effect. */
 #app .workspace.dock-arranged {
-  grid-template-columns: minmax(0, var(--group-0, 0.17fr)) 6px minmax(
-      0,
-      var(--group-1, 0.48fr)
-    ) 6px minmax(0, var(--group-2, 0.35fr)) !important;
+  grid-template-columns:
+    minmax(0, var(--group-0, 0.17fr)) 6px minmax(0, var(--group-1, 0.48fr))
+    6px minmax(0, var(--group-2, 0.35fr)) !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
   grid-template-areas: 'summary summary summary summary summary' 'project split0 source split1 output' !important;
   gap: 0 !important;
@@ -338,10 +337,9 @@
   #app .workspace.dock-arranged,
   #app .workspace.dock-arranged.dock-swapped {
     grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: auto minmax(0, var(--group-0, 0.17fr)) 6px minmax(
-        0,
-        var(--group-1, 0.48fr)
-      ) 6px minmax(0, var(--group-2, 0.35fr)) !important;
+    grid-template-rows:
+      auto minmax(0, var(--group-0, 0.17fr)) 6px minmax(0, var(--group-1, 0.48fr))
+      6px minmax(0, var(--group-2, 0.35fr)) !important;
     grid-template-areas: 'summary' 'project' 'split0' 'source' 'split1' 'output' !important;
   }
   #app .workspace.dock-arranged.dock-swapped {

@@ -2106,15 +2106,13 @@ async function analyze(): Promise<void> {
         for (const [name, paths] of classes)
           if (paths.length > 1)
             for (const path of paths)
-              next
-                .get(path)!
-                .diagnostics.push({
-                  severity: 'error',
-                  message: `クラス ${name} が重複しています: ${paths.join(', ')}`,
-                  line: 1,
-                  column: 1,
-                  length: 1,
-                });
+              next.get(path)!.diagnostics.push({
+                severity: 'error',
+                message: `クラス ${name} が重複しています: ${paths.join(', ')}`,
+                line: 1,
+                column: 1,
+                length: 1,
+              });
         results = next;
         checkedRevision = checked;
         showDiagnostics();
