@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "Ignorar todos los puntos de interrupción",
   "run.options": "Elegir cómo ejecutar",
   "run.debug": "Depurar",
-  "run.normal": "Ejecutar"
+  "run.normal": "Ejecutar",
+  "changelog.title": "Historial de cambios",
+  "changelog.close": "Cerrar",
+  "changelog.versions": "Versiones",
+  "changelog.loading": "Cargando…",
+  "changelog.error": "No se pudieron cargar las novedades. Cierra esta ventana e inténtalo de nuevo."
 }

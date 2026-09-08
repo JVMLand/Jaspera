@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "忽略所有断点",
   "run.options": "选择运行方式",
   "run.debug": "调试",
-  "run.normal": "运行"
+  "run.normal": "运行",
+  "changelog.title": "更新日志",
+  "changelog.close": "关闭",
+  "changelog.versions": "版本",
+  "changelog.loading": "正在加载…",
+  "changelog.error": "无法加载更新日志。请关闭此窗口后重试。"
 }

@@ -1,3 +1,4 @@
+import { initializeChangelog } from './changelog-state';
 import { installRunMenu } from './run-menu';
 import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
@@ -2527,6 +2528,7 @@ window.addEventListener('pagehide', () => {
 void installProject(project).then(() => {
   ensureExample('example/HelloWorld.jal');
   selectClassPreview('example:example/HelloWorld.jal');
+  initializeChangelog();
 });
 
 installFeatureGuides();

@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "Ignorer tous les points d’arrêt",
   "run.options": "Choisir le mode d’exécution",
   "run.debug": "Déboguer",
-  "run.normal": "Exécuter"
+  "run.normal": "Exécuter",
+  "changelog.title": "Historique des versions",
+  "changelog.close": "Fermer",
+  "changelog.versions": "Versions",
+  "changelog.loading": "Chargement…",
+  "changelog.error": "Impossible de charger les nouveautés. Fermez cette fenêtre et réessayez."
 }

@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "Ignora tutti i punti di interruzione",
   "run.options": "Scegli come eseguire",
   "run.debug": "Debug",
-  "run.normal": "Esegui"
+  "run.normal": "Esegui",
+  "changelog.title": "Novità",
+  "changelog.close": "Chiudi",
+  "changelog.versions": "Versioni",
+  "changelog.loading": "Caricamento…",
+  "changelog.error": "Impossibile caricare le novità. Chiudi questa finestra e riprova."
 }

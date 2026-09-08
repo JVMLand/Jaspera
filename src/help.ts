@@ -38,6 +38,13 @@ export function showHelpMessage(title: string, text: string) {
 export function helpMenuItems() {
   return [
     {
+      id: 'help-changelog',
+      label: msg('changelog.title'),
+      action: () => {
+        void import('./changelog').then((m) => m.openChangelog());
+      },
+    },
+    {
       id: 'help-manual',
       label: msg('m9a0311a5dd39'),
       action: () => {

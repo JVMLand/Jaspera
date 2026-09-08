@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "Ignore all breakpoints",
   "run.options": "Choose how to run",
   "run.debug": "Debug",
-  "run.normal": "Run"
+  "run.normal": "Run",
+  "changelog.title": "Changelog",
+  "changelog.close": "Close",
+  "changelog.versions": "Versions",
+  "changelog.loading": "Loading…",
+  "changelog.error": "Could not load the release notes. Close this window and try again."
 }

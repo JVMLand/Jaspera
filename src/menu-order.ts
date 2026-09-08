@@ -31,7 +31,7 @@ const groups: Record<string, string[][]> = {
     ['debug-pause', 'debug-stop', 'debug-start'],
   ],
   Help: [
-    ['help-manual', 'help-language-docs'],
+    ['help-manual', 'help-changelog', 'help-language-docs'],
     ['help-offline', 'help-guides'],
     ['help-about', 'help-langjal', 'help-licenses'],
   ],

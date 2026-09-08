@@ -1,0 +1,109 @@
+#changelog {
+  width: calc(100vw - 32px);
+  height: calc(100dvh - 32px);
+  max-width: 1440px;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  color: var(--theme-text);
+  background: var(--theme-bg);
+  border: 1px solid var(--theme-border);
+}
+#changelog[open] {
+  display: flex;
+  flex-direction: column;
+}
+#changelog::backdrop {
+  background: #0008;
+}
+#changelog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--theme-border);
+}
+#changelog header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+#changelog .changelog-close {
+  border: 0;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  color: inherit;
+  font-size: 28px;
+}
+.changelog-layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+#changelog nav {
+  overflow: auto;
+  padding: 16px 12px;
+  border-right: 1px solid var(--theme-border);
+}
+#changelog nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}
+#changelog nav button[aria-current] {
+  background: var(--theme-selection);
+}
+#changelog nav button:hover {
+  background: color-mix(in srgb, var(--theme-text) 10%, var(--theme-bg));
+}
+#changelog article {
+  overflow: auto;
+  padding: 32px max(24px, calc((100% - 1000px) / 2));
+  font-size: calc(15px * var(--ui-font-scale, 1));
+  line-height: 1.8;
+}
+#changelog article h1 {
+  font-size: 1.8em;
+  line-height: 1.35;
+  margin: 0 0 20px;
+}
+#changelog article h2 {
+  font-size: 1.25em;
+  margin: 28px 0 8px;
+}
+#changelog article p {
+  margin: 0 0 20px;
+}
+#changelog article img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+}
+@media (max-width: 600px) {
+  .changelog-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  #changelog nav {
+    display: flex;
+    border-right: 0;
+    border-bottom: 1px solid var(--theme-border);
+    padding: 8px;
+  }
+  #changelog nav button {
+    width: auto;
+    margin: 0 4px;
+  }
+  #changelog article {
+    padding: 20px;
+  }
+}

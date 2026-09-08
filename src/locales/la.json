@@ -948,5 +948,10 @@
   "debug.ignoreBreakpoints": "Omnia puncta sistendi ignorare",
   "run.options": "Modum exsecutionis eligere",
   "run.debug": "Errores indagare",
-  "run.normal": "Exsequi"
+  "run.normal": "Exsequi",
+  "changelog.title": "Mutationes",
+  "changelog.close": "Claudere",
+  "changelog.versions": "Editiones",
+  "changelog.loading": "Legitur…",
+  "changelog.error": "Mutationes legi non potuerunt. Hanc fenestram claude et iterum conare."
 }
