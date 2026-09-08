@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { observePanelVisibility } from './panel-visibility';
 import type { Compilation } from './protocol';
 import type { installInstructionsPanel as install } from './instructions-panel';
@@ -13,7 +14,7 @@ export function installInstructionsPanel(
   const visibility = observePanelVisibility(host, (visible) => {
     if (!visible || panel || loading || disposed) return;
     loading = true;
-    host.textContent = '命令辞書を読み込んでいます…';
+    host.textContent = msg('mec79e2e4092c');
     void import('./instructions-panel')
       .then((module) => {
         if (disposed) return;
@@ -22,9 +23,7 @@ export function installInstructionsPanel(
         panel.showInstruction(selected);
       })
       .catch(() => {
-        if (!disposed)
-          host.textContent =
-            '命令辞書を読み込めませんでした。回線を確認してタブを開き直してください。';
+        if (!disposed) host.textContent = msg('m866670cee859');
       })
       .finally(() => {
         loading = false;

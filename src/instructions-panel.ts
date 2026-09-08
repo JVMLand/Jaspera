@@ -1,3 +1,5 @@
+import { localizedContent } from './localization';
+import { msg, displayMessage } from './messages.js';
 import { observePanelVisibility } from './panel-visibility';
 import { installInstructionUsage } from './instruction-usage-view';
 import type { Compilation } from './protocol';
@@ -13,7 +15,7 @@ export function installInstructionsPanel(
 ) {
   const el = (tag: string, text?: string, className?: string) => {
     const n = document.createElement(tag);
-    if (text !== undefined) n.textContent = text;
+    if (text !== undefined) n.textContent = localizedContent(text);
     if (className) n.className = className;
     return n;
   };
@@ -21,13 +23,13 @@ export function installInstructionsPanel(
     search = document.createElement('input'),
     category = document.createElement('select');
   search.type = 'search';
-  search.placeholder = '命令名・説明で検索';
-  search.setAttribute('aria-label', '命令を検索');
-  category.setAttribute('aria-label', '命令カテゴリ');
+  search.placeholder = msg('m9396543f8fb4');
+  search.setAttribute('aria-label', msg('m672e476daa75'));
+  category.setAttribute('aria-label', msg('mcfe6de7a0a62'));
   for (const value of ['', ...categories]) {
     const o = document.createElement('option');
     o.value = value;
-    o.textContent = value || 'すべてのカテゴリ';
+    o.textContent = value || msg('m7c98bf34443f');
     category.append(o);
   }
   toolbar.append(search);
@@ -35,7 +37,7 @@ export function installInstructionsPanel(
     list = el('nav', undefined, 'instruction-index'),
     detail = el('article', undefined, 'instruction-detail');
   detail.tabIndex = -1;
-  list.setAttribute('aria-label', 'カテゴリ別の命令一覧');
+  list.setAttribute('aria-label', msg('md7e12cba020d'));
   count.setAttribute('aria-live', 'polite');
   const chooser = el('div', undefined, 'instruction-chooser');
   chooser.hidden = true;
@@ -76,7 +78,9 @@ export function installInstructionsPanel(
   let selected = 'iadd',
     markdown: ReturnType<typeof renderMarkdown> | undefined;
   function comparison(form: Diagram) {
-    const terminal = form.after.includes('メソッド終了') ? 'メソッド終了' : undefined;
+    const terminal = form.after.includes(displayMessage('mdfd98a9ea8c1'))
+      ? msg('mdfd98a9ea8c1')
+      : undefined;
     const labels = form.locals?.before.map((v) => v.match(/^(#[^:]+):/)?.[1] ?? '');
     const localValues = (values: string[]) => values.map((v) => v.replace(/^#[^:]+:\s*/, ''));
     return renderFrameTransition({
@@ -116,6 +120,11 @@ export function installInstructionsPanel(
     header.append(
       el('span', entry.category, 'instruction-eyebrow'),
       el('h2', op),
+      el(
+        'small',
+        '0x' + entry.opcode.toString(16).toUpperCase().padStart(2, '0'),
+        'instruction-opcode',
+      ),
       el('p', entry.title, 'instruction-title'),
     );
     detail.append(header, el('p', entry.summary, 'instruction-summary'));
@@ -124,22 +133,16 @@ export function installInstructionsPanel(
         /long|double|カテゴリ2/.test([...f.before, ...f.after, f.note ?? ''].join(' ')),
       )
     )
-      detail.append(
-        el(
-          'p',
-          'カテゴリ2の long / double は1つの値で2スロットを使います。カテゴリ1の int / float / 参照は1スロットです。',
-          'instruction-category-note',
-        ),
-      );
+      detail.append(el('p', msg('ma442150b3560'), 'instruction-category-note'));
     detail.append(
-      el('h3', entry.example === op ? '命令' : '書き方の例'),
+      el('h3', entry.example === op ? msg('m928f87d4507b') : msg('mda2a27071906')),
       el('pre', entry.example, 'instruction-example'),
     );
     for (const form of entry.forms) {
       if (entry.forms.length > 1) detail.append(el('h4', form.label));
       detail.append(comparison(form));
     }
-    detail.append(el('h3', '使用例'));
+    detail.append(el('h3', msg('m660ffb506bbb')));
     const example = el('div', undefined, 'instruction-usage');
     detail.append(example);
     usage = installInstructionUsage(example, op, analyze);
@@ -156,9 +159,9 @@ export function installInstructionsPanel(
     advanced.append(markdown.element);
     if (entry.markdown.trim()) detail.append(advanced);
     if (entry.related.length) {
-      detail.append(el('h3', '関連命令'));
+      detail.append(el('h3', msg('mb8df8bcf4735')));
       const related = el('nav', undefined, 'instruction-related');
-      related.setAttribute('aria-label', '関連命令');
+      related.setAttribute('aria-label', msg('mb8df8bcf4735'));
       for (const other of entry.related) {
         const target = entries.find((e) => e.op === other)!;
         const anchor = document.createElement('a');
@@ -176,7 +179,7 @@ export function installInstructionsPanel(
       detail.append(related);
     }
     const link = document.createElement('a');
-    link.textContent = 'JVM 仕様書で命令を確認 ↗';
+    link.textContent = msg('m656dc2bbfe6c');
     link.href =
       'https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.' +
       op
@@ -197,12 +200,15 @@ export function installInstructionsPanel(
       found = entries.filter(
         (e) =>
           (!category.value || e.category === category.value) &&
-          (!query || (e.op + ' ' + e.title + ' ' + e.summary).toLocaleLowerCase().includes(query)),
+          (!query ||
+            (e.op + ' ' + localizedContent(e.title) + ' ' + localizedContent(e.summary))
+              .toLocaleLowerCase()
+              .includes(query)),
       );
     list.replaceChildren();
-    count.textContent = found.length + ' / ' + entries.length + ' 命令';
+    count.textContent = displayMessage('instruction.search.count', [found.length, entries.length]);
     if (!found.length) {
-      list.append(el('p', '該当する命令がありません。検索語やカテゴリを変えてください。'));
+      list.append(el('p', msg('md490dd75ec72')));
       detail.hidden = true;
       return;
     }
@@ -212,7 +218,7 @@ export function installInstructionsPanel(
       if (!group.length) continue;
       const folder = document.createElement('details');
       folder.open = !!query || !!category.value || group.some((e) => e.op === selected);
-      folder.append(el('summary', name + ' · ' + group.length));
+      folder.append(el('summary', localizedContent(name) + ' · ' + group.length));
       const buttons = el('div', undefined, 'instruction-buttons');
       for (const entry of group) {
         const b = document.createElement('button');
@@ -238,12 +244,12 @@ export function installInstructionsPanel(
       entry = entries.find((e) => e.op === op) ?? guide(op);
     const selection = selectedText(detail);
     return [
-      { label: '命令名をコピー', action: () => copyText(op) },
-      { label: '書き方の例をコピー', action: () => copyText(entry.example) },
-      { label: '選択範囲をコピー', disabled: !selection, action: () => copyText(selection) },
+      { label: msg('ma62566f76902'), action: () => copyText(op) },
+      { label: msg('mc5a48633cada'), action: () => copyText(entry.example) },
+      { label: msg('mfb8317d857a1'), disabled: !selection, action: () => copyText(selection) },
       null,
       {
-        label: '命令を検索',
+        label: msg('m672e476daa75'),
         action: () => {
           search.focus();
           toggle(true);
@@ -264,6 +270,21 @@ export function installInstructionsPanel(
     filter();
   };
   category.onchange = filter;
+  const languageChanged = () => {
+    search.placeholder = displayMessage('m9396543f8fb4');
+    search.setAttribute('aria-label', displayMessage('m672e476daa75'));
+    category.setAttribute('aria-label', displayMessage('mcfe6de7a0a62'));
+    list.setAttribute('aria-label', displayMessage('md7e12cba020d'));
+    for (const option of category.options)
+      option.textContent = option.value
+        ? localizedContent(option.value)
+        : displayMessage('m7c98bf34443f');
+    entries = [];
+    rendered = undefined;
+    filter();
+  };
+  languageChanged();
+  window.addEventListener('jaspera:locale', languageChanged);
   const visibility = observePanelVisibility(host, (value) => {
     visible = value;
     if (value) filter();
@@ -271,6 +292,7 @@ export function installInstructionsPanel(
   return {
     showInstruction: navigate,
     dispose() {
+      window.removeEventListener('jaspera:locale', languageChanged);
       visibility.dispose();
       usage?.dispose();
       context.dispose();

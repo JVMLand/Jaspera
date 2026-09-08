@@ -356,3 +356,19 @@
   overflow: hidden;
   margin-bottom: 20px;
 }
+
+.instruction-detail > header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+.instruction-opcode {
+  display: block;
+  margin: 0 0 5px;
+  color: var(--theme-muted, #91a19e);
+  opacity: 0.8;
+  font:
+    11px/1.5 Consolas,
+    monospace;
+}

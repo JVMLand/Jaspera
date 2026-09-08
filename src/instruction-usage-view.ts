@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import * as monaco from './editor-platform';
 import { installStackHover } from './stack-hover';
 import { instructionUsage } from './instruction-usage';
@@ -32,7 +33,7 @@ export function installInstructionUsage(
     contextmenu: false,
     stickyScroll: { enabled: false },
     hover: { enabled: false },
-    ariaLabel: op + ' の使用例',
+    ariaLabel: op + msg('m4b7a7c1dbb38'),
   });
   const height = () => {
     host.style.height = Math.min(480, Math.max(140, editor.getContentHeight())) + 'px';

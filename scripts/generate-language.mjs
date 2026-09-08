@@ -2,6 +2,21 @@ import { readFile, writeFile, readdir, mkdir } from 'node:fs/promises';
 import TurndownService from 'turndown';
 const grammar = await readFile('vendor/langjal/antlr/tokyo/peya/langjal/compiler/JAL.g4', 'utf8');
 const instructions = [...grammar.matchAll(/^INSN_\w+:\s*'([^']+)'/gm)].map((m) => m[1]);
+// Reuse the compiler's opcode table; grammar token numbers are not JVM opcodes.
+const opcodeSource = await readFile(
+  'vendor/langjal/java/tokyo/peya/langjal/compiler/jvm/EOpcodes.java',
+  'utf8',
+);
+const opcodeNames = opcodeSource.match(/String\[\] INSTRUCTION_NAMES\s*=\s*\{([\s\S]*?)\};/)?.[1];
+if (!opcodeNames) throw new Error('Compiler opcode table not found');
+const opcodes = Object.fromEntries(
+  [...opcodeNames.matchAll(/"([a-z0-9_]+)"/g)]
+    .map((match, index) => [match[1], index])
+    .filter(([name]) => instructions.includes(name)),
+);
+for (const name of instructions)
+  if (name !== 'aload_4' && !Object.hasOwn(opcodes, name))
+    throw new Error(`Missing opcode: ${name}`);
 const keywords = [...grammar.matchAll(/^KWD_\w+:\s*'([^']+)'/gm)].map((m) => m[1]);
 const converter = new TurndownService({ codeBlockStyle: 'fenced', headingStyle: 'atx' });
 const documents = {};
@@ -58,7 +73,7 @@ for (const [name, [title, body]] of Object.entries(supplemental))
 await mkdir('src/generated', { recursive: true });
 await writeFile(
   'src/generated/language.json',
-  JSON.stringify({ instructions, keywords, documents }, null, 2) + '\n',
+  JSON.stringify({ instructions, keywords, opcodes, documents }, null, 2) + '\n',
 );
 await writeFile(
   'src/generated/language-core.json',

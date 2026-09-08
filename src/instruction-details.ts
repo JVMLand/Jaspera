@@ -1,3 +1,4 @@
+import { displayMessage as msg } from './messages.js';
 // Behaviour beyond the diagrams. Every supported instruction has an explicit family.
 export function instructionDetails(op: string) {
   const arithmetic = op.match(/^([ilfd])(add|sub|mul|div|rem|and|or|xor|shl|shr|ushr)$/);
@@ -7,80 +8,56 @@ export function instructionDetails(op: string) {
       bits = kind === 'l' ? 64 : 32;
     if (['and', 'or', 'xor'].includes(operation))
       return (
-        '### ビット演算の用途\n\n' +
+        msg('md1dcfbbbaecc') +
         (
           {
-            and: 'マスクで指定したビットだけを取り出すときに使います。例えば 13 AND 6 は 4 です。',
-            or: '指定したビットを立てるときに使います。例えば 8 OR 3 は 11 です。',
-            xor: '指定したビットを反転するときに使います。例えば 13 XOR 6 は 11 です。同じ値どうしの XOR は 0 になります。',
+            and: msg('m36e36efbb343'),
+            or: msg('m353c0c86e4fa'),
+            xor: msg('mad02029d723f'),
           } as Record<string, string>
         )[operation]
       );
     if (['shl', 'shr', 'ushr'].includes(operation))
-      return `### ビットの扱い
-
-#### シフト量
-
-TOP の int 値の下位 ${kind === 'l' ? 6 : 5} ビットだけを使います。例えば ${bits} ビットずらす指定は，0 ビットとして扱われます。
-
-#### 空いた位置
-
-${operation === 'shl' ? '右側を 0 で埋め，左にはみ出したビットは捨てます。' : operation === 'shr' ? '左側を元の符号ビットで埋めます。負の値は負のままです。' : '左側を 0 で埋めます。符号ビットも通常のビットとして移動します。'}`;
+      return msg('me7b7c4c96a05', [
+        kind === 'l' ? 6 : 5,
+        bits,
+        operation === 'shl'
+          ? msg('m986045c42090')
+          : operation === 'shr'
+            ? msg('med1f3e951a8c')
+            : msg('md32187807c4c'),
+      ]);
     if (integer) {
-      if (operation === 'div')
-        return `### 整数除算の規則
-
-#### 丸め
-
-小数部分を 0 の方向に切り捨てます。例えば −7 ÷ 2 の結果は −3 です。
-
-#### ゼロ除算
-
-割る値が 0 なら ArithmeticException が発生します。
-
-#### 最小値 ÷ −1
-
-結果はその型の最小値になります。このオーバーフローでは例外は発生しません。`;
-      if (operation === 'rem')
-        return `### 整数の余りの規則
-
-#### 符号
-
-結果が 0 でない場合，割られる値と同じ符号になります。例えば −7 を 2 で割った余りは −1 です。
-
-#### ゼロ除算
-
-割る値が 0 なら ArithmeticException が発生します。`;
-      return `### 整数演算の規則
-
-#### オーバーフロー
-
-${bits} ビットに収まらない部分は捨てられます。範囲を超えても例外は発生しません。${kind === 'i' && operation === 'add' ? '例えば 2147483647 + 1 は −2147483648 になります。' : ''}`;
+      if (operation === 'div') return msg('mc280ded2681c');
+      if (operation === 'rem') return msg('m6c41c5afab95');
+      return msg('mecbc1e4eff99', [
+        bits,
+        kind === 'i' && operation === 'add' ? msg('m274ca1095350') : '',
+      ]);
     }
-    return `### 浮動小数点演算の規則
-
-#### 精度と特殊な値
-
-${operation === 'rem' ? '余りは，商を 0 の方向に切り捨てる考え方で求めます。割られる値が無限大，または割る値が 0 の場合は NaN になります。' : '結果はその型の精度に丸められます。NaN を含む演算の結果は NaN です。無限大と符号付きゼロも扱います。'}${operation === 'div' ? 'ゼロで割っても ArithmeticException は発生せず，値に応じて Infinity または NaN になります。' : ''}`;
+    return msg('ma4cc76892a08', [
+      operation === 'rem' ? msg('mfd50d64a8da1') : msg('mbf76e15bf51e'),
+      operation === 'div' ? msg('m8ea2d6a35c70') : '',
+    ]);
   }
   const conversions: Record<string, string> = {
-    i2l: '符号を保って 64 ビットへ拡張します。元の整数値は変わりません。',
-    i2d: 'int のすべての値を double で正確に表せるため，値は変わりません。',
-    f2d: 'float の値を double へ拡張します。有限の値は正確に表現できます。',
-    l2i: '下位 32 ビットだけを残します。値が int の範囲外なら，大きさや符号が変わることがあります。',
-    i2f: 'float で正確に表せない整数は丸められます。',
-    l2f: 'float で正確に表せない整数は丸められます。',
-    l2d: 'double で正確に表せない大きな整数は丸められます。',
-    d2f: 'float の精度に丸めます。大きすぎる値は無限大，小さすぎる値は符号付きの 0 になる場合があります。',
-    i2b: '下位 8 ビットを残し，符号を保って int へ拡張します。例えば 255 は −1 になります。',
-    i2s: '下位 16 ビットを残し，符号を保って int へ拡張します。',
-    i2c: '下位 16 ビットを残し，上位を 0 で埋めます。結果は 0〜65535 の int です。',
-    f2i: '小数部分を 0 の方向に切り捨てます。NaN は 0 に，範囲外の値は変換先の最小値または最大値になります。',
-    f2l: '小数部分を 0 の方向に切り捨てます。NaN は 0 に，範囲外の値は変換先の最小値または最大値になります。',
-    d2i: '小数部分を 0 の方向に切り捨てます。NaN は 0 に，範囲外の値は変換先の最小値または最大値になります。',
-    d2l: '小数部分を 0 の方向に切り捨てます。NaN は 0 に，範囲外の値は変換先の最小値または最大値になります。',
+    i2l: msg('mdc53bb083b58'),
+    i2d: msg('mafe166d7309c'),
+    f2d: msg('mcd105db66a18'),
+    l2i: msg('m529ccca9d88a'),
+    i2f: msg('ma6a331fefef3'),
+    l2f: msg('ma6a331fefef3'),
+    l2d: msg('m0137afcb1c4d'),
+    d2f: msg('m62904f41d0cd'),
+    i2b: msg('m8d835b48b6ee'),
+    i2s: msg('mf225d2191cac'),
+    i2c: msg('m5641932f444a'),
+    f2i: msg('m2b9eb8b53622'),
+    f2l: msg('m2b9eb8b53622'),
+    d2i: msg('m2b9eb8b53622'),
+    d2l: msg('m2b9eb8b53622'),
   };
-  if (conversions[op]) return '### 変換の規則\n\n' + conversions[op];
+  if (conversions[op]) return msg('ma1ca54f22df8') + conversions[op];
   const section = (heading: string, text: string) => `### ${heading}\n\n${text}`;
   const type = (
     {
@@ -88,7 +65,7 @@ ${operation === 'rem' ? '余りは，商を 0 の方向に切り捨てる考え�
       l: 'long',
       f: 'float',
       d: 'double',
-      a: '参照',
+      a: msg('mad087912287e'),
       b: 'byte / boolean',
       c: 'char',
       s: 'short',
@@ -97,224 +74,166 @@ ${operation === 'rem' ? '余りは，商を 0 の方向に切り捨てる考え�
   let match: RegExpMatchArray | null;
   if ((match = op.match(/^([ilfda])(load|store)(?:_([0-3]))?$/)))
     return section(
-      'ローカル変数の指定',
-      (match[3] === undefined
-        ? '命令の後ろにスロット番号を書きます。番号は 0 から始まります。255 を超える番号には wide を付けます。'
-        : `末尾の ${match[3]} がスロット番号です。別の引数は書きません。通常形より短いバイトコードで同じ操作を行います。`) +
+      msg('m94dab4f6185b'),
+      (match[3] === undefined ? msg('m2dff03dbb4b0') : msg('m52f8ce9bf3a5', [match[3]])) +
         '\n\n' +
-        (match[2] === 'load'
-          ? '読み出してもローカル変数の値は残ります。読み出すスロットには，この命令の型に合う値があらかじめ保存されている必要があります。'
-          : '以前の値を上書きします。') +
-        (/[ld]/.test(match[1])
-          ? ' long / double は指定したスロットとその次のスロットを使います。後半のスロットだけを読み出すことはできません。'
-          : '') +
+        (match[2] === 'load' ? msg('m0fa47a0fca57') : msg('me482cb162004')) +
+        (/[ld]/.test(match[1]) ? msg('m7d7d169bef84') : '') +
         (match[1] === 'a'
-          ? '\n\n' +
-            (match[2] === 'load'
-              ? 'null も通常の参照として読み出せます。古い jsr の returnAddress は aload では読み出せません。'
-              : '参照を保存してもオブジェクトは複製されません。古い jsr が積む returnAddress も保存できますが，オブジェクト参照とは別の型です。')
+          ? '\n\n' + (match[2] === 'load' ? msg('m1f316ccc6ec8') : msg('m6a6f0af39e38'))
           : ''),
     );
-  if (op === 'iinc')
-    return section(
-      '増減量',
-      'スロット番号，加算する整数の順に書きます。iinc 1 -1 なら #1 を 1 減らします。対象は初期化済みの int です。\n\n通常形の増減量は −128〜127，wide 付きは −32768〜32767 です。int の範囲を超える計算結果は下位 32 ビットになり，例外は発生しません。',
-    );
-  if (op === 'aconst_null')
-    return section(
-      'null の意味',
-      'どのオブジェクトも指していない参照です。整数の 0 とは型が異なります。参照型の引数や戻り値として渡せますが，その参照を使ってフィールドや配列要素にアクセスすると NullPointerException が発生します。',
-    );
+  if (op === 'iinc') return section(msg('ma07e7bd8a078'), msg('m285c5d84442a'));
+  if (op === 'aconst_null') return section(msg('m843c588b0954'), msg('m1351880c946c'));
   if ((match = op.match(/^([ilfd])const_(m1|[0-5])$/)))
     return section(
-      '命令に含まれる定数',
-      `値は命令名に含まれているので，後ろに数値は書きません。定数プールを使わずに ${type} の ${match[2] === 'm1' ? '-1' : match[2]} を積みます。${/[fd]/.test(match[1]) && match[2] === '0' ? ' この 0 は正のゼロです。' : ''}`,
+      msg('m52c825bec874'),
+      msg('mbc13fdaf59dd', [
+        type,
+        match[2] === 'm1' ? '-1' : match[2],
+        /[fd]/.test(match[1]) && match[2] === '0' ? msg('m0d5c47b6f297') : '',
+      ]),
     );
   if (/^[bs]ipush$/.test(op))
     return section(
-      '値の範囲',
-      `${op === 'bipush' ? '−128〜127 の符号付き 8 ビット整数' : '−32768〜32767 の符号付き 16 ビット整数'}を命令に埋め込みます。スタックへ積む際には符号を保って int に拡張します。byte / short 型の値がスタックに積まれるわけではありません。`,
+      msg('mb0085cc7b5b2'),
+      msg('m811c5131084b', [op === 'bipush' ? msg('me9fdc028953c') : msg('mb44bb077ec69')]),
     );
   if (/^ldc/.test(op))
     return section(
-      '読み出せる定数',
+      msg('me9699fb1e75a'),
       op === 'ldc2_w'
-        ? 'long / double 定数を定数プールから読み出します。末尾の 2 は値が 2 スロットを使うことを表します。2つの定数を読む命令ではありません。JAL では例えば ldc2_w 10L と書きます。動的定数の場合も型は long または double です。'
-        : `int，float，文字列，クラス，メソッド型，メソッドハンドル，カテゴリ1の動的定数を読み出せます。\n\n${op === 'ldc_w' ? '定数プールの番号を 16 ビットで指定し，大きな定数プールに対応します。' : 'ldc のバイトコードでは定数プールの番号を 8 ビットで指定します。指定できる番号は 1〜255 です。'} JAL では定数プールの番号を直接書く代わりに，読み出す定数を書きます。`,
+        ? msg('m01a784a5f6e7')
+        : msg('mff7373bef817', [op === 'ldc_w' ? msg('mc6f80ef27462') : msg('ma10ad9fa7488')]),
     );
   if (/^[ilfd]neg$/.test(op))
     return section(
-      '符号の反転',
-      /[il]/.test(op[0])
-        ? '0 は 0 のままです。その型の最小値は正の値として表せないため，反転しても最小値のままになります。例外は発生しません。'
-        : '正のゼロは負のゼロに，負のゼロは正のゼロになります。無限大の符号も反転します。NaN は NaN のままです。',
+      msg('m158c6187099c'),
+      /[il]/.test(op[0]) ? msg('mf71f4bd419f6') : msg('m65e5bd3e6c41'),
     );
   if (/^[ilfdabcs]a(load|store)$/.test(op)) {
     const store = op.endsWith('store');
     const special: Record<string, string> = {
-      b: store
-        ? 'byte 配列では下位 8 ビットを保存します。boolean 配列では下位 1 ビットを保存します。'
-        : 'byte 配列の要素は符号を保って int に拡張されます。boolean 配列からは 0 または 1 が得られます。',
-      c: store
-        ? '下位 16 ビットを char として保存します。'
-        : 'char の 16 ビットをゼロ拡張し，0〜65535 の int として積みます。',
-      s: store
-        ? '下位 16 ビットを short として保存します。'
-        : 'short の 16 ビットを符号を保って int に拡張します。',
-      a: store
-        ? '保存する参照は，実際の配列の要素型に代入できる必要があります。例えば String[] に Integer を保存すると ArrayStoreException が発生します。null は保存できます。'
-        : 'オブジェクトを複製せず，要素に保存された参照を積みます。null の要素も読み出せます。',
+      b: store ? msg('m27e0980bc86a') : msg('m441e836fd219'),
+      c: store ? msg('m333416651489') : msg('m886dd888a062'),
+      s: store ? msg('ma525d48b8a15') : msg('mb02cb3dd0752'),
+      a: store ? msg('m2bf487da9589') : msg('mbdaef410a7b1'),
     };
-    return section(
-      '配列の要素',
-      `添字は 0 から始まります。対象は ${type} の配列です。${special[op[0]] ?? ''}\n\n配列の参照が null なら NullPointerException，添字が負または配列の長さ以上なら ArrayIndexOutOfBoundsException が発生します。`,
-    );
+    return section(msg('m6a2b808b714e'), msg('m757b23347808', [type, special[op[0]] ?? '']));
   }
   if (/^(get|put)(field|static)$/.test(op)) {
     const put = op.startsWith('put'),
       instance = op.endsWith('field');
     return section(
-      'フィールドの指定',
-      'クラス名，->，フィールド名，:，型の descriptor を書きます。例えば Counter->value:I は Counter の int フィールド value です。' +
-        (instance
-          ? '\n\n対象オブジェクトが null なら NullPointerException が発生します。'
-          : '\n\nフィールドを宣言しているクラスが未初期化なら，アクセス前にクラスの初期化が行われます。') +
+      msg('m58555d38b30a'),
+      msg('mf35bf7c737fe') +
+        (instance ? msg('m29421d07b20a') : msg('m02b4e7dae579')) +
         (put
-          ? '\n\n保存する値はフィールドの型に合っている必要があります。final フィールドへの書き込みは，宣言クラスの' +
-            (instance ? 'コンストラクター <init>' : 'クラス初期化メソッド <clinit>') +
-            '内に制限されます。'
+          ? msg('m575f0fdfcc02') +
+            (instance ? msg('mec4be68dba1b') : msg('m3807c24e6dd8')) +
+            msg('ma579b401c2f6')
           : ''),
     );
   }
   const calls: Record<string, string> = {
-    invokevirtual:
-      'インスタンスの実際のクラスに従って，オーバーライドされたメソッドを選びます。例えば変数の宣言型が親クラスでも，参照先が子クラスなら子クラスの実装が呼ばれます。',
-    invokeinterface:
-      'インターフェースで宣言されたインスタンスメソッドを呼びます。参照先のクラスが実装するメソッドが選ばれます。対象はインスタンスメソッドです。',
-    invokespecial:
-      'コンストラクター <init>，親クラスのメソッドなど，通常の仮想呼び出しと異なる規則で呼び出すときに使います。new の直後の参照は未初期化なので，利用する前に <init> を呼ぶ必要があります。',
-    invokestatic:
-      'static メソッドを呼びます。this に相当する参照は積みません。呼び出し先を宣言しているクラスが未初期化なら，メソッドの実行前にクラスの初期化が行われます。',
-    invokedynamic:
-      '呼び出し先は，bootstrap メソッドで解決した CallSite によって決まります。Java のラムダや文字列連結などで使われます。クラス名から通常のメソッドを探す命令ではなく，bootstrap とその引数の設定が必要です。',
+    invokevirtual: msg('m98db22b24c43'),
+    invokeinterface: msg('m9ac11155e8a8'),
+    invokespecial: msg('m199c4ecf8d60'),
+    invokestatic: msg('m82495767d195'),
+    invokedynamic: msg('mf4cdc77994c7'),
   };
   if (calls[op])
     return (
-      section('呼び出し先の決まり方', calls[op]) +
+      section(msg('mb03653bd04ac'), calls[op]) +
       sectionBreak(
-        '引数と戻り値',
-        'descriptor の括弧内が引数，括弧の後ろが戻り型です。(II)I なら int を2つ受け取り，int を1つ返します。引数は宣言順に積み，最後の引数が TOP になります。' +
-          (!['invokestatic', 'invokedynamic'].includes(op)
-            ? ' 対象オブジェクトの参照は引数より先に積みます。参照が null なら NullPointerException が発生します。'
-            : '') +
-          ' 戻り型が V なら，呼び出し後に戻り値は積まれません。',
+        msg('ma2a278c4c972'),
+        msg('mc765e1bc342f') +
+          (!['invokestatic', 'invokedynamic'].includes(op) ? msg('m9082c236f2f2') : '') +
+          msg('mf5881e28bd43'),
       )
     );
   if (/^[ilfda]?return$/.test(op))
     return section(
-      '復帰と戻り型',
+      msg('ma8a78e1453cf'),
       op === 'return'
-        ? '戻り型が V（void）のメソッドで使います。呼び出し元では，呼び出し命令の次から実行を再開します。'
-        : '呼び出し元のスタックへ値を1つ渡し，呼び出し命令の次から実行を再開します。' +
+        ? msg('m70b9e9048951')
+        : msg('m5d64710e5e68') +
             (op === 'ireturn'
-              ? 'boolean / byte / char / short を返すメソッドも ireturn を使います。これらの値はメソッド内のスタックでは int として扱われます。'
+              ? msg('m7d58a26d553e')
               : op === 'areturn'
-                ? '返す参照は宣言された戻り型に代入できる必要があります。null も返せます。'
-                : `メソッドの戻り型は ${type} である必要があります。`),
+                ? msg('m201b645db068')
+                : msg('m8b86d625388f', [type])),
     );
-  if (op === 'athrow')
-    return section(
-      '例外の伝わり方',
-      'Throwable またはそのサブクラスの参照を積んで使います。null を投げると NullPointerException になります。\n\n現在の位置を保護する例外ハンドラーから，例外の型に合うものを探します。見つかればスタックを空にして例外参照だけを積み，ハンドラーへ進みます。なければこのメソッドを抜け，呼び出し元でも同じように探します。',
-    );
+  if (op === 'athrow') return section(msg('ma3d9d7d7cad1'), msg('m51519670e5e3'));
   if (/^if/.test(op))
     return section(
-      '比較する値',
+      msg('maa07f94b198f'),
       /^if_acmp/.test(op)
-        ? 'オブジェクトの内容ではなく，同じオブジェクトを指しているかを比較します。両方が null なら等しいと判定します。文字列の内容を比較したい場合は equals メソッドを呼びます。'
+        ? msg('m5ecc78041fee')
         : /^ifnonnull$|^ifnull$/.test(op)
-          ? '参照1つを null と比較します。null でないことを確認してからメソッドを呼ぶ，といった分岐に使えます。'
+          ? msg('mc52b6aa1922b')
           : /^if_icmp/.test(op)
-            ? 'int 値を2つ比較します。long / float / double や参照を直接比較することはできません。'
-            : 'int 値を1つ取り出し，0 と比較します。' +
-              (op === 'ifeq'
-                ? 'boolean 値を調べる場合は false（0）で分岐します。'
-                : op === 'ifne'
-                  ? 'boolean 値を調べる場合は true（0 以外）で分岐します。'
-                  : ''),
+            ? msg('md30da3fcbe8e')
+            : msg('me38fd97f8d19') +
+              (op === 'ifeq' ? msg('m4fba90a68456') : op === 'ifne' ? msg('ma2326d467013') : ''),
     );
   if (/^[lfd]cmp/.test(op))
     return section(
-      '比較結果',
-      '先に積んだ値が TOP の値より小さければ −1，等しければ 0，大きければ 1 を積みます。次に iflt / ifeq / ifgt などを置くことで分岐できます。' +
+      msg('m446fb189e6e6'),
+      msg('mf66ac3ce37c0') +
         (op === 'lcmp'
-          ? ' 減算と違い，オーバーフローを起こさず大小を比較できます。'
-          : `\n\nどちらかが NaN のときは ${op.endsWith('l') ? '−1' : '1'} を積みます。${op.endsWith('l') ? '「より大きい」を ifgt で判定する場合' : '「より小さい」を iflt で判定する場合'}，NaN では分岐しなくなります。正のゼロと負のゼロは等しいと判定します。`),
+          ? msg('ma3a673c211b8')
+          : msg('m68a324d0b9ca', [
+              op.endsWith('l') ? '−1' : '1',
+              op.endsWith('l') ? msg('ma30050be3370') : msg('m6e9bde1f3dd4'),
+            ])),
     );
   if (/switch$/.test(op))
     return section(
-      '分岐先の選び方',
-      op === 'tableswitch'
-        ? '連続する整数の範囲に対して，値ごとの分岐先を表で指定します。範囲外は default へ進みます。例えば 0，1，2 のような密な選択肢に向きます。範囲内で特別な処理が不要な値には default と同じ行き先を指定できます。'
-        : '整数のキーと分岐先の組を列挙します。一致するキーがなければ default へ進みます。例えば 1，100，10000 のような離れた選択肢に向きます。class ファイルではキーは昇順で，重複しない必要があります。',
+      msg('md135a50dbe3d'),
+      op === 'tableswitch' ? msg('mc2ba8abafcca') : msg('m2f806778c6b4'),
     );
   if (/^goto/.test(op))
     return section(
-      '無条件の分岐',
-      '同じメソッド内のラベルへ進みます。ループの先頭に戻る場合や，if の片側の処理後にもう片側を飛ばす場合に使います。' +
-        (op === 'goto_w'
-          ? ' 分岐先までの相対オフセットを符号付き 32 ビットで持ち，goto より遠くへ分岐できます。'
-          : ' バイトコードの相対オフセットは符号付き 16 ビットです。指定できる範囲は −32768〜32767 バイトです。'),
+      msg('m220a70796313'),
+      msg('m60cf8e35fc81') + (op === 'goto_w' ? msg('m4c9f5b0c2119') : msg('mb5fef8446838')),
     );
   if (/^jsr/.test(op) || op === 'ret')
     return section(
-      '古いサブルーチン命令',
-      (op === 'ret'
-        ? '命令の引数にスロット番号を指定します。そのスロットに保存された returnAddress を戻り先として，同じメソッド内の実行を再開します。スタックからアドレスを取り出す命令ではありません。'
-        : `次の命令のアドレスを returnAddress として積み，同じメソッド内のラベルへ分岐します。分岐先への相対オフセットは符号付き ${op === 'jsr_w' ? '32' : '16'} ビットです。`) +
-        '\n\n古い finally の実装に使われました。class ファイルのバージョン 51.0（Java 7）以降では使用できません。',
+      msg('mdcce8fb9f28b'),
+      (op === 'ret' ? msg('medf96a90b56a') : msg('mb8d8223c2f88', [op === 'jsr_w' ? '32' : '16'])) +
+        msg('m898b232a9448'),
     );
   const objectDetails: Record<string, string> = {
-    new: 'クラス名を指定してメモリーを確保します。各フィールドには 0 / false / null などの初期値が入りますが，コンストラクターはまだ実行されていません。通常は dup で参照を残してから invokespecial で <init> を呼びます。抽象クラスやインターフェースの実体は作れません。',
-    newarray:
-      'I（int）や Z（boolean）などのプリミティブ型の descriptor を命令の引数に指定し，要素数をスタックへ積みます。要素はその型の 0 / false で初期化されます。長さ 0 は有効ですが，負の長さなら NegativeArraySizeException が発生します。',
-    anewarray:
-      '要素となる参照型の descriptor を命令の引数に指定し，要素数をスタックへ積みます。全要素は null で，要素のオブジェクトまでは作られません。要素型に配列型を指定することもできます。負の長さなら NegativeArraySizeException が発生します。',
-    multianewarray:
-      '配列の descriptor と，確保する次元数を指定します。長さは外側の次元から順に積みます。指定した次元数が配列型の次元数より少ない場合，その先の配列は作られず null のままです。次元数は 1 以上で配列型の次元数以下，各長さは 0 以上が必要です。負の長さなら NegativeArraySizeException が発生します。',
-    arraylength:
-      '要素の個数を返します。最後の添字は長さ − 1 です。多次元配列では，指定した参照が指す1つの配列の長さだけを返します。null なら NullPointerException が発生します。',
-    checkcast:
-      '参照先が指定したクラスやインターフェースの型として扱えるかを調べます。成功時は同じ参照が残り，失敗すると ClassCastException が発生します。null は検査に成功します。数値型の変換には使えません。',
-    instanceof:
-      '参照先を指定した型に代入できるなら 1，できないなら 0 を積みます。null は 0 です。型が合わなくても ClassCastException は発生しません。',
-    monitorenter:
-      'オブジェクトのモニターを取得します。他のスレッドが所有している間は待ちます。自分のスレッドがすでに所有している場合は取得回数を増やします。参照が null なら NullPointerException が発生します。',
-    monitorexit:
-      '自分のスレッドが持つモニターの取得回数を1つ減らし，0 になったら他のスレッドが取得できるようにします。所有していなければ IllegalMonitorStateException，null なら NullPointerException が発生します。正常終了と例外終了の両方で，取得に対応する解放が行われるようにします。',
-    nop: '何もせず次の命令へ進みます。バイトコード上は 1 バイトを使います。パッチ用の場所を確保する用途などがあります。',
-    wide: '後続の load / store / ret のローカル変数番号を符号なし 16 ビットに拡張します。iinc では，さらに増減量を符号付き 16 ビットへ拡張します。値の型や計算の精度は変わりません。後続命令と合わせて1つの命令なので，途中へ分岐することはできません。',
+    new: msg('mc67f98dc5730'),
+    newarray: msg('m748964757650'),
+    anewarray: msg('m3d3ceb7494b4'),
+    multianewarray: msg('m13124e8fa297'),
+    arraylength: msg('mecb86c0a4941'),
+    checkcast: msg('m5ff568f2921a'),
+    instanceof: msg('mb7e36751d226'),
+    monitorenter: msg('m068607887077'),
+    monitorexit: msg('mfa4caad4a1e0'),
+    nop: msg('ma198c4aad5d4'),
+    wide: msg('mc0acbf21ca63'),
   };
   if (objectDetails[op])
     return section(
       op.startsWith('monitor')
-        ? 'モニターの所有'
+        ? msg('mfd72d5f0e53a')
         : op === 'wide'
-          ? '拡張するオペランド'
-          : '動作と注意点',
+          ? msg('m2ef2b0beb1b3')
+          : msg('m250de5f0835e'),
       objectDetails[op],
     );
   if (/^(pop|dup|swap)/.test(op))
     return section(
-      '値の並べ替え',
+      msg('m9eaa7830a34c'),
       op.startsWith('pop')
-        ? '戻り値など，使わない値を捨てるときに使います。' +
-            (op === 'pop'
-              ? '取り除けるのはカテゴリ1の値1つです。long / double の半分だけを取り除くことはできません。'
-              : 'カテゴリ1の値2つ，または long / double の値1つを取り除きます。カテゴリ2の値を分割することはできません。')
+        ? msg('m759ef43d6cc4') + (op === 'pop' ? msg('mbcc58ea38bc6') : msg('m45f907f7bf17'))
         : op === 'swap'
-          ? 'TOP とその下の値を交換します。どちらもカテゴリ1である必要があり，long / double を直接 swap することはできません。'
-          : '計算や保存で消費する前に，同じ値をもう一度使えるようコピーを残します。参照を複製してもオブジェクトは複製されません。同じオブジェクトを指す参照が増えます。\n\nlong / double を途中で分割する並べ替えはできません。上の図の各形式で，値のカテゴリと積む順序を確認してください。',
+          ? msg('m8b3e25d0e365')
+          : msg('m11de3569c85d'),
     );
   throw new Error(`Missing instruction explanation: ${op}`);
 }
