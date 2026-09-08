@@ -919,7 +919,7 @@
   "run.abstractMain": "抽象方法或抽象类中的实例 main 无法运行。",
   "run.checkingMain": "正在检查 main 方法…",
   "help.langjal.title": "关于 LangJAL",
-  "help.langjal.description": "JAL 是一种用文本编写 JVM 指令的汇编语言。Jaspera 使用 LangJAL 将 JAL 源代码编译为类文件。",
+  "help.langjal.description": "JAL 是用文本编写 JVM 指令的汇编语言。可以在 LangJAL 文档中查阅语法和指令，再到 Jaspera 沙箱中编辑和运行代码。",
   "help.langjal.website": "官方网站",
   "help.langjal.repository": "GitHub 仓库",
   "help.licenses.title": "开源许可证",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "压缩包超过大小或条目数量限制，或包含无效路径。",
   "jar.invalid": "无法读取 JAR 文件。",
   "jar.classTooLarge": "类文件超过 1 MiB。",
-  "jar.keepClassName": "{0}: 请保留原类名，且只声明一个类。"
+  "jar.keepClassName": "{0}: 请保留原类名，且只声明一个类。",
+  "help.langjal.docs": "JAL 文档",
+  "help.langjal.sandboxGuide": "Jaspera 使用指南"
 }

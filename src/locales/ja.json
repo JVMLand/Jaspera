@@ -919,7 +919,7 @@
   "run.abstractMain": "抽象メソッド，または抽象クラスの非 static main は実行できません。",
   "run.checkingMain": "main メソッドを確認しています…",
   "help.langjal.title": "LangJAL について",
-  "help.langjal.description": "JAL は JVM の命令をテキストで記述するアセンブリ言語です。Jaspera は LangJAL を使って，JAL のソースをクラスファイルにコンパイルします。",
+  "help.langjal.description": "JAL は JVM の命令をテキストで記述するアセンブリ言語です。LangJAL のドキュメントで構文と命令を調べ，サンドボックス実行環境 Jaspera で編集・実行して確かめられます。",
   "help.langjal.website": "公式サイト",
   "help.langjal.repository": "GitHub リポジトリ",
   "help.licenses.title": "OSS ライセンス",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "JARのサイズまたはファイル数が上限を超えているか，ファイル名が不正です。",
   "jar.invalid": "JARファイルを読み込めません。",
   "jar.classTooLarge": "クラスファイルが1 MiBを超えています。",
-  "jar.keepClassName": "{0}: クラス名を変更したり，複数のクラスを宣言したりすることはできません。"
+  "jar.keepClassName": "{0}: クラス名を変更したり，複数のクラスを宣言したりすることはできません。",
+  "help.langjal.docs": "JAL ドキュメント",
+  "help.langjal.sandboxGuide": "Jaspera の使い方"
 }

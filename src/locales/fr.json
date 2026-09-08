@@ -919,7 +919,7 @@
   "run.abstractMain": "Une méthode abstraite ou un main d’instance dans une classe abstraite ne peut pas être exécuté.",
   "run.checkingMain": "Vérification de la méthode main…",
   "help.langjal.title": "À propos de LangJAL",
-  "help.langjal.description": "JAL est un langage assembleur permettant d’écrire les instructions de la JVM sous forme de texte. Jaspera utilise LangJAL pour compiler le code JAL en fichiers de classe.",
+  "help.langjal.description": "JAL est un langage assembleur permettant d’écrire les instructions de la JVM sous forme de texte. Consultez la syntaxe et les instructions dans la documentation LangJAL, puis modifiez et exécutez le code dans le bac à sable Jaspera.",
   "help.langjal.website": "Site officiel",
   "help.langjal.repository": "Dépôt GitHub",
   "help.licenses.title": "Licences open source",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "L’archive dépasse la limite de taille ou de fichiers, ou contient un chemin invalide.",
   "jar.invalid": "Impossible de lire le fichier JAR.",
   "jar.classTooLarge": "Le fichier de classe dépasse 1 MiB.",
-  "jar.keepClassName": "{0}: Conservez le nom d’origine et ne déclarez qu’une classe."
+  "jar.keepClassName": "{0}: Conservez le nom d’origine et ne déclarez qu’une classe.",
+  "help.langjal.docs": "Documentation JAL",
+  "help.langjal.sandboxGuide": "Utiliser Jaspera"
 }

@@ -919,7 +919,7 @@
   "run.abstractMain": "Methodus abstracta aut main instantiae in classe abstracta exsequi non potest.",
   "run.checkingMain": "Methodus main examinatur…",
   "help.langjal.title": "De LangJAL",
-  "help.langjal.description": "JAL est lingua qua instructiones JVM ut textus scribuntur. Jaspera LangJAL adhibet ut codicem JAL in fasciculos classium componat.",
+  "help.langjal.description": "JAL est lingua qua instructiones JVM litteris scribuntur. Syntaxim et instructiones in documentis LangJAL lege; deinde codicem in ambitu experimentali Jaspera scribe et exsequere.",
   "help.langjal.website": "Situs officialis",
   "help.langjal.repository": "Repositorium GitHub",
   "help.licenses.title": "Licentiae fontis aperti",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "Archivum fines magnitudinis vel numeri excedit aut viam invalidam continet.",
   "jar.invalid": "JAR legi non potuit.",
   "jar.classTooLarge": "Fasciculus classis 1 MiB excedit.",
-  "jar.keepClassName": "{0}: Nomen pristinum serva et unam tantum classem declara."
+  "jar.keepClassName": "{0}: Nomen pristinum serva et unam tantum classem declara.",
+  "help.langjal.docs": "Documenta JAL",
+  "help.langjal.sandboxGuide": "Usus Jaspera"
 }

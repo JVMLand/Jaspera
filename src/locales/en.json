@@ -919,7 +919,7 @@
   "run.abstractMain": "An abstract method or an instance main in an abstract class cannot run.",
   "run.checkingMain": "Checking the main method…",
   "help.langjal.title": "About LangJAL",
-  "help.langjal.description": "JAL is an assembly language for writing JVM instructions as text. Jaspera uses LangJAL to compile JAL source into class files.",
+  "help.langjal.description": "JAL is an assembly language for writing JVM instructions as text. Read the LangJAL documentation for syntax and instructions, then edit and run code in the Jaspera sandbox.",
   "help.langjal.website": "Official website",
   "help.langjal.repository": "GitHub repository",
   "help.licenses.title": "Open-source licenses",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "The archive exceeds the size or entry limit, or contains an invalid path.",
   "jar.invalid": "Could not read the JAR file.",
   "jar.classTooLarge": "The class file exceeds 1 MiB.",
-  "jar.keepClassName": "{0}: Keep the original class name and declare only one class."
+  "jar.keepClassName": "{0}: Keep the original class name and declare only one class.",
+  "help.langjal.docs": "JAL documentation",
+  "help.langjal.sandboxGuide": "Using Jaspera"
 }

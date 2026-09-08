@@ -919,7 +919,7 @@
   "run.abstractMain": "Un metodo astratto o un main di istanza in una classe astratta non può essere eseguito.",
   "run.checkingMain": "Verifica del metodo main…",
   "help.langjal.title": "Informazioni su LangJAL",
-  "help.langjal.description": "JAL è un linguaggio assembly per scrivere istruzioni JVM in formato testuale. Jaspera usa LangJAL per compilare il codice JAL in file di classe.",
+  "help.langjal.description": "JAL è un linguaggio assembly per scrivere istruzioni JVM in formato testuale. Consulta la sintassi e le istruzioni nella documentazione di LangJAL, poi modifica ed esegui il codice nella sandbox Jaspera.",
   "help.langjal.website": "Sito ufficiale",
   "help.langjal.repository": "Repository GitHub",
   "help.licenses.title": "Licenze open source",
@@ -936,5 +936,7 @@
   "jar.tooLarge": "L’archivio supera il limite di dimensione o voci, oppure contiene un percorso non valido.",
   "jar.invalid": "Impossibile leggere il file JAR.",
   "jar.classTooLarge": "Il file della classe supera 1 MiB.",
-  "jar.keepClassName": "{0}: Mantieni il nome originale e dichiara una sola classe."
+  "jar.keepClassName": "{0}: Mantieni il nome originale e dichiara una sola classe.",
+  "help.langjal.docs": "Documentazione JAL",
+  "help.langjal.sandboxGuide": "Usare Jaspera"
 }

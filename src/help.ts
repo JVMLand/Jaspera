@@ -44,6 +44,11 @@ export function helpMenuItems() {
         void import('./help-manual').then((m) => m.openFeatureManual());
       },
     },
+    {
+      id: 'help-language-docs',
+      label: msg('help.langjal.docs'),
+      action: () => window.open('https://jal.yamad.jp/docs/', '_blank', 'noopener,noreferrer'),
+    },
     { id: 'help-guides', label: msg('m77331ff0ae04'), action: resetFeatureGuides },
     {
       id: 'help-offline',
@@ -61,7 +66,8 @@ export function helpMenuItems() {
         const links = element('ul');
         links.className = 'help-links';
         for (const [label, href] of [
-          ['help.langjal.website', 'https://jal.yamad.jp/'],
+          ['help.langjal.website', 'https://jal.yamad.jp/docs/'],
+          ['help.langjal.sandboxGuide', 'https://jal.yamad.jp/docs/usage/jaspera'],
           ['help.langjal.repository', 'https://github.com/jvmLand/langjal'],
         ] as const) {
           const link = element('a');
