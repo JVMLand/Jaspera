@@ -14,4 +14,4 @@ import 'monaco-editor/esm/vs/editor/contrib/clipboard/browser/clipboard';
 import 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsContribution';
 import 'monaco-editor/esm/vs/editor/contrib/format/browser/formatActions';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-(self as any).MonacoEnvironment={getWorker:()=>new EditorWorker()};
+(self as any).MonacoEnvironment = { getWorker: () => new EditorWorker() };

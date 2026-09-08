@@ -1,179 +1,835 @@
 /* Theme chrome is shared by the main workspace and detached windows.
    Geometry stays in the docking system so saved sizes and D&D remain authoritative. */
-:root[data-theme-family]{--pane-header-height:42px;--theme-canvas:var(--theme-surface);--pane-radius:10px;--pane-shadow:none}
-:root[data-theme-family] #app{grid-template-rows:64px 36px minmax(0,1fr) 28px}
-:root[data-theme-family] .toolbar{padding:0 22px;background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family] .brand-caption{display:none}
-:root[data-theme-family] .menubar{background:var(--theme-bg);padding:0 18px;border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family] .workspace{background:var(--theme-canvas);padding:14px}
-:root[data-theme-family] .workspace-summary{display:flex;align-items:center;justify-content:space-between;gap:20px;grid-area:summary;position:relative;isolation:isolate;padding:16px 22px;margin:0 0 14px;min-height:92px;overflow:hidden}
-:root[data-theme-family] .workspace-summary>div,:root[data-theme-family] .workspace-summary>button{position:relative;z-index:1}
-:root[data-theme-family] .summary-eyebrow{display:none}
-:root[data-theme-family] .workspace-summary h2{font-size:26px;letter-spacing:-.5px;margin:0 0 8px}
-:root[data-theme-family] .workspace-summary p{margin:0;line-height:1.6}
-:root[data-theme-family] .workspace .dock-pane{border:1px solid var(--theme-border);border-radius:var(--pane-radius);background:var(--theme-bg);box-shadow:var(--pane-shadow);margin:0 5px}
-:root[data-theme-family] .workspace .pane-header,:root[data-theme-family] .workspace .project-heading{background:var(--theme-bg)}
-:root[data-theme-family] :is(#file-tabs,#project-tabs){height:var(--pane-header-height)}
-:root[data-theme-family] .group-separator{background:transparent}
-:root[data-theme-family] .group-separator::before{content:"";position:absolute;inset:35% 2px;border-radius:4px;background:var(--theme-border)}
-:root[data-theme-family] .group-separator:is(:hover,:focus-visible)::before{inset:5% 1px;background:var(--theme-accent)}
-:root[data-theme-family] :is(dialog,.menu-popup,.dock-menu){border-radius:var(--pane-radius);border-color:var(--theme-border)}
-:root[data-theme-family] .menu>button{font-size:12px}
-:root[data-theme-family] :is(.menu>button:hover,.menu>button[aria-expanded=true]){background:var(--theme-selection);color:var(--theme-accent)}
-:root[data-theme-family] #file-list{padding:8px!important;margin:0;max-height:none}
-:root[data-theme-family] #file-list button{padding:10px 12px;margin:2px 0;font-family:inherit}
-:root[data-theme-family] #file-list button::before{content:none}
-:root[data-theme-family] :is(.stdin-section,.runtime-card){background:var(--theme-bg);border-color:var(--theme-border)}
-:root[data-theme-family] .statusbar{background:var(--theme-bg);border-color:var(--theme-border);color:var(--theme-muted)}
-:root[data-theme-family] body.detached-window{grid-template-rows:36px var(--pane-header-height) minmax(0,1fr) 28px;background:var(--theme-canvas)}
-:root[data-theme-family] .detached-window #file-tabs{height:var(--pane-header-height);background:var(--theme-bg)}
-:root[data-theme-family] .detached-window #file-tabs .file-tab{height:100%}
-:root[data-theme-family] .detached-window :is(#editor,.detached-tools){margin:0 8px 8px;border:1px solid var(--theme-border);border-radius:var(--pane-radius);overflow:hidden;box-shadow:var(--pane-shadow)}
+:root[data-theme-family] {
+  --pane-header-height: 42px;
+  --theme-canvas: var(--theme-surface);
+  --pane-radius: 10px;
+  --pane-shadow: none;
+}
+:root[data-theme-family] #app {
+  grid-template-rows: 64px 36px minmax(0, 1fr) 28px;
+}
+:root[data-theme-family] .toolbar {
+  padding: 0 22px;
+  background: var(--theme-bg);
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family] .brand-caption {
+  display: none;
+}
+:root[data-theme-family] .menubar {
+  background: var(--theme-bg);
+  padding: 0 18px;
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family] .workspace {
+  background: var(--theme-canvas);
+  padding: 14px;
+}
+:root[data-theme-family] .workspace-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  grid-area: summary;
+  position: relative;
+  isolation: isolate;
+  padding: 16px 22px;
+  margin: 0 0 14px;
+  min-height: 92px;
+  overflow: hidden;
+}
+:root[data-theme-family] .workspace-summary > div,
+:root[data-theme-family] .workspace-summary > button {
+  position: relative;
+  z-index: 1;
+}
+:root[data-theme-family] .summary-eyebrow {
+  display: none;
+}
+:root[data-theme-family] .workspace-summary h2 {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+  margin: 0 0 8px;
+}
+:root[data-theme-family] .workspace-summary p {
+  margin: 0;
+  line-height: 1.6;
+}
+:root[data-theme-family] .workspace .dock-pane {
+  border: 1px solid var(--theme-border);
+  border-radius: var(--pane-radius);
+  background: var(--theme-bg);
+  box-shadow: var(--pane-shadow);
+  margin: 0 5px;
+}
+:root[data-theme-family] .workspace .pane-header,
+:root[data-theme-family] .workspace .project-heading {
+  background: var(--theme-bg);
+}
+:root[data-theme-family] :is(#file-tabs, #project-tabs) {
+  height: var(--pane-header-height);
+}
+:root[data-theme-family] .group-separator {
+  background: transparent;
+}
+:root[data-theme-family] .group-separator::before {
+  content: '';
+  position: absolute;
+  inset: 35% 2px;
+  border-radius: 4px;
+  background: var(--theme-border);
+}
+:root[data-theme-family] .group-separator:is(:hover, :focus-visible)::before {
+  inset: 5% 1px;
+  background: var(--theme-accent);
+}
+:root[data-theme-family] :is(dialog, .menu-popup, .dock-menu) {
+  border-radius: var(--pane-radius);
+  border-color: var(--theme-border);
+}
+:root[data-theme-family] .menu > button {
+  font-size: 12px;
+}
+:root[data-theme-family] :is(.menu > button:hover, .menu > button[aria-expanded='true']) {
+  background: var(--theme-selection);
+  color: var(--theme-accent);
+}
+:root[data-theme-family] #file-list {
+  padding: 8px !important;
+  margin: 0;
+  max-height: none;
+}
+:root[data-theme-family] #file-list button {
+  padding: 10px 12px;
+  margin: 2px 0;
+  font-family: inherit;
+}
+:root[data-theme-family] #file-list button::before {
+  content: none;
+}
+:root[data-theme-family] :is(.stdin-section, .runtime-card) {
+  background: var(--theme-bg);
+  border-color: var(--theme-border);
+}
+:root[data-theme-family] .statusbar {
+  background: var(--theme-bg);
+  border-color: var(--theme-border);
+  color: var(--theme-muted);
+}
+:root[data-theme-family] body.detached-window {
+  grid-template-rows: 36px var(--pane-header-height) minmax(0, 1fr) 28px;
+  background: var(--theme-canvas);
+}
+:root[data-theme-family] .detached-window #file-tabs {
+  height: var(--pane-header-height);
+  background: var(--theme-bg);
+}
+:root[data-theme-family] .detached-window #file-tabs .file-tab {
+  height: 100%;
+}
+:root[data-theme-family] .detached-window :is(#editor, .detached-tools) {
+  margin: 0 8px 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--pane-radius);
+  overflow: hidden;
+  box-shadow: var(--pane-shadow);
+}
 
 /* DenDen: restrained portal navigation, a blue network panorama and fine card frames. */
-:root[data-theme-family="denden"]{--pane-radius:7px;--theme-canvas:var(--theme-surface);--pane-shadow:0 2px 8px #173f6d06}
-:root[data-theme-family="denden"] .brand h1{color:var(--theme-accent);letter-spacing:-.5px}
-:root[data-theme-family="denden"] .brand h1 span{color:var(--theme-text)}
-:root[data-theme-family="denden"] .workspace{padding:14px 18px 18px 8px}
-:root[data-theme-family="denden"] .workspace-summary{margin-left:5px;margin-right:5px;min-height:144px;border-radius:7px;background:linear-gradient(90deg,#08294ff5 0%,#08294fc9 36%,#07306a20 75%),url('/theme-network.svg') center right/cover no-repeat,#08294f;color:#fff;padding:24px 28px;border-bottom:8px solid #194478}
-:root[data-theme-family="denden"] .workspace-summary h2{font-size:28px;font-weight:700;letter-spacing:.4px}
-:root[data-theme-family="denden"] .workspace-summary p{color:#e0ecff}
-:root[data-theme-family="denden"] .workspace-summary button{align-self:flex-end;border:1px solid #d7e6fb;background:#fff;color:#064b92;border-radius:4px;font-weight:600;padding:10px 16px}
-:root[data-theme-family="denden"] .workspace .project-pane{border-width:0 1px 0 0;border-radius:0;box-shadow:none;background:var(--theme-surface);margin-left:0}
-:root[data-theme-family="denden"] .workspace .project-heading{background:var(--theme-surface)}
-:root[data-theme-family="denden"] #file-list button{border-radius:5px;color:var(--theme-accent);font-size:12px}
-:root[data-theme-family="denden"] #file-list button.selected{background:var(--theme-selection);box-shadow:inset 3px 0 var(--theme-accent)}
-:root[data-theme-family="denden"] .workspace [data-pane-key]{border-right:0;background:transparent}
-:root[data-theme-family="denden"] .workspace [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 0 -2px var(--theme-accent)}
-:root[data-theme-family="denden"] .menu-popup{box-shadow:0 8px 24px #0b386121}
-:root[data-theme-family="denden"] :is(dialog,.workspace-summary button){font-family:"Segoe UI","Yu Gothic UI",sans-serif}
+:root[data-theme-family='denden'] {
+  --pane-radius: 7px;
+  --theme-canvas: var(--theme-surface);
+  --pane-shadow: 0 2px 8px #173f6d06;
+}
+:root[data-theme-family='denden'] .brand h1 {
+  color: var(--theme-accent);
+  letter-spacing: -0.5px;
+}
+:root[data-theme-family='denden'] .brand h1 span {
+  color: var(--theme-text);
+}
+:root[data-theme-family='denden'] .workspace {
+  padding: 14px 18px 18px 8px;
+}
+:root[data-theme-family='denden'] .workspace-summary {
+  margin-left: 5px;
+  margin-right: 5px;
+  min-height: 144px;
+  border-radius: 7px;
+  background:
+    linear-gradient(90deg, #08294ff5 0%, #08294fc9 36%, #07306a20 75%),
+    url('/theme-network.svg') center right/cover no-repeat,
+    #08294f;
+  color: #fff;
+  padding: 24px 28px;
+  border-bottom: 8px solid #194478;
+}
+:root[data-theme-family='denden'] .workspace-summary h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+:root[data-theme-family='denden'] .workspace-summary p {
+  color: #e0ecff;
+}
+:root[data-theme-family='denden'] .workspace-summary button {
+  align-self: flex-end;
+  border: 1px solid #d7e6fb;
+  background: #fff;
+  color: #064b92;
+  border-radius: 4px;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+:root[data-theme-family='denden'] .workspace .project-pane {
+  border-width: 0 1px 0 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--theme-surface);
+  margin-left: 0;
+}
+:root[data-theme-family='denden'] .workspace .project-heading {
+  background: var(--theme-surface);
+}
+:root[data-theme-family='denden'] #file-list button {
+  border-radius: 5px;
+  color: var(--theme-accent);
+  font-size: 12px;
+}
+:root[data-theme-family='denden'] #file-list button.selected {
+  background: var(--theme-selection);
+  box-shadow: inset 3px 0 var(--theme-accent);
+}
+:root[data-theme-family='denden'] .workspace [data-pane-key] {
+  border-right: 0;
+  background: transparent;
+}
+:root[data-theme-family='denden'] .workspace [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-selection) !important;
+  box-shadow: inset 0 -2px var(--theme-accent);
+}
+:root[data-theme-family='denden'] .menu-popup {
+  box-shadow: 0 8px 24px #0b386121;
+}
+:root[data-theme-family='denden'] :is(dialog, .workspace-summary button) {
+  font-family: 'Segoe UI', 'Yu Gothic UI', sans-serif;
+}
 
 /* Googol: generous Material-like surfaces, pill selections and four colour accents. */
-:root[data-theme-family="googol"]{--pane-radius:18px;--pane-header-height:48px;--theme-canvas:#f6f8fc}
-:root[data-theme="googol-night"]{--theme-canvas:#17181a}
-:root[data-theme-family="googol"] #app{font-family:Arial,"Noto Sans JP",sans-serif;grid-template-rows:72px 42px minmax(0,1fr) 28px}
-:root[data-theme-family="googol"] .toolbar{padding:0 28px;border-bottom:0}
-:root[data-theme-family="googol"] .brand h1{font-weight:500;letter-spacing:-1.4px;background:linear-gradient(90deg,#4285f4 0 24%,#ea4335 24% 43%,#c28c00 43% 62%,#4285f4 62% 79%,#34a853 79% 91%,#ea4335 91%);background-clip:text;color:transparent}
-:root[data-theme-family="googol"] .brand h1 span{color:inherit}
-:root[data-theme-family="googol"] .brand-logo{padding:3px;border:2px solid #4285f4;border-right-color:#ea4335;border-bottom-color:#fbbc04;border-left-color:#34a853;border-radius:50%}
-:root[data-theme-family="googol"] .menubar{padding-left:24px}
-:root[data-theme-family="googol"] .menu>button{border-radius:24px;padding-left:18px;padding-right:18px}
-:root[data-theme-family="googol"] .workspace{padding:8px 20px 20px 10px}
-:root[data-theme-family="googol"] .workspace-summary{padding:12px 24px 20px;min-height:92px;border-bottom:1px solid var(--theme-border);border-radius:0;background:transparent}
-:root[data-theme-family="googol"] .workspace-summary h2{font-weight:500;color:var(--theme-accent);font-size:27px}
-:root[data-theme-family="googol"] .workspace-summary button{border-radius:28px;border:0;background:var(--theme-selection);color:var(--theme-accent);padding:13px 22px;font-size:13px}
-:root[data-theme-family="googol"] .workspace .project-pane{border:0;background:transparent;box-shadow:none;margin:0 8px 0 0}
-:root[data-theme-family="googol"] .workspace .project-heading{background:transparent;border-bottom:0}
-:root[data-theme-family="googol"] #file-list button{border-radius:24px;padding:12px 16px;font-size:13px}
-:root[data-theme-family="googol"] #file-list .file-folder>summary{padding:10px 12px;border-radius:24px;font-family:inherit}
-:root[data-theme-family="googol"] .workspace [data-pane-key],:root[data-theme-family="googol"] .detached-window [data-pane-key]{margin:5px 2px;border:0;border-radius:24px;background:transparent}
-:root[data-theme-family="googol"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:none!important}
-:root[data-theme-family="googol"] .workspace :is(#project-tabs,#file-tabs,.output-header .tabs){padding:0 5px}
-:root[data-theme-family="googol"] :is(.menu-popup,.dock-menu){padding:8px;box-shadow:0 6px 18px #20212424}
-:root[data-theme-family="googol"] :is(.menu-popup button,.dock-menu button){border-radius:20px}
-:root[data-theme-family="googol"] :is(dialog input,dialog select,textarea){border-radius:8px}
-:root[data-theme-family="googol"] .runtime-dot{background:#34a853}
+:root[data-theme-family='googol'] {
+  --pane-radius: 18px;
+  --pane-header-height: 48px;
+  --theme-canvas: #f6f8fc;
+}
+:root[data-theme='googol-night'] {
+  --theme-canvas: #17181a;
+}
+:root[data-theme-family='googol'] #app {
+  font-family: Arial, 'Noto Sans JP', sans-serif;
+  grid-template-rows: 72px 42px minmax(0, 1fr) 28px;
+}
+:root[data-theme-family='googol'] .toolbar {
+  padding: 0 28px;
+  border-bottom: 0;
+}
+:root[data-theme-family='googol'] .brand h1 {
+  font-weight: 500;
+  letter-spacing: -1.4px;
+  background: linear-gradient(
+    90deg,
+    #4285f4 0 24%,
+    #ea4335 24% 43%,
+    #c28c00 43% 62%,
+    #4285f4 62% 79%,
+    #34a853 79% 91%,
+    #ea4335 91%
+  );
+  background-clip: text;
+  color: transparent;
+}
+:root[data-theme-family='googol'] .brand h1 span {
+  color: inherit;
+}
+:root[data-theme-family='googol'] .brand-logo {
+  padding: 3px;
+  border: 2px solid #4285f4;
+  border-right-color: #ea4335;
+  border-bottom-color: #fbbc04;
+  border-left-color: #34a853;
+  border-radius: 50%;
+}
+:root[data-theme-family='googol'] .menubar {
+  padding-left: 24px;
+}
+:root[data-theme-family='googol'] .menu > button {
+  border-radius: 24px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+:root[data-theme-family='googol'] .workspace {
+  padding: 8px 20px 20px 10px;
+}
+:root[data-theme-family='googol'] .workspace-summary {
+  padding: 12px 24px 20px;
+  min-height: 92px;
+  border-bottom: 1px solid var(--theme-border);
+  border-radius: 0;
+  background: transparent;
+}
+:root[data-theme-family='googol'] .workspace-summary h2 {
+  font-weight: 500;
+  color: var(--theme-accent);
+  font-size: 27px;
+}
+:root[data-theme-family='googol'] .workspace-summary button {
+  border-radius: 28px;
+  border: 0;
+  background: var(--theme-selection);
+  color: var(--theme-accent);
+  padding: 13px 22px;
+  font-size: 13px;
+}
+:root[data-theme-family='googol'] .workspace .project-pane {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  margin: 0 8px 0 0;
+}
+:root[data-theme-family='googol'] .workspace .project-heading {
+  background: transparent;
+  border-bottom: 0;
+}
+:root[data-theme-family='googol'] #file-list button {
+  border-radius: 24px;
+  padding: 12px 16px;
+  font-size: 13px;
+}
+:root[data-theme-family='googol'] #file-list .file-folder > summary {
+  padding: 10px 12px;
+  border-radius: 24px;
+  font-family: inherit;
+}
+:root[data-theme-family='googol'] .workspace [data-pane-key],
+:root[data-theme-family='googol'] .detached-window [data-pane-key] {
+  margin: 5px 2px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+}
+:root[data-theme-family='googol'] [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-selection) !important;
+  box-shadow: none !important;
+}
+:root[data-theme-family='googol'] .workspace :is(#project-tabs, #file-tabs, .output-header .tabs) {
+  padding: 0 5px;
+}
+:root[data-theme-family='googol'] :is(.menu-popup, .dock-menu) {
+  padding: 8px;
+  box-shadow: 0 6px 18px #20212424;
+}
+:root[data-theme-family='googol'] :is(.menu-popup button, .dock-menu button) {
+  border-radius: 20px;
+}
+:root[data-theme-family='googol'] :is(dialog input, dialog select, textarea) {
+  border-radius: 8px;
+}
+:root[data-theme-family='googol'] .runtime-dot {
+  background: #34a853;
+}
 
 /* Entrance: service header, navigation rail and flat content blades. */
-.header-search{display:none}
-:root[data-theme-family="entrance"]{--pane-radius:2px;--pane-header-height:38px;--theme-canvas:var(--theme-bg)}
-:root[data-theme-family="entrance"] #app{font-family:"Segoe UI","Yu Gothic UI",sans-serif;font-size:12px;grid-template-rows:40px 34px minmax(0,1fr) 24px}
-:root[data-theme-family="entrance"] .toolbar{position:relative;background:#1b1b1b;color:#fff;padding:0 18px;border:0}
-:root[data-theme-family="entrance"] .brand{gap:12px;min-width:180px}
-:root[data-theme-family="entrance"] .brand-logo{width:22px;height:22px}
-:root[data-theme-family="entrance"] .brand h1{color:#fff;font-family:"Segoe UI",sans-serif;font-size:14px;letter-spacing:0;font-weight:600}
-:root[data-theme-family="entrance"] .header-search{display:flex;align-items:center;gap:10px;position:absolute;left:50%;transform:translateX(-50%);width:36%;max-width:540px;height:30px;padding:0 10px;border:1px solid #d2d0ce;border-radius:3px;background:#fafafa;color:#605e5c;font:12px "Segoe UI",sans-serif;text-align:left;overflow:hidden}
-:root[data-theme-family="entrance"] .header-search svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.2;flex-shrink:0}
-:root[data-theme-family="entrance"] .header-search span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-:root[data-theme-family="entrance"] .header-search kbd{margin-left:auto;white-space:nowrap;font:10px "Segoe UI",sans-serif;color:#797775}
-:root[data-theme-family="entrance"] .toolbar-actions .run{height:28px;min-height:0;padding:0 13px;border-radius:2px;font-size:12px}
-:root[data-theme-family="entrance"] .menubar{padding:0 12px;background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family="entrance"] .menu>button{padding:0 14px;border-radius:0;font-size:12px;color:var(--theme-accent)}
-:root[data-theme-family="entrance"] .workspace{padding:0}
-:root[data-theme-family="entrance"] .workspace-summary{min-height:104px;margin:0;padding:18px 24px;border:0;background:var(--theme-bg);align-items:center}
-:root[data-theme-family="entrance"] .summary-eyebrow{display:block;font-size:12px;letter-spacing:0;color:var(--theme-muted);margin-bottom:12px}
-:root[data-theme-family="entrance"] .workspace-summary h2{display:flex;align-items:center;gap:10px;font-family:"Segoe UI",sans-serif;font-size:24px;font-weight:600;margin:0;letter-spacing:0}
-:root[data-theme-family="entrance"] .workspace-summary h2::before{content:"";width:22px;height:22px;flex-shrink:0;background:linear-gradient(135deg,#50c7d4,#0078d4);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%,22% 50%,50% 78%,78% 50%,50% 22%,22% 50%,0 50%)}
-:root[data-theme-family="entrance"] .workspace-summary p{display:none}
-:root[data-theme-family="entrance"] .workspace-summary button{border:1px solid var(--theme-border);border-radius:2px;background:var(--theme-bg);color:var(--theme-accent);padding:7px 12px;font-size:12px}
-:root[data-theme-family="entrance"] .workspace .dock-pane{margin:0;border:0;border-right:1px solid var(--theme-border);box-shadow:none;border-radius:0}
-:root[data-theme-family="entrance"] .workspace :is(.project-pane,.project-heading){background:var(--theme-surface)}
-:root[data-theme-family="entrance"] .workspace :is(.source-header,.output-header){background:var(--theme-bg);border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family="entrance"] .group-separator{background:var(--theme-bg)}
-:root[data-theme-family="entrance"] .group-separator::before{inset:0 2px;background:var(--theme-border);border-radius:0}
-:root[data-theme-family="entrance"] :is(.workspace,.detached-window) [data-pane-key]{border:0;background:transparent;box-shadow:none}
-:root[data-theme-family="entrance"] [data-pane-key]:has([aria-selected=true]){background:var(--theme-bg)!important;box-shadow:inset 0 -2px var(--theme-accent)!important}
-:root[data-theme-family="entrance"] .project-heading [data-pane-key]:has([aria-selected=true]){background:var(--theme-selection)!important;box-shadow:inset 3px 0 var(--theme-accent)!important}
-:root[data-theme-family="entrance"] #file-list{padding:4px 0!important}
-:root[data-theme-family="entrance"] #file-list .folder-children{border-left:0;margin-left:0;padding-left:0}
-:root[data-theme-family="entrance"] #file-list .file-folder>summary{padding:13px 16px;margin:6px 0 3px;border-top:1px solid var(--theme-border);font-size:13px;font-weight:600;color:var(--theme-text)}
-:root[data-theme-family="entrance"] #file-list button{border-radius:0;padding:11px 18px;font-family:inherit;font-size:12px;margin:0;border:0;line-height:18px}
-:root[data-theme-family="entrance"] #file-list button::before{content:"◇";display:inline-block;width:24px;color:var(--theme-accent);font-size:16px;vertical-align:-1px}
-:root[data-theme-family="entrance"] #file-list button.selected{box-shadow:inset 3px 0 var(--theme-accent);background:var(--theme-selection);color:var(--theme-text)}
-:root[data-theme-family="entrance"] :is(dialog,input,textarea,select,.menu-popup,.dock-menu){border-radius:2px}
-:root[data-theme-family="entrance"] .menu-popup{box-shadow:0 3px 8px #0003}
-:root[data-theme-family="entrance"] .stdin-section{margin:0 14px 12px;padding:12px!important;border:1px solid var(--theme-border);border-radius:3px;background:var(--theme-bg)}
-:root[data-theme-family="entrance"] .runtime-card{margin:0 14px 12px;border:1px solid var(--theme-border);border-radius:3px;background:var(--theme-bg);box-shadow:0 1px 2px #0001}
-:root[data-theme-family="entrance"] .detached-window .menubar{background:#1b1b1b;color:#fff}
-:root[data-theme-family="entrance"] .detached-window .menu>button{color:#fff}
-:root[data-theme-family="entrance"] .detached-window :is(#editor,.detached-tools){margin:0;border-width:0}
-@media(max-width:800px){:root[data-theme-family="entrance"] .header-search{position:static;transform:none;width:auto;flex:1;margin:0 12px}:root[data-theme-family="entrance"] .header-search kbd{display:none}:root[data-theme-family="entrance"] .brand{min-width:0}}
-@media(max-width:500px){:root[data-theme-family="entrance"] .header-search span{display:none}:root[data-theme-family="entrance"] .header-search{flex:0 0 34px;margin-left:auto}:root[data-theme-family="entrance"] .header-search svg{width:14px}}
-
-@media(max-width:800px){
- :root[data-theme-family] #app{height:100dvh;min-height:680px;grid-template-rows:52px 36px minmax(0,1fr) 26px}
- :root[data-theme-family] .toolbar{padding:0 12px}
- :root[data-theme-family] .workspace{padding:6px}
- :root[data-theme-family] .workspace-summary{min-height:74px;padding:12px 14px;margin:0 0 6px;gap:10px;border-radius:min(var(--pane-radius),12px)}
- :root[data-theme-family] .workspace-summary h2{font-size:22px;margin:0}
- :root[data-theme-family] .workspace-summary p{display:none}
- :root[data-theme-family] .workspace-summary button{font-size:11px;padding:8px 10px}
- :root[data-theme-family] .workspace .dock-pane{margin:0}
- :root[data-theme-family] .group-separator::before{inset:2px 35%}
- :root[data-theme-family] .group-separator:is(:hover,:focus-visible)::before{inset:1px 5%}
- :root[data-theme-family="entrance"] #app{grid-template-rows:40px 32px minmax(0,1fr) 24px}
- :root[data-theme-family="denden"] .workspace-summary{border-bottom-width:4px}
- :root[data-theme-family="vibe"] .workspace-summary::after{right:5%;top:-25px}
+.header-search {
+  display: none;
+}
+:root[data-theme-family='entrance'] {
+  --pane-radius: 2px;
+  --pane-header-height: 38px;
+  --theme-canvas: var(--theme-bg);
+}
+:root[data-theme-family='entrance'] #app {
+  font-family: 'Segoe UI', 'Yu Gothic UI', sans-serif;
+  font-size: 12px;
+  grid-template-rows: 40px 34px minmax(0, 1fr) 24px;
+}
+:root[data-theme-family='entrance'] .toolbar {
+  position: relative;
+  background: #1b1b1b;
+  color: #fff;
+  padding: 0 18px;
+  border: 0;
+}
+:root[data-theme-family='entrance'] .brand {
+  gap: 12px;
+  min-width: 180px;
+}
+:root[data-theme-family='entrance'] .brand-logo {
+  width: 22px;
+  height: 22px;
+}
+:root[data-theme-family='entrance'] .brand h1 {
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+:root[data-theme-family='entrance'] .header-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36%;
+  max-width: 540px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d2d0ce;
+  border-radius: 3px;
+  background: #fafafa;
+  color: #605e5c;
+  font:
+    12px 'Segoe UI',
+    sans-serif;
+  text-align: left;
+  overflow: hidden;
+}
+:root[data-theme-family='entrance'] .header-search svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  flex-shrink: 0;
+}
+:root[data-theme-family='entrance'] .header-search span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:root[data-theme-family='entrance'] .header-search kbd {
+  margin-left: auto;
+  white-space: nowrap;
+  font:
+    10px 'Segoe UI',
+    sans-serif;
+  color: #797775;
+}
+:root[data-theme-family='entrance'] .toolbar-actions .run {
+  height: 28px;
+  min-height: 0;
+  padding: 0 13px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+:root[data-theme-family='entrance'] .menubar {
+  padding: 0 12px;
+  background: var(--theme-bg);
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family='entrance'] .menu > button {
+  padding: 0 14px;
+  border-radius: 0;
+  font-size: 12px;
+  color: var(--theme-accent);
+}
+:root[data-theme-family='entrance'] .workspace {
+  padding: 0;
+}
+:root[data-theme-family='entrance'] .workspace-summary {
+  min-height: 104px;
+  margin: 0;
+  padding: 18px 24px;
+  border: 0;
+  background: var(--theme-bg);
+  align-items: center;
+}
+:root[data-theme-family='entrance'] .summary-eyebrow {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--theme-muted);
+  margin-bottom: 12px;
+}
+:root[data-theme-family='entrance'] .workspace-summary h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0;
+}
+:root[data-theme-family='entrance'] .workspace-summary h2::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #50c7d4, #0078d4);
+  clip-path: polygon(
+    50% 0,
+    100% 50%,
+    50% 100%,
+    0 50%,
+    22% 50%,
+    50% 78%,
+    78% 50%,
+    50% 22%,
+    22% 50%,
+    0 50%
+  );
+}
+:root[data-theme-family='entrance'] .workspace-summary p {
+  display: none;
+}
+:root[data-theme-family='entrance'] .workspace-summary button {
+  border: 1px solid var(--theme-border);
+  border-radius: 2px;
+  background: var(--theme-bg);
+  color: var(--theme-accent);
+  padding: 7px 12px;
+  font-size: 12px;
+}
+:root[data-theme-family='entrance'] .workspace .dock-pane {
+  margin: 0;
+  border: 0;
+  border-right: 1px solid var(--theme-border);
+  box-shadow: none;
+  border-radius: 0;
+}
+:root[data-theme-family='entrance'] .workspace :is(.project-pane, .project-heading) {
+  background: var(--theme-surface);
+}
+:root[data-theme-family='entrance'] .workspace :is(.source-header, .output-header) {
+  background: var(--theme-bg);
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family='entrance'] .group-separator {
+  background: var(--theme-bg);
+}
+:root[data-theme-family='entrance'] .group-separator::before {
+  inset: 0 2px;
+  background: var(--theme-border);
+  border-radius: 0;
+}
+:root[data-theme-family='entrance'] :is(.workspace, .detached-window) [data-pane-key] {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-theme-family='entrance'] [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-bg) !important;
+  box-shadow: inset 0 -2px var(--theme-accent) !important;
+}
+:root[data-theme-family='entrance'] .project-heading [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-selection) !important;
+  box-shadow: inset 3px 0 var(--theme-accent) !important;
+}
+:root[data-theme-family='entrance'] #file-list {
+  padding: 4px 0 !important;
+}
+:root[data-theme-family='entrance'] #file-list .folder-children {
+  border-left: 0;
+  margin-left: 0;
+  padding-left: 0;
+}
+:root[data-theme-family='entrance'] #file-list .file-folder > summary {
+  padding: 13px 16px;
+  margin: 6px 0 3px;
+  border-top: 1px solid var(--theme-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+:root[data-theme-family='entrance'] #file-list button {
+  border-radius: 0;
+  padding: 11px 18px;
+  font-family: inherit;
+  font-size: 12px;
+  margin: 0;
+  border: 0;
+  line-height: 18px;
+}
+:root[data-theme-family='entrance'] #file-list button::before {
+  content: '◇';
+  display: inline-block;
+  width: 24px;
+  color: var(--theme-accent);
+  font-size: 16px;
+  vertical-align: -1px;
+}
+:root[data-theme-family='entrance'] #file-list button.selected {
+  box-shadow: inset 3px 0 var(--theme-accent);
+  background: var(--theme-selection);
+  color: var(--theme-text);
+}
+:root[data-theme-family='entrance'] :is(dialog, input, textarea, select, .menu-popup, .dock-menu) {
+  border-radius: 2px;
+}
+:root[data-theme-family='entrance'] .menu-popup {
+  box-shadow: 0 3px 8px #0003;
+}
+:root[data-theme-family='entrance'] .stdin-section {
+  margin: 0 14px 12px;
+  padding: 12px !important;
+  border: 1px solid var(--theme-border);
+  border-radius: 3px;
+  background: var(--theme-bg);
+}
+:root[data-theme-family='entrance'] .runtime-card {
+  margin: 0 14px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 3px;
+  background: var(--theme-bg);
+  box-shadow: 0 1px 2px #0001;
+}
+:root[data-theme-family='entrance'] .detached-window .menubar {
+  background: #1b1b1b;
+  color: #fff;
+}
+:root[data-theme-family='entrance'] .detached-window .menu > button {
+  color: #fff;
+}
+:root[data-theme-family='entrance'] .detached-window :is(#editor, .detached-tools) {
+  margin: 0;
+  border-width: 0;
+}
+@media (max-width: 800px) {
+  :root[data-theme-family='entrance'] .header-search {
+    position: static;
+    transform: none;
+    width: auto;
+    flex: 1;
+    margin: 0 12px;
+  }
+  :root[data-theme-family='entrance'] .header-search kbd {
+    display: none;
+  }
+  :root[data-theme-family='entrance'] .brand {
+    min-width: 0;
+  }
+}
+@media (max-width: 500px) {
+  :root[data-theme-family='entrance'] .header-search span {
+    display: none;
+  }
+  :root[data-theme-family='entrance'] .header-search {
+    flex: 0 0 34px;
+    margin-left: auto;
+  }
+  :root[data-theme-family='entrance'] .header-search svg {
+    width: 14px;
+  }
 }
 
-:root[data-theme-family] #app .workspace [data-pane-key] .file-tab{height:100%;min-height:0}
-@media(min-width:801px){
- :root:is([data-theme-family="denden"],[data-theme-family="googol"],[data-theme-family="entrance"]) #app .workspace.dock-arranged{grid-template-areas:"project split0 summary summary summary" "project split0 source split1 output"!important}
- :root:is([data-theme-family="denden"],[data-theme-family="googol"],[data-theme-family="entrance"]) #app .workspace.dock-arranged.dock-swapped{grid-template-areas:"project split0 summary summary summary" "project split0 output split1 source"!important}
+@media (max-width: 800px) {
+  :root[data-theme-family] #app {
+    height: 100dvh;
+    min-height: 680px;
+    grid-template-rows: 52px 36px minmax(0, 1fr) 26px;
+  }
+  :root[data-theme-family] .toolbar {
+    padding: 0 12px;
+  }
+  :root[data-theme-family] .workspace {
+    padding: 6px;
+  }
+  :root[data-theme-family] .workspace-summary {
+    min-height: 74px;
+    padding: 12px 14px;
+    margin: 0 0 6px;
+    gap: 10px;
+    border-radius: min(var(--pane-radius), 12px);
+  }
+  :root[data-theme-family] .workspace-summary h2 {
+    font-size: 22px;
+    margin: 0;
+  }
+  :root[data-theme-family] .workspace-summary p {
+    display: none;
+  }
+  :root[data-theme-family] .workspace-summary button {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  :root[data-theme-family] .workspace .dock-pane {
+    margin: 0;
+  }
+  :root[data-theme-family] .group-separator::before {
+    inset: 2px 35%;
+  }
+  :root[data-theme-family] .group-separator:is(:hover, :focus-visible)::before {
+    inset: 1px 5%;
+  }
+  :root[data-theme-family='entrance'] #app {
+    grid-template-rows: 40px 32px minmax(0, 1fr) 24px;
+  }
+  :root[data-theme-family='denden'] .workspace-summary {
+    border-bottom-width: 4px;
+  }
+  :root[data-theme-family='vibe'] .workspace-summary::after {
+    right: 5%;
+    top: -25px;
+  }
 }
 
-:root[data-theme-family] #app .workspace .dock-pane>.pane-header,
-:root[data-theme-family] #app .workspace .project-heading{min-height:var(--pane-header-height);height:var(--pane-header-height)}
+:root[data-theme-family] #app .workspace [data-pane-key] .file-tab {
+  height: 100%;
+  min-height: 0;
+}
+@media (min-width: 801px) {
+  :root:is(
+      [data-theme-family='denden'],
+      [data-theme-family='googol'],
+      [data-theme-family='entrance']
+    )
+    #app
+    .workspace.dock-arranged {
+    grid-template-areas: 'project split0 summary summary summary' 'project split0 source split1 output' !important;
+  }
+  :root:is(
+      [data-theme-family='denden'],
+      [data-theme-family='googol'],
+      [data-theme-family='entrance']
+    )
+    #app
+    .workspace.dock-arranged.dock-swapped {
+    grid-template-areas: 'project split0 summary summary summary' 'project split0 output split1 source' !important;
+  }
+}
 
-@media(max-width:800px){
- :root[data-theme-family] #console-panel.dock-console>.runtime-card{min-height:40px;padding:5px 12px}
- :root[data-theme-family] #console-empty{padding:5px 10px;justify-content:flex-start}
- :root[data-theme-family] #console-empty .terminal-symbol{display:none}
- :root[data-theme-family] #console-empty p{margin:3px 0;font-size:12px}
- :root[data-theme-family] #console-empty>span:last-child{display:none}
- :root[data-theme-family] #project-panel{padding-top:0}
- :root[data-theme-family] #file-list{padding:0 26px 0 4px!important}
- :root[data-theme-family] #file-list button,:root[data-theme-family] #file-list .file-folder>summary{padding:4px 10px;margin:0}
+:root[data-theme-family] #app .workspace .dock-pane > .pane-header,
+:root[data-theme-family] #app .workspace .project-heading {
+  min-height: var(--pane-header-height);
+  height: var(--pane-header-height);
+}
+
+@media (max-width: 800px) {
+  :root[data-theme-family] #console-panel.dock-console > .runtime-card {
+    min-height: 40px;
+    padding: 5px 12px;
+  }
+  :root[data-theme-family] #console-empty {
+    padding: 5px 10px;
+    justify-content: flex-start;
+  }
+  :root[data-theme-family] #console-empty .terminal-symbol {
+    display: none;
+  }
+  :root[data-theme-family] #console-empty p {
+    margin: 3px 0;
+    font-size: 12px;
+  }
+  :root[data-theme-family] #console-empty > span:last-child {
+    display: none;
+  }
+  :root[data-theme-family] #project-panel {
+    padding-top: 0;
+  }
+  :root[data-theme-family] #file-list {
+    padding: 0 26px 0 4px !important;
+  }
+  :root[data-theme-family] #file-list button,
+  :root[data-theme-family] #file-list .file-folder > summary {
+    padding: 4px 10px;
+    margin: 0;
+  }
 }
 
 /* Tsukuba: Classic Purple accents on quiet paper and charcoal surfaces.
    Future Blue is desaturated for borders and secondary accents. */
-:root[data-theme-family="tsukuba"]{--tsukuba-purple:#6600cc;--tsukuba-blue:#7eabb4;--pane-radius:3px;--theme-canvas:#e9e5ed;--pane-shadow:none;--tsukuba-heading:#513567}
-:root[data-theme="tsukuba-night"]{--theme-canvas:#15121a;--tsukuba-heading:#c5aed8;--tsukuba-blue:#526e79}
-:root[data-theme-family="tsukuba"] .toolbar{background:var(--theme-surface);border-top:3px solid var(--tsukuba-purple);border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family="tsukuba"] .brand h1{color:var(--tsukuba-heading);font-family:Georgia,"Yu Mincho",serif;font-size:25px;font-weight:600;letter-spacing:.2px}
-:root[data-theme-family="tsukuba"] .brand-caption{display:inline;color:var(--theme-muted);border-color:var(--theme-border);letter-spacing:.5px}
-:root[data-theme-family="tsukuba"] .toolbar-actions #run{background:var(--tsukuba-purple);border-radius:3px}
-:root[data-theme-family="tsukuba"] .menubar{background:var(--theme-surface);border-bottom:1px solid var(--theme-border)}
-:root[data-theme-family="tsukuba"] .workspace-summary{min-height:68px;padding:12px 20px;border:1px solid var(--theme-border);border-left:3px solid var(--tsukuba-blue);background:var(--theme-bg);border-radius:3px}
-:root[data-theme-family="tsukuba"] .workspace-summary h2{font-family:Georgia,"Yu Mincho",serif;font-size:22px;color:var(--tsukuba-heading);margin-bottom:4px}
-:root[data-theme-family="tsukuba"] .workspace-summary button{background:var(--theme-surface);color:var(--theme-text);border:1px solid var(--theme-border);border-radius:3px}
-:root[data-theme-family="tsukuba"] .workspace :is(.pane-header,.project-heading){background:var(--theme-surface)}
-:root[data-theme-family="tsukuba"] .dock-tab:has([aria-selected=true]),:root[data-theme-family="tsukuba"] .editor-tab:has([aria-selected=true]){background:var(--theme-selection);box-shadow:inset 0 2px var(--theme-accent)}
-:root[data-theme-family="tsukuba"] #file-list button.selected{background:var(--theme-selection);box-shadow:inset 2px 0 var(--theme-accent)}
-:root[data-theme-family="tsukuba"] :is(.stdin-section,.runtime-card){background:var(--theme-surface)}
-:root[data-theme-family="tsukuba"] :is(dialog,.menu-popup,.dock-menu){border-top:2px solid var(--theme-accent)}
-:root[data-theme-family="tsukuba"] .statusbar{background:var(--theme-surface);color:var(--theme-muted);border-top:1px solid var(--theme-border)}
-:root[data-theme-family="tsukuba"] .statusbar #instruction-hint{color:var(--theme-muted)}
-:root[data-theme-family="tsukuba"] body.detached-window>.menubar{border-top:3px solid var(--tsukuba-purple)}
-@media(max-width:1050px){:root[data-theme-family="tsukuba"] .brand-caption{display:none}}
+:root[data-theme-family='tsukuba'] {
+  --tsukuba-purple: #6600cc;
+  --tsukuba-blue: #7eabb4;
+  --pane-radius: 3px;
+  --theme-canvas: #e9e5ed;
+  --pane-shadow: none;
+  --tsukuba-heading: #513567;
+}
+:root[data-theme='tsukuba-night'] {
+  --theme-canvas: #15121a;
+  --tsukuba-heading: #c5aed8;
+  --tsukuba-blue: #526e79;
+}
+:root[data-theme-family='tsukuba'] .toolbar {
+  background: var(--theme-surface);
+  border-top: 3px solid var(--tsukuba-purple);
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family='tsukuba'] .brand h1 {
+  color: var(--tsukuba-heading);
+  font-family: Georgia, 'Yu Mincho', serif;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+:root[data-theme-family='tsukuba'] .brand-caption {
+  display: inline;
+  color: var(--theme-muted);
+  border-color: var(--theme-border);
+  letter-spacing: 0.5px;
+}
+:root[data-theme-family='tsukuba'] .toolbar-actions #run {
+  background: var(--tsukuba-purple);
+  border-radius: 3px;
+}
+:root[data-theme-family='tsukuba'] .menubar {
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family='tsukuba'] .workspace-summary {
+  min-height: 68px;
+  padding: 12px 20px;
+  border: 1px solid var(--theme-border);
+  border-left: 3px solid var(--tsukuba-blue);
+  background: var(--theme-bg);
+  border-radius: 3px;
+}
+:root[data-theme-family='tsukuba'] .workspace-summary h2 {
+  font-family: Georgia, 'Yu Mincho', serif;
+  font-size: 22px;
+  color: var(--tsukuba-heading);
+  margin-bottom: 4px;
+}
+:root[data-theme-family='tsukuba'] .workspace-summary button {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  border-radius: 3px;
+}
+:root[data-theme-family='tsukuba'] .workspace :is(.pane-header, .project-heading) {
+  background: var(--theme-surface);
+}
+:root[data-theme-family='tsukuba'] .dock-tab:has([aria-selected='true']),
+:root[data-theme-family='tsukuba'] .editor-tab:has([aria-selected='true']) {
+  background: var(--theme-selection);
+  box-shadow: inset 0 2px var(--theme-accent);
+}
+:root[data-theme-family='tsukuba'] #file-list button.selected {
+  background: var(--theme-selection);
+  box-shadow: inset 2px 0 var(--theme-accent);
+}
+:root[data-theme-family='tsukuba'] :is(.stdin-section, .runtime-card) {
+  background: var(--theme-surface);
+}
+:root[data-theme-family='tsukuba'] :is(dialog, .menu-popup, .dock-menu) {
+  border-top: 2px solid var(--theme-accent);
+}
+:root[data-theme-family='tsukuba'] .statusbar {
+  background: var(--theme-surface);
+  color: var(--theme-muted);
+  border-top: 1px solid var(--theme-border);
+}
+:root[data-theme-family='tsukuba'] .statusbar #instruction-hint {
+  color: var(--theme-muted);
+}
+:root[data-theme-family='tsukuba'] body.detached-window > .menubar {
+  border-top: 3px solid var(--tsukuba-purple);
+}
+@media (max-width: 1050px) {
+  :root[data-theme-family='tsukuba'] .brand-caption {
+    display: none;
+  }
+}

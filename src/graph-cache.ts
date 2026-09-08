@@ -1,6 +1,6 @@
-import type {MethodGraph, Compilation} from './protocol';
-import type {positionGraphs} from './graph-layout';
-import {BoundedCache, defaultCacheBudget as budget} from './bounded-cache';
+import type { MethodGraph, Compilation } from './protocol';
+import type { positionGraphs } from './graph-layout';
+import { BoundedCache, defaultCacheBudget as budget } from './bounded-cache';
 
 type Layout = Awaited<ReturnType<typeof positionGraphs>>;
 
@@ -15,26 +15,38 @@ export class MethodLayoutCache {
   // or line-number nodes are inserted, so compare topology by instruction order.
   private key(graph: MethodGraph) {
     const ids = new Map(graph.nodes.map((node, index) => [node.id, index]));
-    const blockIds=[...new Set(graph.nodes.map(node=>node.block))];
-    for(const [index,id] of blockIds.entries())if(id!==undefined)ids.set(id,graph.nodes.length+index);
+    const blockIds = [...new Set(graph.nodes.map((node) => node.block))];
+    for (const [index, id] of blockIds.entries())
+      if (id !== undefined) ids.set(id, graph.nodes.length + index);
     return JSON.stringify([
       graph.name,
-      graph.nodes.map(node => [node.text,blockIds.indexOf(node.block)]),
-      graph.edges.map(edge => [ids.get(edge.from), ids.get(edge.to), edge.kind, edge.label]),
+      graph.nodes.map((node) => [node.text, blockIds.indexOf(node.block)]),
+      graph.edges.map((edge) => [ids.get(edge.from), ids.get(edge.to), edge.kind, edge.label]),
     ]);
   }
 
   get(graph: MethodGraph): Layout | undefined {
     const placed = this.cache.get(this.key(graph));
     if (!placed) return;
-    const ids = new Map(placed.nodes.map((node, index) => [node.id, 'm0:' + graph.nodes[index].id]));
-    const blocks=[...new Set(graph.nodes.map(node=>node.block))];
-    for(const [index,block] of [...new Set(placed.nodes.map(node=>node.block))].entries())ids.set('m0:'+block,'m0:'+blocks[index]);
+    const ids = new Map(
+      placed.nodes.map((node, index) => [node.id, 'm0:' + graph.nodes[index].id]),
+    );
+    const blocks = [...new Set(graph.nodes.map((node) => node.block))];
+    for (const [index, block] of [...new Set(placed.nodes.map((node) => node.block))].entries())
+      ids.set('m0:' + block, 'm0:' + blocks[index]);
     return {
       ...placed,
-      blocks:(placed.blocks??[]).map(block=>({...block,id:ids.get(block.id)!})),
-      nodes: placed.nodes.map((node, index) => ({...node, ...graph.nodes[index], id: 'm0:' + graph.nodes[index].id})),
-      edges: placed.edges.map(edge => ({...edge, from: ids.get(edge.from)!, to: ids.get(edge.to)!})),
+      blocks: (placed.blocks ?? []).map((block) => ({ ...block, id: ids.get(block.id)! })),
+      nodes: placed.nodes.map((node, index) => ({
+        ...node,
+        ...graph.nodes[index],
+        id: 'm0:' + graph.nodes[index].id,
+      })),
+      edges: placed.edges.map((edge) => ({
+        ...edge,
+        from: ids.get(edge.from)!,
+        to: ids.get(edge.to)!,
+      })),
     };
   }
 
@@ -52,7 +64,7 @@ interface CachedGraph {
 export const graphDocuments = new BoundedCache<string, CachedGraph>(budget, 16);
 
 export function rememberGraph(source: string, result: Compilation) {
-  if (result.diagnostics.some(diagnostic => diagnostic.severity === 'error')) return;
-  const value = {owner: result.className, graphs: result.graphs ?? []};
+  if (result.diagnostics.some((diagnostic) => diagnostic.severity === 'error')) return;
+  const value = { owner: result.className, graphs: result.graphs ?? [] };
   graphDocuments.set(source, value, 4 * (source.length + JSON.stringify(value).length));
 }

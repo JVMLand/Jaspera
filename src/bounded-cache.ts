@@ -1,6 +1,6 @@
 /** Estimated retained payload size, not a measurement of process memory. */
 export class BoundedCache<K, V> {
-  private entries = new Map<K, {value: V; bytes: number}>();
+  private entries = new Map<K, { value: V; bytes: number }>();
   private bytes = 0;
 
   constructor(
@@ -20,7 +20,7 @@ export class BoundedCache<K, V> {
   set(key: K, value: V, bytes: number) {
     this.delete(key);
     if (bytes > this.budget) return;
-    this.entries.set(key, {value, bytes});
+    this.entries.set(key, { value, bytes });
     this.bytes += bytes;
     while (this.bytes > this.budget || this.entries.size > this.capacity) {
       this.delete(this.entries.keys().next().value!);
@@ -42,5 +42,7 @@ export function cacheBudget(deviceMemory?: number) {
 }
 
 export const defaultCacheBudget = cacheBudget(
-  typeof navigator === 'undefined' ? undefined : (navigator as Navigator & {deviceMemory?: number}).deviceMemory,
+  typeof navigator === 'undefined'
+    ? undefined
+    : (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
 );

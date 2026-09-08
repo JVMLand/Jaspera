@@ -1,1 +1,54 @@
-body.detached-window{height:100dvh;min-width:320px;display:grid;grid-template-rows:32px 34px minmax(0,1fr) 28px;background:var(--theme-bg,#151a21);color:var(--theme-text,#d6e1e6);font:13px system-ui}.detached-window footer{padding:5px 12px;color:var(--theme-muted,#91a19e);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.detached-window #editor{min-height:0;min-width:0}.detached-window #file-tabs,.detached-window #file-tabs .file-tab{height:34px}.detached-window #file-tabs{border-bottom:1px solid var(--theme-border,#303640)}.detached-window .menubar{padding:0 8px}.detached-window dialog select{width:100%;padding:8px;color:inherit;background:var(--theme-bg,#151a21);border:1px solid var(--theme-border,#45544d)}.detached-window .menu-popup{position:absolute;top:100%;left:0;right:auto;min-width:250px;max-width:calc(100vw - 16px)}@media(max-width:480px){.detached-window .menu-popup{position:fixed;top:32px;left:8px;right:8px;min-width:0}}
+body.detached-window {
+  height: 100dvh;
+  min-width: 320px;
+  display: grid;
+  grid-template-rows: 32px 34px minmax(0, 1fr) 28px;
+  background: var(--theme-bg, #151a21);
+  color: var(--theme-text, #d6e1e6);
+  font: 13px system-ui;
+}
+.detached-window footer {
+  padding: 5px 12px;
+  color: var(--theme-muted, #91a19e);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.detached-window #editor {
+  min-height: 0;
+  min-width: 0;
+}
+.detached-window #file-tabs,
+.detached-window #file-tabs .file-tab {
+  height: 34px;
+}
+.detached-window #file-tabs {
+  border-bottom: 1px solid var(--theme-border, #303640);
+}
+.detached-window .menubar {
+  padding: 0 8px;
+}
+.detached-window dialog select {
+  width: 100%;
+  padding: 8px;
+  color: inherit;
+  background: var(--theme-bg, #151a21);
+  border: 1px solid var(--theme-border, #45544d);
+}
+.detached-window .menu-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: auto;
+  min-width: 250px;
+  max-width: calc(100vw - 16px);
+}
+@media (max-width: 480px) {
+  .detached-window .menu-popup {
+    position: fixed;
+    top: 32px;
+    left: 8px;
+    right: 8px;
+    min-width: 0;
+  }
+}

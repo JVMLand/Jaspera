@@ -47,18 +47,7 @@
     "Use the same machine, browser and build mode when comparing reports."
   ],
   "visibleGraphNodes": 172,
-  "reopenGraphSamples": [
-    472,
-    625,
-    425,
-    420,
-    425,
-    454,
-    435,
-    482,
-    450,
-    499
-  ],
+  "reopenGraphSamples": [472, 625, 425, 420, 425, 454, 435, 482, 450, 499],
   "environment": {
     "deviceMemoryGiB": 32,
     "hardwareConcurrency": 28,

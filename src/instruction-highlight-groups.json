@@ -1,7 +1,5 @@
 {
-  "nop": [
-    "nop"
-  ],
+  "nop": ["nop"],
   "variable_access": [
     "aload",
     "aload_0",
@@ -54,9 +52,7 @@
     "lstore_2",
     "lstore_3"
   ],
-  "instance_creation": [
-    "new"
-  ],
+  "instance_creation": ["new"],
   "value_generations": [
     "aconst_null",
     "bipush",
@@ -79,15 +75,7 @@
     "ldc2_w",
     "sipush"
   ],
-  "flow_controls": [
-    "areturn",
-    "athrow",
-    "dreturn",
-    "freturn",
-    "ireturn",
-    "lreturn",
-    "return"
-  ],
+  "flow_controls": ["areturn", "athrow", "dreturn", "freturn", "ireturn", "lreturn", "return"],
   "flow_jumps": [
     "goto",
     "goto_w",
@@ -161,23 +149,8 @@
     "fneg",
     "dneg"
   ],
-  "value_logical_calculations": [
-    "iand",
-    "ior",
-    "ixor",
-    "land",
-    "lor",
-    "lxor"
-  ],
-  "value_comparisons": [
-    "dcmpl",
-    "checkcast",
-    "dcmpg",
-    "fcmpl",
-    "fcmpg",
-    "instanceof",
-    "lcmp"
-  ],
+  "value_logical_calculations": ["iand", "ior", "ixor", "land", "lor", "lxor"],
+  "value_comparisons": ["dcmpl", "checkcast", "dcmpg", "fcmpl", "fcmpg", "instanceof", "lcmp"],
   "stack_controls": [
     "dup",
     "dup2",
@@ -189,12 +162,7 @@
     "pop2",
     "swap"
   ],
-  "field_access": [
-    "getfield",
-    "getstatic",
-    "putfield",
-    "putstatic"
-  ],
+  "field_access": ["getfield", "getstatic", "putfield", "putstatic"],
   "method_invocations": [
     "invokeinterface",
     "invokespecial",
@@ -221,20 +189,8 @@
     "sastore",
     "arraylength"
   ],
-  "array_creations": [
-    "anewarray",
-    "multianewarray",
-    "newarray"
-  ],
-  "switch": [
-    "lookupswitch",
-    "tableswitch"
-  ],
-  "monitoring": [
-    "monitorenter",
-    "monitorexit"
-  ],
-  "wide": [
-    "wide"
-  ]
+  "array_creations": ["anewarray", "multianewarray", "newarray"],
+  "switch": ["lookupswitch", "tableswitch"],
+  "monitoring": ["monitorenter", "monitorexit"],
+  "wide": ["wide"]
 }
