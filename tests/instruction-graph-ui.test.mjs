@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'graph follows edits and selections, navigates to source, and works in a detached tab',
   { timeout: 150000 },
@@ -19,14 +19,15 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1500, height: 1000 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.setDefaultTimeout(60000);
     await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
     );
@@ -208,7 +209,7 @@ test(
         'public class Main { public static x()I { iconst_5 ireturn } }',
       );
     });
-    await popup.getByRole('tab', { name: 'Graph', exact: true }).click();
+    await popup.getByRole('tab', { name: 'グラフ', exact: true }).click();
     await popup.waitForFunction(() =>
       document.querySelector('.graph-node')?.textContent.includes('iconst_5'),
     );

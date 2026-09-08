@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'method frames fill progressively, stay usable, and ignore obsolete results',
   { timeout: 90000 },
@@ -19,9 +19,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1100, height: 850 } });
+    const page = await newAppPage(browser, { viewport: { width: 1100, height: 850 } });
     page.setDefaultTimeout(15000);
     await page.addInitScript(() => {
       localStorage.setItem('jalweb.theme', 'vs-dark');

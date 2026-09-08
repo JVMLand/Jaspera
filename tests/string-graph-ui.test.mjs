@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { unzipSync } from 'fflate';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'String renders all 170 methods beyond the old 2000-instruction class limit',
   { timeout: 240000 },
@@ -21,9 +21,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+    const page = await newAppPage(browser, { viewport: { width: 1500, height: 1000 } });
     page.setDefaultTimeout(180000);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));

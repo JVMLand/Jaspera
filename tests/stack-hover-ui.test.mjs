@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  detachAt,
+  createTestProject,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'Hover compares nearby frames, shows only changed locals, and works in detached windows',
   { timeout: 90000 },
@@ -19,15 +25,15 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 900 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       null,
@@ -114,19 +120,15 @@ test(
         .locator('.jal-bytecode-offset[title]')
         .evaluateAll((nodes) => nodes.map((n) => n.title).filter(Boolean));
     const parentOffsets = await titles(page);
-    const tab = await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).boundingBox(),
+    const tab = await page.getByRole('tab', { name: 'Main', exact: true }).boundingBox(),
       event = page.waitForEvent('popup');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, tab);
     const popup = await event;
     const popupWorkers = [];
     popup.on('worker', (worker) => popupWorkers.push(worker.url()));
     await popup.route('**/runtime/**', (route) => route.abort());
     popup.on('pageerror', (e) => errors.push(e.message));
-    await popup.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     await instruction(popup, 'iload_0').hover();
     await popup
       .locator('.stack-hover:visible')

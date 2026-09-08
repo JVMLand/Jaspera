@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'instruction selection is transient, diagrams align, and clicks follow across detached tools',
   { timeout: 90000 },
@@ -19,16 +19,16 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1450, height: 1000 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1450, height: 1000 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (r) => r.abort());
     await page.goto(base);
+    await createTestProject(page);
     await page.locator('#instructions-tab').click();
     const panel = page.locator('#instructions-panel'),
       chooser = panel.locator('.instruction-chooser'),
@@ -36,6 +36,7 @@ test(
     assert.equal(await chooser.isVisible(), false);
     assert.equal(await panel.locator('.instruction-reading').count(), 0);
     assert.equal(await panel.locator('details.instruction-advanced').count(), 0);
+    await panel.locator('.frame-rest').first().waitFor();
     const rests = await panel
       .locator('.frame-rest')
       .evaluateAll((es) =>
@@ -73,13 +74,13 @@ test(
     await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();
     const popup = await popupPromise;
     popup.on('pageerror', (e) => errors.push(e.message));
-    await popup.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     await op('ldc').click();
     await popup.waitForFunction(
       () => document.querySelector('.instruction-detail>header h2')?.textContent === 'ldc',
     );
-    await popup.getByRole('menuitem', { name: 'View', exact: true }).click();
-    await popup.getByRole('menuitem', { name: 'Problems', exact: true }).click();
+    await popup.getByRole('menuitem', { name: '表示', exact: true }).click();
+    await popup.getByRole('menuitem', { name: '問題', exact: true }).click();
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.setValue(
@@ -88,9 +89,9 @@ test(
     });
     await popup.locator('#problems button').first().waitFor();
     await popup.locator('#problems button').first().click();
-    await popup.getByRole('tab', { name: 'src/Main.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'Main', exact: true }).waitFor();
     assert.equal(await popup.locator('#editor').isVisible(), true);
-    await popup.getByRole('tab', { name: 'Instructions', exact: true }).click();
+    await popup.getByRole('tab', { name: '命令辞書', exact: true }).click();
     await popup.screenshot({ path: '.cache/instructions-revised-popup.png' });
     await popup.close();
     await page.locator('#instructions-tab').waitFor({ state: 'visible' });

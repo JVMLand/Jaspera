@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'label blocks render with shared exception arrows and survive filtering',
   { timeout: 60000 },
@@ -51,9 +51,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1300, height: 1200 } });
+    const page = await newAppPage(browser, { viewport: { width: 1300, height: 1200 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base + '/tests/harness.html');
@@ -87,18 +87,16 @@ test(
     assert.equal(await page.locator('.graph-label-block').count(), 4);
     assert.equal(await page.locator('.graph-edge.exception').count(), 2);
     assert.equal(await page.locator('.graph-node').count(), graph.nodes.length);
-    const labels = await page
-      .locator('.graph-edge-label')
-      .evaluateAll((nodes) =>
-        nodes
-          .map((node) =>
-            [...node.querySelectorAll('tspan')].map((span) => ({
-              text: span.textContent,
-              y: Number(span.getAttribute('y')),
-            })),
-          )
-          .filter((lines) => lines.length === 2),
-      );
+    const labels = await page.locator('.graph-edge-label').evaluateAll((nodes) =>
+      nodes
+        .map((node) =>
+          [...node.querySelectorAll('tspan')].map((span) => ({
+            text: span.textContent,
+            y: Number(span.getAttribute('y')),
+          })),
+        )
+        .filter((lines) => lines.length === 2),
+    );
     assert.equal(labels.length, 2);
     for (const lines of labels) {
       assert.deepEqual(

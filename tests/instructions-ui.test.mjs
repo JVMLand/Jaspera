@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'Instructions dictionary works without JVM and across themes',
   { timeout: 90000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } }),
+    const page = await newAppPage(browser, { viewport: { width: 1400, height: 1000 } }),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.route('**/runtime/**', (r) => r.abort());
@@ -174,6 +173,8 @@ test(
     await tab.focus();
     await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('#graph-tab').getAttribute('aria-selected'), 'true');
+    await page.keyboard.press('ArrowRight');
+    assert.equal(await page.locator('#debug-tab').getAttribute('aria-selected'), 'true');
     await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('#console-tab').getAttribute('aria-selected'), 'true');
     assert.equal(await page.locator('#console-panel').isVisible(), true);
