@@ -32,6 +32,9 @@ test('step into OpenJDK reveals and highlights the actual disassembled instructi
  await page.waitForFunction(old=>{const {editor}=window.testMain;const line=editor.getPosition().lineNumber;return line!==old&&editor.getVisibleRanges().some(r=>r.startLineNumber<=line&&r.endLineNumber>=line)&&!!document.querySelector('.debug-current-marker');},next.line);
  assert.ok(await page.evaluate(()=>window.testMain.editor.getScrollTop())>0,'offscreen execution line must become visible');
  await page.screenshot({path:'.cache/debug-step-into.png'});
+ await page.locator('.debug-frames button').nth(1).click();
+ const caller=await page.locator('.debug-values').innerText();assert.match(caller,/呼び出し時/);assert.match(caller,/PrintStream/);assert.match(caller,/Hello, JAL!/);assert.doesNotMatch(caller,/呼び出し先へ移動|呼び出し先の実行待ち/);
+ await page.screenshot({path:'.cache/debug-caller-frame.png'});
  await page.locator('.debug-toolbar [data-command=debug-stop]').click();
  await page.locator('.debug-current-marker').waitFor({state:'hidden'});
 });

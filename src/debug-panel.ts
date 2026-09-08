@@ -43,7 +43,8 @@ export function installDebugPanel(root:HTMLElement,actions:DebugActions){
   const frame=state.snapshot.frames[selected]??state.snapshot.frames[0];if(!frame)return;
   if(frame.native){content.textContent='ネイティブメソッド';return;}
   const prediction=predictDebugFrame(frame);
-  if(selected>0){prediction.after=[];prediction.consumed=0;prediction.produced=0;prediction.locals=undefined;prediction.terminal='呼び出し先の実行待ち';prediction.note=undefined;}
+  if(selected>0&&frame.callSnapshot)prediction.beforeLabel='呼び出し時';
+  else if(selected>0){prediction.after=[];prediction.consumed=0;prediction.produced=0;prediction.locals=undefined;prediction.terminal='呼び出し先の実行待ち';prediction.note=undefined;}
   content.append(renderFrameTransition(prediction));
  }
  return {update(next:DebugState|undefined){if(next===state)return;if(next?.snapshot!==state?.snapshot)selected=0;state=next??{status:'idle',breakpoints:[]};render();},dispose(){toolbar.remove();root.replaceChildren();}};
