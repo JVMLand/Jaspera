@@ -45,6 +45,15 @@ test(
       requests.some((url) => url.includes('/instructions-panel-')),
       false,
     );
+    assert.deepEqual(
+      requests.filter((url) =>
+        /\/(?:licenses|runtime)\/|\/(?:instruction-graph|jar-archive|instructions-panel)-/.test(
+          url,
+        ),
+      ),
+      [],
+      'Initial editor display must not download optional features or offline resources',
+    );
     await page.locator('#menu-help').click();
     await page.locator('#help-offline').click();
     await page.locator('.offline-start').click();

@@ -15,7 +15,7 @@ import { installSearchEverywhere } from './search-everywhere';
 import type { AnalysisProgress } from './protocol';
 import { memoryPolicy } from './memory-policy';
 import { usageCompiler } from './usage-compilation';
-import { installInstructionGraph } from './instruction-graph';
+import { installInstructionGraph } from './lazy-instruction-graph';
 import type { GraphDocument } from './protocol';
 import { planPathChange } from './project-paths';
 import { tabLabels } from './file-labels';
@@ -32,7 +32,7 @@ import { installConsoleContextMenu } from './console-panel';
 import { installProblemsContextMenu } from './problems-panel';
 import { editMenuItems } from './edit-menu';
 import { fileKind, installFilePicker } from './file-opening';
-import { JarArchive, jarResource } from './jar-archive';
+import type { JarArchive } from './jar-archive';
 import { helpMenuItems } from './help';
 import * as monaco from './editor-platform';
 import { WorkspaceStateStore } from './workspace-state';
@@ -1575,6 +1575,7 @@ async function closeJar(force = false) {
 }
 async function openJar(file: File) {
   if (jarBusy) return;
+  const { JarArchive } = await import('./jar-archive');
   const archive = await JarArchive.open(file);
   if (jar && !(await closeJar())) return;
   jar = archive;
@@ -1593,6 +1594,7 @@ async function openJarEntry(path: string) {
   }
   try {
     if (classPreviews.size >= 16) throw Error(msg('ma5ae4b723858'));
+    const { jarResource } = await import('./jar-archive');
     const isClass = path.endsWith('.class');
     if (isClass) status(msg('jar.opening'), 'loading');
     const source = isClass

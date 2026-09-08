@@ -1,7 +1,7 @@
 import { msg } from './messages.js';
 import { installDebugPanel } from './debug-panel';
 import type { DebugState } from './debug-protocol';
-import { installInstructionGraph } from './instruction-graph';
+import { installInstructionGraph } from './lazy-instruction-graph';
 import type { GraphDocument } from './protocol';
 import { installConsoleContextMenu } from './console-panel';
 import { installProblemsContextMenu } from './problems-panel';
