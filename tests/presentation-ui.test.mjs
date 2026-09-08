@@ -46,6 +46,10 @@ test(
     assert.ok((await page.locator('.source-pane').boundingBox()).width > width);
     const output = await page.locator('.output-pane').boundingBox();
     assert.ok(output.x + output.width > 1400, 'presentation must fill the available width');
+    const consoleFont = () =>
+      page.locator('#output').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    await page.waitForTimeout(100);
+    const initialConsoleFont = await consoleFont();
     const splitter = page.locator('.separator-1');
     const handle = await splitter.boundingBox();
     const priorWidth = (await page.locator('.source-pane').boundingBox()).width;
@@ -72,6 +76,13 @@ test(
     assert.equal((await state(page)).font, '28px');
     await page.locator('#presentation-exit').click();
     await page.waitForFunction(() => !document.fullscreenElement);
+    assert.equal(
+      await page
+        .locator('.dock-content')
+        .first()
+        .evaluate((el) => el.style.getPropertyValue('--ui-font-scale')),
+      '',
+    );
     assert.deepEqual(await state(page), before);
     assert.equal((await page.locator('.source-pane').boundingBox()).width, width);
     // Fullscreen denial still permits presentation, including Escape to exit.

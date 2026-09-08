@@ -1,8 +1,10 @@
+import { installPresentationPanelSizing } from './presentation-panel-sizing';
 import { textSize, setTemporaryTextSize } from './text-size';
 import { msg } from './messages.js';
 import { bindTranslation, localizedMessage } from './localization';
 import './presentation.css';
 
+let disposePanelSizing: (() => void) | undefined;
 let active = false;
 let ownsFullscreen = false;
 let generation = 0;
@@ -11,6 +13,8 @@ let exitButton: HTMLButtonElement | undefined;
 function stop() {
   if (!active) return;
   active = false;
+  disposePanelSizing?.();
+  disposePanelSizing = undefined;
   ++generation;
   document.documentElement.removeAttribute('data-presentation');
   document.documentElement.removeAttribute('data-presentation-project');
@@ -28,6 +32,7 @@ function start() {
   const size = textSize();
   setTemporaryTextSize({ editor: Math.max(28, size.editor), ui: Math.max(20, size.ui) });
   document.documentElement.setAttribute('data-presentation', '');
+  disposePanelSizing = installPresentationPanelSizing();
   window.dispatchEvent(new Event('jaspera:presentation'));
   exitButton = document.createElement('button');
   exitButton.id = 'presentation-exit';
