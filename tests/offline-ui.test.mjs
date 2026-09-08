@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage, runHello } from './helpers/browser.mjs';
 test(
   'prepared production build restarts, shows lazy panels and runs Java without network',
   { timeout: 180000 },
   async (t) => {
-    const base = 'http://127.0.0.1:5230';
+    const base = 'http://127.0.0.1:5230/jaspera/';
     const server = spawn(
       process.execPath,
       [
@@ -27,9 +27,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const context = await browser.newContext(),
+    const context = await newAppContext(browser),
       page = await context.newPage();
     page.setDefaultTimeout(90000);
     const errors = [];
@@ -76,11 +76,8 @@ test(
     await page.locator('#graph-tab').click();
     await page.locator('.graph-node rect').first().waitFor();
     assert.equal(await page.locator('.graph-node').count(), 4);
-    await page.locator('#run').click();
-    await page.waitForFunction(
-      () => document.querySelector('#state')?.textContent === '実行が完了しました',
-    );
-    assert.equal(await page.locator('#output').textContent(), 'Hello, World!\n');
+    await runHello(page);
+    assert.equal(await page.locator('#output').textContent(), 'こんにちは，JAL！\n');
     await page.locator('#menu-help').click();
     await page.locator('#help-offline').click();
     await page.locator('.offline-start').click();

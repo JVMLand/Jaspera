@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'first visit opens theme picker with system preference and remembers the selection',
   { timeout: 90000 },
@@ -19,13 +19,13 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
     for (const [colorScheme, expected] of [
       ['dark', 'vs-dark'],
       ['light', 'vs'],
     ]) {
-      const context = await browser.newContext({ colorScheme });
+      const context = await newAppContext(browser, { colorScheme, theme: null });
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 import { mkdir } from 'node:fs/promises';
 test(
   'new visual families keep their layout, light editor colors and detached themes',
@@ -20,17 +20,17 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1440, height: 960 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1440, height: 960 } }),
       page = await context.newPage(),
       errors = [];
     context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       null,
@@ -98,7 +98,7 @@ test(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         id + ' overflow',
       );
-      assert.ok(await page.getByRole('tab', { name: 'src/Main.jal', exact: true }).isVisible());
+      assert.ok(await page.getByRole('tab', { name: 'HelloWorld', exact: true }).isVisible());
       await page.screenshot({ path: '.cache/brand-themes/' + id + '-mobile.png', fullPage: true });
       await page.setViewportSize({ width: 1440, height: 960 });
     }
@@ -107,12 +107,12 @@ test(
     await page.locator('#instructions-tab').click({ button: 'right' });
     await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();
     const popup = await popupEvent;
-    await popup.getByRole('tab', { name: 'Instructions', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: '命令辞書', exact: true }).waitFor();
     for (const id of ids) {
       await apply(id);
       await popup.waitForFunction((id) => document.documentElement.dataset.theme === id, id);
       assert.equal(await popup.locator('html').getAttribute('data-theme-family'), id.split('-')[0]);
-      assert.ok(await popup.getByRole('tab', { name: 'Instructions', exact: true }).isVisible());
+      await popup.getByRole('tab', { name: '命令辞書', exact: true }).waitFor({ state: 'visible' });
     }
     await popup.screenshot({ path: '.cache/brand-themes/detached.png' });
     await popup.close();

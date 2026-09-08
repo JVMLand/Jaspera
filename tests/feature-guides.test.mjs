@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'feature guides follow their targets and remember dismissal across windows',
   { timeout: 120000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1500, height: 1000 } });
+    const context = await newAppContext(browser, { viewport: { width: 1500, height: 1000 } });
     const page = await context.newPage();
     page.setDefaultTimeout(60000);
     await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
@@ -108,9 +107,9 @@ test(
     await page.waitForTimeout(150);
     await page.screenshot({ path: '.cache/feature-guides.png' });
     await page.locator('#menu-help').click();
-    await page.locator('#help-shortcuts').click();
+    await page.locator('#help-manual').click();
     await guide.waitFor({ state: 'hidden' });
-    await page.locator('#help-dialog button').click();
+    await page.locator('#feature-manual .manual-close').click();
     const popupEvent = page.waitForEvent('popup');
     await page.locator('#instructions-tab').click({ button: 'right' });
     await page.getByRole('menuitem', { name: '小窓で開く', exact: true }).click();

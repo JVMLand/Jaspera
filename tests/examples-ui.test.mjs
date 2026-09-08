@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { unzipSync } from 'fflate';
-import { chromium } from '@playwright/test';
+import {
+  launchBrowser,
+  runHello,
+  detachAt,
+  newAppContext,
+  newAppPage,
+} from './helpers/browser.mjs';
 test(
   'built-in examples run, remain editable and never enter project saves',
   { timeout: 180000 },
@@ -21,9 +27,9 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const context = await browser.newContext({ viewport: { width: 1450, height: 1000 } }),
+    const context = await newAppContext(browser, { viewport: { width: 1450, height: 1000 } }),
       page = await context.newPage(),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -42,12 +48,12 @@ test(
     const open = async (name) =>
       page.locator('#file-list button[title="example/' + name + '.jal"]').click();
     const expected = {
-      HelloWorld: 'Hello, JAL!\n',
+      HelloWorld: 'こんにちは，JAL！\n',
       Arithmetic: '36\n',
-      Branches: 'greater than 10\n',
+      Branches: '10 より大きい\n',
       Loop: '1\n2\n3\n4\n5\n',
       Arrays: '42\n3\n',
-      Strings: 'Answer: 42\n',
+      Strings: '答え: 42\n',
       Collections: '[JAL, JVM]\n',
       Methods: '42\n',
       LongAndDouble: '20000000000\n3.5\n',
@@ -60,7 +66,8 @@ test(
         ),
         false,
       );
-      await page.locator('#run').click();
+      if (name === 'HelloWorld') await runHello(page);
+      else await page.locator('#run').click();
       await page.waitForFunction(
         () =>
           ['実行が完了しました', '実行に失敗しました'].includes(
@@ -74,7 +81,7 @@ test(
     await open('HelloWorld');
     await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
-      editor.setValue(editor.getValue().replace('Hello, JAL!', 'Edited sample'));
+      editor.setValue(editor.getValue().replace('こんにちは，JAL！', 'Edited sample'));
     });
     await page
       .getByRole('button', { name: 'example/HelloWorld.jal のタブを閉じる', exact: true })
@@ -118,25 +125,19 @@ test(
           .then((f) => f.text()),
       };
     });
-    assert.deepEqual(disk.files.sort(), ['project.jalprj', 'src/Main.jal']);
+    assert.deepEqual(disk.files.sort(), ['project.jalprj']);
     assert.doesNotMatch(disk.properties, /preview:example:|Edited sample/);
     event = page.waitForEvent('download');
     await menu('export-project');
     download = await event;
     const zip = unzipSync(await readFile(await download.path()));
-    assert.deepEqual(Object.keys(zip).sort(), ['project.jalprj', 'src/Main.jal']);
-    const tab = await page
-        .getByRole('tab', { name: 'example/HelloWorld.jal', exact: true })
-        .boundingBox(),
+    assert.deepEqual(Object.keys(zip).sort(), ['project.jalprj']);
+    const tab = await page.getByRole('tab', { name: 'HelloWorld', exact: true }).boundingBox(),
       popupEvent = page.waitForEvent('popup');
-    await page.mouse.move(tab.x + tab.width / 2, tab.y + tab.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(420);
-    await page.mouse.move(1200, 15, { steps: 8 });
-    await page.mouse.up();
+    await detachAt(page, tab);
     const popup = await popupEvent;
     popup.on('pageerror', (e) => errors.push(e.message));
-    await popup.getByRole('tab', { name: 'example/HelloWorld.jal', exact: true }).waitFor();
+    await popup.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
     assert.equal(
       await popup.evaluate(
         async () => (await import('/src/detached.ts')).editor.getRawOptions().readOnly,
@@ -146,7 +147,16 @@ test(
     await popup.locator('#menu-build').click();
     await popup.locator('#menu-run').click();
     await page.waitForFunction(
-      () => document.querySelector('#state')?.textContent === '実行が完了しました',
+      () =>
+        document.querySelector('#output')?.textContent === 'Edited sample\n' ||
+        [...document.querySelectorAll('[data-command=debug-continue]')].some(
+          (n) => n.getClientRects().length,
+        ),
+    );
+    const resume = page.locator('.debug-toolbar [data-command=debug-continue]:visible');
+    if (await resume.count()) await resume.click();
+    await page.waitForFunction(
+      () => document.querySelector('#output')?.textContent === 'Edited sample\n',
     );
     assert.equal(await page.locator('#output').textContent(), 'Edited sample\n');
     await popup.close();
@@ -154,10 +164,11 @@ test(
     await open('HelloWorld');
     assert.match(
       await page.evaluate(async () => (await import('/src/main.ts')).editor.getValue()),
-      /Hello, JAL!/,
+      /こんにちは，JAL！/,
     );
     await menu('open-project');
-    await page.locator('#file-list button[title="src/Main.jal"]').waitFor();
+    await page.locator('#project-name').waitFor();
+    assert.equal(await page.locator('#file-list button[title="src/Main.jal"]').count(), 0);
     assert.equal(await page.locator('#file-list button[title^="example/"]').count(), 9);
     assert.deepEqual(errors, []);
   },

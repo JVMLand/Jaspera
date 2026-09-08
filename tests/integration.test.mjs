@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { gunzipSync } from 'node:zlib';
 import { readFile, mkdir } from 'node:fs/promises';
 import { spawn, spawnSync } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 const base = process.env.JALWEB_TEST_URL ?? 'http://127.0.0.1:5178';
 const channel =
   process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium');
@@ -31,9 +31,9 @@ test('JALWeb browser / real WebAssembly integration', { timeout: 240000 }, async
     }
     assert.ok(ready, 'Test dev server did not start');
   }
-  const browser = await chromium.launch({ channel, headless: true });
+  const browser = await launchBrowser({ channel, headless: true });
   t.after(() => browser.close());
-  const page = await browser.newPage();
+  const page = await newAppPage(browser);
   await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
   await page.goto(`${base}/tests/harness.html`);
   await page.evaluate(async () => {
@@ -195,6 +195,7 @@ test('JALWeb browser / real WebAssembly integration', { timeout: 240000 }, async
   });
   await t.test('Monaco UI: default source, Run and diagnostics', async () => {
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       {},
