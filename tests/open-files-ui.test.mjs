@@ -103,6 +103,7 @@ test(
       await popup.evaluate(async () => (await import('/src/detached.ts')).editor.getValue()),
       'public class Popup {}',
     );
+    await popup.getByRole('textbox', { name: 'Editor content', exact: true }).focus();
     const chooser = popup.waitForEvent('filechooser');
     await popup.keyboard.press('Control+o');
     await (await chooser).setFiles([]);
