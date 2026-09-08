@@ -1,3 +1,4 @@
+import { presentationMenuItem } from './presentation';
 import { textSizeMenuItem } from './text-size';
 import { codeFontFamily } from './fonts';
 import { entryProblem } from './entry-method.js';
@@ -692,6 +693,7 @@ const menus = installMenus(el('menus'), [
       { id: 'theme-settings', label: msg('maa77a98a507d'), action: openThemePicker },
       languageMenuItem(),
       textSizeMenuItem(),
+      presentationMenuItem(),
       null,
       ...(['project', 'console', 'problems', 'instructions', 'graph', 'debug'] as const).map(
         (name) => ({

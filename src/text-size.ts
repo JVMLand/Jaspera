@@ -17,17 +17,29 @@ function read(): TextSize {
   }
 }
 let current = read();
-export const textSize = () => ({ ...current });
+let temporary: TextSize | undefined;
+export const textSize = () => ({ ...(temporary ?? current) });
+export function setTemporaryTextSize(value?: TextSize) {
+  temporary = value ? { ...value } : undefined;
+  apply();
+}
 function updateEditor(editor: monaco.editor.ICodeEditor) {
-  editor.updateOptions({ fontSize: current.editor, lineHeight: Math.round(current.editor * 1.8) });
+  const size = textSize();
+  editor.updateOptions({ fontSize: size.editor, lineHeight: Math.round(size.editor * 1.8) });
 }
 function apply() {
-  document.documentElement.style.setProperty('--ui-font-scale', String(current.ui / 14));
+  document.documentElement.style.setProperty('--ui-font-scale', String(textSize().ui / 14));
   for (const editor of monaco.editor.getEditors()) updateEditor(editor);
   window.dispatchEvent(new Event('jaspera:text-size'));
 }
 export function setTextSize(value: TextSize) {
-  current = { editor: limit(value.editor, 15, 10, 32), ui: limit(value.ui, 14, 10, 20) };
+  const next = { editor: limit(value.editor, 15, 10, 32), ui: limit(value.ui, 14, 10, 20) };
+  if (temporary) {
+    temporary = next;
+    apply();
+    return;
+  }
+  current = next;
   try {
     localStorage.setItem(key, JSON.stringify(current));
   } catch {

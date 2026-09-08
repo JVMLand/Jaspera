@@ -942,5 +942,7 @@
   "textSize.title": "Text size",
   "textSize.editor": "Editor",
   "textSize.ui": "Interface",
-  "textSize.reset": "Reset to defaults"
+  "textSize.reset": "Reset to defaults",
+  "presentation.title": "Presentation mode",
+  "presentation.exit": "Exit presentation"
 }

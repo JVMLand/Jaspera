@@ -942,5 +942,7 @@
   "textSize.title": "Tamaño del texto",
   "textSize.editor": "Editor",
   "textSize.ui": "Interfaz",
-  "textSize.reset": "Restablecer valores"
+  "textSize.reset": "Restablecer valores",
+  "presentation.title": "Modo presentación",
+  "presentation.exit": "Salir de la presentación"
 }

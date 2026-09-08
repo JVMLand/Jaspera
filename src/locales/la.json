@@ -942,5 +942,7 @@
   "textSize.title": "Magnitudo litterarum",
   "textSize.editor": "Editor",
   "textSize.ui": "Interfacies",
-  "textSize.reset": "Restitue valores"
+  "textSize.reset": "Restitue valores",
+  "presentation.title": "Modus demonstrationis",
+  "presentation.exit": "Demonstrationem finire"
 }

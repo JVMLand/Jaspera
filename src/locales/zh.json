@@ -942,5 +942,7 @@
   "textSize.title": "文字大小",
   "textSize.editor": "编辑器",
   "textSize.ui": "界面",
-  "textSize.reset": "恢复默认"
+  "textSize.reset": "恢复默认",
+  "presentation.title": "演示模式",
+  "presentation.exit": "退出演示"
 }
