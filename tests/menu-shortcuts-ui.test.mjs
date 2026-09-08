@@ -20,6 +20,23 @@ test(
     await tab.waitFor();
     await page.locator('.feature-guide-skip:visible').click();
     async function verify(view, entry) {
+      const firstItems = {
+        file: 'save-project',
+        edit: 'undo',
+        view: 'show-console',
+        build: 'menu-run',
+        debug: 'debug-continue',
+        help: 'help-manual',
+      };
+      for (const [menu, id] of Object.entries(firstItems)) {
+        assert.equal(
+          await view
+            .locator('#popup-' + menu + ' > button')
+            .first()
+            .getAttribute('id'),
+          id,
+        );
+      }
       for (const [key, menu] of [
         ['f', 'file'],
         ['e', 'edit'],

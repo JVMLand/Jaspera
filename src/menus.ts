@@ -1,3 +1,4 @@
+import { orderMenuItems } from './menu-order';
 import './menus.css';
 import { bindTranslation, localizedMessage } from './localization';
 export interface Item {
@@ -112,7 +113,7 @@ export function installMenus(container: HTMLElement, definitions: Menu[]) {
         }
       }
     };
-    for (const item of menu.items) {
+    for (const item of orderMenuItems(menu.label, menu.items)) {
       if (!item) {
         const separator = document.createElement('hr');
         separator.setAttribute('role', 'separator');
