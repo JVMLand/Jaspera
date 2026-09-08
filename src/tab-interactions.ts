@@ -74,8 +74,10 @@ export function paneDrop(
         item.workspace === workspace &&
         'key' in item &&
         typeof item.key === 'string'
-      )
+      ) {
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
         open(item.key, e);
+      }
     },
     options,
   );
@@ -87,16 +89,14 @@ export function paneDrop(
   };
 }
 
-/** Native dragleave fires when crossing the viewport, before the mouse is released.
- * Keep the payload from dragstart: browsers hide DataTransfer contents during drag. */
+/** Detach only after release outside this viewport. A successful drop in another
+ * window wins even though its coordinates lie outside the source window. */
 export function paneWindowExit(workspace: string, detach: (key: string) => void) {
-  const controller = new AbortController(),
-    options = { capture: true, signal: controller.signal };
-  let active: string | undefined,
-    opened = false;
+  const controller = new AbortController();
+  const options = { capture: true, signal: controller.signal };
+  let active: string | undefined;
   const reset = () => {
     active = undefined;
-    opened = false;
   };
   document.addEventListener(
     'dragstart',
@@ -112,26 +112,30 @@ export function paneWindowExit(workspace: string, detach: (key: string) => void)
     { signal: controller.signal },
   );
   document.addEventListener(
-    'dragleave',
+    'dragend',
     (event) => {
-      if (!active || opened || event.relatedTarget) return;
+      const key = active;
+      reset();
+      if (!key || (event.dataTransfer && event.dataTransfer.dropEffect !== 'none')) return;
+      // Use the release coordinates, not the last dragleave. (0, 0), also reported
+      // for cancelled native drags, is inside and must not create a window.
       const outside =
-        event.clientX <= 0 ||
-        event.clientY <= 0 ||
+        event.clientX < 0 ||
+        event.clientY < 0 ||
         event.clientX >= innerWidth ||
-        event.clientY >= innerHeight ||
-        !document.elementFromPoint(event.clientX, event.clientY);
-      if (!outside) return;
-      opened = true;
-      document
-        .querySelectorAll('.dock-drop-target')
-        .forEach((n) => n.classList.remove('dock-drop-target'));
-      detach(active);
+        event.clientY >= innerHeight;
+      if (outside) detach(key);
     },
     options,
   );
-  document.addEventListener('dragend', reset, options);
   document.addEventListener('drop', reset, options);
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape') reset();
+    },
+    options,
+  );
   window.addEventListener('pagehide', reset, { signal: controller.signal });
   return {
     dispose() {
