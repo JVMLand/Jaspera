@@ -79,6 +79,6 @@ function renderGutter(view:monaco.editor.IStandaloneCodeEditor,state:GutterState
  view.updateOptions({lineNumbers:line=>{
   const items=state.lines.get(line)??[],first=items[0];
   const title=first?'バイトコードオフセット（命令解析による推定・10進数）\n'+items.map(i=>`${i.method}: ${i.offset}`).join('\n'):'';
-  return `<span class="jal-gutter-row"><span class="jal-source-line">${line}</span><span class="jal-breakpoint-slot${state.breakpoints.has(line)?' debug-breakpoint':''}${state.current===line?' debug-current-marker':''}" data-line="${line}" title="ブレークポイントを切り替える（F9）"></span><span class="jal-bytecode-offset" title="${escape(title)}">${first?first.offset+(items.length>1?'…':''):''}</span></span>`;
+  return `<span class="jal-gutter-row"><span class="jal-source-line">${line}</span><span class="jal-breakpoint-slot${state.breakpoints.has(line)?' debug-breakpoint':''}${state.current===line?' debug-current-marker':''}" data-line="${line}"${line===6&&view.getModel()?.uri.authority==='example'&&view.getModel()?.uri.path==='/example/HelloWorld.jal'?' data-guide="hello-breakpoint"':''} title="ブレークポイントを切り替える（F9）"></span><span class="jal-bytecode-offset" title="${escape(title)}">${first?first.offset+(items.length>1?'…':''):''}</span></span>`;
  }});
 }

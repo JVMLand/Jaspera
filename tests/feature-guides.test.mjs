@@ -16,6 +16,14 @@ test('feature guides follow their targets and remember dismissal across windows'
  assert.equal(await page.evaluate(id=>localStorage.getItem('jaspera.guide.dismissed.'+id),first),'1');
  await page.reload();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');
  await guide.waitFor({state:'visible'});assert.notEqual(await guide.getAttribute('data-guide'),first);
+ const breakpoint=page.locator('.jal-breakpoint-slot[data-guide="hello-breakpoint"]');
+ assert.equal(await breakpoint.getAttribute('data-line'),'6');
+ await page.waitForFunction(()=>document.querySelector('[data-guide="hello-breakpoint"]')?.nextElementSibling?.textContent==='5');
+ const gutter=await breakpoint.evaluate(node=>({number:node.previousElementSibling.textContent,offset:node.nextElementSibling.textContent}));assert.deepEqual(gutter,{number:'6',offset:'5'});
+ await breakpoint.click();await page.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')==='breakpoints');
+ await page.waitForTimeout(100);
+ const anchor=await breakpoint.boundingBox(),tip=await page.locator('.feature-guide-arrow').boundingBox();assert.ok(Math.abs(tip.x+tip.width/2-(anchor.x+anchor.width/2))<2);
+ await guide.locator('button').click();
  await page.locator('#instructions-tab').click();
  await page.waitForFunction(()=>document.querySelector('.feature-guide:not([hidden])')?.getAttribute('data-guide')==='instructions');
  const other=await page.context().newPage();await other.goto(base);await other.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');await other.locator('#instructions-tab').click();

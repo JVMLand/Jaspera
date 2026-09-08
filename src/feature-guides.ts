@@ -12,7 +12,7 @@ const guides:Guide[]=[
  {id:'run',title:'プログラムを実行',text:'Run で実行し，Console で出力を確認できます。実行中は同じボタンで停止できます。',target:'#run'},
  {id:'project',title:'ファイルとサンプル',text:'example には実行できるサンプルがあります。ファイルを開いて編集してみてください。自分のフォルダーは File → フォルダーを開くから開けます。',target:selected('project'),trigger:tab('project')},
  {id:'tabs',title:'作業しやすい配置に',text:'タブを少し長押ししてドラッグすると，別のグループへ移動できます。画面の外へ持ち出すと小窓になります。グループの境界をドラッグすると幅を変えられます。',target:'[data-pane-kind="editor"] [role="tab"][aria-selected="true"]',trigger:'[data-pane-kind="editor"] [role="tab"]'},
- {id:'breakpoints',title:'途中で止める',text:'行番号とバイトコードオフセットの間をクリックすると，ブレークポイントを置けます。Run で実行すると，その命令の直前で一時停止します。',target:'.monaco-editor .jal-breakpoint-slot',trigger:'.jal-breakpoint-slot'},
+ {id:'breakpoints',title:'途中で止める',text:'行番号とバイトコードオフセットの間をクリックすると，ブレークポイントを置けます。Run で実行すると，その命令の直前で一時停止します。',target:'.jal-breakpoint-slot[data-guide="hello-breakpoint"]',trigger:'.jal-breakpoint-slot[data-guide="hello-breakpoint"]'},
  {id:'console',title:'出力と入力',text:'プログラムの出力がここに表示されます。入力が必要なプログラムでは，実行前に標準入力へ文字列を入れてください。',target:selected('console'),trigger:tab('console'),context:true},
  {id:'view',title:'見た目とパネル',text:'View からテーマを変更したり，閉じたパネルを開き直したりできます。Shift を2回押すと，ファイルや OpenJDK の定義を検索できます。',target:'#menu-view',trigger:'#menu-view',context:true},
  {id:'file',title:'フォルダーを開く・保存する',text:'File → 開くから JAL や class ファイルを開けます。フォルダーを開いている場合は，保存で編集内容をそのフォルダーに書き込みます。',target:'#menu-file',trigger:'#menu-file',context:true},
@@ -56,7 +56,7 @@ export function installFeatureGuides(){
  const storage=(event:StorageEvent)=>{if(event.key===null||event.key.startsWith(prefix)){read();schedule();}};
  const reset=()=>{for(const guide of guides){dismissed.delete(guide.id);try{localStorage.removeItem(prefix+guide.id);}catch{}}preferred=undefined;hide();schedule();};
  const observer=new MutationObserver(records=>{if(records.some(record=>!bubble.contains(record.target)))schedule();});observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','aria-selected','open']});
- document.addEventListener('click',interact,true);document.addEventListener('focusin',interact,true);window.addEventListener('resize',schedule);window.addEventListener('storage',storage);window.addEventListener('jaspera:reset-guides',reset);
- window.addEventListener('pagehide',()=>{cancelAnimationFrame(request);observer.disconnect();cleanup?.();bubble.remove();document.removeEventListener('click',interact,true);document.removeEventListener('focusin',interact,true);window.removeEventListener('resize',schedule);window.removeEventListener('storage',storage);window.removeEventListener('jaspera:reset-guides',reset);installed=false;},{once:true});
+ document.addEventListener('scroll',schedule,true);document.addEventListener('click',interact,true);document.addEventListener('focusin',interact,true);window.addEventListener('resize',schedule);window.addEventListener('storage',storage);window.addEventListener('jaspera:reset-guides',reset);
+ window.addEventListener('pagehide',()=>{cancelAnimationFrame(request);observer.disconnect();cleanup?.();bubble.remove();document.removeEventListener('scroll',schedule,true);document.removeEventListener('click',interact,true);document.removeEventListener('focusin',interact,true);window.removeEventListener('resize',schedule);window.removeEventListener('storage',storage);window.removeEventListener('jaspera:reset-guides',reset);installed=false;},{once:true});
  schedule();
 }
