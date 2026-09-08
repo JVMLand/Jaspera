@@ -1,3 +1,4 @@
+import { entryProblem } from './entry-method.js';
 import { SourceDocuments } from './source-documents';
 import { languageMenuItem } from './localization';
 import { msg } from './messages.js';
@@ -220,6 +221,7 @@ let problemTargets: { path: string; line: number; column: number }[] = [];
 const sourceAnalysis = new SourceAnalysis(
   (model) => {
     if ([...models.values()].includes(model)) showDiagnostics();
+    updateActions();
     for (const view of groupEditors.values()) if (view.getModel() === model) refreshOffsets(view);
   },
   (model) => [...models.values()].includes(model) || model.uri.authority === 'example',
@@ -492,6 +494,7 @@ function ensureExample(path: string) {
   model.onDidChangeContent(() => {
     rememberExample(path, model.getValue());
     scheduleOffsets(model);
+    updateActions();
     monaco.editor.setModelMarkers(model, 'jal', []);
   });
   scheduleOffsets(model);
@@ -706,6 +709,7 @@ const menus = installMenus(el('menus'), [
   { label: 'Help', items: helpMenuItems() },
 ]);
 function status(text: string, kind: 'ready' | 'loading' | 'error' = 'ready') {
+  if (text === msg('mc2c1724a78a8') && !running) text = runUnavailable() || text;
   workspaceState.update({ status: text });
   el('state').textContent = text;
   el('state-dot').className = `status-dot ${kind}`;
@@ -720,13 +724,37 @@ function setDirty(value = true) {
 function validatePath(path: string) {
   relativePath(path);
   if (folder?.properties !== false && !path.startsWith('src/'))
-    throw new Error('ソースは src/ 以下に置いてください。');
+    throw new Error(msg('m35c9589b91c3'));
 }
 function refreshOffsets(view = editor) {
   showBytecodeOffsets(view, sourceAnalysis.offsets(view.getModel()));
 }
+function runUnavailable(model = editor.getModel()): string {
+  const target =
+    model?.uri.authority === 'example' ? model : (models.get(project.workspace.entryFile) ?? null);
+  if (!target) return msg('run.noMain');
+  const entry = sourceAnalysis.entry(target);
+  if (!entry) return msg('run.checkingMain');
+  const problem = entryProblem(
+    entry,
+    [...models.values()].flatMap((m) => sourceAnalysis.entry(m) ?? []),
+  );
+  return problem ? msg(problem) : '';
+}
 function publishWorkspaceAvailability() {
-  workspaceState.update({ canSave: !!folder && !storageBusy, running });
+  workspaceState.update({
+    canSave: !!folder && !storageBusy,
+    running,
+    runAvailability: {
+      '': runUnavailable(),
+      project: runUnavailable(null),
+      ...Object.fromEntries(
+        [...classPreviews.values()]
+          .filter((p) => p.example)
+          .map((p) => [p.model.uri.toString(), runUnavailable(p.model)]),
+      ),
+    },
+  });
 }
 function updateActions() {
   publishWorkspaceAvailability();
@@ -745,9 +773,24 @@ function updateActions() {
   runButton.innerHTML = running
     ? '<span aria-hidden="true">■</span> Stop <kbd>Ctrl ↵</kbd>'
     : '<span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd>';
-  runButton.title = (running ? '停止' : '実行') + '（Ctrl+Enter / F5）';
-  runButton.setAttribute('aria-label', running ? '停止' : '実行');
-  menus.label('menu-run', running ? '停止' : '実行');
+  const unavailable = running ? '' : runUnavailable();
+  runButton.disabled = !!unavailable;
+  menus.disabled('menu-run', !!unavailable);
+  menus.disabled('debug-start', running || !!unavailable);
+  runButton.title =
+    unavailable || (running ? msg('mca4d973c0b00') : msg('m77721d5dea60')) + '（Ctrl+Enter / F5）';
+  if (
+    !running &&
+    [
+      msg('mc2c1724a78a8'),
+      ...['run.noMain', 'run.noConstructor', 'run.abstractMain', 'run.checkingMain'].map((key) =>
+        msg(key),
+      ),
+    ].includes(workspaceState.value.status)
+  )
+    status(unavailable || msg('mc2c1724a78a8'));
+  runButton.setAttribute('aria-label', running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
+  menus.label('menu-run', running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
   menus.disabled(
     'download',
     editor.getModel()?.uri.authority !== 'example' &&
@@ -2121,6 +2164,11 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
     example = model?.uri.authority === 'example';
   if (running) {
     stopRun();
+    return;
+  }
+  const unavailable = runUnavailable(model);
+  if (unavailable) {
+    status(unavailable);
     return;
   }
   running = true;

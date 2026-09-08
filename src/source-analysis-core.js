@@ -1,3 +1,4 @@
+import { entryMethods } from './entry-method.js';
 import { parseJal } from './jal-parse.js';
 import { parameterSlots } from './parameter-slots.js';
 import { calculateOffsets } from './offsets.js';
@@ -10,6 +11,7 @@ export function analyzeSource(source, parser = parseJal) {
     return snapshots.get(text);
   };
   return {
+    entry: entryMethods(source, parse),
     parameters: parameterSlots(source, parse),
     offsets: calculateOffsets(source, parse),
     inspections: inspectSource(source, parse),

@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { readFile } from 'node:fs/promises';
 const bundle = await build({
   stdin: {
-    contents: `export {analyzeSource} from './src/source-analysis-core.js';export {parseJal} from './src/jal-parse.js';export {parameterSlots} from './src/parameter-slots.js';export {calculateOffsets} from './src/offsets.js';export {inspectSource} from './src/inspections.js';`,
+    contents: `export {entryMethods} from './src/entry-method.js';export {analyzeSource} from './src/source-analysis-core.js';export {parseJal} from './src/jal-parse.js';export {parameterSlots} from './src/parameter-slots.js';export {calculateOffsets} from './src/offsets.js';export {inspectSource} from './src/inspections.js';`,
     resolveDir: process.cwd(),
   },
   bundle: true,
@@ -12,10 +12,12 @@ const bundle = await build({
   platform: 'browser',
   format: 'esm',
 });
-const { analyzeSource, parseJal, parameterSlots, calculateOffsets, inspectSource } = await import(
-  'data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64')
-);
+const { entryMethods, analyzeSource, parseJal, parameterSlots, calculateOffsets, inspectSource } =
+  await import(
+    'data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64')
+  );
 const separate = (source) => ({
+  entry: entryMethods(source),
   parameters: parameterSlots(source),
   offsets: calculateOffsets(source),
   inspections: inspectSource(source),

@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import * as monaco from './editor-platform';
 import { WorkerRpc } from './worker-rpc';
 import type { OffsetsApi } from './offsets.worker';
@@ -47,7 +48,10 @@ export class SourceAnalysis {
                 kind: monaco.languages.InlayHintKind.Parameter,
                 paddingLeft: item.slot > 0,
                 paddingRight: true,
-                tooltip: `ローカル変数スロット ${item.slot}${item.width === 2 ? '・' + (item.slot + 1) + '（2 スロット）' : ''}`,
+                tooltip: msg('md0f0b7e486ad', [
+                  item.slot,
+                  item.width === 2 ? '・' + (item.slot + 1) + msg('md3971f64c1ad') : '',
+                ]),
               }))
               .filter((hint) => range.containsPosition(hint.position))
           : [];
@@ -80,12 +84,16 @@ export class SourceAnalysis {
           this.changed(model);
         })
         .catch((error) => {
-          if (!this.disposed) console.error('ソース解析に失敗しました。', error);
+          if (!this.disposed) console.error(msg('m8c0e54949ad1'), error);
         });
     }, 80);
     this.pending.set(model, { timer, dispose });
   }
 
+  entry(model: Model | null) {
+    const cached = model ? this.cache.get(model) : undefined;
+    return model && cached?.version === model.getVersionId() ? cached.data.entry : undefined;
+  }
   offsets(model: Model | null): SourceOffset[] {
     const cached = model ? this.cache.get(model) : undefined;
     return cached?.data.offsets ?? [];
@@ -153,10 +161,21 @@ function renderGutter(view: monaco.editor.IStandaloneCodeEditor, state: GutterSt
       const items = state.lines.get(line) ?? [],
         first = items[0];
       const title = first
-        ? 'バイトコードオフセット（命令解析による推定・10進数）\n' +
-          items.map((i) => `${i.method}: ${i.offset}`).join('\n')
+        ? msg('mcb85463e1f1f') + items.map((i) => `${i.method}: ${i.offset}`).join('\n')
         : '';
-      return `<span class="jal-gutter-row"><span class="jal-source-line">${line}</span><span class="jal-breakpoint-slot${state.breakpoints.has(line) ? ' debug-breakpoint' : ''}${state.current === line ? ' debug-current-marker' : ''}" data-line="${line}"${line === 6 && view.getModel()?.uri.authority === 'example' && view.getModel()?.uri.path === '/example/HelloWorld.jal' ? ' data-guide="hello-breakpoint"' : ''} title="ブレークポイントを切り替える（F9）"></span><span class="jal-bytecode-offset" title="${escape(title)}">${first ? first.offset + (items.length > 1 ? '…' : '') : ''}</span></span>`;
+      return msg('m3f8e942b08bd', [
+        line,
+        state.breakpoints.has(line) ? ' debug-breakpoint' : '',
+        state.current === line ? ' debug-current-marker' : '',
+        line,
+        line === 6 &&
+        view.getModel()?.uri.authority === 'example' &&
+        view.getModel()?.uri.path === '/example/HelloWorld.jal'
+          ? ' data-guide="hello-breakpoint"'
+          : '',
+        escape(title),
+        first ? first.offset + (items.length > 1 ? '…' : '') : '',
+      ]);
     },
   });
 }
