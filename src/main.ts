@@ -1,3 +1,4 @@
+import {revealEditorPosition,type RevealMode} from './editor-reveal';
 import {installFeatureGuides} from './feature-guides';
 import {BreakpointStore} from './breakpoint-store';
 import {installDebugPanel,debugMenuItems,installDebugKeys} from './debug-panel';
@@ -108,15 +109,15 @@ function debugCommand(command:DebugCommand){
 async function revealDebugFrame(frame:DebugFrame){
  const snapshot=workspaceState.value.debug?.snapshot;if(!snapshot)return;
  const current=()=>workspaceState.value.debug?.status==='paused'&&workspaceState.value.debug.snapshot===snapshot;
- const uri=debugSources.get(frame.className);if(uri&&frame.line>0){if(current())await openDefinition(uri,{lineNumber:frame.line,column:1});return;}
+ const uri=debugSources.get(frame.className);if(uri&&frame.line>0){if(current())await openDefinition(uri,{lineNumber:frame.line,column:1},'ifOutside');return;}
  try{
   const location=frame.native?undefined:await navigation.instructionLocation(frame.className,frame.method,frame.descriptor,frame.pc);
   if(!current())return;
   if(location){
    if(frame===snapshot.frames[0])debugState({instructionLocation:location});
-   await openDefinition(location.uri,{lineNumber:location.line,column:1});return;
+   await openDefinition(location.uri,{lineNumber:location.line,column:1},'ifOutside');return;
   }
-  const target=await navigation.searchDefinition({kind:'method',label:frame.method,detail:frame.className,owner:frame.className,name:frame.method,descriptor:frame.descriptor});if(target&&current())await openDefinition(target.uri,target.range);}
+  const target=await navigation.searchDefinition({kind:'method',label:frame.method,detail:frame.className,owner:frame.className,name:frame.method,descriptor:frame.descriptor});if(target&&current())await openDefinition(target.uri,target.range,'ifOutside');}
  catch(error){if(current())status(error instanceof Error?error.message:String(error),'error');}
 }
 
@@ -223,7 +224,7 @@ function detachableDocument(keyOrUri:string){
  if(!preview){const model=monaco.editor.getModels().find(m=>m.uri.toString()===keyOrUri&&m.uri.authority==='definition');if(!model||model.isDisposed())return;const name=model.uri.path.slice(1).replace(/\.jal$/,'.class');preview={key:'definition:'+name,title:name,model,mtime:0,size:0};classPreviews.set(preview.key,preview);scheduleOffsets(model);}
  return {key:'preview:'+preview.key,title:previewTitle(preview),model:preview.model,readOnly:!preview.example};
 }
-async function openDefinition(uri:string,selection?:monaco.IRange|monaco.IPosition){
+async function openDefinition(uri:string,selection?:monaco.IRange|monaco.IPosition,revealMode:RevealMode='center'){
  const model=monaco.editor.getModel(monaco.Uri.parse(uri));if(!model||model.isDisposed())return false;
  const source=[...models].find(([,m])=>m===model);
  let key:string;
@@ -233,8 +234,8 @@ async function openDefinition(uri:string,selection?:monaco.IRange|monaco.IPositi
   if(!preview){if(model.uri.authority!=='definition')return false;const name=model.uri.path.slice(1).replace(/\.jal$/,'.class');preview={key:'definition:'+name,title:name,model,mtime:0,size:0};classPreviews.set(preview.key,preview);scheduleOffsets(model);}
   key='preview:'+preview.key;if(!detached.has(key))selectClassPreview(preview.key);
  }
- if(detached.has(key)){detached.reveal(key,selection);return true;}
- if(selection){const position='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(position);editor.revealPositionInCenter(position);}
+ if(detached.has(key)){detached.reveal(key,selection,revealMode);return true;}
+ if(selection){const position='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;revealEditorPosition(editor,position,revealMode);}
  editor.focus();window.focus();return true;
 }
 let panelDock:ReturnType<typeof installPanelDock>|undefined;

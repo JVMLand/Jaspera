@@ -1,3 +1,4 @@
+import type {RevealMode} from './editor-reveal';
 import type {DebugCommand,DebugFrame} from './debug-protocol';
 import type {AnalysisProgress} from './protocol';
 import type {WorkspaceState} from './workspace-state';
@@ -11,7 +12,7 @@ import * as monaco from './editor-platform';
 import type {DefinitionDocument,SearchTarget} from './navigation';
 export interface EditorSnapshot {view?:FileView;key:string;id:string;source:string;uri:string;version:number;title:string;readOnly:boolean;theme:string;diagnostics:monaco.editor.IMarkerData[]}
 export type DetachedState=WorkspaceState;
-export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string)=>void}
+export interface DetachedClient {layout?:()=>Pick<WindowLayout,'active'|'views'|'wordWrap'|'order'>;restoreLayout?:(layout:WindowLayout)=>void;instruction?:(op:string)=>void;panel?:(name:PanelName)=>void;panelRemoved?:(name:PanelName)=>void;update:(snapshot:EditorSnapshot)=>void;remove?:(id:string)=>void;state?:(state:DetachedState)=>void;reveal?:(range?:monaco.IRange|monaco.IPosition,id?:string,revealMode?:RevealMode)=>void}
 export interface DetachedDocument {key:string;title:string;model:monaco.editor.ITextModel;readOnly:boolean}
 export interface DetachedBridge {debugStart:(id?:string)=>void;debugCommand:(command:DebugCommand)=>void;toggleBreakpoint:(uri:string,line:number)=>void;debugReveal:(frame:DebugFrame)=>void;graphFocus:(id:string,line:number,column:number)=>void;ready:(id:string)=>void;workspaceId:string;instruction:(op:string)=>void;
  detach:(group:string,key:string)=>boolean;panels:(group:string)=>PanelName[];openPanel:(group:string,name:PanelName)=>void;closePanel:(group:string,name:PanelName)=>void;problem:(index:number,group:string)=>void;stdin:(text:string)=>void;clearOutput:()=>void;
@@ -149,7 +150,7 @@ export function createDetachedHost(onReturn:(key:string)=>void,save:()=>void,run
   replaceDocument(key:string,doc:DetachedDocument){const entry=[...entries.values()].find(e=>e.key===key);if(!entry)return;const view=groups.get(entry.group)?.client?.layout?.().views[key];for(const subscription of entry.subscriptions)subscription.dispose();entries.delete(entry.id);const next=add(entry.group,doc,entry.id);next.view=view;broadcast(next);},
   has:(key:string)=>[...entries.values()].some(e=>e.key===key),
   focus(key:string){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(undefined,e.id);groups.get(e.group)?.popup.focus();}},
-  reveal(key:string,range?:monaco.IRange|monaco.IPosition){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(range,e.id);groups.get(e.group)?.popup.focus();}},
+  reveal(key:string,range?:monaco.IRange|monaco.IPosition,revealMode:RevealMode='center'){const e=[...entries.values()].find(e=>e.key===key);if(e){groups.get(e.group)?.client?.reveal?.(range,e.id,revealMode);groups.get(e.group)?.popup.focus();}},
   open(key:string,title:string,model:monaco.editor.ITextModel,readOnly:boolean){
    if(this.has(key)){this.focus(key);return true;}
    const id=crypto.randomUUID(),url=new URL('detached.html',location.href);url.searchParams.set('editor',id);

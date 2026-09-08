@@ -22,9 +22,15 @@ test('step into OpenJDK reveals and highlights the actual disassembled instructi
   return {uri:model.uri.toString(),line,position:editor.getPosition().lineNumber,text:model.getLineContent(line).trim(),status:document.querySelector('#state').textContent};
  });
  const first=await read();assert.match(first.uri,/PrintStream/);assert.equal(first.position,first.line);assert.equal(first.text,'aload_0');
+ const scroll=await page.evaluate(line=>{const {editor}=window.testMain;editor.setScrollTop(editor.getTopForLineNumber(line)-80);return editor.getScrollTop();},first.line);
  await page.locator('.debug-toolbar [data-command=debug-over]').click();
  await page.waitForFunction(old=>document.querySelector('.debug-current-marker')?.getAttribute('data-line')!==String(old)&&!!document.querySelector('.debug-current-marker'),first.line);
  const next=await read();assert.equal(next.position,next.line);assert.notEqual(next.line,first.line);assert.notEqual(next.text,first.text);
+ assert.equal(await page.evaluate(()=>window.testMain.editor.getScrollTop()),scroll,'visible execution line must not recenter');
+ await page.evaluate(()=>window.testMain.editor.setScrollTop(0));
+ await page.locator('.debug-toolbar [data-command=debug-over]').click();
+ await page.waitForFunction(old=>{const {editor}=window.testMain;const line=editor.getPosition().lineNumber;return line!==old&&editor.getVisibleRanges().some(r=>r.startLineNumber<=line&&r.endLineNumber>=line)&&!!document.querySelector('.debug-current-marker');},next.line);
+ assert.ok(await page.evaluate(()=>window.testMain.editor.getScrollTop())>0,'offscreen execution line must become visible');
  await page.screenshot({path:'.cache/debug-step-into.png'});
  await page.locator('.debug-toolbar [data-command=debug-stop]').click();
  await page.locator('.debug-current-marker').waitFor({state:'hidden'});

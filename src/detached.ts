@@ -1,3 +1,4 @@
+import {revealEditorPosition} from './editor-reveal';
 import {installFeatureGuides} from './feature-guides';
 import {debugMenuItems,installDebugKeys} from './debug-panel';
 import {installDebugEditor} from './debug-editor';
@@ -98,7 +99,7 @@ el<HTMLDialogElement>('open-file').addEventListener('close',()=>{if(el<HTMLDialo
 for(const theme of themes){const option=document.createElement('option');option.value=theme.id;option.textContent=theme.label;el('themes').append(option);}el<HTMLSelectElement>('themes').onchange=()=>bridge?.theme(el<HTMLSelectElement>('themes').value);
 toolTabs=installDetachedTools(bridge,group,()=>{renderTabs();updateActions();editor.layout();});
 const instructionClicks=followInstructionClicks(editor,op=>{toolTabs?.showInstruction(op);bridge?.instruction(op);});
-const initial=bridge?.attach(group,{layout,restoreLayout,update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files,state.graphDocument,state.debug);debugEditor.update();applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;editor.setPosition(p);editor.revealPositionInCenter(p);}editor.focus();}});
+const initial=bridge?.attach(group,{layout,restoreLayout,update,remove,instruction:op=>toolTabs?.showInstruction(op),panel:name=>toolTabs?.show(name),panelRemoved:name=>toolTabs?.remove(name),state:state=>{workspace=state;toolTabs?.update(state.tools,state.files,state.graphDocument,state.debug);debugEditor.update();applyTheme(state.theme,false);el('status').textContent=state.status||'編集内容は元のワークスペースと共有されます。';updateActions();},reveal:(selection,id,revealMode)=>{if(id)select(id);if(selection){const p='startLineNumber' in selection?{lineNumber:selection.startLineNumber,column:selection.startColumn}:selection;revealEditorPosition(editor,p,revealMode);}editor.focus();}});
 for(const snapshot of bridge?.tabs(group)??[])update(snapshot);if(initial)select(initial.id);else if(!bridge)el('status').textContent='元のワークスペースに接続できません。';updateActions();for(const name of bridge?.panels(group)??[])toolTabs?.show(name);
 bridge?.ready(group);
 const exitDrag=paneWindowExit(bridge?.workspaceId??'',key=>{
