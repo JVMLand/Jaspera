@@ -1,3 +1,5 @@
+import { estimatedSize } from './estimated-size';
+import { msg } from './messages.js';
 import { BoundedCache, defaultCacheBudget } from './bounded-cache';
 import type { Compilation, Disassembly, AnalysisProgress, CompileOptions } from './protocol';
 
@@ -50,7 +52,7 @@ export class CompilationService {
     clearTimeout(this.idleTimer);
     this.pending++;
     const promise = this.queue.then(() => {
-      if (this.disposed) throw new Error('解析サービスは終了しています。');
+      if (this.disposed) throw new Error(msg('m430ebe2657fc'));
       return work();
     });
     this.queue = promise
@@ -74,7 +76,7 @@ export class CompilationService {
     this.scheduleIdle();
   }
   disassemble(bytecode: string) {
-    if (this.disposed) return Promise.reject(new Error('解析サービスは終了しています。'));
+    if (this.disposed) return Promise.reject(new Error(msg('m430ebe2657fc')));
     return this.enqueue(() => this.compiler.disassemble(bytecode));
   }
 
@@ -84,7 +86,7 @@ export class CompilationService {
     onProgress?: ProgressListener,
     options: CompileOptions = { stackFrames: true, graphs: true },
   ): Promise<Compilation> {
-    if (this.disposed) return Promise.reject(new Error('解析サービスは終了しています。'));
+    if (this.disposed) return Promise.reject(new Error(msg('m430ebe2657fc')));
     const cached = this.cache.get(document);
     if (cached) this.completed.get(cached);
     if (cached?.source === source) {
@@ -107,7 +109,7 @@ export class CompilationService {
     if (cached) this.completed.delete(cached);
     const promise = this.enqueue(() => {
       if (this.cache.get(document) !== entry) {
-        const error = new Error('新しい編集内容に置き換えられたため解析を省略しました。');
+        const error = new Error(msg('m20f0aa9e3abe'));
         error.name = 'AbortError';
         throw error;
       }
@@ -141,9 +143,9 @@ export class CompilationService {
         waitingFor:
           this.pending > 1
             ? cached?.source === source && cached.started && !cached.settled
-              ? '同じ文書の先行解析の完了待ち'
-              : '先行する解析・逆アセンブルの完了待ち'
-            : '解析の開始待ち',
+              ? msg('m16566deaf6a5')
+              : msg('m98d251e2bf9e')
+            : msg('mbd71d91cc8f0'),
       },
       partials: [],
       listeners: new Set(),
@@ -162,7 +164,7 @@ export class CompilationService {
     void promise.then((result) => {
       finish();
       if (!this.disposed && this.cache.get(document) === entry) {
-        const bytes = 4 * (source.length + JSON.stringify(result).length);
+        const bytes = source.length * 2 + estimatedSize(result, defaultCacheBudget);
         this.completed.set(entry, new WeakRef(document), bytes);
         // Oversized results are returned to the caller but not retained by the service.
         if (bytes > defaultCacheBudget) this.cache.delete(document);
