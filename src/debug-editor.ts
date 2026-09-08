@@ -34,7 +34,10 @@ export function installDebugEditor(
       });
     editor
       .getDomNode()
-      ?.classList.toggle('debug-breakpoints-ignored', !!current?.ignoreBreakpoints);
+      ?.classList.toggle(
+        'debug-breakpoints-ignored',
+        !!(current?.ignoreBreakpoints || current?.forceIgnoreBreakpoints),
+      );
     showDebugGutter(editor, points, line);
     decorations.set(items);
   };

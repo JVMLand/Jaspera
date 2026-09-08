@@ -945,5 +945,8 @@
   "textSize.reset": "Restitue valores",
   "presentation.title": "Modus demonstrationis",
   "presentation.exit": "Demonstrationem finire",
-  "debug.ignoreBreakpoints": "Omnia puncta sistendi ignorare"
+  "debug.ignoreBreakpoints": "Omnia puncta sistendi ignorare",
+  "run.options": "Modum exsecutionis eligere",
+  "run.debug": "Errores indagare",
+  "run.normal": "Exsequi"
 }

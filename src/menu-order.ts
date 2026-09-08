@@ -29,7 +29,6 @@ const groups: Record<string, string[][]> = {
   Debug: [
     ['debug-continue', 'debug-over', 'debug-into', 'debug-out'],
     ['debug-pause', 'debug-stop', 'debug-start'],
-    ['debug-ignore-breakpoints'],
   ],
   Help: [
     ['help-manual', 'help-language-docs'],

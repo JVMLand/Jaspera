@@ -945,5 +945,8 @@
   "textSize.reset": "標準に戻す",
   "presentation.title": "プレゼンテーションモード",
   "presentation.exit": "プレゼンテーションを終了",
-  "debug.ignoreBreakpoints": "すべてのブレークポイントを無視"
+  "debug.ignoreBreakpoints": "すべてのブレークポイントを無視",
+  "run.options": "実行方法を選択",
+  "run.debug": "デバッグ",
+  "run.normal": "実行"
 }

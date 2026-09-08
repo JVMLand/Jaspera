@@ -79,7 +79,9 @@ window.addEventListener(
       !active ||
       event.key !== 'Escape' ||
       event.isComposing ||
-      document.querySelector('dialog[open], .menu-popup:not([hidden])')
+      document.querySelector(
+        'dialog[open], .menu-popup:not([hidden]), #run-options-menu:not([hidden])',
+      )
     )
       return;
     event.preventDefault();

@@ -11,7 +11,7 @@ export interface DebugActions {
   reveal(frame: DebugFrame): void;
 }
 export function debugCommandEnabled(state: DebugState | undefined, id: string) {
-  if (id === 'debug-ignore-breakpoints') return true;
+  if (id === 'debug-ignore-breakpoints') return !state?.forceIgnoreBreakpoints;
   const status = state?.status;
   if (id === 'debug-stop')
     return status === 'starting' || status === 'running' || status === 'paused';
@@ -19,7 +19,7 @@ export function debugCommandEnabled(state: DebugState | undefined, id: string) {
   return status === 'paused';
 }
 export function updateDebugMenu(
-  menus: { disabled(id: string, value: boolean): void; checked(id: string, value: boolean): void },
+  menus: { disabled(id: string, value: boolean): void },
   state: DebugState | undefined,
 ) {
   for (const id of [
@@ -31,7 +31,6 @@ export function updateDebugMenu(
     'debug-stop',
   ])
     menus.disabled(id, !debugCommandEnabled(state, id));
-  menus.checked('debug-ignore-breakpoints', !!state?.ignoreBreakpoints);
 }
 export function debugMenuItems(actions: DebugActions) {
   return [
@@ -62,11 +61,6 @@ export function debugMenuItems(actions: DebugActions) {
       action: () => actions.command('out'),
     },
     { id: 'debug-stop', label: msg('mca4d973c0b00'), action: actions.stop },
-    {
-      id: 'debug-ignore-breakpoints',
-      label: msg('debug.ignoreBreakpoints'),
-      action: actions.toggleIgnoreBreakpoints,
-    },
   ];
 }
 export function installDebugKeys(actions: DebugActions, state: () => DebugState | undefined) {
@@ -130,7 +124,15 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
   const indicator = document.createElement('span');
   indicator.className = 'debug-toolbar-state';
   toolbar.append(indicator);
-  const buttons = debugMenuItems(actions)
+  const buttons = [
+    ...debugMenuItems(actions),
+    {
+      id: 'debug-ignore-breakpoints',
+      label: msg('debug.ignoreBreakpoints'),
+      action: actions.toggleIgnoreBreakpoints,
+      shortcut: undefined,
+    },
+  ]
     .filter((item) => item.id !== 'debug-start')
     .map((item) => {
       const b = document.createElement('button');
@@ -174,7 +176,10 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
       b.hidden = id === 'debug-continue' ? !paused : id === 'debug-pause' ? paused : false;
       b.disabled = !debugCommandEnabled(state, id!);
       if (id === 'debug-ignore-breakpoints')
-        b.setAttribute('aria-pressed', String(!!state?.ignoreBreakpoints));
+        b.setAttribute(
+          'aria-pressed',
+          String(!!(state?.ignoreBreakpoints || state?.forceIgnoreBreakpoints)),
+        );
     });
     list.replaceChildren();
     content.replaceChildren();

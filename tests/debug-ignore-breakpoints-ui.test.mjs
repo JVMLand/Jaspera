@@ -19,11 +19,11 @@ test(
     await page.goto('http://127.0.0.1:5294');
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
     await page.locator('.feature-guide-skip:visible').click();
-    const toggle = page.locator('#debug-ignore-breakpoints');
-    assert.equal(await toggle.getAttribute('aria-checked'), 'false');
-    await page.locator('#menu-debug').click();
-    await toggle.click();
-    assert.equal(await toggle.getAttribute('aria-checked'), 'true');
+    assert.equal(await page.locator('#debug-ignore-breakpoints').count(), 0);
+    const toggle = page.locator('[data-command=debug-ignore-breakpoints]');
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'false');
+    await toggle.evaluate((button) => button.click());
+    assert.equal(await toggle.getAttribute('aria-pressed'), 'true');
     const pointCount = await page.locator('.debug-breakpoint').count();
     assert.ok(pointCount > 0);
     await page.locator('.monaco-editor.debug-breakpoints-ignored').waitFor();
@@ -34,8 +34,7 @@ test(
     await page.waitForFunction(() => document.querySelector('.debug-toolbar')?.hidden);
     assert.equal(await page.locator('.debug-breakpoint').count(), pointCount);
     // Turning the option off restores the existing HelloWorld breakpoint.
-    await page.locator('#menu-debug').click();
-    await toggle.click();
+    await toggle.evaluate((button) => button.click());
     await page.locator('#run').click();
     await page.locator('.debug-toolbar[data-state=paused]').waitFor();
     const event = page.waitForEvent('popup');
@@ -46,8 +45,9 @@ test(
     await popup.locator('[data-command=debug-ignore-breakpoints]').click();
     await page.waitForFunction(
       () =>
-        document.querySelector('#debug-ignore-breakpoints')?.getAttribute('aria-checked') ===
-        'true',
+        document
+          .querySelector('[data-command=debug-ignore-breakpoints]')
+          ?.getAttribute('aria-pressed') === 'true',
     );
     assert.equal(
       await popup.locator('[data-command=debug-ignore-breakpoints]').getAttribute('aria-pressed'),

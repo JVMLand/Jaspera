@@ -1,3 +1,4 @@
+import { installRunMenu } from './run-menu';
 import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
 import { textSizeMenuItem } from './text-size';
@@ -121,6 +122,7 @@ function toggleBreakpoint(uri: string, line: number) {
 }
 
 function toggleIgnoreBreakpoints() {
+  if (workspaceState.value.debug?.forceIgnoreBreakpoints) return;
   debugState({ ignoreBreakpoints: !workspaceState.value.debug?.ignoreBreakpoints });
   if (runner && ['paused', 'running'].includes(workspaceState.value.debug!.status))
     void runner
@@ -129,7 +131,11 @@ function toggleIgnoreBreakpoints() {
 }
 
 function runtimeBreakpoints() {
-  if (workspaceState.value.debug?.ignoreBreakpoints) return [];
+  if (
+    workspaceState.value.debug?.ignoreBreakpoints ||
+    workspaceState.value.debug?.forceIgnoreBreakpoints
+  )
+    return [];
   return workspaceState.value.debug!.breakpoints.flatMap((b) => {
     const owner = [...debugSources].find(([, uri]) => uri === b.uri)?.[0];
     return owner ? [{ className: owner, line: b.line }] : [];
@@ -632,6 +638,7 @@ async function openDefinition(
   window.focus();
   return true;
 }
+let runMenu: ReturnType<typeof installRunMenu> | undefined;
 let panelDock: ReturnType<typeof installPanelDock> | undefined;
 const filePicker = installFilePicker((files) => void openFiles(files));
 const menus = installMenus(el('menus'), [
@@ -804,6 +811,7 @@ function updateActions() {
     : '<span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd>';
   const unavailable = running ? '' : runUnavailable();
   runButton.disabled = !!unavailable;
+  runMenu?.update(!running && !unavailable);
   menus.disabled('menu-run', !!unavailable);
   menus.disabled('debug-start', running || !!unavailable);
   runButton.title =
@@ -2300,7 +2308,12 @@ editor.onDidChangeCursorPosition(({ position }) => {
   el('instruction-hint').textContent = msg('m90f066b614d2');
 });
 function stopRun(show = true) {
-  debugState({ status: 'finished', snapshot: undefined, previous: undefined });
+  debugState({
+    status: 'finished',
+    snapshot: undefined,
+    previous: undefined,
+    forceIgnoreBreakpoints: false,
+  });
   runToken++;
   runner?.stop();
   runner = undefined;
@@ -2308,7 +2321,11 @@ function stopRun(show = true) {
   updateActions();
   if (show) status(msg('m4d87a69ae687'));
 }
-async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) {
+async function run(
+  requestedModel?: monaco.editor.ITextModel,
+  debugging = true,
+  forceIgnoreBreakpoints = false,
+) {
   const model = requestedModel ?? editor.getModel(),
     example = model?.uri.authority === 'example';
   if (running) {
@@ -2326,7 +2343,13 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
   let owned: Runtime | undefined;
   const started = performance.now();
   const debugDisposals: monaco.IDisposable[] = [];
-  if (debugging) debugState({ status: 'starting', snapshot: undefined, previous: undefined });
+  if (debugging)
+    debugState({
+      status: 'starting',
+      snapshot: undefined,
+      previous: undefined,
+      forceIgnoreBreakpoints,
+    });
   el('clear').click();
   el('console-empty').hidden = true;
   selectTab('console');
@@ -2435,7 +2458,13 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
     for (const d of debugDisposals) d.dispose();
     owned?.stop();
     if (token === runToken) {
-      if (debugging) debugState({ status: 'finished', snapshot: undefined, previous: undefined });
+      if (debugging)
+        debugState({
+          status: 'finished',
+          snapshot: undefined,
+          previous: undefined,
+          forceIgnoreBreakpoints: false,
+        });
       runner = undefined;
       running = false;
       updateActions();
@@ -2443,6 +2472,11 @@ async function run(requestedModel?: monaco.editor.ITextModel, debugging = true) 
   }
 }
 el('run').onclick = () => void run();
+runMenu = installRunMenu(
+  el<HTMLButtonElement>('run'),
+  (ignore) => void run(undefined, true, ignore),
+);
+runMenu.update(!running && !runUnavailable());
 const editorCommands = installEditorCommands(editor, () => void run());
 const windowCommands = installWindowCommands({
   save: () => void saveProject(),
@@ -2456,6 +2490,7 @@ window.addEventListener('beforeunload', (e) => {
 });
 window.addEventListener('pagehide', () => {
   disposed = true;
+  runMenu?.dispose();
   unsubscribeDebug();
   breakpoints.dispose();
   debugPanel.dispose();

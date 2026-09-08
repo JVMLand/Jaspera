@@ -50,6 +50,7 @@ export interface DebugOptions {
 }
 export interface DebugState {
   ignoreBreakpoints?: boolean;
+  forceIgnoreBreakpoints?: boolean;
   instructionLocation?: { uri: string; line: number };
   documents?: Record<string, string>;
   status: 'idle' | 'starting' | 'running' | 'paused' | 'finished';

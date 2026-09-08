@@ -945,5 +945,8 @@
   "textSize.reset": "Restablecer valores",
   "presentation.title": "Modo presentación",
   "presentation.exit": "Salir de la presentación",
-  "debug.ignoreBreakpoints": "Ignorar todos los puntos de interrupción"
+  "debug.ignoreBreakpoints": "Ignorar todos los puntos de interrupción",
+  "run.options": "Elegir cómo ejecutar",
+  "run.debug": "Depurar",
+  "run.normal": "Ejecutar"
 }

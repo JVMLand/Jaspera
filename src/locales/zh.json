@@ -945,5 +945,8 @@
   "textSize.reset": "恢复默认",
   "presentation.title": "演示模式",
   "presentation.exit": "退出演示",
-  "debug.ignoreBreakpoints": "忽略所有断点"
+  "debug.ignoreBreakpoints": "忽略所有断点",
+  "run.options": "选择运行方式",
+  "run.debug": "调试",
+  "run.normal": "运行"
 }

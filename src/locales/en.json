@@ -945,5 +945,8 @@
   "textSize.reset": "Reset to defaults",
   "presentation.title": "Presentation mode",
   "presentation.exit": "Exit presentation",
-  "debug.ignoreBreakpoints": "Ignore all breakpoints"
+  "debug.ignoreBreakpoints": "Ignore all breakpoints",
+  "run.options": "Choose how to run",
+  "run.debug": "Debug",
+  "run.normal": "Run"
 }
