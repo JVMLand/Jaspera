@@ -491,17 +491,69 @@ public final class Bridge {
         if (!loader.classes.containsKey(binaryName)) throw new IllegalArgumentException(
             "Entry class not found"
         );
+        byte[] entryBytes = loader.classes.get(binaryName);
+        ClassNode entry = new ClassNode();
+        new ClassReader(entryBytes).accept(entry, 0);
+        if (
+            (entry.access & (Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT)) == 0 &&
+            entry.methods.stream().noneMatch(m -> m.name.equals("<init>"))
+        ) {
+            MethodNode constructor = new MethodNode(
+                Opcodes.ACC_PUBLIC,
+                "<init>",
+                "()V",
+                null,
+                null
+            );
+            constructor.visitVarInsn(Opcodes.ALOAD, 0);
+            constructor.visitMethodInsn(
+                Opcodes.INVOKESPECIAL,
+                entry.superName,
+                "<init>",
+                "()V",
+                false
+            );
+            constructor.visitInsn(Opcodes.RETURN);
+            constructor.visitMaxs(1, 1);
+            entry.methods.add(constructor);
+            ClassWriter writer = new ClassWriter(0);
+            entry.accept(writer);
+            loader.classes.put(binaryName, writer.toByteArray());
+        }
         Thread.currentThread().setContextClassLoader(loader);
         Class<?> main = Class.forName(binaryName, true, loader);
-        var method = main.getMethod("main", String[].class);
-        if (
-            !java.lang.reflect.Modifier.isStatic(method.getModifiers()) ||
-            method.getReturnType() != void.class
-        ) throw new IllegalArgumentException(
-            "main must be public static main([Ljava/lang/String;)V"
+        java.lang.reflect.Method method = null;
+        // Prefer String[] when both signatures exist, independently of staticness.
+        for (Class<?>[] parameters : new Class<?>[][] { { String[].class }, {} }) {
+            for (Class<?> owner = main; owner != null; owner = owner.getSuperclass()) {
+                try {
+                    var candidate = owner.getDeclaredMethod("main", parameters);
+                    if (
+                        candidate.getReturnType() == void.class &&
+                        !java.lang.reflect.Modifier.isPrivate(candidate.getModifiers())
+                    ) {
+                        method = candidate;
+                        break;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+            }
+            if (method != null) break;
+        }
+        if (method == null) throw new IllegalArgumentException(
+            "Entry method must be a non-private main([Ljava/lang/String;)V or main()V"
         );
         try {
-            method.invoke(null, (Object) new String[0]);
+            method.setAccessible(true);
+            Object receiver = null;
+            if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                var constructor = main.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                receiver = constructor.newInstance();
+            }
+            method.invoke(
+                receiver,
+                method.getParameterCount() == 0 ? new Object[0] : new Object[] { new String[0] }
+            );
         } catch (InvocationTargetException e) {
             throw e.getCause();
         }
