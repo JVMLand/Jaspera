@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { renderFrameTransition } from './frame-transition';
 import * as monaco from './editor-platform';
 import { instructionNames } from './language';
@@ -12,7 +13,7 @@ export function installStackHover(
   panel.className = 'stack-hover';
   panel.hidden = true;
   panel.setAttribute('role', 'tooltip');
-  panel.setAttribute('aria-label', '命令実行前後のスタック');
+  panel.setAttribute('aria-label', msg('m1616f521d21c'));
   document.body.append(panel);
   let serial = 0,
     disposed = false,
@@ -54,7 +55,7 @@ export function installStackHover(
   }
   function render(frame: StackFrame) {
     if (frame.unreachable) {
-      panel.append(node('p', 'この命令には到達しません。実行前後の状態はありません。'));
+      panel.append(node('p', msg('mc6293dc94adb')));
       return;
     }
     const before = frame.before ?? [],
@@ -68,8 +69,8 @@ export function installStackHover(
         if (i !== frame.local && a[i] !== b[i]) indices.push(i);
       indices.sort((a, b) => a - b);
       locals = {
-        before: indices.map((i) => a[i] ?? '未設定'),
-        after: indices.map((i) => b[i] ?? '未設定'),
+        before: indices.map((i) => a[i] ?? msg('m621330591694')),
+        after: indices.map((i) => b[i] ?? msg('m621330591694')),
         labels: indices.map((i) => '#' + i),
         effect: frame.effect,
       };
@@ -114,10 +115,10 @@ export function installStackHover(
     const currentAnchor = anchor;
     const header = () => {
       const h = node('header');
-      h.append(node('code', word.word), node('span', 'この位置のフレーム · 静的解析'));
+      h.append(node('code', word.word), node('span', msg('m682f5005670c')));
       return h;
     };
-    panel.replaceChildren(header(), node('p', 'スタックを解析しています…', 'stack-hover-loading'));
+    panel.replaceChildren(header(), node('p', msg('m38889814003c'), 'stack-hover-loading'));
     panel.hidden = false;
     place(currentAnchor);
     try {
@@ -143,7 +144,7 @@ export function installStackHover(
           node(
             'p',
             compilation.diagnostics.find((d) => d.severity === 'error')?.message ??
-              'この命令の状態を解析できません。ソースを確認してください。',
+              msg('maccecbcc82f6'),
           ),
         );
       place(currentAnchor);
@@ -151,7 +152,7 @@ export function installStackHover(
       if (request !== serial || disposed) return;
       panel.replaceChildren(
         header(),
-        node('p', error instanceof Error ? error.message : '解析できませんでした。'),
+        node('p', error instanceof Error ? error.message : msg('m700200c26858')),
       );
       place(currentAnchor);
     }

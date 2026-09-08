@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type { DebugFrame } from './debug-protocol';
 import type { FrameTransition } from './frame-transition';
 /** Pure preview: never resumes the VM or calls a Java method. Values are logical JVM values (category 2 is one entry). */
@@ -10,25 +11,25 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     after: [...before],
     consumed: 0,
     produced: 0,
-    beforeLabel: '現在',
-    afterLabel: '実行後',
+    beforeLabel: msg('m83aeddd37528'),
+    afterLabel: msg('m194f0b1f2a46'),
     limit: 65536,
   };
   if (localsBefore.length)
     result.locals = { before: localsBefore, after: [...localsBefore], changed: [] };
   const insn = frame.instruction;
   if (!insn) {
-    result.terminal = '命令情報がありません';
+    result.terminal = msg('mcd5b4a83053f');
     return result;
   }
   const op = insn.opcode
     .toLowerCase()
     .replace(/_resolved$/, '')
     .replace(/^(getfield|putfield|getstatic|putstatic)_[bcsijfdzl]$/, '$1');
-  const unknown = (label: string) => label + '（未確定）';
+  const unknown = (label: string) => label + msg('m93c4b2742fe7');
   const fieldType = () => {
     const match = insn.fieldDescriptor?.match(/^(\[*)(?:L([^;]+);|([ZBCSIJFD]))$/);
-    if (!match) return unknown('フィールド値');
+    if (!match) return unknown(msg('m3e9743156256'));
     const primitives: Record<string, string> = {
       Z: 'boolean',
       B: 'byte',
@@ -42,14 +43,14 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     return (match[2] ?? primitives[match[3]]) + '[]'.repeat(match[1].length);
   };
   const replace = (count: number, values: string[]) => {
-    if (count > before.length) throw Error('スタック情報が不足しています');
+    if (count > before.length) throw Error(msg('mf87dce3571c8'));
     result.consumed = count;
     result.produced = values.length;
     result.after = [...before.slice(0, before.length - count), ...values];
   };
   const top = () => before.at(-1)!;
   const local = () => {
-    if (insn.local < 0) throw Error('ローカル変数の位置が不明です');
+    if (insn.local < 0) throw Error(msg('m25af7eac5f09'));
     return insn.local;
   };
   const terminal = (text: string) => {
@@ -59,7 +60,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
   const numeric = (v: string) => Number(v.replace(/[fFdD]$/, ''));
   try {
     if (/^[ilfda]load$/.test(op)) {
-      replace(0, [localsBefore[local()] ?? unknown('ローカル変数')]);
+      replace(0, [localsBefore[local()] ?? unknown(msg('m9bf67764bae7'))]);
     } else if (/^[ilfda]store$/.test(op)) {
       localsAfter[local()] = top();
       replace(1, []);
@@ -67,16 +68,16 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       const index = local();
       localsAfter[index] = String((Number(localsBefore[index]) + insn.increment) | 0);
     } else if (/^[ilfda]const$/.test(op) || op === 'aconst_null' || op === 'ldc') {
-      replace(0, [insn.constant ?? unknown('定数')]);
+      replace(0, [insn.constant ?? unknown(msg('m673af6892c3c'))]);
     } else if (op.startsWith('invoke')) {
-      if (insn.arguments < 0) throw Error('呼び出しの情報が不足しています');
-      replace(insn.arguments, insn.returns ? [unknown('戻り値')] : []);
+      if (insn.arguments < 0) throw Error(msg('mcb9fe228d1f4'));
+      replace(insn.arguments, insn.returns ? [unknown(msg('mcd8e4c178488'))] : []);
     } else if (op === 'return' || /^[ilfda]return$/.test(op)) {
       replace(op === 'return' ? 0 : 1, []);
-      terminal('呼び出し元へ戻る');
+      terminal(msg('m6ff9abc732ee'));
     } else if (op === 'athrow') {
       replace(1, []);
-      terminal('例外ハンドラーへ移る');
+      terminal(msg('m5d0bf5d23080'));
     } else if (op === 'getstatic') {
       replace(0, [fieldType()]);
     } else if (op === 'getfield') {
@@ -88,22 +89,22 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       replace(2, []);
       if (before.at(-2) === 'null') terminal('NullPointerException');
     } else if (/^[ilfdabcs]aload$/.test(op)) {
-      replace(2, [unknown('配列要素')]);
+      replace(2, [unknown(msg('mb1b65da3c3a8'))]);
       if (before.at(-2) === 'null') terminal('NullPointerException');
     } else if (/^[ilfdabcs]astore$/.test(op)) {
       replace(3, []);
       if (before.at(-3) === 'null') terminal('NullPointerException');
     } else if (op === 'arraylength') {
-      replace(1, [unknown('配列長')]);
+      replace(1, [unknown(msg('mf26688b57fd6'))]);
       if (top() === 'null') terminal('NullPointerException');
     } else if (op === 'new') {
-      replace(0, ['未初期化のオブジェクト']);
+      replace(0, [msg('m68c68242c66e')]);
     } else if (['newarray', 'anewarray', 'multianewarray'].includes(op)) {
-      replace(op === 'multianewarray' ? insn.dimensions : 1, ['新しい配列']);
+      replace(op === 'multianewarray' ? insn.dimensions : 1, [msg('me87f077ee96b')]);
     } else if (op === 'instanceof') {
-      replace(1, [top() === 'null' ? '0' : unknown('型の判定結果')]);
+      replace(1, [top() === 'null' ? '0' : unknown(msg('m405fabd13ff8'))]);
     } else if (op === 'checkcast') {
-      result.note = '型の検査に成功した場合。';
+      result.note = msg('mcaaa6f58f63f');
     } else if (op.startsWith('monitor')) {
       replace(1, []);
       if (top() === 'null') terminal('NullPointerException');
@@ -113,7 +114,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       replace(1, []);
     } else if (['nop', 'goto', 'ret'].includes(op)) {
     } else if (op === 'jsr') {
-      replace(0, [unknown('戻り先')]);
+      replace(0, [unknown(msg('m4122fa922cdc'))]);
     } else if (op === 'pop' || op === 'pop2') {
       replace(op === 'pop' ? 1 : 2, []);
     } else if (op === 'swap') {
@@ -224,16 +225,16 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
         ),
       ]);
     } else if (/^[ilfd]2[ilfdbcs]$/.test(op)) {
-      replace(1, [unknown('変換結果')]);
-    } else throw Error('この命令の変化はまだ予測できません');
+      replace(1, [unknown(msg('md9b10bd56c77'))]);
+    } else throw Error(msg('me9abc3e743ac'));
     const changed = Array.from(
       { length: Math.max(localsBefore.length, localsAfter.length) },
       (_, i) => i,
     ).filter((i) => localsBefore[i] !== localsAfter[i]);
     if (changed.length)
       result.locals = {
-        before: changed.map((i) => localsBefore[i] ?? '未設定'),
-        after: changed.map((i) => localsAfter[i] ?? '未設定'),
+        before: changed.map((i) => localsBefore[i] ?? msg('m621330591694')),
+        after: changed.map((i) => localsAfter[i] ?? msg('m621330591694')),
         labels: changed.map((i) => '#' + i),
         changed: changed.map((_, i) => i),
       };
@@ -241,7 +242,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     result.after = [];
     result.consumed = 0;
     result.produced = 0;
-    result.terminal = 'この命令の変化は予測できません';
+    result.terminal = msg('md655e5b8177c');
   }
   return result;
 }

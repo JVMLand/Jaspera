@@ -14,10 +14,12 @@
 }
 .frame-pair {
   display: grid;
-  grid-template-columns: minmax(0, 128px) 52px minmax(0, 128px);
+  grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr);
   justify-content: center;
   gap: 0;
-  max-width: 334px;
+  width: max-content;
+  min-width: min(100%, 334px);
+  max-width: min(100%, 638px);
   padding-left: 26px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -102,5 +104,7 @@
 }
 
 .frame-pair.is-unchanged {
-  grid-template-columns: minmax(0, 128px);
+  grid-template-columns: minmax(0, 1fr);
+  min-width: min(100%, 154px);
+  max-width: min(100%, 306px);
 }

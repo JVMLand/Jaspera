@@ -1,3 +1,5 @@
+import { localizedContent } from './localization';
+import { msg } from './messages.js';
 import { formatFrameValue } from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {
@@ -42,10 +44,10 @@ export function renderFrameTransition(frame: FrameTransition) {
         node(
           'h4',
           unchanged
-            ? '（変更無し）'
+            ? msg('m5766024f896e')
             : side
-              ? (frame.afterLabel ?? '実行後')
-              : (frame.beforeLabel ?? '実行前'),
+              ? (frame.afterLabel ?? msg('m194f0b1f2a46'))
+              : (frame.beforeLabel ?? msg('ma9ebc102c9e5')),
         ),
         body,
       );
@@ -55,7 +57,10 @@ export function renderFrameTransition(frame: FrameTransition) {
         const order = values.map((_, i) => i);
         if (!locals) order.reverse();
         const visible = order.slice(0, frame.limit ?? 8);
-        if (!values.length) body.append(node('div', locals ? '未設定' : '空', 'frame-empty'));
+        if (!values.length)
+          body.append(
+            node('div', locals ? msg('m621330591694') : msg('m2f8267a89ad5'), 'frame-empty'),
+          );
         for (const index of visible) {
           const changed =
             !unchanged &&
@@ -68,8 +73,8 @@ export function renderFrameTransition(frame: FrameTransition) {
               undefined,
               'frame-value' + (changed ? (side ? ' is-produced' : ' is-consumed') : ''),
             );
-          value.append(node('code', formatFrameValue(values[index])));
-          if (changed) value.title = side ? '追加・更新される値' : '消費・更新される値';
+          value.append(node('code', formatFrameValue(localizedContent(values[index]))));
+          if (changed) value.title = side ? msg('m4ce0e3f5d826') : msg('m8fd971c0d3a4');
           if (locals)
             row.append(node('small', frame.locals?.labels?.[index] ?? '#' + index, 'frame-marker'));
           else if (index === values.length - 1) row.append(node('small', 'TOP', 'frame-marker'));
@@ -83,9 +88,12 @@ export function renderFrameTransition(frame: FrameTransition) {
     });
     return grid;
   }
-  root.append(node('h3', 'スタック'), pair(frame.before, frame.after));
+  root.append(node('h3', msg('m340ecc5d5f10')), pair(frame.before, frame.after));
   if (frame.locals) {
-    root.append(node('h3', 'ローカル変数'), pair(frame.locals.before, frame.locals.after, true));
+    root.append(
+      node('h3', msg('m9bf67764bae7')),
+      pair(frame.locals.before, frame.locals.after, true),
+    );
     if (frame.locals.effect) root.append(node('p', frame.locals.effect, 'frame-note'));
   }
   if (frame.note) root.append(node('p', frame.note, 'frame-note'));

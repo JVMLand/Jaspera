@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { showDebugGutter } from './source-analysis';
 import * as monaco from './editor-platform';
 import type { DebugState } from './debug-protocol';
@@ -65,7 +66,7 @@ export function installDebugEditor(
   });
   const action = editor.addAction({
     id: 'jaspera.toggleBreakpoint',
-    label: 'ブレークポイントを切り替える',
+    label: msg('m253c89fd3600'),
     keybindings: [monaco.KeyCode.F9],
     contextMenuGroupId: 'debug',
     run: (e) => {

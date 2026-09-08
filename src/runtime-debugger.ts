@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type {
   DebugBreakpoint,
   DebugCommand,
@@ -39,8 +40,7 @@ export class RuntimeDebugger {
     this.classes = new Set(options.classes);
     this.breakpoints(options.breakpoints);
     const module = vm._module;
-    if (!module._jaspera_debug_enable)
-      throw new Error('デバッガ対応 JVM がありません。pnpm run build:runtime を実行してください。');
+    if (!module._jaspera_debug_enable) throw new Error(msg('m2a0c66fdee72'));
     module.jasperaDebugger = this;
     module._jaspera_debug_enable(vm.getActiveThread().ptr);
   }
@@ -117,7 +117,7 @@ export class RuntimeDebugger {
       if (!this.paused) this.mode = 'pause';
       return;
     }
-    if (!this.paused) throw new Error('JVM は停止していません。');
+    if (!this.paused) throw new Error(msg('m7b8efde7231b'));
     const rootReturn =
       this.location!.depth === this.rootDepths.get(this.location!.thread) &&
       /^(?:[ilfda]?return)$/.test(this.frames[0]?.instruction?.opcode ?? '');

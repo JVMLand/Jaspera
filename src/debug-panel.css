@@ -129,10 +129,6 @@
 .debug-values {
   padding: 10px 28px;
 }
-.debug-values .frame-pair {
-  max-width: 580px;
-  margin: auto;
-}
 .monaco-editor .jal-breakpoint-slot {
   display: inline-block;
   position: relative;
