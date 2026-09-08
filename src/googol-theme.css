@@ -1,0 +1,426 @@
+/* Material-inspired chrome shared by the workspace and detached windows. */
+:root[data-theme-family='googol'] {
+  --pane-radius: 16px;
+  --pane-header-height: 48px;
+  --theme-canvas: #f0f3fa;
+  --material-container: #e9edf5;
+  --material-on-selection: #001d35;
+  --material-shadow: 0 2px 6px #1a1c201f, 0 1px 2px #1a1c2026;
+}
+:root[data-theme='googol-night'] {
+  --theme-canvas: #111318;
+  --material-container: #282b31;
+  --material-on-selection: #d1e4ff;
+  --material-shadow: 0 2px 6px #0004, 0 1px 2px #0005;
+}
+:root[data-theme-family='googol'] #app {
+  font-family: var(--font-ui);
+  grid-template-rows: 64px 40px minmax(0, 1fr) 28px;
+}
+:root[data-theme-family='googol'] .toolbar {
+  padding: 0 24px;
+  border-bottom: 0;
+  background: var(--theme-canvas);
+}
+:root[data-theme-family='googol'] .brand h1 {
+  font-weight: 500;
+  letter-spacing: -0.6px;
+  color: var(--theme-text);
+  background: none;
+}
+:root[data-theme-family='googol'] .brand h1 span {
+  color: inherit;
+}
+:root[data-theme-family='googol'] .brand-logo {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+:root[data-theme-family='googol'] .menubar {
+  padding: 0 16px;
+  border-bottom: 0;
+  background: var(--theme-canvas);
+}
+:root[data-theme-family='googol'] .menu > button {
+  border-radius: 20px;
+  padding: 0 16px;
+}
+:root[data-theme-family='googol'] .workspace {
+  padding: 8px 16px 16px;
+}
+:root[data-theme-family='googol'] .workspace-summary {
+  padding: 8px 16px 16px;
+  min-height: 80px;
+  border: 0;
+  background: transparent;
+}
+:root[data-theme-family='googol'] .workspace-summary h2 {
+  font-weight: 400;
+  color: var(--theme-text);
+  font-size: calc(24px * var(--ui-font-scale, 1));
+}
+:root[data-theme-family='googol'] :is(.run, .workspace-summary button) {
+  border-radius: 20px;
+  border: 0;
+  min-height: 40px;
+  padding: 0 24px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
+  font-weight: 500;
+  box-shadow: none;
+}
+:root[data-theme-family='googol'] .workspace-summary button {
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] .workspace .dock-pane {
+  border: 0;
+  box-shadow: none;
+}
+:root[data-theme-family='googol'] :is(.pane-header, .project-heading, .output-header) {
+  border-bottom: 1px solid var(--theme-border);
+}
+:root[data-theme-family='googol'] #file-list button,
+:root[data-theme-family='googol'] #file-list .file-folder > summary {
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
+}
+:root[data-theme-family='googol'] #file-list button.selected {
+  box-shadow: none;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key] {
+  margin: 4px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [role='tab'] {
+  filter: none;
+  border-radius: 0;
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:has([aria-selected='true']) {
+  background: var(--theme-selection);
+  box-shadow: none;
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]:has([aria-selected='true']):hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [aria-selected='true'] {
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol']
+  :is(#project-tabs, #file-tabs, .output-header .tabs)
+  [data-pane-key]
+  [role='tab']::after {
+  display: none;
+}
+:root[data-theme-family='googol'] :is(#project-tabs, #file-tabs, .output-header .tabs) {
+  padding: 0 4px;
+}
+:root[data-theme-family='googol'] :is(.menu-popup, .dock-menu) {
+  padding: 8px 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--material-container);
+  box-shadow: var(--material-shadow);
+}
+:root[data-theme-family='googol'] :is(.menu-popup button, .dock-menu button) {
+  border-radius: 0;
+  min-height: 40px;
+  padding-inline: 16px;
+}
+:root[data-theme-family='googol'] :is(.menu > button, .menu-popup button, .dock-menu button):hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--material-container));
+}
+:root[data-theme-family='googol'] #file-list button:hover {
+  filter: none;
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--theme-bg));
+}
+:root[data-theme-family='googol'] #file-list button.selected:hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol'] .graph-filters {
+  gap: 8px;
+  padding: 12px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
+}
+:root[data-theme-family='googol'] .graph-filters label {
+  position: relative;
+  min-height: 32px;
+  padding: 6px 12px;
+  gap: 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--theme-text);
+  cursor: pointer;
+  user-select: none;
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked) {
+  border-color: transparent;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] .graph-filters label:hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--theme-surface));
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked):hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:focus-visible) {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+:root[data-theme-family='googol'] .graph-filters input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+:root[data-theme-family='googol'] .graph-filters label::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  background: currentColor;
+  clip-path: polygon(9% 47%, 0 58%, 36% 93%, 100% 20%, 89% 10%, 35% 71%);
+  visibility: hidden;
+}
+:root[data-theme-family='googol'] .graph-filters label:has(input:checked)::before {
+  visibility: visible;
+}
+:root[data-theme-family='googol'] .graph-filters label::after {
+  flex-shrink: 0;
+}
+:root[data-theme-family='googol'] dialog {
+  border: 0;
+  border-radius: 28px;
+  background: var(--material-container);
+  box-shadow: var(--material-shadow);
+}
+:root[data-theme-family='googol'] :is(dialog input, dialog select, textarea) {
+  border: 1px solid var(--theme-muted);
+  border-radius: 4px;
+  background: transparent;
+}
+:root[data-theme-family='googol'] :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+
+/* Expressive controls: shape, state layers and tonal surfaces. */
+:root[data-theme-family='googol'] {
+  --material-primary: #005ac1;
+  --material-on-primary: #fff;
+  --material-motion: 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+:root[data-theme='googol-night'] {
+  --material-primary: #adc6ff;
+  --material-on-primary: #002e69;
+}
+:root[data-theme-family='googol']
+  :is(
+    .toolbar,
+    .menubar,
+    .debug-toolbar,
+    .run-options-menu,
+    .menu-popup,
+    .dock-menu,
+    .panel-context-menu,
+    dialog,
+    .instruction-search,
+    .debug-frames
+  )
+  button {
+  filter: none;
+  transition:
+    background-color var(--material-motion),
+    border-radius var(--material-motion),
+    color var(--material-motion);
+}
+:root[data-theme-family='googol'] .run-split {
+  gap: 2px;
+}
+:root[data-theme-family='googol'] .run-split :is(#run, #run-options) {
+  height: 44px;
+  border: 0;
+  background: var(--material-primary);
+  color: var(--material-on-primary);
+  box-shadow: none;
+}
+:root[data-theme-family='googol'] .run-split #run {
+  border-radius: 24px 4px 4px 24px !important;
+  padding-inline: 22px;
+}
+:root[data-theme-family='googol'] .run-split #run-options {
+  width: 48px;
+  border-radius: 4px 24px 24px 4px !important;
+  font-size: 0;
+}
+:root[data-theme-family='googol'] #run-options > span {
+  display: none;
+}
+:root[data-theme-family='googol'] #run-options::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--material-motion);
+}
+:root[data-theme-family='googol'] .run-split #run-options[aria-expanded='true'] {
+  border-radius: 14px !important;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] #run-options[aria-expanded='true']::before {
+  transform: translateY(2px) rotate(225deg);
+}
+:root[data-theme-family='googol'] .run-split button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--material-on-primary) 10%, var(--material-primary));
+}
+:root[data-theme-family='googol'] .run-split #run:active:not(:disabled) {
+  border-radius: 16px 4px 4px 16px !important;
+}
+:root[data-theme-family='googol']
+  :is(.menu-popup, .dock-menu, .panel-context-menu, .run-options-menu) {
+  padding: 6px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--material-container);
+  box-shadow: var(--material-shadow);
+}
+:root[data-theme-family='googol']
+  :is(.menu-popup, .dock-menu, .panel-context-menu, .run-options-menu)
+  button {
+  min-height: 40px;
+  border-radius: 14px;
+  padding: 10px 16px;
+}
+:root[data-theme-family='googol']
+  :is(.menu-popup, .dock-menu, .panel-context-menu, .run-options-menu)
+  button:is(:hover, :focus-visible):not(:disabled) {
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] .debug-toolbar {
+  gap: 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+  box-shadow: var(--material-shadow);
+  overflow-x: auto;
+}
+:root[data-theme-family='googol'] .debug-toolbar-state {
+  border: 0;
+  color: var(--material-on-selection);
+  padding-inline: 12px;
+}
+:root[data-theme-family='googol'] .debug-toolbar button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--material-on-selection);
+}
+:root[data-theme-family='googol'] .debug-toolbar button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--material-on-selection) 10%, transparent);
+}
+:root[data-theme-family='googol']
+  .debug-toolbar
+  button:is([data-command='debug-continue'], [aria-pressed='true']) {
+  background: var(--material-primary);
+  color: var(--material-on-primary);
+}
+:root[data-theme-family='googol'] .debug-toolbar button[aria-pressed='true'] {
+  border-radius: 12px;
+}
+:root[data-theme-family='googol'] .debug-toolbar button:active:not(:disabled) {
+  border-radius: 12px;
+}
+:root[data-theme-family='googol'] .debug-toolbar button[data-command='debug-stop'] {
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  margin-left: 4px;
+}
+:root[data-theme-family='googol'] .debug-frames button {
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+:root[data-theme-family='googol'] .debug-frames button.selected {
+  background: var(--theme-selection);
+  color: var(--material-on-selection);
+  box-shadow: none;
+}
+:root[data-theme-family='googol'] .debug-frames button:hover {
+  background: color-mix(in srgb, var(--theme-text) 8%, var(--theme-bg));
+}
+:root[data-theme-family='googol'] .debug-frames button.selected:hover {
+  background: color-mix(in srgb, var(--material-on-selection) 8%, var(--theme-selection));
+}
+:root[data-theme-family='googol']
+  :is(
+    dialog input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    dialog select,
+    textarea,
+    .instruction-search input
+  ) {
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: var(--theme-bg);
+  color: var(--theme-text);
+}
+:root[data-theme-family='googol'] .instruction-search input {
+  border-radius: 28px;
+  min-height: 48px;
+  background: var(--material-container);
+}
+:root[data-theme-family='googol'] dialog button:not(.theme-option) {
+  border-radius: 20px;
+  min-height: 36px;
+}
+:root[data-theme-family='googol'] :is(.menu > button, .tab-close, .dock-tab-close) {
+  border-radius: 999px;
+}
+@media (max-width: 480px) {
+  :root[data-theme-family='googol'] .debug-toolbar-state {
+    display: none;
+  }
+  :root[data-theme-family='googol'] .debug-toolbar button {
+    width: 36px;
+    height: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme-family='googol'] {
+    --material-motion: 0s;
+  }
+}

@@ -1,5 +1,6 @@
 import { inlayHintColors } from './inlay-hint-style';
 import './brand-themes.css';
+import './googol-theme.css';
 import './vibe-theme.css';
 import { instructionColorRules, instructionColors } from './instruction-colors';
 import * as monaco from './editor-platform';
