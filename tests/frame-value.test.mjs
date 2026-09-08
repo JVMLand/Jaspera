@@ -5,7 +5,7 @@ const bundle=await build({entryPoints:['src/frame-value.ts'],bundle:true,platfor
 const {formatFrameValue:format}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 test('frame labels abbreviate types without rewriting string contents',()=>{
  for(const [input,expected] of [
-  ['java.io.PrintStream','PrintStream'],['java.lang.String[][]','String[][]'],['java.util.Map$Entry','Map$Entry'],
+  ['java/io/PrintStream @57bd940','PrintStream'],['[Ljava/lang/String; @5ad0548','String[]'],['[[I @1234','int[][]'],['"java/io/Foo @1234"','"java/io/Foo @1234"'],['java.io.PrintStream','PrintStream'],['java.lang.String[][]','String[][]'],['java.util.Map$Entry','Map$Entry'],
   ['receiver : java.io.PrintStream','receiver : PrintStream'],['value : int','value : int'],
   ['"java.io.PrintStream : String" : java.lang.String','"java.io.PrintStream : String"'],['"a:b" : String','"a:b"'],['"truncated… : java.lang.String','"truncated…'],['null','null'],['未設定','未設定']
  ])assert.equal(format(input),expected,input);

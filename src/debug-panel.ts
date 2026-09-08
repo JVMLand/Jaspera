@@ -1,5 +1,6 @@
 import type {DebugCommand,DebugState,DebugFrame} from './debug-protocol';
 import {renderFrameTransition} from './frame-transition';
+import {predictDebugFrame} from './debug-prediction';
 import './debug-panel.css';
 export interface DebugActions {start():void;command(command:DebugCommand):void;stop():void;reveal(frame:DebugFrame):void}
 export function debugMenuItems(actions:DebugActions){return [
@@ -40,9 +41,9 @@ export function installDebugPanel(root:HTMLElement,actions:DebugActions){
   state.snapshot.frames.forEach((f,i)=>{const b=document.createElement('button');b.textContent=f.className.replaceAll('/','.')+'.'+f.method+f.descriptor+(f.native?'（native）':' · '+f.pc);b.className=i===selected?'selected':'';b.onclick=()=>{selected=i;render();actions.reveal(f);};list.append(b);});
   const frame=state.snapshot.frames[selected]??state.snapshot.frames[0];if(!frame)return;
   if(frame.native){content.textContent='ネイティブメソッド';return;}
-  const previous=state.previous?.frames.find(f=>f.id===frame.id&&f.method===frame.method&&f.className===frame.className);
-  const before=previous?.stack??frame.stack,after=frame.stack;let common=0;while(common<Math.min(before.length,after.length)&&before[common]===after[common])common++;
-  content.append(renderFrameTransition({before,after,consumed:before.length-common,produced:after.length-common,beforeLabel:previous?'前の停止時':'現在',afterLabel:'現在',limit:65536,locals:{before:previous?.locals??frame.locals,after:frame.locals,changed:frame.locals.map((v,i)=>v!==previous?.locals[i]?i:-1).filter(i=>i>=0)}}));
+  const prediction=predictDebugFrame(frame);
+  if(selected>0){prediction.after=[];prediction.consumed=0;prediction.produced=0;prediction.locals=undefined;prediction.terminal='呼び出し先の実行待ち';prediction.note=undefined;}
+  content.append(renderFrameTransition(prediction));
  }
  return {update(next:DebugState|undefined){if(next===state)return;if(next?.snapshot!==state?.snapshot)selected=0;state=next??{status:'idle',breakpoints:[]};render();},dispose(){toolbar.remove();root.replaceChildren();}};
 }

@@ -5,6 +5,8 @@ const shortenType=(type:string)=>type.match(typeName)?.[1]??type;
 
 /** Keep analysis types intact; only compact their presentation in frame diagrams. */
 export function formatFrameValue(value:string):string{
+ const reference=value.match(/^([\w$/;[.]+) @[\da-f]+$/i);
+ if(reference){value=reference[1];const array=value.match(/^(\[+)(?:L(.+);|([ZBCSIJFD]))$/);if(array){const primitives:Record<string,string>={Z:'boolean',B:'byte',C:'char',S:'short',I:'int',J:'long',F:'float',D:'double'};return shortenType(array[2]??primitives[array[3]])+'[]'.repeat(array[1].length);}return shortenType(value);}
  const typed=value.match(/^(.*)\s*:\s*((?:[A-Za-z_$][\w$]*[./])*[A-Za-z_$][\w$]*(?:\[\])*)$/s);
  if(!typed)return shortenType(value);
  const literal=typed[1].trimEnd(),type=shortenType(typed[2]);

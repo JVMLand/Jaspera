@@ -3,7 +3,7 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  const base='http://127.0.0.1:5252',server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5252','--strictPort'],{stdio:'pipe',windowsHide:true});t.after(()=>server.kill());for(let i=0;i<100;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  const browser=await chromium.launch({channel:process.env.JALWEB_BROWSER??(process.platform==='win32'?'msedge':'chromium'),headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1500,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(60000);await page.addInitScript(()=>localStorage.setItem('jalweb.theme','vs-dark'));await page.goto(base);
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');
- await page.reload();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');await page.locator('#instructions-tab').click();
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#state')?.textContent==='実行できます');await page.locator('#menu-file').click();await page.locator('#new-project').click();await page.locator('#instructions-tab').click();
  await page.getByRole('tab',{name:'Main',exact:true}).click();
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');const offset=editor.getValue().indexOf('->out')+3;editor.setPosition(editor.getModel().getPositionAt(offset));editor.focus();});
  await page.keyboard.press('F12');await page.waitForFunction(async()=>(await import('/src/main.ts')).editor.getModel()?.uri.authority==='definition');
@@ -39,8 +39,8 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  await page.locator('#debug-tab').click({button:'right'});await page.getByRole('menuitem',{name:'小窓で開く',exact:true}).click();
  const popup=await popupEvent;popup.setDefaultTimeout(60000);await popup.waitForLoadState();await popup.locator('.debug-toolbar [data-command=debug-over]').waitFor();
  await popup.evaluate(()=>{window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));});
- await popup.waitForFunction(()=>document.querySelector('.debug-values')?.textContent.includes('#1'));
- assert.match(await popup.locator('.debug-values').innerText(),/5/);
+ await popup.waitForFunction(()=>document.querySelector('.debug-values')?.textContent.includes('呼び出し元へ戻る'));
+ assert.doesNotMatch(await popup.locator('.debug-values').innerText(),/ローカル変数/);
  await popup.locator('.debug-toolbar [data-command=debug-continue]').click();await popup.waitForFunction(()=>document.querySelector('.debug-status')?.textContent==='実行が終了しました。');
  await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.hidden===true);
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
