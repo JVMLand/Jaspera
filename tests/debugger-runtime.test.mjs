@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'Bovine suspends real frames, steps calls, preserves values, breaks loops and can be interrupted',
   { timeout: 180000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.env.JALWEB_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage();
+    const page = await newAppPage(browser);
     page.on('pageerror', (e) => console.log('PAGE', e.message));
     page.on('console', (m) => {
       if (m.type() === 'error') console.log('BROWSER', m.text().slice(0, 1000));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'step into OpenJDK reveals and highlights the actual disassembled instruction',
   { timeout: 120000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+    const page = await newAppPage(browser, { viewport: { width: 1500, height: 1000 } });
     page.setDefaultTimeout(60000);
     await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     await page.goto(base);
@@ -109,7 +108,7 @@ test(
     const caller = await page.locator('.debug-values').innerText();
     assert.match(caller, /呼び出し時/);
     assert.match(caller, /PrintStream/);
-    assert.match(caller, /Hello, JAL!/);
+    assert.match(caller, /こんにちは，JAL！/);
     assert.doesNotMatch(caller, /呼び出し先へ移動|呼び出し先の実行待ち/);
     await page.screenshot({ path: '.cache/debug-caller-frame.png' });
     await page.locator('.debug-toolbar [data-command=debug-stop]').click();

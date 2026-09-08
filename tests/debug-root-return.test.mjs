@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'step over the entry return finishes without opening runtime definitions',
   { timeout: 120000 },
@@ -19,12 +19,11 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({
-      channel: process.platform === 'win32' ? 'msedge' : 'chromium',
+    const browser = await launchBrowser({
       headless: true,
     });
     t.after(() => browser.close());
-    const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+    const page = await newAppPage(browser, { viewport: { width: 1500, height: 1000 } });
     page.setDefaultTimeout(60000);
     await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
     await page.goto(base);

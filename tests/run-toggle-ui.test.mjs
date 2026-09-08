@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { chromium } from '@playwright/test';
+import { launchBrowser, createTestProject, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
   'run control toggles stop during preparation and returns to run after completion',
   { timeout: 90000 },
@@ -19,12 +19,13 @@ test(
       } catch {}
       await new Promise((r) => setTimeout(r, 100));
     }
-    const browser = await chromium.launch({ channel: 'msedge', headless: true });
+    const browser = await launchBrowser({ headless: true });
     t.after(() => browser.close());
-    const page = await browser.newPage(),
+    const page = await newAppPage(browser),
       errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(base);
+    await createTestProject(page);
     await page.waitForFunction(
       () => document.querySelector('#state')?.textContent === '実行できます',
       null,
