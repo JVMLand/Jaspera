@@ -2,6 +2,7 @@
 
 | Component | Version / source | License |
 | --- | --- | --- |
+| i18next | 26.4.2, https://github.com/i18next/i18next | MIT, `licenses/i18next.txt` |
 | Floating UI (DOM) | 1.8.0, https://github.com/floating-ui/floating-ui | MIT, `licenses/Floating-UI.txt` |
 | Workbox | 7.4.1, https://github.com/GoogleChrome/workbox | MIT, `licenses/Workbox.txt` |
 | Comlink | 4.4.2, https://github.com/GoogleChromeLabs/comlink | Apache-2.0, `licenses/Comlink.txt` |
