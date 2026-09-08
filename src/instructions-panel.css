@@ -47,7 +47,7 @@
   border-radius: 4px;
   background: var(--theme-bg, #151a21);
   color: var(--theme-text, #d6e1e6);
-  font: 12px system-ui;
+  font: 12px var(--font-ui);
 }
 .instruction-count {
   margin: 3px 14px;
@@ -60,7 +60,7 @@
   overflow: auto;
   flex-shrink: 0;
   border-bottom: 1px solid var(--theme-border, #40515c);
-  font: 12px/1.7 system-ui;
+  font: 12px/1.7 var(--font-ui);
 }
 .instruction-index summary {
   cursor: pointer;
@@ -78,9 +78,7 @@
   background: var(--theme-bg, #151a21);
   color: var(--theme-text, #d6e1e6);
   padding: 4px 7px;
-  font:
-    12px Consolas,
-    monospace;
+  font: 12px var(--font-code);
   cursor: pointer;
 }
 .instruction-buttons button[aria-pressed='true'] {
@@ -91,13 +89,11 @@
   overflow: auto;
   min-height: 0;
   padding: 16px;
-  font: 13px/1.8 system-ui;
+  font: 13px/1.8 var(--font-ui);
   overflow-wrap: anywhere;
 }
 .instruction-detail h2 {
-  font:
-    700 23px Consolas,
-    monospace;
+  font: 700 23px var(--font-code);
   margin: 3px 0;
   color: var(--theme-accent, #91caba);
 }
@@ -138,9 +134,7 @@
   background: var(--theme-bg, #151a21);
   border: 1px solid var(--theme-border, #40515c);
   border-radius: 4px;
-  font:
-    12px/1.7 Consolas,
-    monospace;
+  font: 12px/1.7 var(--font-code);
 }
 .instruction-note {
   font-size: 12px;
@@ -304,7 +298,7 @@
   margin: 18px 0 8px;
 }
 .instruction-advanced :is(h1, h2, h3, h4, h5, h6) {
-  font-family: system-ui;
+  font-family: var(--font-ui);
   line-height: 1.4;
   font-weight: 650;
   color: var(--theme-text, #d6e1e6);
@@ -338,9 +332,7 @@
   margin: 8px 0 24px;
 }
 .instruction-related a {
-  font:
-    13px/1.8 Consolas,
-    monospace;
+  font: 13px/1.8 var(--font-code);
   text-underline-offset: 3px;
 }
 .instruction-related a:focus-visible {
@@ -368,7 +360,5 @@
   margin: 0 0 5px;
   color: var(--theme-muted, #91a19e);
   opacity: 0.8;
-  font:
-    11px/1.5 Consolas,
-    monospace;
+  font: 11px/1.5 var(--font-code);
 }

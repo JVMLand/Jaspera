@@ -1,0 +1,30 @@
+@font-face {
+  font-family: 'UDEV Gothic';
+  src:
+    local('UDEV Gothic Regular'),
+    local('UDEVGothic-Regular'),
+    url('./generated/fonts/UDEVGothic-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'UDEV Gothic';
+  src:
+    local('UDEV Gothic Bold'),
+    local('UDEVGothic-Bold'),
+    url('./generated/fonts/UDEVGothic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-ui: 'Yu Gothic UI', 'Segoe UI', 'Noto Sans JP', sans-serif;
+  --font-code: 'UDEV Gothic', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+}
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-code);
+}

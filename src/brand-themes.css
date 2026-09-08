@@ -213,7 +213,7 @@
   box-shadow: 0 8px 24px #0b386121;
 }
 :root[data-theme-family='denden'] :is(dialog, .workspace-summary button) {
-  font-family: 'Segoe UI', 'Yu Gothic UI', sans-serif;
+  font-family: var(--font-ui);
 }
 
 /* Googol: generous Material-like surfaces, pill selections and four colour accents. */
@@ -226,7 +226,7 @@
   --theme-canvas: #17181a;
 }
 :root[data-theme-family='googol'] #app {
-  font-family: Arial, 'Noto Sans JP', sans-serif;
+  font-family: var(--font-ui);
   grid-template-rows: 72px 42px minmax(0, 1fr) 28px;
 }
 :root[data-theme-family='googol'] .toolbar {
@@ -348,7 +348,7 @@
   --theme-canvas: var(--theme-bg);
 }
 :root[data-theme-family='entrance'] #app {
-  font-family: 'Segoe UI', 'Yu Gothic UI', sans-serif;
+  font-family: var(--font-ui);
   font-size: 12px;
   grid-template-rows: 40px 34px minmax(0, 1fr) 24px;
 }
@@ -369,7 +369,7 @@
 }
 :root[data-theme-family='entrance'] .brand h1 {
   color: #fff;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   letter-spacing: 0;
   font-weight: 600;
@@ -389,9 +389,7 @@
   border-radius: 3px;
   background: #fafafa;
   color: #605e5c;
-  font:
-    12px 'Segoe UI',
-    sans-serif;
+  font: 12px var(--font-ui);
   text-align: left;
   overflow: hidden;
 }
@@ -411,9 +409,7 @@
 :root[data-theme-family='entrance'] .header-search kbd {
   margin-left: auto;
   white-space: nowrap;
-  font:
-    10px 'Segoe UI',
-    sans-serif;
+  font: 10px var(--font-ui);
   color: #797775;
 }
 :root[data-theme-family='entrance'] .toolbar-actions .run {
@@ -456,7 +452,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: var(--font-ui);
   font-size: 24px;
   font-weight: 600;
   margin: 0;
@@ -760,7 +756,7 @@
 }
 :root[data-theme-family='tsukuba'] .brand h1 {
   color: var(--tsukuba-heading);
-  font-family: Georgia, 'Yu Mincho', serif;
+  font-family: var(--font-ui);
   font-size: 25px;
   font-weight: 600;
   letter-spacing: 0.2px;
@@ -788,7 +784,7 @@
   border-radius: 3px;
 }
 :root[data-theme-family='tsukuba'] .workspace-summary h2 {
-  font-family: Georgia, 'Yu Mincho', serif;
+  font-family: var(--font-ui);
   font-size: 22px;
   color: var(--tsukuba-heading);
   margin-bottom: 4px;

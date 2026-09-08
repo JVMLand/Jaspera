@@ -26,9 +26,7 @@
   overflow-wrap: anywhere;
   padding: 16px;
   margin: 0;
-  font:
-    14px/1.7 Consolas,
-    monospace;
+  font: 14px/1.7 var(--font-code);
 }
 .detached-tools label {
   padding: 12px;

@@ -1,3 +1,4 @@
+import { codeFontFamily } from './fonts';
 import { entryProblem } from './entry-method.js';
 import { SourceDocuments } from './source-documents';
 import { languageMenuItem } from './localization';
@@ -295,7 +296,7 @@ export let editor = monaco.editor.create(el('editor'), {
   automaticLayout: true,
   fontSize: 15,
   lineHeight: 27,
-  fontFamily: '"Cascadia Code", "JetBrains Mono", Consolas, monospace',
+  fontFamily: codeFontFamily,
   fontLigatures: true,
   minimap: { enabled: false },
   padding: { top: 24, bottom: 24 },

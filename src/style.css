@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  font-family: var(--font-ui);
   color: var(--theme-text, #d7dce3);
   background: var(--theme-bg, #11161c);
   font-synthesis: none;
@@ -147,9 +147,7 @@ h1 span {
 }
 .file-icon {
   color: var(--theme-text, #abd4b4);
-  font:
-    600 14px Consolas,
-    monospace;
+  font: 600 14px var(--font-code);
 }
 .file-dot {
   width: 6px;
@@ -237,10 +235,7 @@ h1 span {
   position: relative;
 }
 #output {
-  font:
-    14px/1.8 'Cascadia Code',
-    Consolas,
-    monospace;
+  font: 14px/1.8 var(--font-code);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   margin: 0;
@@ -277,9 +272,7 @@ h1 span {
   color: var(--theme-muted, #60717c);
 }
 .terminal-symbol {
-  font:
-    32px Consolas,
-    monospace;
+  font: 32px var(--font-code);
   color: var(--theme-muted, #3d5b59);
   letter-spacing: -4px;
 }
@@ -309,9 +302,7 @@ textarea {
   border: 1px solid var(--theme-border, #2a3641);
   border-radius: 5px;
   padding: 10px 12px;
-  font:
-    13px/1.5 Consolas,
-    monospace;
+  font: 13px/1.5 var(--font-code);
   color: var(--theme-text, #c8d5dd);
 }
 textarea::placeholder {
@@ -419,9 +410,7 @@ textarea::placeholder {
   border: 0;
   border-bottom: 1px solid var(--theme-border, #242e38);
   background: transparent;
-  font:
-    13px/1.7 Consolas,
-    monospace;
+  font: 13px/1.7 var(--font-code);
   padding: 12px 18px;
   overflow-wrap: anywhere;
 }
@@ -581,9 +570,7 @@ textarea::placeholder {
   outline: 0;
 }
 .menu-popup kbd {
-  font:
-    10px Consolas,
-    monospace;
+  font: 10px var(--font-code);
   color: var(--theme-muted, #91a19e);
   white-space: nowrap;
 }
@@ -627,9 +614,7 @@ textarea::placeholder {
   color: var(--theme-muted, #8c9eab);
   border: 0;
   text-align: left;
-  font:
-    12px Consolas,
-    monospace;
+  font: 12px var(--font-code);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -802,9 +787,7 @@ dialog input {
   border-radius: 4px;
   background: var(--theme-bg, #111a21);
   color: var(--theme-text, #d9eee5);
-  font:
-    14px Consolas,
-    monospace;
+  font: 14px var(--font-code);
 }
 #project-properties .properties-hint {
   font-size: 12px;
@@ -1029,7 +1012,7 @@ dialog input {
   background: var(--theme-surface, #202934);
   color: var(--theme-text, #d6e1e6);
   box-shadow: 0 6px 20px #0006;
-  font: 13px system-ui;
+  font: 13px var(--font-ui);
 }
 body.tab-dragging,
 body.tab-dragging * {
@@ -1049,9 +1032,7 @@ body.tab-dragging * {
   padding: 7px 13px;
   cursor: pointer;
   color: var(--theme-text, #d6e1e6);
-  font:
-    12px Consolas,
-    monospace;
+  font: 12px var(--font-code);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

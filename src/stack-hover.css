@@ -13,7 +13,7 @@
   background: var(--theme-surface, #202934);
   color: var(--theme-text, #d6e1e6);
   box-shadow: 0 8px 26px #0005;
-  font: 12px/1.5 system-ui;
+  font: 12px/1.5 var(--font-ui);
 }
 .stack-hover[hidden] {
   display: none;
@@ -26,9 +26,7 @@
   border-bottom: 1px solid var(--theme-border, #40515c);
 }
 .stack-hover header code {
-  font:
-    700 14px Consolas,
-    monospace;
+  font: 700 14px var(--font-code);
   color: var(--theme-accent, #91caba);
 }
 .stack-hover header span {

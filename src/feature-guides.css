@@ -17,18 +17,14 @@
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--theme-accent, #72b7ff) 12%, transparent),
     0 8px 24px #0004;
-  font:
-    13px/1.7 system-ui,
-    sans-serif;
+  font: 13px/1.7 var(--font-ui);
   overflow: visible;
 }
 .feature-guide[hidden] {
   display: none;
 }
 .feature-guide h2 {
-  font:
-    600 14px/1.5 system-ui,
-    sans-serif;
+  font: 600 14px/1.5 var(--font-ui);
   margin: 0 0 6px;
   color: var(--theme-accent, #72b7ff);
 }
@@ -50,7 +46,7 @@
   border-radius: 4px;
   background: transparent;
   color: inherit;
-  font: 22px/1 system-ui;
+  font: 22px/1 var(--font-ui);
   cursor: pointer;
 }
 .feature-guide-close:hover {
@@ -97,9 +93,7 @@
   border-radius: 3px;
   background: transparent;
   color: var(--theme-muted, #a6a6a6);
-  font:
-    11px/1.5 system-ui,
-    sans-serif;
+  font: 11px/1.5 var(--font-ui);
   cursor: pointer;
   pointer-events: auto;
 }

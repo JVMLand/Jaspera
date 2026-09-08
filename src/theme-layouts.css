@@ -49,7 +49,7 @@
 /* Japan: dense navigation tree, ledger-like frames and a permanent operation strip. */
 :root[data-theme^='japan-'] #app {
   grid-template-rows: 60px 32px minmax(0, 1fr) 26px;
-  font-family: 'Meiryo', 'Yu Gothic UI', sans-serif;
+  font-family: var(--font-ui);
   font-size: 12px;
 }
 :root[data-theme^='japan-'] .workspace {

@@ -1,3 +1,4 @@
+import { codeFontFamily } from './fonts';
 import { msg } from './messages.js';
 import * as monaco from './editor-platform';
 import { installStackHover } from './stack-hover';
@@ -20,6 +21,7 @@ export function installInstructionUsage(
     domReadOnly: true,
     automaticLayout: true,
     minimap: { enabled: false },
+    fontFamily: codeFontFamily,
     fontSize: 13,
     lineHeight: 21,
     scrollBeyondLastLine: false,

@@ -15,3 +15,7 @@ import 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsContrib
 import 'monaco-editor/esm/vs/editor/contrib/format/browser/formatActions';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 (self as any).MonacoEnvironment = { getWorker: () => new EditorWorker() };
+
+// A downloaded font changes glyph metrics after Monaco has first laid out the editor.
+import { editor as editorApi } from 'monaco-editor/esm/vs/editor/editor.api';
+document.fonts.addEventListener('loadingdone', () => editorApi.remeasureFonts());

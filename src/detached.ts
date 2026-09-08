@@ -1,3 +1,4 @@
+import { codeFontFamily } from './fonts';
 import { languageMenuItem } from './localization';
 import { msg } from './messages.js';
 import { revealEditorPosition } from './editor-reveal';
@@ -66,6 +67,7 @@ export const editor = monaco.editor.create(el('editor'), {
   inlayHints: inlayHintOptions,
   overflowWidgetsDomNode: overlays,
   automaticLayout: true,
+  fontFamily: codeFontFamily,
   fontSize: 15,
   lineHeight: 27,
   minimap: { enabled: false },

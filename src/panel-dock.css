@@ -35,9 +35,7 @@
 .output-header .dock-tab-button {
   height: 100%;
   padding: 0 7px 0 12px;
-  font:
-    12px 'Segoe UI',
-    sans-serif;
+  font: 12px var(--font-ui);
   border: 0;
   background: transparent;
   color: var(--theme-muted, #98a4b3);
@@ -253,9 +251,7 @@
 .dock-pane .dock-tab-button {
   height: 100%;
   padding: 0 7px 0 12px;
-  font:
-    12px 'Segoe UI',
-    sans-serif;
+  font: 12px var(--font-ui);
   border: 0;
   background: transparent;
   color: var(--theme-muted, #98a4b3);

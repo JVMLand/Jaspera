@@ -53,9 +53,7 @@
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font:
-    13px/1.7 ui-monospace,
-    monospace;
+  font: 13px/1.7 var(--font-code);
 }
 @media (max-width: 600px) {
   .licenses-layout {

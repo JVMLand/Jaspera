@@ -1,5 +1,5 @@
 .frame-transition {
-  font: 12px/1.5 system-ui;
+  font: 12px/1.5 var(--font-ui);
   color: var(--theme-text, #d6e1e6);
 }
 .frame-transition h3 {
@@ -49,9 +49,7 @@
   background: var(--theme-bg, #151a21);
 }
 .frame-value code {
-  font:
-    12px/1.5 Consolas,
-    monospace;
+  font: 12px/1.5 var(--font-code);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -68,9 +66,7 @@
   right: calc(100% + 4px);
   top: 50%;
   transform: translateY(-50%);
-  font:
-    9px/1.2 Consolas,
-    monospace;
+  font: 9px/1.2 var(--font-code);
   color: var(--theme-muted, #91a19e);
   white-space: nowrap;
 }

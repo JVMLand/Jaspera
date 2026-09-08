@@ -20,9 +20,7 @@
   background: var(--theme-surface);
   color: var(--theme-text);
   box-shadow: 0 6px 24px #0003;
-  font:
-    12px system-ui,
-    sans-serif;
+  font: 12px var(--font-ui);
   max-width: calc(100vw - 24px);
 }
 .debug-toolbar[hidden],
@@ -114,7 +112,7 @@
 }
 .debug-frames button {
   text-align: left;
-  font-family: monospace;
+  font-family: var(--font-code);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
