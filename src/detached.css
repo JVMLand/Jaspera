@@ -5,7 +5,7 @@ body.detached-window {
   grid-template-rows: 32px 34px minmax(0, 1fr) 28px;
   background: var(--theme-bg, #151a21);
   color: var(--theme-text, #d6e1e6);
-  font: 13px var(--font-ui);
+  font: calc(13px * var(--ui-font-scale, 1)) var(--font-ui);
 }
 .detached-window footer {
   padding: 5px 12px;

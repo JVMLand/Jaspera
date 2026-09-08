@@ -1,13 +1,13 @@
 .frame-transition {
-  font: 12px/1.5 var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1))/1.5 var(--font-ui);
   color: var(--theme-text, #d6e1e6);
 }
 .frame-transition h3 {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   margin: 14px 0 7px;
 }
 .frame-transition h4 {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   margin: 0 0 6px;
   font-weight: 600;
   text-align: center;
@@ -49,7 +49,7 @@
   background: var(--theme-bg, #151a21);
 }
 .frame-value code {
-  font: 12px/1.5 var(--font-code);
+  font: calc(12px * var(--ui-font-scale, 1))/1.5 var(--font-code);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -66,7 +66,7 @@
   right: calc(100% + 4px);
   top: 50%;
   transform: translateY(-50%);
-  font: 9px/1.2 var(--font-code);
+  font: calc(9px * var(--ui-font-scale, 1))/1.2 var(--font-code);
   color: var(--theme-muted, #91a19e);
   white-space: nowrap;
 }
@@ -74,7 +74,7 @@
   align-self: center;
   justify-self: center;
   color: var(--theme-accent, #91caba);
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
 }
 .frame-empty,
 .frame-terminal {
@@ -82,7 +82,7 @@
   border-radius: 4px;
   padding: 5px;
   text-align: center;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #91a19e);
   min-height: 30px;
   box-sizing: border-box;
@@ -90,10 +90,10 @@
 .frame-rest {
   text-align: center;
   color: var(--theme-muted, #91a19e);
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
 }
 .frame-note {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   line-height: 1.6;
   margin: 8px 0 0;
   overflow-wrap: anywhere;

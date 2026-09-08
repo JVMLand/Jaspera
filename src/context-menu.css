@@ -22,7 +22,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 .panel-context-menu button:not(:disabled):hover,
 .panel-context-menu button:focus-visible {

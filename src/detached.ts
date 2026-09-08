@@ -1,3 +1,4 @@
+import { textSizeMenuItem } from './text-size';
 import { codeFontFamily } from './fonts';
 import { languageMenuItem } from './localization';
 import { msg } from './messages.js';
@@ -416,6 +417,7 @@ const menus = installMenus(el('menus'), [
         },
       },
       languageMenuItem(),
+      textSizeMenuItem(),
       null,
       ...(['project', 'console', 'problems', 'instructions', 'graph', 'debug'] as const).map(
         (name) => ({

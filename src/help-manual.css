@@ -21,13 +21,13 @@
 }
 #feature-manual > header h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: calc(17px * var(--ui-font-scale, 1));
 }
 #feature-manual .manual-close {
   border: 0;
   background: transparent;
   color: var(--theme-muted, #9ca9b6);
-  font: 24px/1 sans-serif;
+  font: calc(24px * var(--ui-font-scale, 1))/1 sans-serif;
   width: 32px;
   height: 32px;
   border-radius: 4px;
@@ -55,7 +55,7 @@
   border-radius: 4px;
   text-align: left;
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   line-height: 1.6;
   color: var(--theme-text, #d7dce3);
   background: transparent;
@@ -81,18 +81,18 @@
   scrollbar-gutter: stable;
 }
 #feature-manual article h2 {
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   line-height: 1.5;
   margin: 0 0 20px;
 }
 #feature-manual article h3 {
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
   line-height: 1.6;
   margin: 28px 0 10px;
 }
 #feature-manual article p,
 #feature-manual article li {
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   line-height: 1.9;
   white-space: normal;
 }
@@ -115,13 +115,13 @@
   border-bottom-width: 2px;
   border-radius: 4px;
   background: var(--theme-bg, #151a21);
-  font: 12px/1.7 var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1))/1.7 var(--font-ui);
   white-space: nowrap;
 }
 #feature-manual table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   line-height: 1.8;
 }
 #feature-manual :is(th, td) {
@@ -145,10 +145,10 @@
   }
   #feature-manual nav button {
     padding: 9px 6px;
-    font-size: 12px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
   }
   #feature-manual article h2 {
-    font-size: 19px;
+    font-size: calc(19px * var(--ui-font-scale, 1));
   }
   #feature-manual :is(th, td) {
     padding: 7px 2px;

@@ -938,5 +938,9 @@
   "jar.classTooLarge": "类文件超过 1 MiB。",
   "jar.keepClassName": "{0}: 请保留原类名，且只声明一个类。",
   "help.langjal.docs": "JAL 文档",
-  "help.langjal.sandboxGuide": "Jaspera 使用指南"
+  "help.langjal.sandboxGuide": "Jaspera 使用指南",
+  "textSize.title": "文字大小",
+  "textSize.editor": "编辑器",
+  "textSize.ui": "界面",
+  "textSize.reset": "恢复默认"
 }

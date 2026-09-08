@@ -4,7 +4,7 @@
   background: var(--theme-bg, #11161c);
   font-synthesis: none;
   color-scheme: dark;
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
 }
 * {
   box-sizing: border-box;
@@ -61,7 +61,7 @@ button:hover:not(:disabled) {
   white-space: nowrap;
 }
 h1 {
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   letter-spacing: -0.8px;
   font-weight: 650;
   margin: 0;
@@ -71,7 +71,7 @@ h1 span {
   color: var(--theme-muted, #98a4b3);
 }
 .brand-caption {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   letter-spacing: 1.9px;
   color: var(--theme-muted, #81909d);
   margin-left: 18px;
@@ -103,10 +103,10 @@ h1 span {
   gap: 11px;
 }
 .run > span {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 .run kbd {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   font-weight: 400;
   font-family: inherit;
   opacity: 0.65;
@@ -143,11 +143,11 @@ h1 span {
   background: var(--theme-bg, #151a21);
   border-top: 2px solid var(--theme-accent, #8dccbd);
   border-right: 1px solid var(--theme-border, #2b333e);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 .file-icon {
   color: var(--theme-text, #abd4b4);
-  font: 600 14px var(--font-code);
+  font: 600 calc(14px * var(--ui-font-scale, 1)) var(--font-code);
 }
 .file-dot {
   width: 6px;
@@ -157,7 +157,7 @@ h1 span {
   margin-left: 10px;
 }
 .pane-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #63717e);
   letter-spacing: 1.8px;
 }
@@ -167,7 +167,7 @@ h1 span {
   overflow: hidden;
 }
 .editor-footer {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #73818e);
   display: flex;
   align-items: center;
@@ -199,7 +199,7 @@ h1 span {
   border: 0;
   background: transparent;
   color: var(--theme-muted, #778694);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   padding: 0 0 2px;
 }
 .tabs button[aria-selected='true'] {
@@ -218,14 +218,14 @@ h1 span {
   background: var(--theme-selection, #2c3541);
   border-radius: 4px;
   padding: 1px 5px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   margin-left: 5px;
 }
 .icon-button {
   background: transparent;
   color: var(--theme-muted, #7b8a97);
   border: 0;
-  font-size: 19px;
+  font-size: calc(19px * var(--ui-font-scale, 1));
   padding: 5px;
 }
 #console-panel,
@@ -235,7 +235,7 @@ h1 span {
   position: relative;
 }
 #output {
-  font: 14px/1.8 var(--font-code);
+  font: calc(14px * var(--ui-font-scale, 1))/1.8 var(--font-code);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   margin: 0;
@@ -263,16 +263,16 @@ h1 span {
   text-align: center;
 }
 #console-empty p {
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   margin: 20px 0 10px;
   color: var(--theme-text, #a2afb9);
 }
 #console-empty > span:last-child {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #60717c);
 }
 .terminal-symbol {
-  font: 32px var(--font-code);
+  font: calc(32px * var(--ui-font-scale, 1)) var(--font-code);
   color: var(--theme-muted, #3d5b59);
   letter-spacing: -4px;
 }
@@ -286,11 +286,11 @@ h1 span {
   justify-content: space-between;
   color: var(--theme-muted, #81969e);
   letter-spacing: 1.3px;
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-font-scale, 1));
   margin-bottom: 12px;
 }
 .stdin-section label span {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   letter-spacing: 0;
   color: var(--theme-muted, #62737f);
 }
@@ -302,7 +302,7 @@ textarea {
   border: 1px solid var(--theme-border, #2a3641);
   border-radius: 5px;
   padding: 10px 12px;
-  font: 13px/1.5 var(--font-code);
+  font: calc(13px * var(--ui-font-scale, 1))/1.5 var(--font-code);
   color: var(--theme-text, #c8d5dd);
 }
 textarea::placeholder {
@@ -329,17 +329,17 @@ textarea::placeholder {
   gap: 6px;
 }
 .runtime-card strong {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   font-weight: 500;
   color: var(--theme-text, #b8c8ce);
 }
 .runtime-card div span {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #6f8390);
 }
 .runtime-label {
   margin-left: auto;
-  font-size: 9px;
+  font-size: calc(9px * var(--ui-font-scale, 1));
   letter-spacing: 1.2px;
   border: 1px solid var(--theme-border, #34443f);
   border-radius: 3px;
@@ -354,7 +354,7 @@ textarea::placeholder {
   background: var(--theme-surface, #1c272b);
   border-top: 1px solid var(--theme-border, #31423e);
   padding: 0 20px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #86a69e);
   overflow: hidden;
 }
@@ -396,7 +396,7 @@ textarea::placeholder {
   color: var(--theme-muted, #80959c);
   padding: 22px;
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 #problems {
   list-style: none;
@@ -410,7 +410,7 @@ textarea::placeholder {
   border: 0;
   border-bottom: 1px solid var(--theme-border, #242e38);
   background: transparent;
-  font: 13px/1.7 var(--font-code);
+  font: calc(13px * var(--ui-font-scale, 1))/1.7 var(--font-code);
   padding: 12px 18px;
   overflow-wrap: anywhere;
 }
@@ -478,7 +478,7 @@ textarea::placeholder {
     padding: 0 10px;
   }
   h1 {
-    font-size: 20px;
+    font-size: calc(20px * var(--ui-font-scale, 1));
   }
   .brand {
     gap: 9px;
@@ -531,7 +531,7 @@ textarea::placeholder {
   background: transparent;
   color: var(--theme-text, #b7c2cd);
   padding: 0 13px;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 .menu > button:hover,
 .menu > button[aria-expanded='true'] {
@@ -562,7 +562,7 @@ textarea::placeholder {
   color: var(--theme-text, #d6e1e6);
   text-align: left;
   border-radius: 3px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 .menu-popup button:hover:not(:disabled),
 .menu-popup button:focus {
@@ -570,12 +570,12 @@ textarea::placeholder {
   outline: 0;
 }
 .menu-popup kbd {
-  font: 10px var(--font-code);
+  font: calc(10px * var(--ui-font-scale, 1)) var(--font-code);
   color: var(--theme-muted, #91a19e);
   white-space: nowrap;
 }
 #project-name {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-accent, #91b8aa);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -598,7 +598,7 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-font-scale, 1));
   letter-spacing: 1.5px;
   color: var(--theme-muted, #859aa5);
   border-bottom: 1px solid var(--theme-border, #2b333e);
@@ -614,7 +614,7 @@ textarea::placeholder {
   color: var(--theme-muted, #8c9eab);
   border: 0;
   text-align: left;
-  font: 12px var(--font-code);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-code);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -665,11 +665,11 @@ dialog::backdrop {
   background: #070e16aa;
 }
 dialog h2 {
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
   margin: 0 0 15px;
 }
 dialog p {
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   line-height: 1.9;
   white-space: pre-wrap;
 }
@@ -679,7 +679,7 @@ dialog input {
   border: 1px solid var(--theme-border, #456156);
   background: var(--theme-bg, #111a21);
   color: var(--theme-text, #d9eee5);
-  font: 14px inherit;
+  font: calc(14px * var(--ui-font-scale, 1)) inherit;
 }
 .dialog-actions {
   display: flex;
@@ -764,7 +764,7 @@ dialog input {
     padding: 0 12px;
   }
   .project-heading {
-    font-size: 9px;
+    font-size: calc(9px * var(--ui-font-scale, 1));
   }
   #project-name {
     max-width: 140px;
@@ -777,7 +777,7 @@ dialog input {
 #project-properties label {
   display: block;
   margin: 20px 0 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-text, #b4c9cc);
 }
 #project-properties select {
@@ -787,10 +787,10 @@ dialog input {
   border-radius: 4px;
   background: var(--theme-bg, #111a21);
   color: var(--theme-text, #d9eee5);
-  font: 14px var(--font-code);
+  font: calc(14px * var(--ui-font-scale, 1)) var(--font-code);
 }
 #project-properties .properties-hint {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #91a5ad);
 }
 #properties-save {
@@ -946,7 +946,7 @@ dialog input {
   border-radius: 3px;
   background: transparent;
   color: var(--theme-muted, #8c9eab);
-  font-size: 17px;
+  font-size: calc(17px * var(--ui-font-scale, 1));
   line-height: 1;
   cursor: pointer;
   opacity: 0;
@@ -1012,7 +1012,7 @@ dialog input {
   background: var(--theme-surface, #202934);
   color: var(--theme-text, #d6e1e6);
   box-shadow: 0 6px 20px #0006;
-  font: 13px var(--font-ui);
+  font: calc(13px * var(--ui-font-scale, 1)) var(--font-ui);
 }
 body.tab-dragging,
 body.tab-dragging * {
@@ -1032,7 +1032,7 @@ body.tab-dragging * {
   padding: 7px 13px;
   cursor: pointer;
   color: var(--theme-text, #d6e1e6);
-  font: 12px var(--font-code);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-code);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1086,5 +1086,5 @@ body.tab-dragging * {
   border-left: 0;
   background: var(--theme-surface, #1b2530);
   color: var(--theme-muted, #91a1b2);
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
 }

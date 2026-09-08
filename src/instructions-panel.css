@@ -47,11 +47,11 @@
   border-radius: 4px;
   background: var(--theme-bg, #151a21);
   color: var(--theme-text, #d6e1e6);
-  font: 12px var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-ui);
 }
 .instruction-count {
   margin: 3px 14px;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #91a19e);
 }
 .instruction-index {
@@ -60,7 +60,7 @@
   overflow: auto;
   flex-shrink: 0;
   border-bottom: 1px solid var(--theme-border, #40515c);
-  font: 12px/1.7 var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1))/1.7 var(--font-ui);
 }
 .instruction-index summary {
   cursor: pointer;
@@ -78,7 +78,7 @@
   background: var(--theme-bg, #151a21);
   color: var(--theme-text, #d6e1e6);
   padding: 4px 7px;
-  font: 12px var(--font-code);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-code);
   cursor: pointer;
 }
 .instruction-buttons button[aria-pressed='true'] {
@@ -89,26 +89,26 @@
   overflow: auto;
   min-height: 0;
   padding: 16px;
-  font: 13px/1.8 var(--font-ui);
+  font: calc(13px * var(--ui-font-scale, 1))/1.8 var(--font-ui);
   overflow-wrap: anywhere;
 }
 .instruction-detail h2 {
-  font: 700 23px var(--font-code);
+  font: 700 calc(23px * var(--ui-font-scale, 1)) var(--font-code);
   margin: 3px 0;
   color: var(--theme-accent, #91caba);
 }
 .instruction-detail h3 {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   margin: 15px 0 6px;
 }
 .instruction-detail h4 {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   margin: 0 0 5px;
 }
 .instruction-eyebrow,
 .instruction-title,
 .instruction-local-note {
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #91a19e);
 }
 .instruction-title {
@@ -134,10 +134,10 @@
   background: var(--theme-bg, #151a21);
   border: 1px solid var(--theme-border, #40515c);
   border-radius: 4px;
-  font: 12px/1.7 var(--font-code);
+  font: calc(12px * var(--ui-font-scale, 1))/1.7 var(--font-code);
 }
 .instruction-note {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 .instruction-detail a {
   color: var(--theme-accent, #91caba);
@@ -153,7 +153,7 @@
   padding-left: 18px;
 }
 .instruction-reading p {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 @media (max-width: 650px) {
   .instruction-index {
@@ -285,16 +285,16 @@
   margin: 20px 0;
 }
 .instruction-category-note {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-muted, #91a19e);
 }
 
 .instruction-detail > h3 {
-  font-size: 17px;
+  font-size: calc(17px * var(--ui-font-scale, 1));
   margin: 20px 0 8px;
 }
 .instruction-detail .frame-transition h3 {
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
   margin: 18px 0 8px;
 }
 .instruction-advanced :is(h1, h2, h3, h4, h5, h6) {
@@ -304,24 +304,24 @@
   color: var(--theme-text, #d6e1e6);
 }
 .instruction-advanced h1 {
-  font-size: 26px;
+  font-size: calc(26px * var(--ui-font-scale, 1));
   margin: 28px 0 12px;
 }
 .instruction-advanced h2 {
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   margin: 26px 0 10px;
 }
 .instruction-advanced h3 {
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
   margin: 24px 0 10px;
 }
 .instruction-advanced h4 {
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
   margin: 18px 0 6px;
 }
 .instruction-advanced h5,
 .instruction-advanced h6 {
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   margin: 14px 0 5px;
 }
 
@@ -332,7 +332,7 @@
   margin: 8px 0 24px;
 }
 .instruction-related a {
-  font: 13px/1.8 var(--font-code);
+  font: calc(13px * var(--ui-font-scale, 1))/1.8 var(--font-code);
   text-underline-offset: 3px;
 }
 .instruction-related a:focus-visible {
@@ -360,5 +360,5 @@
   margin: 0 0 5px;
   color: var(--theme-muted, #91a19e);
   opacity: 0.8;
-  font: 11px/1.5 var(--font-code);
+  font: calc(11px * var(--ui-font-scale, 1))/1.5 var(--font-code);
 }

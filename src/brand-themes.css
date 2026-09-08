@@ -48,7 +48,7 @@
   display: none;
 }
 :root[data-theme-family] .workspace-summary h2 {
-  font-size: 26px;
+  font-size: calc(26px * var(--ui-font-scale, 1));
   letter-spacing: -0.5px;
   margin: 0 0 8px;
 }
@@ -89,7 +89,7 @@
   border-color: var(--theme-border);
 }
 :root[data-theme-family] .menu > button {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family] :is(.menu > button:hover, .menu > button[aria-expanded='true']) {
   background: var(--theme-selection);
@@ -166,7 +166,7 @@
   border-bottom: 8px solid #194478;
 }
 :root[data-theme-family='denden'] .workspace-summary h2 {
-  font-size: 28px;
+  font-size: calc(28px * var(--ui-font-scale, 1));
   font-weight: 700;
   letter-spacing: 0.4px;
 }
@@ -195,7 +195,7 @@
 :root[data-theme-family='denden'] #file-list button {
   border-radius: 5px;
   color: var(--theme-accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='denden'] #file-list button.selected {
   background: var(--theme-selection);
@@ -280,7 +280,7 @@
 :root[data-theme-family='googol'] .workspace-summary h2 {
   font-weight: 500;
   color: var(--theme-accent);
-  font-size: 27px;
+  font-size: calc(27px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='googol'] .workspace-summary button {
   border-radius: 28px;
@@ -288,7 +288,7 @@
   background: var(--theme-selection);
   color: var(--theme-accent);
   padding: 13px 22px;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='googol'] .workspace .project-pane {
   border: 0;
@@ -303,7 +303,7 @@
 :root[data-theme-family='googol'] #file-list button {
   border-radius: 24px;
   padding: 12px 16px;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='googol'] #file-list .file-folder > summary {
   padding: 10px 12px;
@@ -349,7 +349,7 @@
 }
 :root[data-theme-family='entrance'] #app {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   grid-template-rows: 40px 34px minmax(0, 1fr) 24px;
 }
 :root[data-theme-family='entrance'] .toolbar {
@@ -370,7 +370,7 @@
 :root[data-theme-family='entrance'] .brand h1 {
   color: #fff;
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-font-scale, 1));
   letter-spacing: 0;
   font-weight: 600;
 }
@@ -389,7 +389,7 @@
   border-radius: 3px;
   background: #fafafa;
   color: #605e5c;
-  font: 12px var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-ui);
   text-align: left;
   overflow: hidden;
 }
@@ -409,7 +409,7 @@
 :root[data-theme-family='entrance'] .header-search kbd {
   margin-left: auto;
   white-space: nowrap;
-  font: 10px var(--font-ui);
+  font: calc(10px * var(--ui-font-scale, 1)) var(--font-ui);
   color: #797775;
 }
 :root[data-theme-family='entrance'] .toolbar-actions .run {
@@ -417,7 +417,7 @@
   min-height: 0;
   padding: 0 13px;
   border-radius: 2px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='entrance'] .menubar {
   padding: 0 12px;
@@ -427,7 +427,7 @@
 :root[data-theme-family='entrance'] .menu > button {
   padding: 0 14px;
   border-radius: 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   color: var(--theme-accent);
 }
 :root[data-theme-family='entrance'] .workspace {
@@ -443,7 +443,7 @@
 }
 :root[data-theme-family='entrance'] .summary-eyebrow {
   display: block;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   letter-spacing: 0;
   color: var(--theme-muted);
   margin-bottom: 12px;
@@ -453,7 +453,7 @@
   align-items: center;
   gap: 10px;
   font-family: var(--font-ui);
-  font-size: 24px;
+  font-size: calc(24px * var(--ui-font-scale, 1));
   font-weight: 600;
   margin: 0;
   letter-spacing: 0;
@@ -486,7 +486,7 @@
   background: var(--theme-bg);
   color: var(--theme-accent);
   padding: 7px 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root[data-theme-family='entrance'] .workspace .dock-pane {
   margin: 0;
@@ -535,7 +535,7 @@
   padding: 13px 16px;
   margin: 6px 0 3px;
   border-top: 1px solid var(--theme-border);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
   font-weight: 600;
   color: var(--theme-text);
 }
@@ -543,7 +543,7 @@
   border-radius: 0;
   padding: 11px 18px;
   font-family: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   margin: 0;
   border: 0;
   line-height: 18px;
@@ -553,7 +553,7 @@
   display: inline-block;
   width: 24px;
   color: var(--theme-accent);
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-font-scale, 1));
   vertical-align: -1px;
 }
 :root[data-theme-family='entrance'] #file-list button.selected {
@@ -640,14 +640,14 @@
     border-radius: min(var(--pane-radius), 12px);
   }
   :root[data-theme-family] .workspace-summary h2 {
-    font-size: 22px;
+    font-size: calc(22px * var(--ui-font-scale, 1));
     margin: 0;
   }
   :root[data-theme-family] .workspace-summary p {
     display: none;
   }
   :root[data-theme-family] .workspace-summary button {
-    font-size: 11px;
+    font-size: calc(11px * var(--ui-font-scale, 1));
     padding: 8px 10px;
   }
   :root[data-theme-family] .workspace .dock-pane {
@@ -716,7 +716,7 @@
   }
   :root[data-theme-family] #console-empty p {
     margin: 3px 0;
-    font-size: 12px;
+    font-size: calc(12px * var(--ui-font-scale, 1));
   }
   :root[data-theme-family] #console-empty > span:last-child {
     display: none;
@@ -757,7 +757,7 @@
 :root[data-theme-family='tsukuba'] .brand h1 {
   color: var(--tsukuba-heading);
   font-family: var(--font-ui);
-  font-size: 25px;
+  font-size: calc(25px * var(--ui-font-scale, 1));
   font-weight: 600;
   letter-spacing: 0.2px;
 }
@@ -785,7 +785,7 @@
 }
 :root[data-theme-family='tsukuba'] .workspace-summary h2 {
   font-family: var(--font-ui);
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   color: var(--tsukuba-heading);
   margin-bottom: 4px;
 }

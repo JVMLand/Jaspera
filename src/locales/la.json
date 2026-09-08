@@ -938,5 +938,9 @@
   "jar.classTooLarge": "Fasciculus classis 1 MiB excedit.",
   "jar.keepClassName": "{0}: Nomen pristinum serva et unam tantum classem declara.",
   "help.langjal.docs": "Documenta JAL",
-  "help.langjal.sandboxGuide": "Usus Jaspera"
+  "help.langjal.sandboxGuide": "Usus Jaspera",
+  "textSize.title": "Magnitudo litterarum",
+  "textSize.editor": "Editor",
+  "textSize.ui": "Interfacies",
+  "textSize.reset": "Restitue valores"
 }

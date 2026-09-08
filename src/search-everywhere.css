@@ -25,14 +25,14 @@
   justify-content: space-between;
 }
 .search-everywhere h1 {
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-font-scale, 1));
   margin: 0;
 }
 .search-everywhere input {
   flex: none;
   width: 100%;
   box-sizing: border-box;
-  font-size: 20px;
+  font-size: calc(20px * var(--ui-font-scale, 1));
   padding: 14px;
   color: inherit;
   background: var(--theme-bg);
@@ -62,7 +62,7 @@
 }
 .search-everywhere strong {
   overflow-wrap: anywhere;
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
 }
 .search-everywhere small {
   grid-column: 2;
@@ -70,11 +70,11 @@
   overflow-wrap: anywhere;
 }
 .search-everywhere .search-kind {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   opacity: 0.7;
 }
 .search-everywhere footer {
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   opacity: 0.8;
 }
 
@@ -82,6 +82,6 @@
   background: transparent;
   color: inherit;
   border: 0;
-  font-size: 26px;
+  font-size: calc(26px * var(--ui-font-scale, 1));
   padding: 2px 10px;
 }

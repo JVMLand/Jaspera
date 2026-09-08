@@ -13,7 +13,7 @@
   background: var(--theme-surface, #202934);
   color: var(--theme-text, #d6e1e6);
   box-shadow: 0 8px 26px #0005;
-  font: 12px/1.5 var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1))/1.5 var(--font-ui);
 }
 .stack-hover[hidden] {
   display: none;
@@ -26,14 +26,14 @@
   border-bottom: 1px solid var(--theme-border, #40515c);
 }
 .stack-hover header code {
-  font: 700 14px var(--font-code);
+  font: 700 calc(14px * var(--ui-font-scale, 1)) var(--font-code);
   color: var(--theme-accent, #91caba);
 }
 .stack-hover header span {
   flex: 1;
   text-align: right;
   color: var(--theme-muted, #91a19e);
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-font-scale, 1));
 }
 .stack-hover p {
   margin: 10px 0 0;

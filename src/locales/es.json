@@ -938,5 +938,9 @@
   "jar.classTooLarge": "El archivo de clase supera 1 MiB.",
   "jar.keepClassName": "{0}: Mantén el nombre original y declara una sola clase.",
   "help.langjal.docs": "Documentación de JAL",
-  "help.langjal.sandboxGuide": "Cómo usar Jaspera"
+  "help.langjal.sandboxGuide": "Cómo usar Jaspera",
+  "textSize.title": "Tamaño del texto",
+  "textSize.editor": "Editor",
+  "textSize.ui": "Interfaz",
+  "textSize.reset": "Restablecer valores"
 }

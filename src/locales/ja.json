@@ -938,5 +938,9 @@
   "jar.classTooLarge": "クラスファイルが1 MiBを超えています。",
   "jar.keepClassName": "{0}: クラス名を変更したり，複数のクラスを宣言したりすることはできません。",
   "help.langjal.docs": "JAL ドキュメント",
-  "help.langjal.sandboxGuide": "Jaspera の使い方"
+  "help.langjal.sandboxGuide": "Jaspera の使い方",
+  "textSize.title": "文字サイズ",
+  "textSize.editor": "エディタ",
+  "textSize.ui": "周辺 UI",
+  "textSize.reset": "標準に戻す"
 }

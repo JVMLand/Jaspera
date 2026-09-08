@@ -3,7 +3,7 @@
   padding: 12px;
   min-height: 0;
   color: var(--theme-text);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-font-scale, 1));
 } /* Mounted on body so docking or hiding the frame pane cannot hide controls. */
 .debug-toolbar {
   position: fixed;
@@ -20,7 +20,7 @@
   background: var(--theme-surface);
   color: var(--theme-text);
   box-shadow: 0 6px 24px #0003;
-  font: 12px var(--font-ui);
+  font: calc(12px * var(--ui-font-scale, 1)) var(--font-ui);
   max-width: calc(100vw - 24px);
 }
 .debug-toolbar[hidden],

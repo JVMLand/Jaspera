@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--theme-border);
 }
 #licenses-dialog h2 {
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-font-scale, 1));
   margin: 0;
 }
 .licenses-layout {
@@ -53,7 +53,7 @@
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font: 13px/1.7 var(--font-code);
+  font: calc(13px * var(--ui-font-scale, 1))/1.7 var(--font-code);
 }
 @media (max-width: 600px) {
   .licenses-layout {

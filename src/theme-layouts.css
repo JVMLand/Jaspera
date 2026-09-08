@@ -5,17 +5,17 @@
 }
 .workspace-summary h2 {
   margin: 4px 0;
-  font-size: 24px;
+  font-size: calc(24px * var(--ui-font-scale, 1));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .workspace-summary p {
   margin: 6px 0 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 .summary-eyebrow {
-  font-size: 10px;
+  font-size: calc(10px * var(--ui-font-scale, 1));
   letter-spacing: 1.6px;
 }
 .workspace-summary > div {
@@ -28,7 +28,7 @@
   border-radius: 5px;
   background: var(--theme-bg);
   color: var(--theme-accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root:is([data-theme^='japan-'], [data-theme^='hitachi-']) .workspace-summary {
   display: flex;
@@ -50,7 +50,7 @@
 :root[data-theme^='japan-'] #app {
   grid-template-rows: 60px 32px minmax(0, 1fr) 26px;
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
 }
 :root[data-theme^='japan-'] .workspace {
   padding: 6px;
@@ -70,7 +70,7 @@
   letter-spacing: 0;
 }
 :root[data-theme^='japan-'] .workspace-summary h2 {
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-font-scale, 1));
   margin: 2px 0;
 }
 :root[data-theme^='japan-'] .workspace-summary p {
@@ -113,7 +113,7 @@
 }
 :root[data-theme^='japan-'] :is(.toolbar-actions button, .workspace-summary button) {
   border-radius: 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-font-scale, 1));
   height: 30px;
 }
 :root[data-theme^='japan-'] dialog {
@@ -277,13 +277,13 @@
     gap: 8px;
   }
   :root:is([data-theme^='japan-'], [data-theme^='hitachi-']) .workspace-summary h2 {
-    font-size: 20px;
+    font-size: calc(20px * var(--ui-font-scale, 1));
   }
   :root:is([data-theme^='japan-'], [data-theme^='hitachi-']) .workspace-summary p {
     display: none;
   }
   :root:is([data-theme^='japan-'], [data-theme^='hitachi-']) .workspace-summary button {
-    font-size: 11px;
+    font-size: calc(11px * var(--ui-font-scale, 1));
     padding: 9px;
   }
   :root[data-theme^='japan-'] .menu > button {
