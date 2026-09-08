@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { fileLabel } from './file-labels';
 import { installContextMenu, copyText } from './context-menu';
 import { paneDrag } from './tab-interactions';
@@ -26,17 +27,17 @@ export function renderProjectTree(
       const current = contexts.get(surface)!;
       return [
         ...(current.actions
-          ? [{ label: '新規 JAL ファイル…', action: () => current.actions!.create('src') }, null]
+          ? [{ label: msg('md3a91edcf75f'), action: () => current.actions!.create('src') }, null]
           : []),
         {
-          label: 'すべて展開',
+          label: msg('m127ced042f4f'),
           action: () => {
             for (const folder of current.host.querySelectorAll<HTMLDetailsElement>('details'))
               folder.open = true;
           },
         },
         {
-          label: 'すべて折りたたむ',
+          label: msg('mf4fe505d5480'),
           action: () => {
             for (const folder of current.host.querySelectorAll<HTMLDetailsElement>('details'))
               folder.open = false;
@@ -54,12 +55,12 @@ export function renderProjectTree(
     (folder ? editable(path) : files.some((f) => f.path === path && f.key.startsWith('source:')))
       ? [
           {
-            label: '新規 JAL ファイル…',
+            label: msg('md3a91edcf75f'),
             action: () => actions.create(folder ? path : path.split('/').slice(0, -1).join('/')),
           },
           null,
-          { label: '名前を変更…', action: () => actions.rename(path, folder) },
-          { label: '移動…', action: () => actions.move(path, folder) },
+          { label: msg('m845f8265321f'), action: () => actions.rename(path, folder) },
+          { label: msg('m7d2242b95abd'), action: () => actions.move(path, folder) },
           null,
         ]
       : [];
@@ -89,12 +90,12 @@ export function renderProjectTree(
       installContextMenu(summary, () => [
         ...operations(path, true),
         {
-          label: details.open ? '折りたたむ' : '展開する',
+          label: details.open ? msg('m8ab5d1f1fa80') : msg('m5dfc8ef53b28'),
           action: () => {
             details.open = !details.open;
           },
         },
-        { label: '相対パスをコピー', action: () => copyText(path) },
+        { label: msg('m87d17ab9caf9'), action: () => copyText(path) },
       ]);
       children.className = 'folder-children';
       details.append(summary, children);
@@ -115,9 +116,9 @@ export function renderProjectTree(
       button.setAttribute('aria-current', String(!!file.active));
       button.onclick = file.open;
       installContextMenu(button, () => [
-        { label: '開く', action: file.open },
+        { label: msg('m3aa692fcaae4'), action: file.open },
         ...operations(file.path, false),
-        { label: '相対パスをコピー', action: () => copyText(file.path) },
+        { label: msg('m87d17ab9caf9'), action: () => copyText(file.path) },
       ]);
       if (file.key) paneDrag(button, workspace, file.key);
       parent.append(button);

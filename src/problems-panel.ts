@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { installContextMenu, copyText } from './context-menu';
 export function installProblemsContextMenu(host: HTMLElement) {
   return installContextMenu(host, (target) => {
@@ -6,13 +7,13 @@ export function installProblemsContextMenu(host: HTMLElement) {
     return [
       ...(item
         ? [
-            { label: 'ソースへ移動', action: () => item.click() },
-            { label: 'この問題をコピー', action: () => copyText(item.textContent ?? '') },
+            { label: msg('md3bed236948a'), action: () => item.click() },
+            { label: msg('m1e6645c063cf'), action: () => copyText(item.textContent ?? '') },
             null,
           ]
         : []),
       {
-        label: '問題をすべてコピー',
+        label: msg('m473035efc46f'),
         disabled: !rows.length,
         action: () => copyText(rows.map((row) => row.textContent).join('\n')),
       },

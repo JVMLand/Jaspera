@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import './context-menu.css';
 export type ContextItem = { label: string; action: () => void; disabled?: boolean } | null;
 let dismissActive: (() => void) | undefined;
@@ -116,8 +117,8 @@ export function copyText(text: string) {
       close = document.createElement('button');
     input.value = text;
     input.readOnly = true;
-    input.setAttribute('aria-label', 'コピーする内容');
-    close.textContent = '閉じる';
+    input.setAttribute('aria-label', msg('meb8927b82c0b'));
+    close.textContent = msg('mf6c244f98893');
     close.onclick = () => dialog.close();
     dialog.onclose = () => dialog.remove();
     dialog.append(input, close);

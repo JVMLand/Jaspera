@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { expose, transfer } from 'comlink';
 import { unzipSync } from 'fflate';
 import { analyzeSymbols } from './symbols.js';
@@ -10,7 +11,7 @@ const api = {
     if (!/^[\w$]+(?:\/[\w$]+)*$/.test(owner)) throw new Error('Invalid class name');
     archive ??= fetch(new URL('../runtime/jdk23.jar', self.location.href))
       .then(async (r) => {
-        if (!r.ok) throw new Error('OpenJDK を読み込めませんでした。');
+        if (!r.ok) throw new Error(msg('m880fb2cfc25c'));
         return new Uint8Array(await r.arrayBuffer());
       })
       .catch((e) => {

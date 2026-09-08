@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { readWorkspaceLayout, type WorkspaceLayout } from './workspace-layout';
 import { hello } from './examples';
 export interface FileView {
@@ -29,7 +30,7 @@ export function validatePath(path: string) {
       path.endsWith('.jal') &&
       !/[\\:<>"|?*\x00-\x1f]/.test(path) &&
       path.split('/').every((p) => p && p !== '.' && p !== '..' && p.trim() === p),
-    'ファイル名は相対パスの .jal にしてください（例: src/Main.jal）。',
+    msg('m528e18f611dc'),
   );
   return path;
 }
@@ -37,32 +38,26 @@ export function validateProject(project: Project): Project {
   const data = project;
   requireValue(
     typeof data.name === 'string' && data.name.trim().length > 0 && data.name.length <= 128,
-    'プロジェクト名は 1〜128 文字にしてください。',
+    msg('m7edc3415aa8b'),
   );
-  requireValue(
-    Array.isArray(data.files) && data.files.length <= 64,
-    'プロジェクトには 0〜64 個の JAL ファイルが必要です。',
-  );
+  requireValue(Array.isArray(data.files) && data.files.length <= 64, msg('m20a0d8b5aeff'));
   const names = new Set<string>();
   let total = 0;
   const files = data.files.map((f: any) => {
     requireValue(
       f && typeof f.path === 'string' && typeof f.source === 'string',
-      'ファイルの path と source が必要です。',
+      msg('m9695c133fa8b'),
     );
     validatePath(f.path);
-    requireValue(!names.has(f.path.toLowerCase()), '同じファイル名が重複しています。');
+    requireValue(!names.has(f.path.toLowerCase()), msg('md1a60f346cae'));
     names.add(f.path.toLowerCase());
     const size = bytes(f.source);
     total += size;
-    requireValue(
-      size <= 1024 * 1024 && total <= 6 * 1024 * 1024,
-      'ソースは各 1 MiB，合計 6 MiB 以下にしてください。',
-    );
+    requireValue(size <= 1024 * 1024 && total <= 6 * 1024 * 1024, msg('m8cea98e986be'));
     return { path: f.path as string, source: f.source as string };
   });
   const w = data.workspace ?? {};
-  requireValue(typeof w === 'object' && !Array.isArray(w), 'workspace が不正です。');
+  requireValue(typeof w === 'object' && !Array.isArray(w), msg('mccee5e820320'));
   const activeFile = w.activeFile ?? files[0]?.path ?? '',
     entryFile =
       w.entryFile ??
@@ -74,15 +69,12 @@ export function validateProject(project: Project): Project {
     !files.length ||
       (files.some((f: { path: string }) => f.path === activeFile) &&
         files.some((f: { path: string }) => f.path === entryFile)),
-    '開いているファイルまたは実行対象が見つかりません。',
+    msg('m093dcd33196a'),
   );
   const stdin = w.stdin ?? '',
     panel = w.panel ?? 'console',
     wordWrap = w.wordWrap ?? false;
-  requireValue(
-    typeof stdin === 'string' && bytes(stdin) <= 1024 * 1024,
-    '標準入力は 1 MiB 以下にしてください。',
-  );
+  requireValue(typeof stdin === 'string' && bytes(stdin) <= 1024 * 1024, msg('md892e026e5ba'));
   requireValue(
     panel === 'project' ||
       panel === 'console' ||
@@ -90,13 +82,13 @@ export function validateProject(project: Project): Project {
       panel === 'instructions' ||
       panel === 'graph' ||
       panel === 'debug',
-    '表示パネルが不正です。',
+    msg('me9f9d28e3390'),
   );
-  requireValue(typeof wordWrap === 'boolean', '折り返し設定が不正です。');
+  requireValue(typeof wordWrap === 'boolean', msg('m04361e31d62e'));
   const views: Record<string, FileView> = Object.create(null);
   requireValue(
     !w.views || (typeof w.views === 'object' && !Array.isArray(w.views)),
-    'カーソル位置が不正です。',
+    msg('m44c49b04bb2e'),
   );
   for (const f of files) {
     const v = w.views?.[f.path];
@@ -105,7 +97,7 @@ export function validateProject(project: Project): Project {
       (['line', 'column', 'scrollTop', 'scrollLeft'] as const).every(
         (k) => Number.isSafeInteger(v[k]) && v[k] >= (k === 'line' || k === 'column' ? 1 : 0),
       ),
-      'カーソル位置が不正です。',
+      msg('m44c49b04bb2e'),
     );
     views[f.path] = {
       line: v.line,

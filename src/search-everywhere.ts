@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import type { SearchTarget } from './navigation';
 import type { Catalog } from './completion';
 import './search-everywhere.css';
@@ -36,9 +37,8 @@ export function installSearchEverywhere(
 ) {
   const dialog = document.createElement('dialog');
   dialog.className = 'search-everywhere';
-  dialog.setAttribute('aria-label', 'どこでも検索');
-  dialog.innerHTML =
-    '<header><h1>どこでも検索</h1><button type="button" aria-label="閉じる">×</button></header><input type="search" placeholder="ファイル・クラス・メソッド・フィールドを検索" aria-label="ファイル・定義を検索" role="combobox" aria-autocomplete="list" aria-controls="everywhere-results" aria-expanded="true"><p role="status" aria-live="polite"></p><div id="everywhere-results" role="listbox"></div><footer><kbd>↑</kbd> <kbd>↓</kbd> 選択　<kbd>Enter</kbd> 開く　<kbd>Esc</kbd> 閉じる</footer>';
+  dialog.setAttribute('aria-label', msg('m4f2a06aba30f'));
+  dialog.innerHTML = msg('mcdf342526df6');
   document.body.append(dialog);
   const input = dialog.querySelector('input')!,
     list = dialog.querySelector<HTMLDivElement>('[role=listbox]')!,
@@ -67,10 +67,10 @@ export function installSearchEverywhere(
       const kind = document.createElement('span');
       kind.className = 'search-kind';
       kind.textContent = {
-        file: 'ファイル',
-        class: 'クラス',
-        method: 'メソッド',
-        field: 'フィールド',
+        file: msg('m2b39ec3da17e'),
+        class: msg('m428926567c1a'),
+        method: msg('m99942ce88f0b'),
+        field: msg('mdb132d621cb1'),
       }[target.kind];
       const title = document.createElement('strong');
       title.textContent = target.label;
@@ -84,8 +84,8 @@ export function installSearchEverywhere(
       list.append(row);
     }
     status.textContent = rows.length
-      ? `${rows.length} 件${rows.length === 100 ? '（上位100件）' : ''}`
-      : '見つかりませんでした。';
+      ? msg('m32b573b66067', [rows.length, rows.length === 100 ? msg('m8d1740df6215') : ''])
+      : msg('mbf18fbb2cc25');
     highlight();
   };
   async function choose() {
@@ -93,7 +93,7 @@ export function installSearchEverywhere(
     if (!target || opening) return;
     opening = true;
     const current = version;
-    status.textContent = '定義を開いています…';
+    status.textContent = msg('m0f1be67e7930');
     try {
       const reveal = await open(target);
       if (current === version) {
@@ -102,7 +102,7 @@ export function installSearchEverywhere(
       }
     } catch (error) {
       if (current === version)
-        status.textContent = error instanceof Error ? error.message : '開けませんでした。';
+        status.textContent = error instanceof Error ? error.message : msg('mfbe152e63373');
     } finally {
       opening = false;
     }
@@ -113,7 +113,7 @@ export function installSearchEverywhere(
     input.value = '';
     all = [];
     list.replaceChildren();
-    status.textContent = '検索の準備中…';
+    status.textContent = msg('m03876eb6f5da');
     dialog.showModal();
     input.focus();
     const current = ++version;
@@ -122,8 +122,7 @@ export function installSearchEverywhere(
     all = results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
     render();
     if (results.some((result) => result.status === 'rejected'))
-      status.textContent =
-        '一部の検索対象を読み込めませんでした。閉じてからもう一度お試しください。';
+      status.textContent = msg('m1933268e3a9b');
   }
   dialog.querySelector('button')!.onclick = () => dialog.close();
   dialog.addEventListener('close', () => {

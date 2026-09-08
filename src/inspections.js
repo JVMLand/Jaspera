@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { parseJal } from './jal-parse.js';
 import JALParser from './generated/offset-parser/JALParser.js';
 
@@ -70,15 +71,11 @@ export function inspectSource(source, parse = parseJal) {
           ...(removeArg ? [edit(arg, '')] : []),
           ...(wide ? [edit(ts[0], '')] : []),
         ];
-        if (terminated) report('unreachable', `${terminated} の後の命令には到達できません。`);
+        if (terminated) report('unreachable', msg('m389e82feb8ec', [terminated]));
         if (/^(goto(?:_w)?|[ilfda]?return|athrow|tableswitch|lookupswitch)$/.test(name))
           terminated = name;
         if (/^[ilfda]?return$/.test(name) && expected && name !== expected)
-          report(
-            'return-type',
-            `戻り値 ${returnType} には ${expected} が必要です。スタックの型も確認してください。`,
-            'error',
-          );
+          report('return-type', msg('mdda8758de0fe', [returnType, expected]), 'error');
         const value = integer(arg?.text);
         if (['bipush', 'sipush', 'ldc'].includes(name) && value !== undefined) {
           const replacement =
@@ -94,12 +91,10 @@ export function inspectSource(source, parse = parseJal) {
               (name === 'bipush' && (value < -128 || value > 127)) ||
               (name === 'sipush' && (value < -32768 || value > 32767));
             const short = replacement.startsWith('iconst_'),
-              title = `${replacement}${short ? '' : ' ' + arg.text} に変更`;
+              title = msg('m953e91d324df', [replacement, short ? '' : ' ' + arg.text]);
             report(
               overflow ? 'push-range' : 'short-push',
-              overflow
-                ? `${name} の範囲外です。${title}してください。`
-                : `より短い命令を使用できます。${title}。`,
+              overflow ? msg('mbd3e5d6983ef', [name, title]) : msg('m0e6f3c9e8193', [title]),
               overflow ? 'error' : 'warning',
               title,
               replace(replacement, short),
@@ -109,44 +104,32 @@ export function inspectSource(source, parse = parseJal) {
         if (/^(?:[ilfda](?:load|store)|ret|iinc)$/.test(name) && value !== undefined) {
           const increment = name === 'iinc' ? integer(ts[wide ? 3 : 2]?.text) : 0;
           if (value < 0 || value > 65534 || (/^[ld]/.test(name) && value > 65533)) {
-            report(
-              'local-range',
-              'ローカル変数番号が範囲外です（2 スロット型は 0〜65533，その他は 0〜65534）。',
-              'error',
-            );
+            report('local-range', msg('m2004faf0b357'), 'error');
             continue;
           }
           if (increment === undefined) continue;
           if (increment < -32768 || increment > 32767) {
-            report('increment-range', 'iinc の増分は -32768〜32767 にしてください。', 'error');
+            report('increment-range', msg('m66219646320d'), 'error');
             continue;
           }
           const needsWide = value > 255 || increment < -128 || increment > 127;
           if (needsWide && !wide) {
-            report(
-              'missing-wide',
-              'このローカル変数番号または増分には wide が必要です。',
-              'error',
-              'wide を付ける',
-              [{ start: op.start, end: op.start, text: 'wide ' }],
-            );
+            report('missing-wide', msg('m6a0a3dae4000'), 'error', msg('m1af5958d289f'), [
+              { start: op.start, end: op.start, text: 'wide ' },
+            ]);
           } else if (value <= 3 && /^[ilfda](?:load|store)$/.test(name)) {
             const replacement = name + '_' + value;
             report(
               'short-local',
-              `短縮形 ${replacement} を使用できます。`,
+              msg('mf6e71fe2c47f', [replacement]),
               'warning',
-              replacement + ' に変更',
+              replacement + msg('me21e638ae14e'),
               replace(replacement, true),
             );
           } else if (wide && !needsWide)
-            report(
-              'extra-wide',
-              'この命令には wide は不要です。',
-              'warning',
-              '不要な wide を除去',
-              [edit(ts[0], '')],
-            );
+            report('extra-wide', msg('m8af507cd6057'), 'warning', msg('m5fbd0de6b5da'), [
+              edit(ts[0], ''),
+            ]);
         }
       }
     }

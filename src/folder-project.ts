@@ -1,3 +1,4 @@
+import { msg } from './messages.js';
 import { readWorkspaceLayout, type WorkspaceLayout } from './workspace-layout';
 import { validateProject, validatePath, type Project } from './project';
 export const CONFIG_NAME = 'project.jalprj';
@@ -46,29 +47,24 @@ const byteLength = (s: string) => new TextEncoder().encode(s).length;
 const missing = (e: unknown) => e instanceof Error && e.name === 'NotFoundError';
 export function sourcePath(path: string) {
   validatePath(path);
-  if (!path.startsWith('src/'))
-    throw new Error('ソースは src/ 以下に置いてください（例: src/Main.jal）。');
+  if (!path.startsWith('src/')) throw new Error(msg('md141e8985f83'));
   return path;
 }
 export function parseProperties(text: string): Properties {
-  if (byteLength(text) > 65536) throw new Error('project.jalprj は 64 KiB 以下にしてください。');
+  if (byteLength(text) > 65536) throw new Error(msg('mb4658df76983'));
   let p: any;
   try {
     p = JSON.parse(text);
   } catch {
-    throw new Error('プロジェクト設定の JSON を読み取れませんでした。');
+    throw new Error(msg('mfa230d569bf0'));
   }
-  if (!p || p.format !== 'jalprj' || p.version !== 1)
-    throw new Error('対応していないプロジェクト設定です。');
+  if (!p || p.format !== 'jalprj' || p.version !== 1) throw new Error(msg('mef5bf4f1b729'));
   if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 128)
-    throw new Error('プロジェクト名は 1〜128 文字にしてください。');
+    throw new Error(msg('m7edc3415aa8b'));
   const entryFile = p.entryFile ?? 'src/Main.jal';
-  if (typeof entryFile !== 'string') throw new Error('実行ファイルが不正です。');
+  if (typeof entryFile !== 'string') throw new Error(msg('m525605187f4a'));
   sourcePath(entryFile);
-  if ('files' in p || 'source' in p)
-    throw new Error(
-      'jalprj にはソースを含められません。src/ 以下に .jal ファイルを置いてください。',
-    );
+  if ('files' in p || 'source' in p) throw new Error(msg('md7032e3e98e2'));
   const editor = readWorkspaceLayout(p.editor);
   return {
     format: 'jalprj',
@@ -99,7 +95,7 @@ export function serializeProperties(project: Project) {
 }
 async function readText(handle: FileHandle, max = 1024 * 1024) {
   const file = await handle.getFile();
-  if (file.size > max) throw new Error(`${handle.name}: ファイルが大きすぎます。`);
+  if (file.size > max) throw new Error(msg('m1d8d3dc37e68', [handle.name]));
   return file.text();
 }
 async function resolve(root: DirectoryHandle, path: string, create = false) {
@@ -127,15 +123,11 @@ export async function openFolder(
   for await (const [, h] of root.entries())
     if (h.kind === 'file' && h.name.endsWith('.jalprj')) configs.push(h);
   if (configs.length > 1 || (requireProperties && !configs.length))
-    throw new Error(
-      configs.length
-        ? 'フォルダー直下に複数の .jalprj があります。'
-        : 'フォルダー直下の .jalprj が見つかりません。',
-    );
+    throw new Error(configs.length ? msg('m95f7084c4d84') : msg('m655f437f6959'));
   const cache = new Map<string, { mtime: number; size: number; text: string }>();
   async function cached(h: FileHandle, path: string, max = 1024 * 1024) {
     const f = await h.getFile();
-    if (f.size > max) throw new Error(`${path}: ファイルが大きすぎます。`);
+    if (f.size > max) throw new Error(msg('m1d8d3dc37e68', [path]));
     const old = previous?.cache?.get(path);
     const text =
       old && old.mtime === f.lastModified && old.size === f.size ? old.text : await f.text();
@@ -151,9 +143,9 @@ export async function openFolder(
   let entries = 0,
     total = 0;
   async function scan(dir: DirectoryHandle, prefix: string, depth: number): Promise<void> {
-    if (depth > 24) throw new Error('ソースのフォルダー階層が深すぎます。');
+    if (depth > 24) throw new Error(msg('mc18bdda7189a'));
     for await (const [name, h] of dir.entries()) {
-      if (++entries > 2048) throw new Error('src/ 以下の項目数が多すぎます。');
+      if (++entries > 2048) throw new Error(msg('mf9dee5022545'));
       const path = prefix ? prefix + '/' + name : name;
       if (h.kind === 'directory') await scan(h, path, depth + 1);
       else if (name.toLowerCase().endsWith('.class')) {
@@ -163,8 +155,7 @@ export async function openFolder(
         validatePath(path);
         const source = await cached(h, path);
         total += byteLength(source);
-        if (files.length >= 64 || total > 6 * 1024 * 1024)
-          throw new Error('ソースは 64 ファイル，合計 6 MiB 以下にしてください。');
+        if (files.length >= 64 || total > 6 * 1024 * 1024) throw new Error(msg('ma7f6e23f80c3'));
         files.push({ path, source });
         baseline.set(path, source);
       }
@@ -180,7 +171,7 @@ export async function openFolder(
     files[0]?.path ??
     '';
   if (!previous && props && !files.some((f) => f.path === entry))
-    throw new Error('実行対象が見つかりません。');
+    throw new Error(msg('md7afc4fabe9c'));
   const project: Project = {
     name: props?.name ?? root.name,
     files,
@@ -219,22 +210,17 @@ export async function saveFolder(binding: FolderBinding, project: Project): Prom
       !root.requestPermission ||
       (await root.requestPermission({ mode: 'readwrite' })) !== 'granted'
     )
-      throw new Error('フォルダーへの書き込みが許可されていません。');
+      throw new Error(msg('ma94a3948939c'));
   }
   // Check all destinations before writing. Keep per-file baselines after partial saves so retry is safe.
   if (config !== undefined && !baseline.size)
     for await (const [, h] of root.entries())
-      if (h.kind === 'file' && h.name.endsWith('.jalprj'))
-        throw new Error(
-          'このフォルダーには既存のプロジェクトがあります。「フォルダーを開く」で開いてください。',
-        );
+      if (h.kind === 'file' && h.name.endsWith('.jalprj')) throw new Error(msg('m014bd69582a5'));
   const paths = new Set([...baseline.keys(), ...desired.keys()]);
   async function check(path: string) {
     const current = await readPath(root, path);
     if (baseline.has(path) ? current !== baseline.get(path) : current !== undefined)
-      throw new Error(
-        `${path} は外部で変更されたか，保存先に既に存在します。フォルダーを開き直すか，別のフォルダーへ保存してください。`,
-      );
+      throw new Error(msg('m8a90168bb710', [path]));
   }
   for (const path of paths) await check(path);
   for (const [path, source] of desired) {
@@ -289,10 +275,7 @@ export async function pickFolder(): Promise<DirectoryHandle> {
       showDirectoryPicker?: (options: { mode: 'readwrite' }) => Promise<DirectoryHandle>;
     }
   ).showDirectoryPicker;
-  if (!picker)
-    throw new Error(
-      'このブラウザはフォルダーへの直接保存に対応していません。Chrome / Edge を使用してください。「ZIP にエクスポート」は利用できます。',
-    );
+  if (!picker) throw new Error(msg('m0a64d0ac8f39'));
   return picker.call(window, { mode: 'readwrite' });
 }
 export async function projectArchive(project: Project, properties = true): Promise<Uint8Array> {
