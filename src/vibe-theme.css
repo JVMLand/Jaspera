@@ -139,7 +139,7 @@
   filter: drop-shadow(0 0 14px #ab70ff38);
 }
 :root[data-theme-family='vibe'] .workspace-summary h2::before {
-  content: '✨ ';
+  content: '✨ ' / '';
   color: var(--theme-text);
 }
 :root[data-theme-family='vibe'] .toolbar-actions .run {
@@ -206,19 +206,19 @@
   pointer-events: none;
 }
 :root[data-theme-family='vibe'] [data-pane-key='panel:project'] [role='tab']::before {
-  content: '🗂️ ';
+  content: '🗂️ ' / '';
 }
 :root[data-theme-family='vibe'] [data-pane-key='panel:console'] [role='tab']::before {
-  content: '💻 ';
+  content: '💻 ' / '';
 }
 :root[data-theme-family='vibe'] [data-pane-key='panel:problems'] [role='tab']::before {
-  content: '🔎 ';
+  content: '🔎 ' / '';
 }
 :root[data-theme-family='vibe'] [data-pane-key='panel:instructions'] [role='tab']::before {
-  content: '📚 ';
+  content: '📚 ' / '';
 }
 :root[data-theme-family='vibe'] [data-pane-key='panel:graph'] [role='tab']::before {
-  content: '🧬 ';
+  content: '🧬 ' / '';
 }
 :root[data-theme-family='vibe'] #file-list .file-folder > summary {
   border: 1px solid var(--theme-border);

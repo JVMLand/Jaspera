@@ -833,3 +833,13 @@
     display: none;
   }
 }
+
+/* Keep the full translated menubar reachable on narrow screens. */
+@media (max-width: 650px) {
+  :root[data-theme-family] .menubar {
+    padding-inline: 5px;
+  }
+  :root[data-theme-family] .menu > button {
+    padding-inline: 7px;
+  }
+}
