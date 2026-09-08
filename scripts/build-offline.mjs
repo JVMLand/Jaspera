@@ -1,4 +1,5 @@
-import { generateSW } from 'workbox-build';
+import { generateSW, getManifest } from 'workbox-build';
+import { createHash } from 'node:crypto';
 import { readdir, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 async function inventory(directory, prefix = '') {
@@ -17,15 +18,32 @@ async function inventory(directory, prefix = '') {
   return files;
 }
 const files = await inventory('dist');
+const manifestOptions = {
+  globDirectory: 'dist',
+  globPatterns: ['**/*'],
+  globIgnores: ['**/*.map', '**/.*', 'sw.js', 'offline-manifest.json'],
+  maximumFileSizeToCacheInBytes: 64 * 1024 * 1024,
+};
+const { manifestEntries, warnings } = await getManifest(manifestOptions);
+if (warnings.length) throw new Error(warnings.join('\n'));
+const cacheId =
+  'jaspera-' +
+  createHash('sha256')
+    .update(JSON.stringify([...manifestEntries].sort((a, b) => a.url.localeCompare(b.url))))
+    .digest('hex')
+    .slice(0, 16);
 await writeFile(
   'dist/offline-manifest.json',
   JSON.stringify({
     bytes: files.reduce((n, f) => n + f.bytes, 0),
     files: files.length,
     urls: files.map((f) => f.url),
+    cacheId,
+    entries: manifestEntries,
   }),
 );
 const result = await generateSW({
+  cacheId,
   globDirectory: 'dist',
   globPatterns: ['**/*'],
   globIgnores: ['**/*.map', '**/.*', 'sw.js'],
