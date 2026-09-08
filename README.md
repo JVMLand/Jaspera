@@ -157,3 +157,5 @@ OpenJDK 23 のクラスライブラリを同梱していますが，ブラウザ
 利用している OSS とライセンスは [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) にまとめています。
 
 配布用ビルドの公開パスは `/jaspera/` です。`dist` の内容を `https://jal.yamad.jp/jaspera/` に配置します。`pnpm preview` でも `/jaspera/` から確認できます。
+
+既存の GitHub Pages と同じドメインで Cloudflare に公開する場合は，[Cloudflare への公開](docs/cloudflare.md) を参照してください。Brotli・gzip 圧縮と，/jaspera/ だけを配信する設定を用意しています。
