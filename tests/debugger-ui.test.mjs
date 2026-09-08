@@ -29,7 +29,7 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.dataset.state==='starting');
  assert.equal(await page.locator('.debug-toolbar [data-command=debug-pause]').isDisabled(),true);
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});release();
- await page.waitForFunction(()=>document.querySelector('.debug-status')?.textContent.startsWith('停止中'));
+ await page.waitForFunction(()=>document.querySelector('.debug-status')?.textContent==='フレーム');
  await page.locator('.debug-current-line').waitFor();assert.equal(await page.locator('.debug-current-line').count(),1);
  await page.waitForFunction(()=>document.querySelector('#state')?.textContent.includes(' · 3 で停止中'));
  assert.match(await page.locator('.debug-values').innerText(),/5/);
@@ -40,8 +40,8 @@ test('Debug pane, gutter breakpoints and detached controls share the running VM'
  const popup=await popupEvent;popup.setDefaultTimeout(60000);await popup.waitForLoadState();await popup.locator('.debug-toolbar [data-command=debug-over]').waitFor();
  await popup.evaluate(()=>{window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));window.dispatchEvent(new KeyboardEvent('keydown',{key:'F10'}));});
  await popup.waitForFunction(()=>document.querySelector('.debug-values')?.textContent.includes('呼び出し元へ戻る'));
- assert.doesNotMatch(await popup.locator('.debug-values').innerText(),/ローカル変数/);
- await popup.locator('.debug-toolbar [data-command=debug-continue]').click();await popup.waitForFunction(()=>document.querySelector('.debug-status')?.textContent==='実行が終了しました。');
+ assert.match(await popup.locator('.debug-values').innerText(),/ローカル変数/);assert.match(await popup.locator('.debug-values').innerText(),/（変更無し）/);
+ await popup.locator('.debug-toolbar [data-command=debug-continue]').click();await popup.waitForFunction(()=>document.querySelector('.debug-status')?.textContent.includes('デバッガは待機中です。'));
  await page.waitForFunction(()=>document.querySelector('.debug-toolbar')?.hidden===true);
  await page.evaluate(async()=>{const {editor}=await import('/src/main.ts');editor.setPosition({lineNumber:7,column:1});await editor.getAction('jaspera.toggleBreakpoint').run();});
  await page.locator('.debug-breakpoint').waitFor({state:'hidden'});assert.equal(await page.locator('.debug-breakpoint').count(),0);

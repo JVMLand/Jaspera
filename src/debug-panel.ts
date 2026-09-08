@@ -32,7 +32,8 @@ export function installDebugPanel(root:HTMLElement,actions:DebugActions){
  const indicator=document.createElement('span');indicator.className='debug-toolbar-state';toolbar.append(indicator);
  const buttons=debugMenuItems(actions).filter(item=>item.id!=='debug-start').map(item=>{const b=document.createElement('button');b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[item.id]+'</svg>';b.title=item.label+(item.shortcut?'（'+item.shortcut+'）':'');b.setAttribute('aria-label',item.label);b.dataset.command=item.id;b.onclick=item.action;toolbar.append(b);return b;});
  document.body.append(toolbar);root.replaceChildren(stateLabel,list,content);let state:DebugState|undefined,selected=0;
- const labels={idle:'デバッグ実行すると，ここに実際の値が表示されます。',starting:'デバッグ実行を準備中…',running:'実行中',paused:'停止中（表示中の命令を実行する直前）',finished:'実行が終了しました。'};
+ const waiting='デバッガは待機中です。Run で実行を開始します。ブレークポイントを置くと，その命令で一時停止してフレームを確認できます。';
+ const labels={idle:waiting,starting:'デバッグ実行を準備中…',running:'実行中',paused:'フレーム',finished:waiting};
  function render(){
   if(!state)return;stateLabel.textContent=labels[state.status];const paused=state.status==='paused',active=paused||state.status==='running'||state.status==='starting';
   toolbar.hidden=!active;toolbar.dataset.state=state.status;indicator.textContent=paused?'停止中':state.status==='starting'?'準備中':'実行中';
