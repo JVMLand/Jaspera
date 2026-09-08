@@ -1,6 +1,6 @@
 {
   "name": "jalweb",
-  "version": "0.1.0",
+  "version": "2026.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "prebuild": "node scripts/check-runtime.mjs",
-    "build:runtime": "node scripts/build-runtime.mjs"
+    "build:runtime": "node scripts/build-runtime.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -22,11 +24,15 @@
     "comlink": "^4.4.2",
     "elkjs": "^0.12.0",
     "fflate": "0.8.2",
+    "i18next": "^26.4.2",
     "monaco-editor": "0.52.2"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.1",
     "esbuild": "0.25.12",
+    "prettier": "^3.9.6",
+    "prettier-plugin-java": "^2.10.3",
     "turndown": "7.2.0",
     "typescript": "5.8.3",
     "vite": "6.4.1",

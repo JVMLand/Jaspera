@@ -1,0 +1,19 @@
+# Generated files, dependencies and build artifacts
+node_modules/
+vendor/
+src/vendor/
+src/generated/
+dist/
+.cache/
+java/build/
+public/runtime/
+test-results/
+pnpm-lock.yaml
+# Upstream notices and artwork
+licenses/
+public/licenses/
+THIRD_PARTY_NOTICES.md
+public/THIRD_PARTY_NOTICES.md
+*.svg
+# Local agent instructions
+AGENTS.md
