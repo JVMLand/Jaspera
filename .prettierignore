@@ -1,7 +1,6 @@
 # Generated files, dependencies and build artifacts
 node_modules/
 vendor/
-src/vendor/
 src/generated/
 dist/
 .cache/

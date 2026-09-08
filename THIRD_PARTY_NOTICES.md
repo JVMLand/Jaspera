@@ -23,7 +23,7 @@ The Bovine repository supplies a reduced OpenJDK class archive. Its exact binary
 
 JALWeb replaces java.util.zip.Deflater, Inflater, CRC32 and Adler32 with adapters to JZlib. The complete adapter source and build procedure are included in `java/patches/` and `scripts/build-compiler.mjs`. These files are modifications by JALWeb, not unmodified OpenJDK source.
 
-Bovine's generated JS wrapper receives build-time UTF-8 allocation and HTTP response handling fixes in `scripts/setup.mjs`. The original wrapper is retained in `src/vendor/`.
+Bovine is built from the pinned upstream revision with `vendor/patches/bovine-debugger.patch` by `scripts/build-runtime.mjs`. `scripts/bundle-runtime.mjs` applies UTF-8 allocation and HTTP response handling fixes to the wrapper from that checkout and bundles it with the locally built WebAssembly runtime.
 
 All application execution is local to the browser; public dependency hosts are contacted by the setup process only. Runtime assets are served from the same site as the editor.
 

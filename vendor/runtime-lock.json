@@ -14,11 +14,6 @@
     "sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726",
     "bytes": 19274
   },
-  "src/vendor/bovine/bjvm2.ts": {
-    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/js/bjvm2.ts",
-    "sha256": "73545a44ba7d4389a617a0653d3671be5bab3eb47343c82ee1dc176ed63453c9",
-    "bytes": 32843
-  },
   "public/runtime/jdk23/lib/security/default.policy": {
     "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/lib/security/default.policy",
     "sha256": "feb816214fec0c13d57cd3d6202b84679f7f0fa19c8e9f71581de419a4695fa0",
@@ -33,16 +28,6 @@
     "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/conf/security/java.security",
     "sha256": "17532b46489e9db1d523cb8b4381670c652d45b41e746f1d1d3d9dc720560516",
     "bytes": 65249
-  },
-  "src/vendor/build/bjvm_main.js": {
-    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/build/bjvm_main.js",
-    "sha256": "877e9c64fd855771d53987130bdc2678166baac7447350245093405ca2d151f7",
-    "bytes": 171478
-  },
-  "public/runtime/bjvm_main.wasm": {
-    "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/build/bjvm_main.wasm",
-    "sha256": "3a0e899ba06c466ced8fb326ec0ff50f759ec47f709584eed9e1cbef116dd2f0",
-    "bytes": 930096
   },
   "public/runtime/jdk23/lib/modules": {
     "url": "https://raw.githubusercontent.com/anematode/b-jvm/3fd56c74656602eb32efefca46f51f074bef6bca/test/jdk23/lib/modules",
