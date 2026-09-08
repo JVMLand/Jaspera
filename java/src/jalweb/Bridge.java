@@ -83,6 +83,15 @@ public final class Bridge {
     };
 
     public static String quote(String s) {
+        return quote(s, true);
+    }
+
+    /** Human-readable literals retain Unicode; the enclosing protocol is still JSON-escaped. */
+    public static String quoteLiteral(String s) {
+        return quote(s, false);
+    }
+
+    private static String quote(String s, boolean ascii) {
         StringBuilder b = new StringBuilder("\"");
         for (char c : s.toCharArray())
             switch (c) {
@@ -92,7 +101,7 @@ public final class Bridge {
                 case '\r' -> b.append("\\r");
                 case '\t' -> b.append("\\t");
                 default -> {
-                    if (c < 32 || c > 126) b.append("\\u")
+                    if (c < 32 || (ascii && c > 126)) b.append("\\u")
                         .append("0123456789abcdef".charAt(c >>> 12))
                         .append("0123456789abcdef".charAt((c >>> 8) & 15))
                         .append("0123456789abcdef".charAt((c >>> 4) & 15))

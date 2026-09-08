@@ -80,8 +80,15 @@ final class StackFrames {
         else if (
             producer instanceof LdcInsnNode ldc &&
             (ldc.cst instanceof String || ldc.cst instanceof Number)
-        ) constant =
-            ldc.cst instanceof String ? Bridge.quote(ldc.cst.toString()) : ldc.cst.toString();
+        ) {
+            if (ldc.cst instanceof String text) {
+                // Truncate the value before quoting, never in an escape or surrogate pair.
+                if (text.codePointCount(0, text.length()) > 42) text =
+                    text.substring(0, text.offsetByCodePoints(0, 42)) + "…";
+                return Bridge.quoteLiteral(text) + " : " + type;
+            }
+            constant = ldc.cst.toString();
+        }
         if (constant == null) return type;
         if (constant.length() > 48) constant = constant.substring(0, 45) + "…";
         return constant + " : " + type;

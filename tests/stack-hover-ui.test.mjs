@@ -39,6 +39,10 @@ test(
       null,
       { timeout: 60000 },
     );
+    await page.evaluate(async () => {
+      const { editor } = await import('/src/main.ts');
+      editor.setValue(editor.getValue().replace('Hello, World!', 'こんにちは，JAL！😀'));
+    });
     await page
       .locator('.view-line span')
       .filter({ hasText: /^invokevirtual$/ })
@@ -47,7 +51,7 @@ test(
     const literalCard = page.locator('.stack-hover:visible');
     await literalCard.getByText('実行前', { exact: true }).waitFor({ timeout: 60000 });
     assert.deepEqual(await literalCard.locator('.frame-column code').allTextContents(), [
-      '"Hello, World!"',
+      '"こんにちは，JAL！😀"',
       'PrintStream',
     ]);
     await page.keyboard.press('Escape');
