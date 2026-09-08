@@ -1,5 +1,4 @@
 import { generateSW, getManifest } from 'workbox-build';
-import { createHash } from 'node:crypto';
 import { readdir, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 async function inventory(
@@ -29,12 +28,9 @@ const manifestOptions = {
 };
 const { manifestEntries, warnings } = await getManifest(manifestOptions);
 if (warnings.length) throw new Error(warnings.join('\n'));
-const cacheId =
-  'jaspera-' +
-  createHash('sha256')
-    .update(JSON.stringify([...manifestEntries].sort((a, b) => a.url.localeCompare(b.url))))
-    .digest('hex')
-    .slice(0, 16);
+// Workbox already keys every entry by its revision. A build-specific cache name
+// would download unchanged runtime archives and licenses again on every update.
+const cacheId = 'jaspera';
 await writeFile(
   'dist/offline-manifest.json',
   JSON.stringify({

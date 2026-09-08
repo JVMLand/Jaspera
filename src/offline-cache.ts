@@ -3,9 +3,10 @@ export interface OfflineManifest {
   cacheId: string;
   entries: { url: string; revision: string | null }[];
 }
-/** Require the exact build's precache and exact revision, never another cache's URL. */
+/** Check every revision in this build, including entries reused from the preceding build. */
 export async function offlineComplete(storage: CacheStorage, base: URL, manifest: OfflineManifest) {
-  if (!manifest.entries?.length || !/^jaspera-[a-f0-9]{16}$/.test(manifest.cacheId)) return false;
+  if (!manifest.entries?.length || !/^jaspera(?:-[a-f0-9]{16})?$/.test(manifest.cacheId))
+    return false;
   const names = (await storage.keys()).filter((name) =>
     name.startsWith(manifest.cacheId + '-precache-'),
   );

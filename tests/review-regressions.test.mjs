@@ -148,39 +148,40 @@ test('rename transfers views and tab positions using the latest model text', () 
   assert.throws(() => f.store.add('b.jal', 'overwrite'));
   assert.equal(f.models.get('b.jal').getValue(), 'edited');
 });
-test('offline readiness requires one complete cache of the current build and exact revisions', async () => {
-  const base = new URL('https://example.test/jaspera/');
-  const manifest = {
-    cacheId: 'jaspera-0123456789abcdef',
-    entries: [
-      { url: 'runtime.js', revision: 'new' },
-      { url: 'assets/a-hash.js', revision: null },
-    ],
-  };
-  const caches = new Map();
-  const storage = {
-    keys: async () => [...caches.keys()],
-    open: async (n) => ({ match: async (url) => (caches.get(n).has(url) ? {} : undefined) }),
-  };
-  caches.set(
-    'jaspera-old-precache-v2',
-    new Set([
-      'https://example.test/jaspera/runtime.js?__WB_REVISION__=new',
+for (const cacheId of ['jaspera', 'jaspera-0123456789abcdef'])
+  test(`offline readiness requires exact revisions in ${cacheId}`, async () => {
+    const base = new URL('https://example.test/jaspera/');
+    const manifest = {
+      cacheId,
+      entries: [
+        { url: 'runtime.js', revision: 'new' },
+        { url: 'assets/a-hash.js', revision: null },
+      ],
+    };
+    const caches = new Map();
+    const storage = {
+      keys: async () => [...caches.keys()],
+      open: async (n) => ({ match: async (url) => (caches.get(n).has(url) ? {} : undefined) }),
+    };
+    caches.set(
+      'jaspera-old-precache-v2',
+      new Set([
+        'https://example.test/jaspera/runtime.js?__WB_REVISION__=new',
+        'https://example.test/jaspera/assets/a-hash.js',
+      ]),
+    );
+    assert.equal(await offlineComplete(storage, base, manifest), false);
+    const entries = new Set([
+      'https://example.test/jaspera/runtime.js?__WB_REVISION__=old',
       'https://example.test/jaspera/assets/a-hash.js',
-    ]),
-  );
-  assert.equal(await offlineComplete(storage, base, manifest), false);
-  const entries = new Set([
-    'https://example.test/jaspera/runtime.js?__WB_REVISION__=old',
-    'https://example.test/jaspera/assets/a-hash.js',
-  ]);
-  caches.set(manifest.cacheId + '-precache-v2', entries);
-  assert.equal(await offlineComplete(storage, base, manifest), false);
-  entries.add('https://example.test/jaspera/runtime.js?__WB_REVISION__=new');
-  assert.equal(await offlineComplete(storage, base, manifest), true);
-  entries.delete('https://example.test/jaspera/assets/a-hash.js');
-  assert.equal(await offlineComplete(storage, base, manifest), false);
-});
+    ]);
+    caches.set(manifest.cacheId + '-precache-v2', entries);
+    assert.equal(await offlineComplete(storage, base, manifest), false);
+    entries.add('https://example.test/jaspera/runtime.js?__WB_REVISION__=new');
+    assert.equal(await offlineComplete(storage, base, manifest), true);
+    entries.delete('https://example.test/jaspera/assets/a-hash.js');
+    assert.equal(await offlineComplete(storage, base, manifest), false);
+  });
 test('closing preparation interrupts pending API and worker waits', async () => {
   const controller = new AbortController(),
     worker = new EventTarget();
