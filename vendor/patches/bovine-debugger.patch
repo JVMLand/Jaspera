@@ -98,7 +98,7 @@
        if (!ent->catch_type || instanceof(exception_type, ent->catch_type->classdesc)) {
 --- /dev/null
 +++ b/vm/jaspera_debugger.c
-@@ -0,0 +1,116 @@
+@@ -0,0 +1,129 @@
 +// Jaspera's cooperative instruction debugger. No Java calls or GC allocation
 +// are allowed while copying a suspended frame into JavaScript.
 +#include "debugger.h"
@@ -184,25 +184,38 @@
 +  }
 +  jaspera_value(local,buf);
 +}
++EM_JS(int, jaspera_capture_begin, (int thread,int depth), {
++  const d=Module.jasperaDebugger;if(!d?.canCaptureCall(thread,depth))return 0;
++  d.savedFrames=d.frames;d.frames=[];return 1;
++});
++EM_JS(void, jaspera_capture_end, (int thread,int depth), {
++  const d=Module.jasperaDebugger;d.captureCall(thread,depth,d.frames[0]);d.frames=d.savedFrames;delete d.savedFrames;
++});
++static void emit_frame(stack_frame *f,uintptr_t unowned) {
++  cp_method *m=f->method;
++  jaspera_frame((int)(uintptr_t)f,m->my_class->name.chars,m->my_class->name.len,m->name.chars,m->name.len,m->unparsed_descriptor.chars,m->unparsed_descriptor.len,is_interpreter_frame(f)?f->code[f->program_counter].original_pc:-1,source_line(f),is_frame_native(f));
++  if(!is_interpreter_frame(f)||!m->code_analysis)return;
++  emit_instruction(&f->code[f->program_counter]);
++  stack_summary *s=m->code_analysis->stack_states[f->program_counter];if(!s)return;
++  for(int i=0;i<s->stack;i++){if((uintptr_t)&f->stack[i]>=unowned)jaspera_value(0,"呼び出し先へ移動");else emit_value(f->stack[i],s->entries[i],0);}
++  for(int i=0;i<s->locals;i++)emit_value(frame_locals(f)[i],s->entries[s->stack+i],1);
++}
 +static bool should_pause(standard_debugger *dbg,vm_thread *thread,stack_frame *frame) {
 +  if(thread->stack.synchronous_depth) return false;
 +  int depth=0;for(stack_frame *f=frame;f;f=f->prev)depth++;
-+  cp_method *m=frame->method;
-+  if(!jaspera_check((int)(uintptr_t)thread,(int)(uintptr_t)frame,m->my_class->name.chars,m->my_class->name.len,m->name.chars,m->name.len,m->unparsed_descriptor.chars,m->unparsed_descriptor.len,frame->code[frame->program_counter].original_pc,source_line(frame),depth,thread->debugger_instruction_serial)) return false;
-+  uintptr_t unowned=UINTPTR_MAX;
-+  for(stack_frame *f=frame;f;f=f->prev) {
-+    m=f->method;
-+    jaspera_frame((int)(uintptr_t)f,m->my_class->name.chars,m->my_class->name.len,m->name.chars,m->name.len,m->unparsed_descriptor.chars,m->unparsed_descriptor.len,is_interpreter_frame(f)?f->code[f->program_counter].original_pc:-1,source_line(f),is_frame_native(f));
-+    if(!is_interpreter_frame(f)||!m->code_analysis)continue;
-+    emit_instruction(&f->code[f->program_counter]);
-+    stack_summary *s=m->code_analysis->stack_states[f->program_counter];
-+    if(!s)continue;
-+    for(int i=0;i<s->stack;i++){if((uintptr_t)&f->stack[i]>=unowned)jaspera_value(0,"呼び出し先へ移動");else emit_value(f->stack[i],s->entries[i],0); }
-+    for(int i=0;i<s->locals;i++)emit_value(frame_locals(f)[i],s->entries[s->stack+i],1);
-+    unowned=(uintptr_t)frame_locals(f);
++  cp_method *m=frame->method;int tid=(int)(uintptr_t)thread;
++  bool pause=jaspera_check(tid,(int)(uintptr_t)frame,m->my_class->name.chars,m->my_class->name.len,m->name.chars,m->name.len,m->unparsed_descriptor.chars,m->unparsed_descriptor.len,frame->code[frame->program_counter].original_pc,source_line(frame),depth,thread->debugger_instruction_serial);
++  if(!pause){
++    // Copy display values before the callee can overwrite the argument slots.
++    // No heap pointers are retained, so GC remains free to move objects.
++    if(strncmp(insn_code_to_string(frame->code[frame->program_counter].kind),"invoke",6)==0&&jaspera_capture_begin(tid,depth)){
++      emit_frame(frame,UINTPTR_MAX);jaspera_capture_end(tid,depth);
++    }
++    return false;
 +  }
-+  jaspera_publish();
-+  return true;
++  uintptr_t unowned=UINTPTR_MAX;
++  for(stack_frame *f=frame;f;f=f->prev){emit_frame(f,unowned);unowned=(uintptr_t)frame_locals(f);}
++  jaspera_publish();return true;
 +}
 +EMSCRIPTEN_KEEPALIVE void jaspera_debug_enable(vm_thread *thread) {
 +  if(!thread->vm->debugger) {

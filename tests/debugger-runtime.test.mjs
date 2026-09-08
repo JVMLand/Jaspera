@@ -32,6 +32,8 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  iload_0
  iload_1
  iadd
+ istore_0
+ iload_0
  ireturn
  }
 }`;
@@ -39,7 +41,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
    const compiled=await compile(source),run=vm.run(compiled,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]});
    let stop=await next();const entry=stop;const states=[stop];
    while(stop.location.line!==13){stop=await advance('over');states.push(stop);if(states.length>20)throw Error('Stepping did not advance');}
-   phase='into';const call=stop;const into=await advance('into');phase='inside';const inside=await advance('over');phase='out';const out=await advance('out');
+   phase='into';const call=stop;const into=await advance('into');phase='inside';const inside=await advance('over');await advance('over');await advance('over');const overwritten=await advance('over');phase='out';const out=await advance('out');
    phase='stored';const stored=await advance('over');await vm.debugCommand('continue');await run;
    const normal=await vm.run(compiled,'');
    const helper=await compile(`public class Helper { public static calc(II)I {
@@ -124,7 +126,7 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
    const fieldRun=vm.run(fields,'',{stopOnEntry:true,classes:['Main'],breakpoints:[]}).catch(e=>e.message);
    const unresolvedField=(await next()).frames[0];await advance('over');await advance('over');const resolvedField=(await advance('over')).frames[0];vm.stop();await fieldRun;
    const {predictDebugFrame}=await import('/src/debug-prediction.ts');const predictions=states.slice(0,-1).map(s=>predictDebugFrame(s.frames[0]));
-   return {unresolvedField,resolvedField,entry,predictions,states:states.map(s=>s.frames[0]),call,into,inside,out,stored,first,second,paused,stopped,normal,parentThread,childThread,childValue,selfBefore,selfAfter,caught,loadedHelper,returnedHelper};
+   return {unresolvedField,resolvedField,entry,predictions,states:states.map(s=>s.frames[0]),call,into,inside,overwritten,out,stored,first,second,paused,stopped,normal,parentThread,childThread,childValue,selfBefore,selfAfter,caught,loadedHelper,returnedHelper};
   }catch(e){throw Error(phase+' '+trace.join(',')+' '+e.message);}finally{vm.stop();}
  });
  assert.equal(result.unresolvedField.instruction.fieldDescriptor,'Ljava/io/PrintStream;');assert.equal(result.resolvedField.instruction.fieldDescriptor,'Ljava/io/PrintStream;');assert.equal(result.resolvedField.instruction.opcode,'getstatic_L');
@@ -137,6 +139,9 @@ test('Bovine suspends real frames, steps calls, preserves values, breaks loops a
  assert.deepEqual(result.call.frames[0].stack,['2','3']);
  assert.equal(result.into.location.method,'calc');assert.deepEqual(result.into.frames[0].locals,['2','3']);
  assert.deepEqual(result.inside.frames[0].stack,['2']);
+ assert.equal(result.into.frames[1].callSnapshot,true);assert.deepEqual(result.into.frames[1].stack,['2','3']);
+ assert.equal(result.overwritten.frames[0].locals[0],'5');assert.deepEqual(result.overwritten.frames[1].stack,['2','3']);assert.deepEqual(result.overwritten.frames[1].locals,result.call.frames[0].locals);
+ assert.equal(result.out.frames[0].callSnapshot,undefined);
  assert.equal(result.out.location.method,'main');assert.deepEqual(result.out.frames[0].stack,['5']);
  assert.equal(result.stored.frames[0].locals[7],'5');
  assert.equal(result.first.reason,'breakpoint');assert.equal(result.second.reason,'breakpoint');

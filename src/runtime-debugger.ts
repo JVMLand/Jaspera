@@ -10,6 +10,10 @@ export class RuntimeDebugger {
  private points=new Set<string>();
  private rootDepths=new Map<number,number>();
  private classes:Set<string>;
+ private calls=new Map<number,DebugFrame[]>();
+ canCaptureCall(thread:number,depth:number){return depth>=(this.rootDepths.get(thread)??Infinity);}
+ captureCall(thread:number,depth:number,frame:DebugFrame){let calls=this.calls.get(thread);if(!calls){calls=[];this.calls.set(thread,calls);}calls[depth]=frame;}
+
  constructor(private vm:any,options:DebugOptions,private publishSnapshot:(snapshot:DebugSnapshot)=>void){
   this.mode=options.stopOnEntry?'entry':'continue';this.classes=new Set(options.classes);this.breakpoints(options.breakpoints);
   const module=vm._module;
@@ -19,6 +23,8 @@ export class RuntimeDebugger {
  }
  breakpoints(points:DebugBreakpoint[]){this.points=new Set(points.map(p=>p.className+':'+p.line));}
  check=(where:DebugLocation)=>{
+  // Only live callers are retained; returns and exception unwinding release them.
+  const calls=this.calls.get(where.thread);if(calls&&calls.length>where.depth)calls.length=where.depth;
   // Internal resolution may redispatch an opcode. Only an executed instruction
   // (including a self-loop) or a different frame can finish a step.
   const skip=this.skips.get(where.thread);
@@ -43,7 +49,15 @@ export class RuntimeDebugger {
   if(!reason)return false;
   this.location=where;this.reason=reason;this.frames=[];this.paused=true;return true;
  };
- publish=()=>this.publishSnapshot({location:this.location!,frames:this.frames.slice(0,this.location!.depth-this.rootDepths.get(this.location!.thread)!+1),reason:this.reason});
+ publish=()=>{
+  const location=this.location!,calls=this.calls.get(location.thread);
+  const frames=this.frames.slice(0,location.depth-this.rootDepths.get(location.thread)!+1).map((frame,index)=>{
+   const saved=index>0?calls?.[location.depth-index]:undefined;
+   return saved&&saved.id===frame.id&&saved.pc===frame.pc&&saved.className===frame.className&&saved.method===frame.method&&saved.descriptor===frame.descriptor
+    ?{...frame,stack:saved.stack,locals:saved.locals,instruction:saved.instruction,callSnapshot:true}:frame;
+  });
+  this.publishSnapshot({location,frames,reason:this.reason});
+ };
  command(command:DebugCommand){
   if(command==='pause'){if(!this.paused)this.mode='pause';return;}
   if(!this.paused)throw new Error('JVM は停止していません。');
