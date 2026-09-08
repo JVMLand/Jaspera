@@ -8,7 +8,7 @@ export interface GraphEdge {from:string;to:string;kind:'stack'|'local'|'control'
 export interface MethodGraph {name:string;nodes:GraphNode[];edges:GraphEdge[]}
 export interface GraphDocument {uri:string;source:string;version:number;line:number;column:number}
 export interface Compilation { graphs?:MethodGraph[]; stackFrames?:StackFrame[]; classes?: {className:string;bytecode:string}[]; className: string; bytecode: string; diagnostics: Diagnostic[] }
-export interface Disassembly {className:string;source:string}
+export interface Disassembly {className:string;source:string;locations?:{method:string;pc:number;line:number}[]}
 export type RuntimeRequest = {type:'disassemble';bytecode:string} | {type:'compile';source:string;options?:CompileOptions} | {type:'run';compilation:Compilation;stdin:string;debug?:DebugOptions};
 export interface RuntimeEvents {debugReady():void;debug(snapshot:DebugSnapshot):void;analysis(progress:AnalysisProgress):void;progress(loaded:number,total:number):void;output(stream:'stdout'|'stderr',text:string):void}
 

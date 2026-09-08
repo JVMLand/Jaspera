@@ -44,3 +44,21 @@ test('selective outputs preserve bytecode and reject invalid stacks in every mod
  const source='public class Main (major_version=67, minor_version=0) { public static value()I { iconst_1 ireturn } }';let bytecode;
  for(let mode=0;mode<4;mode++){const result=compileSelected(source,mode);assert.deepEqual(result.diagnostics,[]);bytecode??=result.bytecode;assert.equal(result.bytecode,bytecode);assert.equal(result.stackFrames.length>0,!!(mode&1));assert.equal(result.graphs.length>0,!!(mode&2));const bad=compileSelected(source.replace('iconst_1','aconst_null'),mode);assert.equal(bad.bytecode,'');assert.ok(bad.diagnostics.some(d=>d.severity==='error'));}
 });
+
+
+test('disassembly maps original wide instruction PCs and overloaded methods to JAL lines',async()=>{
+ const probe=directory+'/InstructionLocations.java';
+ await writeFile(probe,`import jalweb.Bridge; import org.objectweb.asm.*; import java.util.Base64;
+ public class InstructionLocations implements Opcodes { public static void main(String[] args) {
+  ClassWriter c=new ClassWriter(0);c.visit(V17,ACC_PUBLIC,"Locations",null,"java/lang/Object",null);
+  for(int i=0;i<300;i++)c.newConst("padding"+i);
+  MethodVisitor m=c.visitMethod(ACC_PUBLIC|ACC_STATIC,"test","(I)V",null,null);m.visitCode();
+  m.visitLdcInsn("wide constant");m.visitInsn(POP);m.visitVarInsn(ILOAD,300);m.visitInsn(POP);m.visitInsn(RETURN);m.visitMaxs(1,301);m.visitEnd();
+  m=c.visitMethod(ACC_PUBLIC|ACC_STATIC,"test","()V",null,null);m.visitCode();m.visitInsn(RETURN);m.visitMaxs(0,0);m.visitEnd();c.visitEnd();
+  System.out.print(Bridge.disassemble(Base64.getEncoder().encodeToString(c.toByteArray())));
+ }} `);
+ const result=JSON.parse(java(['-cp','public/runtime/jalweb-compiler.jar',probe]));
+ assert.deepEqual(result.locations.map(l=>[l.method,l.pc]),[['test(I)V',0],['test(I)V',3],['test(I)V',4],['test(I)V',8],['test(I)V',9],['test()V',0]]);
+ const lines=result.source.split('\n');
+ assert.deepEqual(result.locations.map(l=>lines[l.line-1].trim()),['ldc "wide constant"','pop','wide iload 300','pop','return','return']);
+});

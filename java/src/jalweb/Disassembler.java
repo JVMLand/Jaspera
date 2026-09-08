@@ -9,7 +9,10 @@ import tokyo.peya.langjal.compiler.jvm.EOpcodes;
 /** JALP-style rendering over ASM's validated class reader. Never defines or executes the input class. */
 public final class Disassembler {
     private final StringBuilder out=new StringBuilder();
-    private void line(String text){out.append(text).append('\n');if(out.length()>1024*1024)throw new IllegalArgumentException("逆アセンブル結果は 1 MiB 以下にしてください。");}
+    private final List<Integer> instructionOffsets=new ArrayList<>();
+    private final List<String> locations=new ArrayList<>();
+    private int instructionIndex=0,sourceLine=1;
+    private void line(String text){out.append(text).append('\n');sourceLine++;if(out.length()>1024*1024)throw new IllegalArgumentException("逆アセンブル結果は 1 MiB 以下にしてください。");}
     private static String clean(String s){return s.replace('\r',' ').replace('\n',' ');}
     private static String type(String s){return s.startsWith("[")?s:"L"+s+";";}
     private static String flags(int access,int kind){
@@ -60,14 +63,20 @@ public final class Disassembler {
                     LabelNode end=catches.get(0).end;
                     StringBuilder s=new StringBuilder("    [~"+labels.get(end));for(TryCatchBlockNode t:catches)s.append(t.type==null?" -> "+labels.get(t.handler):", "+t.type+": "+labels.get(t.handler));line(s+"]");
                 }
-            }else if(i.getOpcode()>=0)for(String part:instruction(i,labels).split("\n"))line("    "+part);
+            }else if(i.getOpcode()>=0){
+                locations.add("{\"method\":"+Bridge.quote(method.name+method.desc)+",\"pc\":"+instructionOffsets.get(instructionIndex++)+",\"line\":"+sourceLine+"}");
+                for(String part:instruction(i,labels).split("\n"))line("    "+part);
+            }
         }
         line("  }");
     }
     public static String disassemble(String encoded){
         byte[] bytes=Base64.getDecoder().decode(encoded);
         if(bytes.length<10||bytes.length>1024*1024||bytes[0]!=(byte)0xca||bytes[1]!=(byte)0xfe||bytes[2]!=(byte)0xba||bytes[3]!=(byte)0xbe)throw new IllegalArgumentException("有効な .class ファイル（1 MiB 以下）を指定してください。");
-        ClassNode c=new ClassNode();new ClassReader(bytes).accept(c,ClassReader.SKIP_FRAMES);Disassembler d=new Disassembler();
+        Disassembler d=new Disassembler();ClassNode c=new ClassNode();
+        new ClassReader(bytes){
+            @Override protected void readBytecodeInstructionOffset(int offset){d.instructionOffsets.add(offset);}
+        }.accept(c,ClassReader.SKIP_FRAMES);
         d.line("/*");
         d.line("  Decompiled by JALP (Java Assembly Language Parser)");
         d.line("  Class: "+clean(c.name).replace("*/","* /")+".class");
@@ -81,6 +90,6 @@ public final class Disassembler {
         for(FieldNode f:c.fields)d.line("  "+flags(f.access,1)+f.name+":"+f.desc+(f.value==null?"":" = "+d.constant(f.value)));
         for(MethodNode m:c.methods)d.method(m);d.line("}");
         String source=d.out.toString();if(source.getBytes(StandardCharsets.UTF_8).length>1024*1024)throw new IllegalArgumentException("逆アセンブル結果が大きすぎます。");
-        return "{\"className\":"+Bridge.quote(c.name)+",\"source\":"+Bridge.quote(source)+"}";
+        return "{\"className\":"+Bridge.quote(c.name)+",\"source\":"+Bridge.quote(source)+",\"locations\":["+String.join(",",d.locations)+"]}";
     }
 }
