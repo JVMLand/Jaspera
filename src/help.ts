@@ -103,10 +103,26 @@ export function helpMenuItems() {
         const version = element('p', BUILD_LABEL);
         version.className = 'app-version';
         version.translate = false;
+        const author = element('p', 'Author: ');
+        const authorLink = element('a', 'Daisuke Yamazaki (yamad)');
+        authorLink.href = 'https://yamad.jp/';
+        authorLink.target = '_blank';
+        authorLink.rel = 'author noopener noreferrer';
+        authorLink.translate = false;
+        author.append(authorLink);
+        const article = element('p');
+        const articleLink = element('a', 'Java Ring — 探偵！ナイトスクープ / Knight Scoop');
+        articleLink.href = 'https://yamad.jp/writings/java/ring/post-tv.htm';
+        articleLink.target = '_blank';
+        articleLink.rel = 'noopener noreferrer';
+        articleLink.lang = 'ja';
+        article.append(articleLink);
         openHelp(APP_NAME, [
           version,
           element('p', APP_TAGLINE),
           element('p', msg('m9a8033004453')),
+          author,
+          article,
         ]);
       },
     },
