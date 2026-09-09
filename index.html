@@ -5,14 +5,51 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Jaspera — Through bytecode, ad astra. JAL のコードを編集し，WebAssembly JVM で実行するブラウザ環境。"
+      content="Jaspera は、JAL（JVM Assembly Language）をブラウザで編集・実行できるオンライン開発環境です。コード補完、バイトコードの可視化、デバッガで Java 仮想マシンの仕組みを学べます。"
     />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://jaspera.yamad.jp/" />
-    <title>Jaspera — Through bytecode, ad astra</title>
+    <title>Jaspera — Online JVM Assembly Editor &amp; Debugger</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Jaspera" />
+    <meta property="og:url" content="https://jaspera.yamad.jp/" />
+    <meta property="og:title" content="Jaspera — Online JVM Assembly Editor &amp; Debugger" />
+    <meta
+      property="og:description"
+      content="JAL（JVM Assembly Language）をブラウザで編集・実行。コード補完、バイトコードの可視化、デバッガで JVM の仕組みを学べます。"
+    />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Jaspera",
+        "url": "https://jaspera.yamad.jp/",
+        "description": "An online editor and debugger for JAL (JVM Assembly Language), with code completion, bytecode visualization and a WebAssembly JVM.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript and WebAssembly"
+      }
+    </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main>
+        <h1>Jaspera — Online JVM Assembly Editor &amp; Debugger</h1>
+        <p>
+          Jaspera は、JAL（JVM Assembly Language）をブラウザで編集・実行できる開発環境です。
+          WebAssembly 上の JVM でコードを動かしながら、Java バイトコードの仕組みを学べます。
+        </p>
+        <ul>
+          <li>コード補完、構文ハイライト、スタックの不整合の検出</li>
+          <li>JVM 命令の解説と制御フローの可視化</li>
+          <li>ブレークポイントとステップ実行に対応したデバッガ</li>
+          <li>Hello World から始められるサンプルコード</li>
+        </ul>
+        <p>エディタを読み込んでいます。</p>
+        <noscript><p>エディタを使うには、ブラウザの JavaScript を有効にしてください。</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/analytics.ts"></script>
     <script type="module" src="/src/main.ts"></script>
   </body>
