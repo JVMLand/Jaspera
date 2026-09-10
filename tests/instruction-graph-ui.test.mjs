@@ -156,16 +156,26 @@ test(
     );
     assert.equal(diagonal, false);
     await page.screenshot({ path: '.cache/instruction-graph.png' });
+    const darkFill = await page
+      .locator('.graph-node text')
+      .first()
+      .evaluate((el) => getComputedStyle(el).fill);
     await page.evaluate(async () => {
       (await import('/src/themes.ts')).applyTheme('googol-light');
     });
-    assert.equal(
-      await page
-        .locator('.graph-node text')
-        .first()
-        .evaluate((el) => getComputedStyle(el).fill),
-      'rgb(32, 33, 36)',
-    );
+    const lightColors = await page
+      .locator('.graph-node text')
+      .first()
+      .evaluate((el) => {
+        const probe = document.createElement('span');
+        probe.style.color = 'var(--theme-text)';
+        document.body.append(probe);
+        const expected = getComputedStyle(probe).color;
+        probe.remove();
+        return { actual: getComputedStyle(el).fill, expected };
+      });
+    assert.equal(lightColors.actual, lightColors.expected);
+    assert.notEqual(lightColors.actual, darkFill);
     await page.screenshot({ path: '.cache/instruction-graph-light.png' });
     await page.evaluate(async () => {
       (await import('/src/themes.ts')).applyTheme('jal-night');
