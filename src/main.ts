@@ -1632,7 +1632,7 @@ async function openJarEntry(path: string) {
     if (!classPreviews.has(key)) {
       const model = monaco.editor.createModel(
         source?.source ?? jarResource(archive.entries[path]),
-        isClass ? 'jal' : 'plaintext',
+        isClass || path.toLowerCase().endsWith('.jal') ? 'jal' : 'plaintext',
         monaco.Uri.from({
           scheme: 'inmemory',
           authority: 'jar',
@@ -1677,7 +1677,11 @@ async function downloadJar() {
     );
     if (archive !== jar) return;
     download(
-      new Blob([new Uint8Array(result.bytes)], { type: 'application/java-archive' }),
+      new Blob([new Uint8Array(result.bytes)], {
+        type: archive.name.toLowerCase().endsWith('.zip')
+          ? 'application/zip'
+          : 'application/java-archive',
+      }),
       archive.name,
     );
     result.saved();

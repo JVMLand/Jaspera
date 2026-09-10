@@ -4,7 +4,7 @@ export function fileKind(name: string) {
     ? 'source'
     : extension === '.class'
       ? 'class'
-      : extension === '.jar'
+      : extension === '.jar' || extension === '.zip'
         ? 'jar'
         : extension === '.jalprj'
           ? 'project'
@@ -14,7 +14,7 @@ export function fileKind(name: string) {
 export function installFilePicker(open: (files: File[]) => void) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.jal,.class,.jar,.jalprj';
+  input.accept = '.jal,.class,.jar,.zip,.jalprj';
   input.multiple = true;
   input.hidden = true;
   input.id = 'file-input';
