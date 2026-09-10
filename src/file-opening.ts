@@ -4,11 +4,13 @@ export function fileKind(name: string) {
     ? 'source'
     : extension === '.class'
       ? 'class'
-      : extension === '.jar' || extension === '.zip'
-        ? 'jar'
-        : extension === '.jalprj'
-          ? 'project'
-          : undefined;
+      : extension === '.zip'
+        ? 'zip'
+        : extension === '.jar'
+          ? 'jar'
+          : extension === '.jalprj'
+            ? 'project'
+            : undefined;
 }
 /** A real file input keeps picker activation in the window receiving the gesture. */
 export function installFilePicker(open: (files: File[]) => void) {

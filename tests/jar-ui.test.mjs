@@ -129,46 +129,5 @@ test(
     assert.equal(disasm.status, 0, disasm.stderr);
     assert.match(disasm.stdout, /iconst_3/);
     await popup.close();
-
-    // A source-only assignment ZIP opens one preview, not one model per entry.
-    const answers = Object.fromEntries(
-      Array.from({ length: 40 }, (_, i) => [
-        `answers/Answer${i}.jal`,
-        strToU8(`public class Answer${i} {}`),
-      ]),
-    );
-    answers['answers/Main.java'] = strToU8('public class Main { /* 日本語 */ }');
-    await page.locator('#file-input').setInputFiles({
-      name: 'answers.ZIP',
-      mimeType: 'application/zip',
-      buffer: Buffer.from(zipSync(answers)),
-    });
-    await page.waitForFunction(() => {
-      const app = window.testMain;
-      return (
-        app.editor.getModel()?.getValue() === 'public class Answer0 {}' &&
-        app.editor.getModel()?.getLanguageId() === 'jal' &&
-        app.editor.getRawOptions().readOnly
-      );
-    });
-    assert.equal(
-      await page.evaluate(async () => {
-        const platform = await import('/src/editor-platform.ts');
-        return platform.editor.getModels().filter((model) => model.uri.authority === 'jar').length;
-      }),
-      1,
-    );
-    await page.locator('#file-list button[title="answers.ZIP/answers/Main.java"]').click();
-    await page.waitForFunction(
-      () => window.testMain.editor.getModel()?.getValue() === 'public class Main { /* 日本語 */ }',
-    );
-    assert.ok(await page.evaluate(() => window.testMain.editor.getRawOptions().readOnly));
-    const zipDownloading = page.waitForEvent('download');
-    await page.locator('#menu-file').click();
-    await page.locator('#download-jar').click();
-    const zipDownload = await zipDownloading;
-    assert.equal(zipDownload.suggestedFilename(), 'answers.ZIP');
-    await zipDownload.saveAs('.cache/jar-ui/answers.zip');
-    assert.deepEqual(unzipSync(await readFile('.cache/jar-ui/answers.zip')), answers);
   },
 );

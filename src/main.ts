@@ -227,6 +227,7 @@ window.addEventListener('jaspera:locale', () => {
     }
 });
 let classQueue = Promise.resolve();
+let projectProperties = true;
 let folder: FolderBinding | undefined,
   storageBusy = false,
   changeVersion = 0,
@@ -756,8 +757,7 @@ function setDirty(value = true) {
 }
 function validatePath(path: string) {
   relativePath(path);
-  if (folder?.properties !== false && !path.startsWith('src/'))
-    throw new Error(msg('m35c9589b91c3'));
+  if (projectProperties && !path.startsWith('src/')) throw new Error(msg('m35c9589b91c3'));
 }
 function refreshOffsets(view = editor) {
   showBytecodeOffsets(view, sourceAnalysis.offsets(view.getModel()));
@@ -804,8 +804,8 @@ function updateActions() {
   menus.disabled('rename-file', !!activePreview || !editor.getModel() || !project.files.length);
   menus.disabled('close-tab', !editor.getModel());
   menus.hidden('save-class-source', !activePreview);
-  menus.disabled('project-properties-menu', folder?.properties === false);
-  el<HTMLButtonElement>('summary-properties').disabled = folder?.properties === false;
+  menus.disabled('project-properties-menu', !projectProperties);
+  el<HTMLButtonElement>('summary-properties').disabled = !projectProperties;
   const runButton = el<HTMLButtonElement>('run');
   runButton.innerHTML = running
     ? '<span aria-hidden="true">■</span> Stop <kbd>Ctrl ↵</kbd>'
@@ -999,7 +999,11 @@ function invalidate() {
   clearTimeout(analysisTimer);
   analysisTimer = setTimeout(() => void analyze(), 500);
 }
-async function installProject(next: Project, binding?: FolderBinding) {
+async function installProject(
+  next: Project,
+  binding?: FolderBinding,
+  properties = binding?.properties !== false,
+) {
   restoringLayout = true;
   detached.closeAll();
   panelDock?.restore();
@@ -1016,6 +1020,7 @@ async function installProject(next: Project, binding?: FolderBinding) {
   classPreviews.clear();
   activePreview = undefined;
   folder = binding;
+  projectProperties = properties;
   stopRun(false);
   clearTimeout(analysisTimer);
   revision++;
@@ -1214,7 +1219,7 @@ async function saveProject(saveAs = false) {
   try {
     const target =
       !folder || saveAs
-        ? { ...newBinding(await pickFolder()), properties: folder?.properties ?? true }
+        ? { ...newBinding(await pickFolder()), properties: projectProperties }
         : folder;
     while (watchBusy) await new Promise((resolve) => setTimeout(resolve, 20));
     const version = changeVersion,
@@ -1239,7 +1244,7 @@ async function exportProject() {
   if (storageBusy) return;
   storageState(true);
   try {
-    const bytes = await projectArchive(snapshot(), folder?.properties !== false);
+    const bytes = await projectArchive(snapshot(), projectProperties);
     const name = project.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Project';
     download(new Blob([new Uint8Array(bytes)], { type: 'application/zip' }), name + '.zip');
     status(msg('mbd11d2e72230'));
@@ -1307,6 +1312,7 @@ async function pollFolder() {
     syncClassFiles(binding, disk.binding.classFiles ?? []);
     binding.cache = disk.binding.cache;
     binding.properties = disk.binding.properties;
+    projectProperties = binding.properties !== false;
     binding.configName = disk.binding.configName;
     if (changed) {
       project.files.sort((a, b) => a.path.localeCompare(b.path));
@@ -1789,6 +1795,31 @@ async function openFiles(files: File[]): Promise<string[]> {
   if (storageBusy) return [];
   if (files.length > 64) {
     await dialog(msg('m5d6c611f808f'), msg('m380caa4874b5'));
+    return [];
+  }
+  if (files.some((file) => fileKind(file.name) === 'zip')) {
+    if (files.length !== 1) {
+      await dialog(msg('m1d25ade4db27'), msg('m7373ee74be3e'));
+      return [];
+    }
+    storageState(true);
+    try {
+      const { openZipProject } = await import('./zip-project');
+      const next = await openZipProject(files[0]);
+      if (!next) {
+        const key = await openJar(files[0]);
+        return key ? [key] : [];
+      }
+      if (await allowReplace()) {
+        await installProject(next.project, undefined, next.properties);
+        setDirty();
+        return next.project.files.map((file) => 'source:' + file.path);
+      }
+    } catch (e) {
+      storageError(e, msg('mcdd98f9ac910'));
+    } finally {
+      storageState(false);
+    }
     return [];
   }
   if (files.some((file) => fileKind(file.name) === 'project')) {
