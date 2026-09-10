@@ -56,6 +56,11 @@ test(
         'answers/Helper.jal': strToU8(
           'public class Helper { public static value()I { iconst_3 ireturn } }',
         ),
+        'answers/Task3.jal': strToU8(
+          source
+            .replace('class Main', 'class Task3')
+            .replace('invokestatic Helper->value()I', 'bipush 7'),
+        ),
       }),
     );
     await page
@@ -73,6 +78,13 @@ test(
     );
     assert.equal((await page.locator('#output').textContent()).trim(), '3');
     await page.waitForFunction(() => !document.querySelector('#run').textContent.includes('Stop'));
+    await page.getByRole('tab', { name: 'Task3', exact: true }).click();
+    await page.locator('#run').click();
+    await page.waitForFunction(() => document.querySelector('#output').textContent.trim() === '7');
+    await page.waitForFunction(() => !document.querySelector('#run').textContent.includes('Stop'));
+    await page.getByRole('tab', { name: 'Helper', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('#run').disabled);
+    await page.getByRole('tab', { name: 'Main', exact: true }).click();
     await page.evaluate(() => {
       window.app.editor
         .getModel()
@@ -99,10 +111,40 @@ test(
         source: await (await (await root.getFileHandle('Main.jal')).getFile()).text(),
       };
     });
-    assert.deepEqual(disk.names.sort(), ['Helper.jal', 'Main.jal']);
+    assert.deepEqual(disk.names.sort(), ['Helper.jal', 'Main.jal', 'Task3.jal']);
     assert.match(disk.source, /\/\/ edited/);
     await page.keyboard.press('Control+s');
     await page.waitForFunction(() => !document.querySelector('#save-project').disabled);
     assert.equal(await page.evaluate(() => window.pickerCalls), 2);
+    // A real configured project still runs its declared entry, regardless of the selected tab.
+    const configured = Buffer.from(
+      zipSync({
+        'project.jalprj': strToU8(
+          JSON.stringify({
+            format: 'jalprj',
+            version: 1,
+            name: 'Configured',
+            entryFile: 'src/Main.jal',
+          }),
+        ),
+        'src/Main.jal': strToU8(source),
+        'src/Helper.jal': strToU8(
+          'public class Helper { public static value()I { iconst_3 ireturn } }',
+        ),
+        'src/Task3.jal': strToU8(
+          source
+            .replace('class Main', 'class Task3')
+            .replace('invokestatic Helper->value()I', 'bipush 7'),
+        ),
+      }),
+    );
+    await page
+      .locator('#file-input')
+      .setInputFiles({ name: 'configured.zip', mimeType: 'application/zip', buffer: configured });
+    await page.waitForFunction(() => window.app.editor.getModel()?.uri.path === '/src/Main.jal');
+    await page.getByRole('tab', { name: 'Task3', exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('#run').disabled);
+    await page.locator('#run').click();
+    await page.waitForFunction(() => document.querySelector('#output').textContent.trim() === '3');
   },
 );

@@ -762,9 +762,13 @@ function validatePath(path: string) {
 function refreshOffsets(view = editor) {
   showBytecodeOffsets(view, sourceAnalysis.offsets(view.getModel()));
 }
+function runTarget(model = editor.getModel()) {
+  if (model?.uri.authority === 'example') return model;
+  if (projectProperties) return models.get(project.workspace.entryFile) ?? null;
+  return model && [...models.values()].includes(model) ? model : null;
+}
 function runUnavailable(model = editor.getModel()): string {
-  const target =
-    model?.uri.authority === 'example' ? model : (models.get(project.workspace.entryFile) ?? null);
+  const target = runTarget(model);
   if (!target) return msg('run.noMain');
   const entry = sourceAnalysis.entry(target);
   if (!entry) return msg('run.checkingMain');
@@ -782,6 +786,9 @@ function publishWorkspaceAvailability() {
     runAvailability: {
       '': runUnavailable(),
       project: runUnavailable(null),
+      ...Object.fromEntries(
+        [...models.values()].map((model) => [model.uri.toString(), runUnavailable(model)]),
+      ),
       ...Object.fromEntries(
         [...classPreviews.values()]
           .filter((p) => p.example)
@@ -2363,7 +2370,9 @@ async function run(
   forceIgnoreBreakpoints = false,
 ) {
   const model = requestedModel ?? editor.getModel(),
-    example = model?.uri.authority === 'example';
+    example = model?.uri.authority === 'example',
+    target = runTarget(model),
+    entryPath = [...models].find(([, source]) => source === target)?.[0];
   if (running) {
     stopRun();
     return;
@@ -2405,7 +2414,7 @@ async function run(
         status(msg('m428b24c11fc6'), 'error');
         return;
       }
-      entry = results.get(project.workspace.entryFile);
+      entry = entryPath ? results.get(entryPath) : undefined;
       classes = [...results.values()];
     }
     if (token !== runToken) return;
