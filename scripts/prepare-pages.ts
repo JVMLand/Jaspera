@@ -1,9 +1,11 @@
 import { readdir, stat, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 const root = resolve('dist');
-// Keep the original locally for compiler tests, but never upload this 28 MiB asset.
-await stat(join(root, 'runtime/jdk23/lib/modules.gzip'));
-await rm(join(root, 'runtime/jdk23/lib/modules'), { force: true });
+// Keep originals locally for compiler tests; deploy the compressed runtime assets.
+for (const file of ['runtime/jdk27/lib/modules', 'runtime/jdk27.jar']) {
+  await stat(join(root, file + '.gzip'));
+  await rm(join(root, file), { force: true });
+}
 let count = 0,
   largest = { name: '', bytes: 0 };
 async function check(directory: string) {

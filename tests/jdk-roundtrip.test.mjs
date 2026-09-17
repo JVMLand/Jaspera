@@ -28,7 +28,7 @@ const names = [
   'java/util/Objects',
   'java/util/Optional',
 ];
-const jar = unzipSync(await readFile('public/runtime/jdk23.jar'), {
+const jar = unzipSync(await readFile('public/runtime/jdk27.jar'), {
   filter: (entry) => names.some((name) => entry.name === name + '.class'),
 });
 for (const name of names)

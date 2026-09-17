@@ -1,62 +1,80 @@
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import {
+  mkdir,
+  writeFile,
+  readFile,
+  copyFile,
+  cp,
+  access,
+  mkdtemp,
+  rename,
+} from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { unzipSync } from 'fflate';
-const revision = '3fd56c74656602eb32efefca46f51f074bef6bca';
-const base = `https://raw.githubusercontent.com/anematode/b-jvm/${revision}`;
-const assets: Record<string, string> = {
-  '.cache/runtime/temurin23-jre.zip':
-    'https://github.com/adoptium/temurin23-binaries/releases/download/jdk-23.0.2%2B7/OpenJDK23U-jre_x64_windows_hotspot_23.0.2_7.zip',
-  'public/runtime/jdk23/conf/logging.properties': `${base}/test/jdk23/conf/logging.properties`,
-  'licenses/JZlib.txt': 'https://raw.githubusercontent.com/ymnk/jzlib/1.1.3/LICENSE.txt',
-  'licenses/Bovine-JVM.txt': `${base}/LICENSE`,
-  'licenses/OpenJDK.txt': 'https://raw.githubusercontent.com/openjdk/jdk/jdk-23%2B37/LICENSE',
-  'licenses/OpenJDK-classpath-exception.txt':
-    'https://raw.githubusercontent.com/openjdk/jdk/jdk-23%2B37/ADDITIONAL_LICENSE_INFO',
+import { spawnSync } from 'node:child_process';
+import { join, dirname } from 'node:path';
+import { ensureBovineSource, source, revision } from './bovine.ts';
+await mkdir('.cache', { recursive: true });
+ensureBovineSource();
+const python = process.env.PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3');
+const result = spawnSync(
+  python,
+  [
+    join(source, 'scripts/setup-runtime.py'),
+    '--cache',
+    '.cache/openjdk27',
+    '--output',
+    '.cache/runtime27',
+  ],
+  { stdio: 'inherit', windowsHide: true },
+);
+if (result.error) throw result.error;
+if (result.status !== 0) throw new Error('OpenJDK 27 runtime preparation failed');
+const manifest = JSON.parse(await readFile('.cache/runtime27/runtime-manifest.json', 'utf8')) as {
+  files: Record<string, { sha256: string; bytes: number }>;
 };
-for (const name of [
-  'jdk23.jar',
-  'jdk23/lib/modules',
-  'jdk23/lib/security/default.policy',
-  'jdk23/conf/security/java.security',
-  'jdk23/conf/security/java.policy',
-])
-  assets[name === 'jdk23.jar' ? '.cache/runtime/jdk23.jar' : `public/runtime/${name}`] =
-    `${base}/test/${name}`;
-let lock: Record<string, { url?: string; sha256: string; bytes?: number }> = {};
-try {
-  lock = JSON.parse(await readFile('vendor/runtime-lock.json', 'utf8'));
-} catch {}
-lock['.cache/runtime/temurin23-jre.zip'] ??= {
-  sha256: '8de3b72f164555ad4b847d45bad2e455d60d414b58f63a07e3c6e4b744a7e5a1',
-};
-async function download(path: string, url: string) {
-  const { dirname } = await import('node:path');
-  await mkdir(dirname(path), { recursive: true });
-  let bytes;
-  try {
-    bytes = await readFile(path);
-  } catch {}
-  const hash = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');
-  if (!bytes || !lock[path] || hash(bytes) !== lock[path].sha256) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`${response.status}: ${url}`);
-    bytes = Buffer.from(await response.arrayBuffer());
-    if (lock[path] && hash(bytes) !== lock[path].sha256)
-      throw new Error(`Integrity mismatch: ${path}`);
-    await writeFile(path, bytes);
-  }
-  lock[path] = { url, sha256: hash(bytes), bytes: bytes.length };
-  console.log(`${path}: ${bytes.length} bytes`);
+for (const name of Object.keys(manifest.files)) {
+  const destination = name === 'jdk27.jar' ? '.cache/runtime/jdk27.jar' : `public/runtime/${name}`;
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(join('.cache/runtime27', name), destination);
 }
-await Promise.all(Object.entries(assets).map(([path, url]) => download(path, url)));
-delete lock['public/runtime/jdk23.jar'];
-await writeFile('vendor/runtime-lock.json', JSON.stringify(lock, null, 2) + '\n');
+for (const module of ['java.base', 'java.desktop', 'java.logging'])
+  await cp(`.cache/openjdk27/linux/jdk-27/legal/${module}`, `licenses/OpenJDK27/${module}`, {
+    recursive: true,
+    dereference: true,
+  });
+await copyFile('.cache/openjdk27/linux/jdk-27/legal/java.base/LICENSE', 'licenses/OpenJDK.txt');
+await copyFile(
+  '.cache/openjdk27/linux/jdk-27/legal/java.base/ADDITIONAL_LICENSE_INFO',
+  'licenses/OpenJDK-classpath-exception.txt',
+);
+await copyFile(join(source, 'LICENSE'), 'licenses/Bovine-JVM.txt');
+const lock = JSON.parse(await readFile('vendor/runtime-lock.json', 'utf8'));
+const jzlib = await readFile('licenses/JZlib.txt');
+if (createHash('sha256').update(jzlib).digest('hex') !== lock['licenses/JZlib.txt'].sha256)
+  throw new Error('JZlib license checksum mismatch');
+await writeFile(
+  'vendor/jdk27-runtime.json',
+  JSON.stringify(
+    {
+      bovineRevision: revision,
+      source: 'OpenJDK 27+35 (GPL), jdk-27+35',
+      ...manifest,
+    },
+    null,
+    2,
+  ) + '\n',
+);
 await import('./build-runtime.ts');
-const jre = unzipSync(await readFile('.cache/runtime/temurin23-jre.zip'), {
-  filter: (entry) => entry.name.endsWith('/lib/tzdb.dat'),
-});
-const tzdb = Object.values(jre)[0];
-if (!tzdb) throw new Error('OpenJDK timezone database is missing');
-await writeFile('public/runtime/jdk23/lib/tzdb.dat', tzdb);
 await import('./build-compiler.ts');
+// Preserve obsolete generated assets outside public/ so they are not deployed.
+for (const name of ['jdk23', 'jdk23.jar']) {
+  if (
+    await access(`public/runtime/${name}`).then(
+      () => true,
+      () => false,
+    )
+  ) {
+    const retired = await mkdtemp('.cache/retired-jdk23-');
+    await rename(`public/runtime/${name}`, join(retired, name));
+  }
+}
 await import('./generate.ts');

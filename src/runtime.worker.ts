@@ -69,11 +69,16 @@ async function initialize(heapMiB: number) {
     os = await makeBovineOS({
       runtimeUrl: root.replace(/\/$/, ''),
       wasmLocation: new URL('bjvm_main.wasm', root).href,
-      additionalRuntimeFiles: [
-        'jalweb-compiler.jar',
-        'jdk23/lib/tzdb.dat',
-        'jdk23/conf/logging.properties',
+      javaHome: 'jdk27',
+      runtimeClasspath: 'jdk27.jar',
+      runtimeFiles: [
+        'jdk27.jar',
+        'jdk27/lib/modules',
+        'jdk27/lib/tzdb.dat',
+        'jdk27/conf/security/java.security',
+        'jdk27/conf/logging.properties',
       ],
+      additionalRuntimeFiles: ['jalweb-compiler.jar'],
       fetchParams: { cache: 'default' },
       progress: (loaded: number, total: number) => notify((sink) => sink.progress(loaded, total)),
       stdout: (bytes: Uint8Array) => output('stdout', bytes),

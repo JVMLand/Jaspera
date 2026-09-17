@@ -25,7 +25,12 @@ test(
     t.after(() => browser.close());
     const page = await newAppPage(browser);
     page.setDefaultTimeout(120000);
-    const errors = [];
+    const errors = [],
+      consoleMessages = [];
+    page.on('console', (message) => {
+      consoleMessages.push(message.text() + JSON.stringify(message.location()));
+      if (consoleMessages.length > 80) consoleMessages.shift();
+    });
     page.on('pageerror', (e) => errors.push(e.message));
     await page.addInitScript(() => {
       localStorage.setItem('jalweb.theme', 'vs-dark');
@@ -41,9 +46,9 @@ test(
       () => document.querySelector('#state')?.textContent === '実行できます',
     );
     for (const [name, methods, nodes] of [
-      ['PrintStream', 71, 1322],
-      ['System', 39, 849],
-      ['ArrayList', 68, 1533],
+      ['PrintStream', 59, 991],
+      ['System', 33, 539],
+      ['ArrayList', 69, 1553],
     ]) {
       await page.evaluate(() => {
         window.graphProgressSeen = { outline: false, partial: false, stepped: false };
@@ -64,7 +69,7 @@ test(
         '/' +
         name +
         '.class';
-      const bytes = unzipSync(await readFile('public/runtime/jdk23.jar'), {
+      const bytes = unzipSync(await readFile('public/runtime/jdk27.jar'), {
         filter: (file) => file.name === entry,
       })[entry];
       assert.ok(bytes);
@@ -82,12 +87,19 @@ test(
         document.querySelector('#state')?.textContent.includes('逆アセンブルしました'),
       );
       await page.locator('#graph-tab').click();
-      await page.waitForFunction(
-        ({ methods }) =>
-          document.querySelectorAll('.graph-method-group').length === methods &&
-          document.querySelector('.graph-status')?.textContent.includes(' · 100% · '),
-        { methods },
-      );
+      await page
+        .waitForFunction(
+          ({ methods }) =>
+            document.querySelectorAll('.graph-method-group').length === methods &&
+            document.querySelector('.graph-status')?.textContent.includes(' · 100% · '),
+          { methods },
+        )
+        .catch(async (error) => {
+          error.message += `\n${name}: expected ${methods} methods, got ${await page.locator('.graph-method-group').count()}; ${await page.locator('.graph-status').innerText()}; ${await page.locator('#state').innerText()}`;
+          error.message += '\nOutput:\n' + (await page.locator('#output').innerText());
+          error.message += '\nBrowser console:\n' + consoleMessages.join('\n');
+          throw error;
+        });
       await page.waitForFunction(() => document.querySelectorAll('.graph-node').length > 0);
       assert.ok((await page.locator('.graph-node').count()) < nodes);
       const progress = await page.evaluate(() => {
@@ -119,7 +131,7 @@ test(
     await page.getByRole('tab', { name: /PrintStream/ }).click();
     await page.waitForFunction(
       () =>
-        document.querySelectorAll('.graph-method-group').length === 71 &&
+        document.querySelectorAll('.graph-method-group').length === 59 &&
         document.querySelector('.graph-status')?.textContent.includes(' · 100% · '),
     );
     await page.waitForFunction(() => !document.querySelector('.graph-method-progress'));

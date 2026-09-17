@@ -13,22 +13,22 @@
 | LangJAL | local source snapshot; `vendor/provenance.json` | MIT, `licenses/LangJAL.txt` |
 | Javasm instruction documents | local source snapshot; `vendor/provenance.json` | `licenses/Javasm.txt` |
 | ANTLR | 4.13.2, https://github.com/antlr/antlr4/tree/4.13.2 | BSD-3-Clause |
-| ASM | 9.8, https://asm.ow2.io/ | BSD-3-Clause |
-| Bovine JVM | 3fd56c74656602eb32efefca46f51f074bef6bca, https://github.com/anematode/b-jvm | MIT, `licenses/Bovine-JVM.txt` |
-| OpenJDK 23 | runtime artifacts from Bovine's pinned `test/jdk23*` files | GPLv2 with Classpath Exception where applicable; `licenses/OpenJDK*` |
+| ASM | 9.10, https://asm.ow2.io/ | BSD-3-Clause |
+| Bovine JVM | fb4df55cda5d6b29016e2421a037251a8b7852ab, https://github.com/JVMLand/bovine-jvm | MIT, `licenses/Bovine-JVM.txt` |
+| OpenJDK 27 | GPL OpenJDK 27+35; `vendor/jdk27-runtime.json` | GPLv2 with Classpath Exception where applicable; `licenses/OpenJDK*` and `licenses/OpenJDK27/` |
 | JZlib | 1.1.3, https://github.com/ymnk/jzlib/tree/1.1.3 | BSD-style, `licenses/JZlib.txt` |
 
-OpenJDK upstream source: https://github.com/openjdk/jdk/tree/jdk-23%2B37
-Runtime distribution provenance: https://github.com/anematode/b-jvm/tree/3fd56c74656602eb32efefca46f51f074bef6bca/test
-The Bovine repository supplies a reduced OpenJDK class archive. Its exact binary hashes and source URLs are recorded in `vendor/runtime-lock.json`; it does not supply a complete original JDK build recipe. The upstream source link is not a claim that this checkout reproduces the original binary bit for bit.
+OpenJDK upstream source: https://github.com/openjdk/jdk/tree/jdk-27%2B35
+Runtime distribution provenance: https://github.com/JVMLand/bovine-jvm/blob/fb4df55cda5d6b29016e2421a037251a8b7852ab/scripts/setup-runtime.py
+The setup script builds a reduced class archive and module image from the verified OpenJDK distribution. Hashes before Jaspera's runtime adaptations are recorded in `vendor/jdk27-runtime.json`. The upstream source link identifies the distribution source; it is not a claim of a bit-for-bit rebuild of OpenJDK.
 
 JALWeb replaces java.util.zip.Deflater, Inflater, CRC32 and Adler32 with adapters to JZlib. The complete adapter source and build procedure are included in `java/patches/` and `scripts/build-compiler.ts`. These files are modifications by JALWeb, not unmodified OpenJDK source.
 
-Bovine is built from the pinned upstream revision with `vendor/patches/bovine-debugger.patch` by `scripts/build-runtime.ts`. `scripts/bundle-runtime.ts` applies UTF-8 allocation and HTTP response handling fixes to the wrapper from that checkout and bundles it with the locally built WebAssembly runtime.
+Bovine is built from the pinned fork revision by `scripts/build-runtime.ts`; the fork includes Jaspera's debugger patches and OpenJDK 27 support. `scripts/bundle-runtime.ts` applies UTF-8 allocation and HTTP response handling fixes to the wrapper from that checkout and bundles it with the locally built WebAssembly runtime.
 
 All application execution is local to the browser; public dependency hosts are contacted by the setup process only. Runtime assets are served from the same site as the editor.
 
-Timezone data (`tzdb.dat`) comes from Eclipse Temurin 23.0.2+7. The setup script pins the archive SHA-256 and extracts only this platform-independent data file. Sources: https://github.com/adoptium/jdk23u/tree/jdk-23.0.2%2B7_adopt
+Timezone data (`tzdb.dat`), class files, configuration, and the module image all come from the same GPL OpenJDK 27+35 Linux distribution. The fork setup script pins and verifies its SHA-256. The class archive includes java.base, java.desktop, and java.logging; the module image includes java.base. Sources: https://github.com/openjdk/jdk/tree/jdk-27%2B35
 
 `java/src/jalweb/PatchRuntime.java` changes FileInputStream.available0 to check the closed state and return the conservative estimate 0, avoiding an unsupported host ioctl. All other FileInputStream bytecode is retained. This is a JALWeb modification of the runtime.
 

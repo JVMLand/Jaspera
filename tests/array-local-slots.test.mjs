@@ -51,7 +51,7 @@ test('the second slot of scalar long remains unreadable as an int', async () => 
 });
 test('bundled ArrayList round-trips with all method frames and graphs', async () => {
   const entry = 'java/util/ArrayList.class',
-    bytes = unzipSync(await readFile('public/runtime/jdk23.jar'), {
+    bytes = unzipSync(await readFile('public/runtime/jdk27.jar'), {
       filter: (f) => f.name === entry,
     })[entry];
   assert.ok(bytes);
@@ -71,10 +71,10 @@ test('bundled ArrayList round-trips with all method frames and graphs', async ()
   const result = await compile('ArrayList', source);
   assert.deepEqual(result.diagnostics, []);
   assert.ok(result.bytecode);
-  assert.equal(result.graphs.length, 68);
+  assert.equal(result.graphs.length, 69);
   assert.equal(
     result.graphs.reduce((sum, g) => sum + g.nodes.length, 0),
-    1533,
+    1553,
   );
   assert.ok(result.stackFrames.length > 0);
 });

@@ -1,18 +1,19 @@
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { resolve, delimiter } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { unzipSync, zipSync } from 'fflate';
 const deps = {
   'jzlib-1.1.3.jar': 'https://repo.maven.apache.org/maven2/com/jcraft/jzlib/1.1.3/jzlib-1.1.3.jar',
   'antlr4-4.13.2-complete.jar': 'https://www.antlr.org/download/antlr-4.13.2-complete.jar',
-  'asm-9.8.jar': 'https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.8/asm-9.8.jar',
-  'asm-tree-9.8.jar':
-    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.8/asm-tree-9.8.jar',
-  'asm-commons-9.8.jar':
-    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.8/asm-commons-9.8.jar',
-  'asm-analysis-9.8.jar':
-    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/9.8/asm-analysis-9.8.jar',
+  'asm-9.10.jar': 'https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.10/asm-9.10.jar',
+  'asm-tree-9.10.jar':
+    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.10/asm-tree-9.10.jar',
+  'asm-commons-9.10.jar':
+    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.10/asm-commons-9.10.jar',
+  'asm-analysis-9.10.jar':
+    'https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/9.10/asm-analysis-9.10.jar',
   'lombok-1.18.42.jar':
     'https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar',
   'annotations-26.0.2.jar':
@@ -113,7 +114,7 @@ jar['META-INF/MANIFEST.MF'] = new TextEncoder().encode(
   'Manifest-Version: 1.0\r\nMain-Class: jalweb.Bridge\r\n\r\n',
 );
 await writeFile('public/runtime/jalweb-compiler.jar', zipSync(jar, { level: 6 }));
-console.log(`Built compiler: ${sources.length} Java sources; ANTLR 4.13.2 / ASM 9.8`);
+console.log(`Built compiler: ${sources.length} Java sources; ANTLR 4.13.2 / ASM 9.10`);
 
 await mkdir('src/generated', { recursive: true });
 await mkdir('java/build/patches', { recursive: true });
@@ -138,22 +139,22 @@ run('java', [
   '-cp',
   'public/runtime/jalweb-compiler.jar',
   'jalweb.PatchRuntime',
-  '.cache/runtime/jdk23.jar',
+  '.cache/runtime/jdk27.jar',
   'java/build/patches',
 ]);
-const runtime = unzipSync(await readFile('.cache/runtime/jdk23.jar'));
+const runtime = unzipSync(await readFile('.cache/runtime/jdk27.jar'));
 for (const [path, bytes] of Object.entries(
   unzipSync(await readFile('.cache/java/jzlib-1.1.3.jar')),
 ))
   if (path.startsWith('com/')) runtime[path] = bytes;
 for (const path of await walk('java/build/patches'))
   runtime[path.slice('java/build/patches/'.length)] = new Uint8Array(await readFile(path));
-await writeFile('public/runtime/jdk23.jar', zipSync(runtime, { level: 6 }));
+await writeFile('public/runtime/jdk27.jar', zipSync(runtime, { level: 6 }));
 run('java', [
   '-cp',
   'public/runtime/jalweb-compiler.jar',
   'jalweb.Catalog',
-  'public/runtime/jdk23.jar',
+  'public/runtime/jdk27.jar',
   'src/generated/jdk.json',
 ]);
 
@@ -161,8 +162,14 @@ run('java', [
   '-cp',
   'public/runtime/jalweb-compiler.jar',
   'tokyo.peya.langjal.analyser.ClassHierarchy',
-  'public/runtime/jdk23.jar',
+  'public/runtime/jdk27.jar',
   'java/build/hierarchy.tsv',
 ]);
 jar['langjal/hierarchy.tsv'] = new Uint8Array(await readFile('java/build/hierarchy.tsv'));
 await writeFile('public/runtime/jalweb-compiler.jar', zipSync(jar, { level: 6 }));
+
+// Pages limits each static asset to 25 MiB. Keep the full archive compressed in transit.
+const runtimeGzip = gzipSync(await readFile('public/runtime/jdk27.jar'), { level: 9 });
+if (runtimeGzip.length > 25 * 1024 * 1024)
+  throw new Error('Compressed JDK archive exceeds Pages asset limit');
+await writeFile('public/runtime/jdk27.jar.gzip', runtimeGzip);

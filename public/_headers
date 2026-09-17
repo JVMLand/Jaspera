@@ -9,7 +9,10 @@
 /runtime/*
   Cache-Control: public, max-age=0, must-revalidate
 
-/runtime/jdk23/lib/modules.gzip
+/runtime/jdk27/lib/modules.gzip
+  Content-Type: application/gzip
+
+/runtime/jdk27.jar.gzip
   Content-Type: application/gzip
 
 /sw.js

@@ -1,3 +1,6 @@
 
 # Keep pnpm patch hashes stable across Windows and Linux.
 patches/*.patch text eol=lf
+
+# setup.ts verifies this checked-in license against its upstream SHA-256.
+licenses/JZlib.txt text eol=lf

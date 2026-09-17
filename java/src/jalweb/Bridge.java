@@ -418,9 +418,9 @@ public final class Bridge {
                     }
                 }
                 progress("frames", owner, "", frameTotal, frameTotal);
-                if (node.version > 67) add(
+                if ((node.version & 0xffff) > Opcodes.V27) add(
                     "error",
-                    "This runtime supports class file versions up to 67 (Java 23).",
+                    "This runtime supports class file versions up to 71 (Java 27).",
                     1,
                     0,
                     1

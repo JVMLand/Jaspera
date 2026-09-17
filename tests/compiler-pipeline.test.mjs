@@ -56,6 +56,31 @@ test('syntax and lexer errors prevent bytecode emission', async () => {
   }
 });
 
+test('Java 27 class files are accepted and newer versions are rejected', async () => {
+  const defaults = await compile(
+    'default-version',
+    'public class Main { public static value()I { iconst_1 ireturn } }',
+  );
+  assert.deepEqual(defaults.diagnostics, []);
+  assert.equal(Buffer.from(defaults.bytecode, 'base64').readUInt16BE(6), 67);
+  for (const version of [67, 71, 72]) {
+    const result = await compile(
+      'jdk-version-' + version,
+      `public class Main (major_version=${version}, minor_version=0) { public static value()I { iconst_1 ireturn } }`,
+    );
+    if (version <= 71) {
+      assert.deepEqual(
+        result.diagnostics.filter((d) => d.severity === 'error'),
+        [],
+      );
+      assert.equal(Buffer.from(result.bytecode, 'base64').readUInt16BE(6), version);
+    } else {
+      assert.equal(result.bytecode, '');
+      assert.ok(result.diagnostics.some((d) => d.message.includes('71 (Java 27)')));
+    }
+  }
+});
+
 test('conditional branches inside a label block retain locals needed at their target', async () => {
   const result = await compile(
     'branch-local',

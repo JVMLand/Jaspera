@@ -64,7 +64,7 @@ export function completeOperand(
   opcode: string,
   typed: string,
   catalog: Catalog,
-  origin = 'OpenJDK 23',
+  origin = 'OpenJDK 27',
 ): Candidate[] {
   const query = normalize(typed),
     isField = /^(get|put)/.test(opcode),

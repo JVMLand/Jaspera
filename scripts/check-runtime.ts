@@ -2,10 +2,11 @@ import { access, readFile } from 'node:fs/promises';
 for (const file of [
   'bovine.js',
   'bjvm_main.wasm',
-  'jdk23.jar',
-  'jdk23/lib/modules',
-  'jdk23/lib/modules.gzip',
-  'jdk23/lib/tzdb.dat',
+  'jdk27.jar',
+  'jdk27.jar.gzip',
+  'jdk27/lib/modules',
+  'jdk27/lib/modules.gzip',
+  'jdk27/lib/tzdb.dat',
   'jalweb-compiler.jar',
 ]) {
   try {

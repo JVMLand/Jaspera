@@ -1,6 +1,7 @@
 /** Pages serves the JDK as a compressed static asset, not HTTP content encoding. */
 export async function fetchRuntimeFile(url: string, init?: RequestInit): Promise<Response> {
-  if (!new URL(url).pathname.endsWith('/jdk23/lib/modules')) return fetch(url, init);
+  const path = new URL(url).pathname;
+  if (!path.endsWith('/jdk27/lib/modules') && !path.endsWith('/jdk27.jar')) return fetch(url, init);
   const compressed = new URL(url);
   compressed.pathname += '.gzip';
   const response = await fetch(compressed, init);

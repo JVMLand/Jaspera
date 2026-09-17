@@ -15,6 +15,9 @@ jobs:
           distribution: temurin
           # LangJAL emits Java 23 class files that the JVM tests execute.
           java-version: 23
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: pnpm install --frozen-lockfile
       - uses: actions/cache@v4
         with:

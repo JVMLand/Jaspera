@@ -1,0 +1,32 @@
+{
+  "bovineRevision": "fb4df55cda5d6b29016e2421a037251a8b7852ab",
+  "source": "OpenJDK 27+35 (GPL), jdk-27+35",
+  "javaVersion": "27",
+  "modules": [
+    "java.base",
+    "java.desktop",
+    "java.logging"
+  ],
+  "files": {
+    "jdk27.jar": {
+      "sha256": "23def6911a442c215c8c49cfbe823d554d235846acb091325c424ec624e3167d",
+      "bytes": 26029634
+    },
+    "jdk27/lib/modules": {
+      "sha256": "268e341bfcacf47a8508f3bd334c0146495cb91a02f5444ddad46160f3c1a99b",
+      "bytes": 14159024
+    },
+    "jdk27/lib/tzdb.dat": {
+      "sha256": "5906b44e25a8a730131d7ba1beb5d15af27043f6536f1a169ca8a5d8b8bed8f8",
+      "bytes": 102956
+    },
+    "jdk27/conf/security/java.security": {
+      "sha256": "2fb92b9701d2cfe568a781da88c94fe2d2adc147080628ae34499edbdb5975de",
+      "bytes": 76682
+    },
+    "jdk27/conf/logging.properties": {
+      "sha256": "8590633e1e8a7d88ffe74cc04189c5c61b1ed4703180cbc851dcd5575efcce74",
+      "bytes": 2740
+    }
+  }
+}

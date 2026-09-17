@@ -24,15 +24,26 @@ test('JDK download decompresses static gzip and preserves fetch options', async 
   const bytes = Buffer.from('JDK bytes: 譌･譛ｬ隱杤0');
   const init = { cache: 'no-cache', signal: new AbortController().signal };
   globalThis.fetch = async (url, options) => {
-    assert.equal(String(url), 'https://example.test/runtime/jdk23/lib/modules.gzip?v=1');
+    assert.equal(String(url), 'https://example.test/runtime/jdk27/lib/modules.gzip?v=1');
     assert.equal(options, init);
     return new Response(gzipSync(bytes));
   };
   assert.deepEqual(
     Buffer.from(
       await (
-        await fetchRuntimeFile('https://example.test/runtime/jdk23/lib/modules?v=1', init)
+        await fetchRuntimeFile('https://example.test/runtime/jdk27/lib/modules?v=1', init)
       ).arrayBuffer(),
+    ),
+    bytes,
+  );
+  globalThis.fetch = async (url, options) => {
+    assert.equal(String(url), 'https://example.test/runtime/jdk27.jar.gzip');
+    assert.equal(options, init);
+    return new Response(gzipSync(bytes));
+  };
+  assert.deepEqual(
+    Buffer.from(
+      await (await fetchRuntimeFile('https://example.test/runtime/jdk27.jar', init)).arrayBuffer(),
     ),
     bytes,
   );
@@ -43,10 +54,10 @@ test('JDK download decompresses static gzip and preserves fetch options', async 
   };
   assert.equal(await fetchRuntimeFile('https://example.test/runtime/bovine.js'), response);
   globalThis.fetch = async () => new Response('missing', { status: 404 });
-  await assert.rejects(fetchRuntimeFile('https://example.test/runtime/jdk23/lib/modules'), /404/);
+  await assert.rejects(fetchRuntimeFile('https://example.test/runtime/jdk27/lib/modules'), /404/);
   globalThis.fetch = async () => new Response('not gzip');
   await assert.rejects(async () =>
-    (await fetchRuntimeFile('https://example.test/runtime/jdk23/lib/modules')).arrayBuffer(),
+    (await fetchRuntimeFile('https://example.test/runtime/jdk27/lib/modules')).arrayBuffer(),
   );
 });
 
@@ -66,12 +77,19 @@ test('Pages output contains only static assets below the upload limits', async (
   }
   await walk('dist');
   assert.ok(count <= 20000);
-  await assert.rejects(stat('dist/runtime/jdk23/lib/modules'), { code: 'ENOENT' });
-  const compressed = await readFile('dist/runtime/jdk23/lib/modules.gzip');
-  assert.deepEqual(gunzipSync(compressed), await readFile('public/runtime/jdk23/lib/modules'));
+  await assert.rejects(stat('dist/runtime/jdk27/lib/modules'), { code: 'ENOENT' });
+  await assert.rejects(stat('dist/runtime/jdk27.jar'), { code: 'ENOENT' });
+  assert.deepEqual(
+    gunzipSync(await readFile('dist/runtime/jdk27.jar.gzip')),
+    await readFile('public/runtime/jdk27.jar'),
+  );
+  const compressed = await readFile('dist/runtime/jdk27/lib/modules.gzip');
+  assert.deepEqual(gunzipSync(compressed), await readFile('public/runtime/jdk27/lib/modules'));
   const manifest = JSON.parse(await readFile('dist/offline-manifest.json', 'utf8'));
-  assert.ok(manifest.urls.includes('runtime/jdk23/lib/modules.gzip'));
-  for (const path of ['runtime/jdk23/lib/modules', '_headers', '_redirects'])
+  assert.ok(manifest.urls.includes('runtime/jdk27/lib/modules.gzip'));
+  assert.ok(manifest.urls.includes('runtime/jdk27.jar.gzip'));
+  assert.ok(!manifest.urls.includes('runtime/jdk27.jar'));
+  for (const path of ['runtime/jdk27/lib/modules', '_headers', '_redirects'])
     assert.ok(!manifest.urls.includes(path));
   const config = JSON.parse((await readFile('wrangler.jsonc', 'utf8')).replace(/,\s*}/g, '}'));
   assert.equal(config.pages_build_output_dir, './dist');

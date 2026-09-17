@@ -4,15 +4,11 @@ import { resolve, join, delimiter } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { bundleRuntime } from './bundle-runtime.ts';
-const revision = '3fd56c74656602eb32efefca46f51f074bef6bca',
-  sdkVersion = '4.0.2';
-const root = resolve('.'),
-  source = resolve('.cache/b-jvm'),
-  output = join(source, 'build-debugger');
-const patch = await readFile('vendor/patches/bovine-debugger.patch');
+import { revision, sdkVersion, source, output, ensureBovineSource } from './bovine.ts';
+const root = resolve('.');
+ensureBovineSource();
 const digest = createHash('sha256')
   .update(revision + sdkVersion)
-  .update(patch)
   .digest('hex');
 const stamp = join(output, 'jaspera-build.json');
 let cached = false;
@@ -34,38 +30,6 @@ function run(command: string, args: string[], cwd = root) {
 }
 if (!cached) {
   await mkdir('.cache', { recursive: true });
-  if (!existsSync(join(source, '.git')))
-    run('git', ['clone', '--filter=blob:none', 'https://github.com/anematode/b-jvm', source]);
-  const head = spawnSync('git', ['rev-parse', 'HEAD'], {
-    cwd: source,
-    encoding: 'utf8',
-  }).stdout.trim();
-  if (head !== revision) run('git', ['checkout', '--detach', revision], source);
-  const reverse = spawnSync(
-    'git',
-    ['apply', '--reverse', '--check', resolve('vendor/patches/bovine-debugger.patch')],
-    { cwd: source },
-  );
-  const applied = join(source, 'jaspera-applied.patch');
-  if (reverse.status !== 0) {
-    let restored = false;
-    if (existsSync(applied)) {
-      const check = spawnSync('git', ['apply', '--reverse', '--check', applied], { cwd: source });
-      if (check.status !== 0)
-        throw new Error(
-          'Cached Bovine sources have local changes. Preserve them before rebuilding.',
-        );
-      run('git', ['apply', '--reverse', applied], source);
-      restored = true;
-    }
-    try {
-      run('git', ['apply', resolve('vendor/patches/bovine-debugger.patch')], source);
-    } catch (error) {
-      if (restored) run('git', ['apply', applied], source);
-      throw error;
-    }
-  }
-  await writeFile(applied, patch);
   // A fixed SDK is required: the interpreter's postprocessor is version-sensitive.
   const sdk = process.env.EMSDK ? resolve(process.env.EMSDK) : resolve('.cache/emsdk');
   if (!existsSync(join(sdk, 'emsdk.py')))

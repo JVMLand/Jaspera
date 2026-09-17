@@ -1,3 +1,4 @@
+import { fetchRuntimeFile } from './runtime-download.js';
 import { msg } from './messages.js';
 import { expose, transfer } from 'comlink';
 import { unzipSync } from 'fflate';
@@ -9,7 +10,7 @@ const api = {
   },
   async classBytes(owner: string): Promise<Uint8Array | null> {
     if (!/^[\w$]+(?:\/[\w$]+)*$/.test(owner)) throw new Error('Invalid class name');
-    archive ??= fetch(new URL('../runtime/jdk23.jar', self.location.href))
+    archive ??= fetchRuntimeFile(new URL('../runtime/jdk27.jar', self.location.href).href)
       .then(async (r) => {
         if (!r.ok) throw new Error(msg('m880fb2cfc25c'));
         return new Uint8Array(await r.arrayBuffer());

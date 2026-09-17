@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { unzipSync } from 'fflate';
 import { launchBrowser, newAppContext, newAppPage } from './helpers/browser.mjs';
 test(
-  'String renders all 170 methods beyond the old 2000-instruction class limit',
+  'String renders all 183 methods beyond the old 2000-instruction class limit',
   { timeout: 240000 },
   async (t) => {
     const base = 'http://127.0.0.1:5238',
@@ -33,7 +33,7 @@ test(
       () => document.querySelector('#state')?.textContent === '実行できます',
     );
     const entry = 'java/lang/String.class',
-      bytes = unzipSync(await readFile('public/runtime/jdk23.jar'), {
+      bytes = unzipSync(await readFile('public/runtime/jdk27.jar'), {
         filter: (f) => f.name === entry,
       })[entry];
     const started = performance.now();
@@ -51,13 +51,13 @@ test(
     await page.waitForFunction(() =>
       document.querySelector('.graph-status')?.textContent.includes(' · 100% · '),
     );
-    assert.equal(await page.locator('.graph-method-group').count(), 170);
+    assert.equal(await page.locator('.graph-method-group').count(), 183);
     await page.waitForFunction(() =>
       document.querySelector('.graph-method-group:first-child .graph-node'),
     );
-    assert.match(await page.locator('.graph-status').innerText(), /170\/170/);
+    assert.match(await page.locator('.graph-status').innerText(), /183\/183/);
     const count = await page.locator('.graph-node').count();
-    assert.ok(count < 5258);
+    assert.ok(count < 5394);
     assert.doesNotMatch(await page.locator('.graph-status').innerText(), /上限|失敗/);
     console.log(
       'String full graph: ' +

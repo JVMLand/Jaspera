@@ -13,7 +13,7 @@ await cp('licenses', 'public/licenses', { recursive: true });
 await cp('vendor/themes/LICENSE.txt', 'public/licenses/Darcula.txt');
 await cp('THIRD_PARTY_NOTICES.md', 'public/THIRD_PARTY_NOTICES.md');
 const compiler = 'public/runtime/jalweb-compiler.jar';
-const runtime = 'public/runtime/jdk23.jar';
+const runtime = 'public/runtime/jdk27.jar';
 const catalog = 'src/generated/jdk.json';
 try {
   const [compilerStat, runtimeStat, catalogStat] = await Promise.all([

@@ -4,7 +4,7 @@ Through bytecode, ad astra
 
 JVM Assembly Language（JAL）を書き，ブラウザで実行できるエディタです。命令ごとのスタックの変化を調べたり，ブレークポイントで実行を止めたりしながら，Java のバイトコードを読み書きできます。
 
-エディタには Monaco Editor，実行環境には WebAssembly 上で動く Bovine JVM と OpenJDK 23 を使っています。利用者の PC に Java をインストールする必要はありません。
+エディタには Monaco Editor，実行環境には WebAssembly 上で動く Bovine JVM と OpenJDK 27 を使っています。利用者の PC に Java をインストールする必要はありません。
 
 ## まず動かす
 
@@ -133,7 +133,7 @@ JAR は一度に一つ開けます。JAR の変更はプロジェクトやフォ
 
 ## 開発環境
 
-必要なものは Node.js 22 以降，pnpm 10.13.1，JDK 23 以降，Git，Python 3，CMake 3.15〜3.31，Ninja です。
+必要なものは Node.js 22 以降，pnpm 10.13.1，JDK 23 以降，Git，Python 3.12 以降，CMake 3.15〜3.31，Ninja です。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -170,7 +170,9 @@ Windows では MSYS2 UCRT64 の CMake と Ninja も使えます。C コードの
 
 ## 実行環境について
 
-OpenJDK 23 のクラスライブラリを同梱していますが，ブラウザ上で通常の Java 環境の全機能を使えるわけではありません。OS のファイル操作，ソケット通信，AWT / Swing，JNI など，ネイティブ実装に依存する機能には制約があります。
+実行環境と標準ライブラリは OpenJDK 27 です。JAL の既定の出力形式は Java 23 のままで，明示した場合は Java 27（class file version 71）まで扱えます。ビルド用 JDK は従来どおり 23 以降を使い，セットアップ時にランタイム生成専用の JDK 27 をダウンロードします。自動セットアップは Linux / Windows の x64 に対応しています。
+
+OpenJDK 27 のクラスライブラリを同梱していますが，ブラウザ上で通常の Java 環境の全機能を使えるわけではありません。OS のファイル操作，ソケット通信，AWT / Swing，JNI など，ネイティブ実装に依存する機能には制約があります。
 
 実行の入口は `public static main([Ljava/lang/String;)V` です。標準入力は実行前に Console で設定します。Java プログラムはブラウザ内で動き，サーバー上では実行しません。
 

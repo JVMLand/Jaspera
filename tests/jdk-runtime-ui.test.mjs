@@ -33,7 +33,7 @@ test(
       window.runtime = new Runtime(128);
     });
     const names = ['java/lang/String', 'java/util/HashMap', 'java/lang/Integer'],
-      jar = unzipSync(await readFile('public/runtime/jdk23.jar'), {
+      jar = unzipSync(await readFile('public/runtime/jdk27.jar'), {
         filter: (f) => names.some((n) => f.name === n + '.class'),
       });
     for (const name of names) {
