@@ -1,0 +1,25 @@
+{
+  "title": "Apri uno ZIP, modifica ed esegui",
+  "introduction": "Ora puoi modificare ed eseguire sorgenti JAL da uno ZIP. Il pulsante di esecuzione ricorda l’ultima modalità scelta e la cronologia delle versioni include schermate.",
+  "imageAlt": "Main.jal aperto da uno ZIP, con il risultato nella console.",
+  "sections": [
+    {
+      "title": "Esegui il codice di uno ZIP",
+      "body": "Apri uno ZIP dal menu File o trascinalo nella finestra per modificare ed eseguire i sorgenti JAL al suo interno. Per ZIP e cartelle senza impostazioni di progetto viene eseguito il file JAL selezionato. Puoi salvare le modifiche in una cartella o esportarle in uno ZIP. Il salvataggio e l’esportazione includono i sorgenti JAL e le impostazioni di progetto.",
+      "image": "zip",
+      "imageAlt": "Main.jal e Helper.jal importati da uno ZIP. Main.jal stampa 3."
+    },
+    {
+      "title": "Ripeti l’ultima modalità di esecuzione",
+      "body": "Il pulsante ricorda se hai scelto Esegui o Debug e ne aggiorna l’etichetta e l’azione. La modalità iniziale è Esegui; durante l’esecuzione il pulsante diventa Interrompi. Ctrl+Enter / F5 funziona anche fuori dall’editor e avvia o interrompe l’esecuzione con la stessa modalità del pulsante.",
+      "image": "run",
+      "imageAlt": "Il pulsante principale dopo aver scelto Debug, con il menu delle modalità aperto."
+    },
+    {
+      "title": "Consulta la cronologia con le schermate",
+      "body": "Dal menu Aiuto puoi leggere le novità delle versioni precedenti con schermate illustrative. Dopo un aggiornamento, le novità vengono mostrate se una versione precedente ha registrato la tua visita. Una volta chiuso, l’avviso non riappare ricaricando la pagina.",
+      "image": "history",
+      "imageAlt": "Cronologia aperta sulla versione 2026.2, con altre versioni selezionabili a sinistra."
+    }
+  ]
+}

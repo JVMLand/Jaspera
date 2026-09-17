@@ -58,7 +58,7 @@ test(
     const context = await newAppContext(browser);
     await context.addInitScript(() => {
       if (!localStorage.getItem('jaspera.lastVersion'))
-        localStorage.setItem('jaspera.lastVersion', '2026.1');
+        localStorage.setItem('jaspera.lastVersion', '2026.2');
     });
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:5297');
@@ -70,12 +70,13 @@ test(
     );
     assert.match(
       await page.locator('#changelog article h1').textContent(),
-      new RegExp('^' + currentVersion.replace('.', '\\.')),
+      new RegExp('^' + currentVersion.replaceAll('.', '\\.')),
     );
-    await page.locator('#changelog nav button').filter({ hasText: '2026.1' }).click();
-    await page.waitForFunction(() =>
-      document.querySelector('#changelog article h1')?.textContent.startsWith('2026.1'),
-    );
+    assert.deepEqual(await page.locator('#changelog nav button').allTextContents(), [
+      currentVersion,
+      '2026.2',
+      '2026.1',
+    ]);
     for (const lang of langs) {
       await page.evaluate(async (lang) => {
         const { setLocale } = await import('/src/localization.ts');
@@ -86,10 +87,18 @@ test(
         lang,
       );
       await page.waitForFunction(() => {
-        const img = document.querySelector('#changelog img');
-        return img?.complete && img.naturalWidth > 0;
+        const images = [...document.querySelectorAll('#changelog img')];
+        // Load all topic images, including those initially below the fold.
+        images.forEach((image) => (image.loading = 'eager'));
+        return (
+          images.length === 4 && images.every((image) => image.complete && image.naturalWidth > 0)
+        );
       });
     }
+    await page.getByRole('button', { name: '2026.1', exact: true }).click();
+    await page.waitForFunction(() =>
+      document.querySelector('#changelog article h1')?.textContent.startsWith('2026.1'),
+    );
     await page.keyboard.press('Escape');
     await page.locator('#changelog').waitFor({ state: 'detached' });
     assert.equal(await page.locator('#changelog').count(), 0);
@@ -104,7 +113,26 @@ test(
     await page.locator('#menu-help').click();
     await page.locator('#help-changelog').click();
     await page.locator('#changelog article h1').waitFor();
-    await page.screenshot({ path: '.cache/changelog-desktop.png' });
+    await page.evaluate(async () => {
+      await (await import('/src/localization.ts')).setLocale('ja');
+    });
+    await page.waitForFunction(() =>
+      document.querySelector('#changelog img')?.src.endsWith('/ja.jpg'),
+    );
+    await page.waitForFunction(() => {
+      const image = document.querySelector('#changelog img');
+      return image?.complete && image.naturalWidth > 0;
+    });
+    for (const theme of ['googol-light', 'googol-night']) {
+      await page.evaluate(async (theme) => {
+        (await import('/src/themes.ts')).applyTheme(theme);
+        await Promise.all(
+          [...document.querySelectorAll('#changelog img')].map((image) => image.decode()),
+        );
+        document.querySelector('#changelog h1').scrollIntoView({ block: 'start' });
+      }, theme);
+      await page.screenshot({ path: `.cache/changelog-${theme}.png`, animations: 'disabled' });
+    }
     await page.setViewportSize({ width: 390, height: 844 });
     const box = await page.locator('#changelog').boundingBox();
     assert.ok(box.width <= 390);
@@ -117,9 +145,16 @@ test(
         compareVersions('2026.10', '2026.2'),
         compareVersions('2026.1', '2026.2'),
         compareVersions('bad', '2026.2'),
+        compareVersions('2026.2.1', '2026.2'),
+        compareVersions('2026.2', '2026.2.0'),
+        compareVersions('2026.2.10', '2026.2.2'),
+        compareVersions('2026.2.1', '2026.3'),
+        compareVersions('2026.2.1', '2026.2.1'),
       ];
     });
     assert.ok(compared[0] > 0 && compared[1] < 0 && compared[2] === 0);
+    assert.ok(compared[3] > 0 && compared[4] === 0 && compared[5] > 0);
+    assert.ok(compared[6] < 0 && compared[7] === 0);
     await page.evaluate(async () => {
       const dialog = document.createElement('dialog');
       dialog.id = 'blocking-dialog';

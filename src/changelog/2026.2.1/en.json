@@ -1,0 +1,25 @@
+{
+  "title": "Open a ZIP, edit and run",
+  "introduction": "You can now edit and run JAL sources from a ZIP archive. The run button remembers your last mode, and release history includes screenshots.",
+  "imageAlt": "Main.jal opened from a ZIP archive, with its output in the console.",
+  "sections": [
+    {
+      "title": "Run code from a ZIP archive",
+      "body": "Open a ZIP from the File menu or drag it into the window to edit and run its JAL sources. In ZIP archives and folders without project settings, the selected JAL file is the execution target. Save your edits to a folder or export a ZIP. Saving and exporting includes JAL sources and project settings.",
+      "image": "zip",
+      "imageAlt": "Main.jal and Helper.jal imported from a ZIP. Running Main.jal prints 3."
+    },
+    {
+      "title": "Repeat your last run mode",
+      "body": "The run button remembers whether you last chose Run or Debug, and updates its label and action. It starts in Run mode and becomes Stop during execution. Ctrl+Enter / F5 also works outside the editor, starting or stopping execution with the same mode as the button.",
+      "image": "run",
+      "imageAlt": "The primary button after choosing Debug, with the Debug and Run menu open."
+    },
+    {
+      "title": "Browse illustrated release history",
+      "body": "Open release history from Help to read earlier releases with screenshots. After an upgrade, the latest changes appear if a previous version recorded your visit. Once dismissed, the update notice does not appear again when you reload.",
+      "image": "history",
+      "imageAlt": "Release history showing 2026.2, with other versions available on the left."
+    }
+  ]
+}

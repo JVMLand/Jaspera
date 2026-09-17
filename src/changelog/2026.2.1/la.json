@@ -1,0 +1,25 @@
+{
+  "title": "Archivum ZIP aperi, emenda, exsequere",
+  "introduction": "Fontes JAL in archivo ZIP nunc emendari et exsequi possunt. Bulla exsecutionis modum nuper electum meminit, et historia versionum imagines continet.",
+  "imageAlt": "Main.jal ex archivo ZIP apertum, cum exitu in consola.",
+  "sections": [
+    {
+      "title": "Codicem ex archivo ZIP exsequere",
+      "body": "Archivum ZIP per indicem Fasciculus aperi aut in fenestram trahe, ut fontes JAL in eo emendes et exsequaris. In archivis ZIP et directoriis sine configuratione propositi, fasciculus JAL electus exsequitur. Mutationes in directorio servare aut in ZIP exportare potes. Fontes JAL et configuratio propositi servantur et exportantur.",
+      "image": "zip",
+      "imageAlt": "Main.jal et Helper.jal ex archivo ZIP importata. Main.jal numerum 3 imprimit."
+    },
+    {
+      "title": "Modum nuper electum repete",
+      "body": "Bulla meminit utrum Exsequi an Depurare elegeris, atque titulum et actionem mutat. Initio Exsequi offert; dum programma exsequitur, fit Siste. Ctrl+Enter / F5 etiam extra editorem operatur et eodem modo ac bulla exsecutionem incipit aut sistit.",
+      "image": "run",
+      "imageAlt": "Bulla principalis post modum depurationis electum, cum indice modorum aperto."
+    },
+    {
+      "title": "Historiam versionum cum imaginibus lege",
+      "body": "Per indicem Auxilium versiones priores cum imaginibus legere potes. Post renovationem novitates monstrantur, si versio prior visitationem tuam notavit. Nuntio clauso, pagina denuo onerata eum non repetit.",
+      "image": "history",
+      "imageAlt": "Historia versionis 2026.2, cum aliis versionibus ad sinistram eligendis."
+    }
+  ]
+}

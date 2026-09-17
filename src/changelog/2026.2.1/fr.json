@@ -1,0 +1,25 @@
+{
+  "title": "Ouvrir un ZIP, modifier et exécuter",
+  "introduction": "Vous pouvez désormais modifier et exécuter des sources JAL contenues dans un ZIP. Le bouton d’exécution retient le dernier mode choisi et l’historique des versions comprend des captures d’écran.",
+  "imageAlt": "Main.jal ouvert depuis un ZIP, avec son résultat dans la console.",
+  "sections": [
+    {
+      "title": "Exécuter le code d’un ZIP",
+      "body": "Ouvrez un ZIP depuis le menu Fichier ou déposez-le dans la fenêtre pour modifier et exécuter ses sources JAL. Dans les ZIP et dossiers sans configuration de projet, le fichier JAL sélectionné est exécuté. Enregistrez vos modifications dans un dossier ou exportez-les en ZIP. Seuls les sources JAL et la configuration du projet sont enregistrés ou exportés.",
+      "image": "zip",
+      "imageAlt": "Main.jal et Helper.jal importés depuis un ZIP. Main.jal affiche 3."
+    },
+    {
+      "title": "Reprendre le dernier mode d’exécution",
+      "body": "Le bouton retient votre dernier choix, Exécuter ou Déboguer, et adapte son libellé et son action. Il propose Exécuter au départ, puis Arrêter pendant l’exécution. Ctrl+Entrée / F5 fonctionne aussi hors de l’éditeur et lance ou arrête l’exécution avec le même mode que le bouton.",
+      "image": "run",
+      "imageAlt": "Le bouton principal après le choix Déboguer, avec le menu des modes ouvert."
+    },
+    {
+      "title": "Consulter l’historique illustré",
+      "body": "Le menu Aide permet de consulter les versions précédentes avec des captures d’écran. Après une mise à jour, les nouveautés s’affichent si une version précédente a enregistré votre visite. Une fois l’annonce fermée, elle ne réapparaît pas au rechargement de la page.",
+      "image": "history",
+      "imageAlt": "Historique affichant la version 2026.2, avec les autres versions à gauche."
+    }
+  ]
+}

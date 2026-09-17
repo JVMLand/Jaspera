@@ -1,0 +1,25 @@
+{
+  "title": "Abre un ZIP, edita y ejecuta",
+  "introduction": "Ahora puedes editar y ejecutar código JAL desde un ZIP. El botón de ejecución recuerda el último modo elegido y el historial de versiones incluye capturas.",
+  "imageAlt": "Main.jal abierto desde un ZIP, con su resultado en la consola.",
+  "sections": [
+    {
+      "title": "Ejecuta el código de un ZIP",
+      "body": "Abre un ZIP desde el menú Archivo o arrástralo a la ventana para editar y ejecutar sus archivos JAL. En archivos ZIP y carpetas sin configuración de proyecto se ejecuta el archivo JAL seleccionado. Puedes guardar los cambios en una carpeta o exportarlos a un ZIP. Se guardan los archivos JAL y la configuración del proyecto.",
+      "image": "zip",
+      "imageAlt": "Main.jal y Helper.jal importados desde un ZIP. Main.jal imprime 3."
+    },
+    {
+      "title": "Repite el último modo de ejecución",
+      "body": "El botón recuerda si elegiste Ejecutar o Depurar y actualiza su etiqueta y su acción. Empieza en Ejecutar y cambia a Detener durante la ejecución. Ctrl+Enter / F5 también funciona fuera del editor y permite iniciar o detener la ejecución con el mismo modo que el botón.",
+      "image": "run",
+      "imageAlt": "El botón principal tras elegir Depurar, con el menú de depuración y ejecución abierto."
+    },
+    {
+      "title": "Consulta el historial con capturas",
+      "body": "Desde Ayuda puedes consultar versiones anteriores con capturas de pantalla. Tras una actualización, se muestran los cambios si una versión anterior registró tu visita. Una vez cerrado el aviso, no vuelve a aparecer al recargar la página.",
+      "image": "history",
+      "imageAlt": "Historial con las notas de 2026.2 y otras versiones a la izquierda."
+    }
+  ]
+}

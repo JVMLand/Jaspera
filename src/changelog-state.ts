@@ -1,9 +1,10 @@
 export const lastVersionKey = 'jaspera.lastVersion';
 export function compareVersions(a: string, b: string) {
-  const parts = (v: string) => (/^\d{4}\.\d+$/.test(v) ? v.split('.').map(Number) : undefined);
+  const parts = (v: string) =>
+    /^\d{4}\.\d+(?:\.\d+)?$/.test(v) ? v.split('.').map(Number) : undefined;
   const x = parts(a),
     y = parts(b);
-  return x && y ? x[0] - y[0] || x[1] - y[1] : 0;
+  return x && y ? x[0] - y[0] || x[1] - y[1] || (x[2] ?? 0) - (y[2] ?? 0) : 0;
 }
 export function initializeChangelog() {
   const current = __APP_VERSION__;

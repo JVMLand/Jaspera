@@ -1,10 +1,10 @@
 # Release notes
 
-Each `yyyy.N/` directory contains one JSON page and a full-page JPEG screenshot plus one screenshot per topic for every supported locale (`ja`, `en`, `zh`, `es`, `it`, `fr`, `la`). Older directories stay in place. The version list is discovered automatically; there is no separate index to update.
+Each `yyyy.N/` or `yyyy.N.P/` directory contains one JSON page and a full-page JPEG screenshot plus one screenshot per topic for every supported locale (`ja`, `en`, `zh`, `es`, `it`, `fr`, `la`). Older directories stay in place. The version list is discovered automatically; there is no separate index to update.
 
 When bumping the version:
 
-1. Set `package.json` to `yyyy.N.0` and add `yyyy.N/` here.
+1. Set `package.json` to `yyyy.N.0` and add `yyyy.N/` here. For a patch release, use `yyyy.N.P` in both places (for example, `2026.2.1`). An omitted patch number compares as zero.
 2. Write the user-visible changes in each locale. Each page has `title`, `introduction`, `imageAlt`, and `sections` (each with `title`, `body`, `image` and `imageAlt`). These are plain text, not HTML.
 3. Capture a real screenshot in each language as `<locale>.jpg`. Use a legible viewport and JPEG compression; omit unrelated personal data. Use `<image>-<locale>.jpg` for each topic, where `image` is its stable identifier. Describe every screenshot with its `imageAlt`.
 4. Run `tests/changelog-ui.test.mjs` and the production build. Review the full-screen history in light and dark themes.
