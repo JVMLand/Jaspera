@@ -118,7 +118,8 @@ test(
       editor.setPosition({ lineNumber: 7, column: 1 });
       await editor.getAction('jaspera.toggleBreakpoint').run();
     });
-    await page.locator('#run').click();
+    await page.locator('#run-options').click();
+    await page.locator('#run-with-debugger').click();
     await page.waitForFunction(
       () => document.querySelector('.debug-toolbar')?.dataset.state === 'starting',
     );

@@ -57,6 +57,18 @@ test(
     assert.equal(await button.getAttribute('aria-label'), '停止');
     await page.keyboard.press('Control+Enter');
     assert.equal(await button.getAttribute('aria-label'), '実行');
+    // Execution shortcuts also work in standard input, after focus leaves Monaco.
+    await page.locator('#stdin').focus();
+    await page.keyboard.press('Control+Enter');
+    assert.equal(await button.getAttribute('aria-label'), '停止');
+    await page.keyboard.press('F5');
+    assert.equal(await button.getAttribute('aria-label'), '実行');
+    await page.evaluate(() => {
+      document.querySelector('#dialog').showModal();
+    });
+    await page.keyboard.press('Control+Enter');
+    assert.equal(await button.getAttribute('aria-label'), '実行');
+    await page.evaluate(() => document.querySelector('#dialog').close());
     assert.deepEqual(errors, []);
   },
 );

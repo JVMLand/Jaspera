@@ -40,18 +40,29 @@ export function installEditorCommands(
     },
   };
 }
-export function installWindowCommands(commands: { save: () => void; open: () => void }) {
+export function installWindowCommands(commands: {
+  save: () => void;
+  open: () => void;
+  run: () => void;
+}) {
   const keydown = (event: KeyboardEvent) => {
     if (
       event.defaultPrevented ||
       event.isComposing ||
       document.querySelector('dialog[open]') ||
       event.altKey ||
-      event.shiftKey ||
-      !(event.ctrlKey || event.metaKey)
+      event.shiftKey
     )
       return;
     const key = event.key.toLowerCase();
+    const modifier = event.ctrlKey || event.metaKey;
+    if ((key === 'enter' && modifier) || (key === 'f5' && !modifier)) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!event.repeat) commands.run();
+      return;
+    }
+    if (!modifier) return;
     if (key === 's' || key === 'o') {
       event.preventDefault();
       if (key === 's') commands.save();

@@ -20,6 +20,11 @@ test(
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
     await page.locator('.feature-guide-skip:visible').click();
     await page.waitForFunction(() => !document.querySelector('#run-options')?.disabled);
+    assert.equal(await page.locator('#run .run-label').textContent(), '実行');
+    // The initial primary action ignores the example's existing breakpoint.
+    await page.locator('#run').click();
+    await page.waitForFunction(() => !document.querySelector('#run-options')?.disabled);
+    assert.match(await page.locator('#output').textContent(), /JAL/);
     await page.locator('#run-options').click();
     assert.deepEqual(await page.locator('#run-options-menu button').allTextContents(), [
       'デバッグ',
@@ -45,6 +50,14 @@ test(
     assert.equal(await page.locator('#run-options').isDisabled(), true);
     await page.locator('#run').click();
     await page.waitForFunction(() => !document.querySelector('#run-options')?.disabled);
+    assert.equal(await page.locator('#run .run-label').textContent(), 'デバッグ');
+    assert.equal(await page.locator('#run').getAttribute('aria-label'), 'デバッグ');
+    // A shortcut outside Monaco repeats the selected debug action exactly once.
+    await page.locator('#run').focus();
+    await page.keyboard.press('Control+Enter');
+    await page.locator('.debug-toolbar[data-state=paused]').waitFor();
+    await page.locator('#run').click();
+    assert.equal(await page.locator('#run .run-label').textContent(), 'デバッグ');
     await page
       .locator('[data-command=debug-ignore-breakpoints]')
       .evaluate((button) => button.click());
@@ -59,5 +72,6 @@ test(
       'true',
     );
     assert.equal(await page.locator('[data-command=debug-ignore-breakpoints]').isDisabled(), false);
+    assert.equal(await page.locator('#run .run-label').textContent(), '実行');
   },
 );

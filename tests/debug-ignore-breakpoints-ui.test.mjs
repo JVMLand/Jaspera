@@ -27,7 +27,8 @@ test(
     const pointCount = await page.locator('.debug-breakpoint').count();
     assert.ok(pointCount > 0);
     await page.locator('.monaco-editor.debug-breakpoints-ignored').waitFor();
-    await page.locator('#run').click();
+    await page.locator('#run-options').click();
+    await page.locator('#run-with-debugger').click();
     await page.waitForFunction(() =>
       document.querySelector('#output')?.textContent.includes('JAL'),
     );

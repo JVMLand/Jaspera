@@ -33,7 +33,8 @@ test(
     await page.evaluate(async () => {
       window.testMain = await import('/src/main.ts');
     });
-    await page.locator('#run').click();
+    await page.locator('#run-options').click();
+    await page.locator('#run-with-debugger').click();
     await page.waitForFunction(
       () => document.querySelector('.debug-toolbar')?.dataset.state === 'paused',
     );

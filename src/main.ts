@@ -100,7 +100,7 @@ const debugSources = new Map<string, string>();
 const debugEditors: ReturnType<typeof installDebugEditor>[] = [];
 const debugActions = {
   start: () => {
-    if (!running) void run(undefined, true);
+    if (!running) void run(undefined, true, false);
   },
   command: debugCommand,
   toggleIgnoreBreakpoints,
@@ -237,6 +237,7 @@ let dirty = false,
   revision = 0,
   checkedRevision = -1,
   running = false,
+  lastRunIgnoreBreakpoints = true,
   runToken = 0,
   disposed = false;
 let models = new Map<string, monaco.editor.ITextModel>();
@@ -389,7 +390,7 @@ const detached = createDetachedHost(
   (model) => void run(model),
   {
     debugStart: (model) => {
-      if (!running) void run(model, true);
+      if (!running) void run(model, true, false);
     },
     debugCommand,
     toggleIgnoreBreakpoints,
@@ -814,16 +815,17 @@ function updateActions() {
   menus.disabled('project-properties-menu', !projectProperties);
   el<HTMLButtonElement>('summary-properties').disabled = !projectProperties;
   const runButton = el<HTMLButtonElement>('run');
-  runButton.innerHTML = running
-    ? '<span aria-hidden="true">■</span> Stop <kbd>Ctrl ↵</kbd>'
-    : '<span aria-hidden="true">▶</span> Run <kbd>Ctrl ↵</kbd>';
+  const runLabel = running
+    ? msg('mca4d973c0b00')
+    : msg(lastRunIgnoreBreakpoints ? 'run.normal' : 'run.debug');
+  runButton.innerHTML = `<span aria-hidden="true">${running ? '■' : '▶'}</span> <span class="run-label"></span> <kbd>Ctrl ↵</kbd>`;
+  runButton.querySelector('.run-label')!.textContent = runLabel;
   const unavailable = running ? '' : runUnavailable();
   runButton.disabled = !!unavailable;
   runMenu?.update(!running && !unavailable);
   menus.disabled('menu-run', !!unavailable);
   menus.disabled('debug-start', running || !!unavailable);
-  runButton.title =
-    unavailable || (running ? msg('mca4d973c0b00') : msg('m77721d5dea60')) + '（Ctrl+Enter / F5）';
+  runButton.title = unavailable || runLabel + '（Ctrl+Enter / F5）';
   if (
     !running &&
     [
@@ -834,8 +836,8 @@ function updateActions() {
     ].includes(workspaceState.value.status)
   )
     status(unavailable || msg('mc2c1724a78a8'));
-  runButton.setAttribute('aria-label', running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
-  menus.label('menu-run', running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
+  runButton.setAttribute('aria-label', runLabel);
+  menus.label('menu-run', runLabel);
   menus.disabled(
     'download',
     editor.getModel()?.uri.authority !== 'example' &&
@@ -2367,7 +2369,7 @@ function stopRun(show = true) {
 async function run(
   requestedModel?: monaco.editor.ITextModel,
   debugging = true,
-  forceIgnoreBreakpoints = false,
+  forceIgnoreBreakpoints = lastRunIgnoreBreakpoints,
 ) {
   const model = requestedModel ?? editor.getModel(),
     example = model?.uri.authority === 'example',
@@ -2382,6 +2384,7 @@ async function run(
     status(unavailable);
     return;
   }
+  lastRunIgnoreBreakpoints = forceIgnoreBreakpoints;
   running = true;
   const token = ++runToken;
   updateActions();
@@ -2524,6 +2527,7 @@ runMenu = installRunMenu(
 runMenu.update(!running && !runUnavailable());
 const editorCommands = installEditorCommands(editor, () => void run());
 const windowCommands = installWindowCommands({
+  run: () => void run(),
   save: () => void saveProject(),
   open: filePicker.open,
 });

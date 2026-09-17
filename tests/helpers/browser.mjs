@@ -21,7 +21,8 @@ export async function newAppPage(browser, options) {
   return (await newAppContext(browser, options)).newPage();
 }
 export async function runHello(page) {
-  await page.locator('#run').click();
+  await page.locator('#run-options').click();
+  await page.locator('#run-with-debugger').click();
   await page
     .locator('.debug-toolbar [data-command="debug-continue"]:visible')
     .waitFor({ timeout: 60000 })

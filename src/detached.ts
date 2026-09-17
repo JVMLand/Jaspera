@@ -545,7 +545,7 @@ const definitionUI = installDefinitionUI(
 const editorCommands = installEditorCommands(editor, run, (redo) => {
   if (active) bridge?.undo(active, redo);
 });
-const windowCommands = installWindowCommands({ save, open: filePicker.open });
+const windowCommands = installWindowCommands({ save, open: filePicker.open, run });
 window.addEventListener('pagehide', () => {
   debugEditor.dispose();
   debugKeys.dispose();
