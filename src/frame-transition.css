@@ -95,6 +95,12 @@
   background: color-mix(in srgb, #e95762 12%, var(--theme-bg, #151a21));
   color: var(--theme-text, #d6e1e6);
 }
+.frame-blocked {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  border-style: solid;
+}
 .frame-rest {
   text-align: center;
   color: var(--theme-muted, #91a19e);
