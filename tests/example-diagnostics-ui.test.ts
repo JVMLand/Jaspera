@@ -67,6 +67,14 @@ test(
     const hover = page.locator('.stack-hover:visible');
     await hover.locator('.frame-missing').waitFor();
     assert.match((await hover.locator('.frame-missing').textContent())!, /\bString\b/);
+    await page.keyboard.press('Escape');
+    await page.evaluate(async () => (await import('/src/localization.ts')).setLocale('en'));
+    await page
+      .locator('.view-line span')
+      .filter({ hasText: /^invokevirtual$/ })
+      .first()
+      .hover();
+    await hover.locator('.frame-missing').filter({ hasText: 'Missing: String' }).waitFor();
     const clip = await hover.evaluate((panel) => {
       const bounds = panel.getBoundingClientRect();
       const line = [...document.querySelectorAll('.view-line')].find((line) =>
@@ -86,6 +94,7 @@ test(
     });
     await page.screenshot({ path: '.cache/missing-stack-hover.png', clip });
     await page.keyboard.press('Escape');
+    await page.evaluate(async () => (await import('/src/localization.ts')).setLocale('ja'));
     await page.locator('#problems-tab').click();
     await page.locator('#problems button.error').click();
     assert.equal(

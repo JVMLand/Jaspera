@@ -200,7 +200,6 @@
   "instructions.forTheIndexedElementOfAArray": "对 {0} 数组指定索引的元素进行{1}",
   "instructions.form": "形式 ",
   "instructions.frameAnalysis": "栈帧分析",
-  "instructions.frameAtThisPositionStaticAnalysis": "此位置的栈帧 · 静态分析",
   "instructions.get": "获取",
   "instructions.greaterThan": "大于",
   "instructions.greaterThanOrEqualTo": "大于或等于",

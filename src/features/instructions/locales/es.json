@@ -200,7 +200,6 @@
   "instructions.forTheIndexedElementOfAArray": "Para el elemento indexado de una matriz {0}, {1}",
   "instructions.form": "Forma ",
   "instructions.frameAnalysis": "Análisis de marcos",
-  "instructions.frameAtThisPositionStaticAnalysis": "Marco en esta posición · análisis estático",
   "instructions.get": "Obtener",
   "instructions.greaterThan": "mayor que",
   "instructions.greaterThanOrEqualTo": "mayor o igual que",

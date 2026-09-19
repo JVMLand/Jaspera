@@ -3,7 +3,6 @@
   "analysis.missing": "不足: {0}",
   "analysis.partial": "解析途中のスタックです。別の経路から合流した場合の整合性は確認できていません。",
   "analysis.partialGraph": "解析エラーのあるメソッドは制御フローのみ表示しています。スタックとローカル変数の依存関係は未確定です。",
-  "analysis.requiredInputs": "必要な値（下 → 上）: {0}",
   "analysis.stackMerge": "ラベル「{0}」で合流する経路のスタックの高さが一致しません。\n先に到達した経路（{1} スロット）: {2}\n別の経路（{3} スロット）: {4}\n分岐やループから戻る際は，合流先のスタックの高さと各値の型を整合させてください。",
   "execution.aClassFileMustNotExceedMiB": "class は 1 MiB 以下にしてください。",
   "execution.aClassToRunIsInvalidOrDuplicated": "実行するクラスが不正または重複しています。",

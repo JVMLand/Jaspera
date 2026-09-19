@@ -3,7 +3,6 @@
   "analysis.missing": "缺少: {0}",
   "analysis.partial": "这是分析中的临时栈状态，尚未验证其与其他传入路径是否一致。",
   "analysis.partialGraph": "存在分析错误的方法仅显示控制流。栈和局部变量的依赖关系尚未确定。",
-  "analysis.requiredInputs": "所需的值（栈底 → 栈顶）：{0}",
   "analysis.stackMerge": "到达标签“{0}”的各条路径的栈高度不一致。\n先到达的路径（{1} 个槽位）：{2}\n另一条路径（{3} 个槽位）：{4}\n分支和循环回边到达汇合点时，栈高度必须一致，各值的类型必须兼容。",
   "execution.aClassFileMustNotExceedMiB": "class 文件不得超过 1 MiB。",
   "execution.aClassToRunIsInvalidOrDuplicated": "要运行的类无效或重复。",

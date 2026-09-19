@@ -1,5 +1,5 @@
 import { localizedContent } from './localization';
-import { msg } from './messages.ts';
+import { displayMessage, msg } from './messages.ts';
 import { formatFrameValue } from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {
@@ -65,7 +65,7 @@ export function renderFrameTransition(frame: FrameTransition) {
           const missing = node(
             'div',
             '× ' +
-              msg('analysis.missing', [
+              displayMessage('analysis.missing', [
                 (frame.requiredInputs ?? []).slice(-frame.missing).map(formatFrameValue).join(', '),
               ]),
             'frame-missing',

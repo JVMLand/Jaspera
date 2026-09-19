@@ -200,7 +200,6 @@
   "instructions.forTheIndexedElementOfAArray": "Elementum indicatum seriei {0} {1}",
   "instructions.form": "Forma ",
   "instructions.frameAnalysis": "Analysis statuum invocationis",
-  "instructions.frameAtThisPositionStaticAnalysis": "Status hoc loco · analysis statica",
   "instructions.get": "Accipe",
   "instructions.greaterThan": "maius quam",
   "instructions.greaterThanOrEqualTo": "maius aut aequale",

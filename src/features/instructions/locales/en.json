@@ -200,7 +200,6 @@
   "instructions.forTheIndexedElementOfAArray": "For the indexed element of a {0} array, {1}",
   "instructions.form": "Form ",
   "instructions.frameAnalysis": "Frame analysis",
-  "instructions.frameAtThisPositionStaticAnalysis": "Frame at this position · static analysis",
   "instructions.get": "Get",
   "instructions.greaterThan": "greater than",
   "instructions.greaterThanOrEqualTo": "greater than or equal to",

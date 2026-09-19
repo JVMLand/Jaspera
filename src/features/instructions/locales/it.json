@@ -200,7 +200,6 @@
   "instructions.forTheIndexedElementOfAArray": "Per l’elemento indicizzato di un array {0}, {1}",
   "instructions.form": "Forma ",
   "instructions.frameAnalysis": "Analisi dei frame",
-  "instructions.frameAtThisPositionStaticAnalysis": "Frame in questa posizione · analisi statica",
   "instructions.get": "Ottieni",
   "instructions.greaterThan": "maggiore di",
   "instructions.greaterThanOrEqualTo": "maggiore o uguale a",
