@@ -2,37 +2,37 @@ import { msg } from './messages.js';
 import type { Item } from './menus';
 export function editMenuItems(action: (id: string) => void): (Item | null)[] {
   return [
-    { id: 'undo', label: msg('mdc65bd3603e8'), shortcut: 'Ctrl+Z', action: () => action('undo') },
-    { id: 'redo', label: msg('mbb9965eed1aa'), shortcut: 'Ctrl+Y', action: () => action('redo') },
+    { id: 'undo', label: msg('editor.undo'), shortcut: 'Ctrl+Z', action: () => action('undo') },
+    { id: 'redo', label: msg('editor.redo'), shortcut: 'Ctrl+Y', action: () => action('redo') },
     null,
     {
       id: 'find',
-      label: msg('m977ece7f418a'),
+      label: msg('editor.find'),
       shortcut: 'Ctrl+F',
       action: () => action('actions.find'),
     },
     {
       id: 'replace',
-      label: msg('mfd481a97d712'),
+      label: msg('editor.replace'),
       shortcut: 'Ctrl+H',
       action: () => action('editor.action.startFindReplaceAction'),
     },
     null,
     {
       id: 'format',
-      label: msg('m50f9e220e47b'),
+      label: msg('editor.formatCode'),
       shortcut: 'Shift+Alt+F',
       action: () => action('editor.action.formatDocument'),
     },
     {
       id: 'comment',
-      label: msg('m577631e74dec'),
+      label: msg('editor.toggleComment'),
       shortcut: 'Ctrl+/',
       action: () => action('editor.action.commentLine'),
     },
     {
       id: 'quick-fix',
-      label: msg('mba6e41c7bd6d'),
+      label: msg('editor.quickFix'),
       shortcut: 'Ctrl+.',
       action: () => action('editor.action.quickFix'),
     },

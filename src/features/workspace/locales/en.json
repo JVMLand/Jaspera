@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "Cannot connect to the original workspace.",
+  "workspace.checkTheSourceCompilationResults": "Check the source compilation results.",
+  "workspace.checkYourBrowserSPopUpSettings": "Check your browser’s pop-up settings.",
+  "workspace.closeAltClickCloseOtherTabs": "Close (Alt+click: close other tabs)",
+  "workspace.closeOtherTabs": "Close other tabs",
+  "workspace.closeTab": " — close tab",
+  "workspace.closeThisTab": "Close this tab",
+  "workspace.closeWindow": "Close window",
+  "workspace.couldNotOpenTheDetachedWindow": "Could not open the detached window",
+  "workspace.couldNotSaveTheClassFile": "Could not save the class file",
+  "workspace.detachedTools.clearConsole": "Clear console",
+  "workspace.detachedTools.noProblemsFound": "No problems found.",
+  "workspace.detachedTools.standardInput": "Standard input",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": " (drag to move / Alt+click to close other tabs)",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "Edits are shared with the original workspace.",
+  "workspace.fileInProject": "File in project…",
+  "workspace.moveLeft": "Move left",
+  "workspace.moveRight": "Move right",
+  "workspace.moveToProjectGroup": "Move to project group"
+}

@@ -1,0 +1,11 @@
+{
+  "appearance.theme.choose": "主题",
+  "appearance.theme.savedImmediately": "更改立即生效并保存在此浏览器中。",
+  "appearance.theme.title": "主题与布局",
+  "presentation.exit": "退出演示",
+  "presentation.title": "演示模式",
+  "textSize.editor": "编辑器",
+  "textSize.reset": "恢复默认",
+  "textSize.title": "文字大小",
+  "textSize.ui": "界面"
+}

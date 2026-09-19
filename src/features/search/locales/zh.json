@@ -1,0 +1,19 @@
+{
+  "search.class": "类",
+  "search.couldNotOpen": "无法打开。",
+  "search.file": "文件",
+  "search.noResultsFound": "未找到结果。",
+  "search.openingDefinition": "正在打开定义…",
+  "search.preparingSearch": "正在准备搜索…",
+  "search.results": "{0} 条结果 {1}",
+  "search.searchEverywhere": "全局搜索",
+  "search.searchEverywhere.close": "关闭",
+  "search.searchEverywhere.close.ariaLabel": "关闭",
+  "search.searchEverywhere.open": "打开",
+  "search.searchEverywhere.searchEverywhere": "全局搜索",
+  "search.searchEverywhere.searchFilesAndDefinitions.ariaLabel": "搜索文件和定义",
+  "search.searchEverywhere.searchFilesClassesMethodsAndFields.placeholder": "搜索文件、类、方法和字段",
+  "search.searchEverywhere.select": "选择",
+  "search.someSearchSourcesCouldNotBeLoadedCloseAndTry": "部分搜索来源无法加载。请关闭后重试。",
+  "search.top": "(前 100 条)"
+}

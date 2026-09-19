@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { readFile, readdir } from 'node:fs/promises';
+import { readCatalogs } from '../scripts/localization-catalogs.mjs';
 const bundle = await build({
   stdin: {
     contents:
@@ -196,11 +197,12 @@ test('closing preparation interrupts pending API and worker waits', async () => 
   await assert.rejects(waitForWorker(worker, controller.signal), /closed/);
 });
 test('all locale keys and placeholders match, including every referenced UI message', async () => {
-  const ja = JSON.parse(await readFile('src/locales/ja.json', 'utf8'));
+  const { catalogs } = await readCatalogs();
+  const ja = catalogs.ja;
   const walk = async (path) => {
     let texts = [];
     for (const entry of await readdir(path, { withFileTypes: true })) {
-      if (entry.isDirectory() && entry.name !== 'locales')
+      if (entry.isDirectory() && !['locales', 'generated'].includes(entry.name))
         texts.push(...(await walk(path + '/' + entry.name)));
       else if (entry.isFile() && /\.(ts|js)$/.test(entry.name))
         texts.push(await readFile(path + '/' + entry.name, 'utf8'));
@@ -212,7 +214,7 @@ test('all locale keys and placeholders match, including every referenced UI mess
       assert.ok(match[1] in ja, match[1]);
   const slots = (value) => [...new Set(value.match(/\{\d+\}/g) ?? [])].sort();
   for (const lang of ['en', 'zh', 'es', 'it', 'fr', 'la']) {
-    const catalog = JSON.parse(await readFile('src/locales/' + lang + '.json', 'utf8'));
+    const catalog = catalogs[lang];
     assert.deepEqual(Object.keys(catalog).sort(), Object.keys(ja).sort(), lang);
     for (const [key, value] of Object.entries(catalog)) {
       assert.deepEqual(slots(value), slots(ja[key]), lang + ': ' + key);

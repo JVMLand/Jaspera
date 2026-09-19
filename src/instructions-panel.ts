@@ -23,13 +23,13 @@ export function installInstructionsPanel(
     search = document.createElement('input'),
     category = document.createElement('select');
   search.type = 'search';
-  search.placeholder = msg('m9396543f8fb4');
-  search.setAttribute('aria-label', msg('m672e476daa75'));
-  category.setAttribute('aria-label', msg('mcfe6de7a0a62'));
+  search.placeholder = msg('instructions.searchInstructionNamesAndDescriptions');
+  search.setAttribute('aria-label', msg('instructions.searchInstructions'));
+  category.setAttribute('aria-label', msg('instructions.instructionCategory'));
   for (const value of ['', ...categories]) {
     const o = document.createElement('option');
     o.value = value;
-    o.textContent = value || msg('m7c98bf34443f');
+    o.textContent = value || msg('instructions.allCategories');
     category.append(o);
   }
   toolbar.append(search);
@@ -37,7 +37,7 @@ export function installInstructionsPanel(
     list = el('nav', undefined, 'instruction-index'),
     detail = el('article', undefined, 'instruction-detail');
   detail.tabIndex = -1;
-  list.setAttribute('aria-label', msg('md7e12cba020d'));
+  list.setAttribute('aria-label', msg('instructions.instructionsByCategory'));
   count.setAttribute('aria-live', 'polite');
   const chooser = el('div', undefined, 'instruction-chooser');
   chooser.hidden = true;
@@ -78,8 +78,8 @@ export function installInstructionsPanel(
   let selected = 'iadd',
     markdown: ReturnType<typeof renderMarkdown> | undefined;
   function comparison(form: Diagram) {
-    const terminal = form.after.includes(displayMessage('mdfd98a9ea8c1'))
-      ? msg('mdfd98a9ea8c1')
+    const terminal = form.after.includes(displayMessage('instructions.methodEnds'))
+      ? msg('instructions.methodEnds')
       : undefined;
     const labels = form.locals?.before.map((v) => v.match(/^(#[^:]+):/)?.[1] ?? '');
     const localValues = (values: string[]) => values.map((v) => v.replace(/^#[^:]+:\s*/, ''));
@@ -133,16 +133,25 @@ export function installInstructionsPanel(
         /long|double|カテゴリ2/.test([...f.before, ...f.after, f.note ?? ''].join(' ')),
       )
     )
-      detail.append(el('p', msg('ma442150b3560'), 'instruction-category-note'));
+      detail.append(
+        el(
+          'p',
+          msg('instructions.aCategoryLongOrDoubleValueOccupiesTwoSlotsCategory'),
+          'instruction-category-note',
+        ),
+      );
     detail.append(
-      el('h3', entry.example === op ? msg('m928f87d4507b') : msg('mda2a27071906')),
+      el(
+        'h3',
+        entry.example === op ? msg('instructions.instruction') : msg('instructions.syntaxExample'),
+      ),
       el('pre', entry.example, 'instruction-example'),
     );
     for (const form of entry.forms) {
       if (entry.forms.length > 1) detail.append(el('h4', form.label));
       detail.append(comparison(form));
     }
-    detail.append(el('h3', msg('m660ffb506bbb')));
+    detail.append(el('h3', msg('instructions.usageExample')));
     const example = el('div', undefined, 'instruction-usage');
     detail.append(example);
     usage = installInstructionUsage(example, op, analyze);
@@ -159,9 +168,9 @@ export function installInstructionsPanel(
     advanced.append(markdown.element);
     if (entry.markdown.trim()) detail.append(advanced);
     if (entry.related.length) {
-      detail.append(el('h3', msg('mb8df8bcf4735')));
+      detail.append(el('h3', msg('instructions.relatedInstructions')));
       const related = el('nav', undefined, 'instruction-related');
-      related.setAttribute('aria-label', msg('mb8df8bcf4735'));
+      related.setAttribute('aria-label', msg('instructions.relatedInstructions'));
       for (const other of entry.related) {
         const target = entries.find((e) => e.op === other)!;
         const anchor = document.createElement('a');
@@ -179,7 +188,7 @@ export function installInstructionsPanel(
       detail.append(related);
     }
     const link = document.createElement('a');
-    link.textContent = msg('m656dc2bbfe6c');
+    link.textContent = msg('instructions.readTheJVMSpecification');
     link.href =
       'https://docs.oracle.com/javase/specs/jvms/se23/html/jvms-6.html#jvms-6.5.' +
       op
@@ -208,7 +217,7 @@ export function installInstructionsPanel(
     list.replaceChildren();
     count.textContent = displayMessage('instruction.search.count', [found.length, entries.length]);
     if (!found.length) {
-      list.append(el('p', msg('md490dd75ec72')));
+      list.append(el('p', msg('instructions.noMatchingInstructionsTryAnotherSearchOrCategory')));
       detail.hidden = true;
       return;
     }
@@ -244,12 +253,16 @@ export function installInstructionsPanel(
       entry = entries.find((e) => e.op === op) ?? guide(op);
     const selection = selectedText(detail);
     return [
-      { label: msg('ma62566f76902'), action: () => copyText(op) },
-      { label: msg('mc5a48633cada'), action: () => copyText(entry.example) },
-      { label: msg('mfb8317d857a1'), disabled: !selection, action: () => copyText(selection) },
+      { label: msg('instructions.copyInstructionName'), action: () => copyText(op) },
+      { label: msg('instructions.copySyntaxExample'), action: () => copyText(entry.example) },
+      {
+        label: msg('common.copySelection'),
+        disabled: !selection,
+        action: () => copyText(selection),
+      },
       null,
       {
-        label: msg('m672e476daa75'),
+        label: msg('instructions.searchInstructions'),
         action: () => {
           search.focus();
           toggle(true);
@@ -271,14 +284,14 @@ export function installInstructionsPanel(
   };
   category.onchange = filter;
   const languageChanged = () => {
-    search.placeholder = displayMessage('m9396543f8fb4');
-    search.setAttribute('aria-label', displayMessage('m672e476daa75'));
-    category.setAttribute('aria-label', displayMessage('mcfe6de7a0a62'));
-    list.setAttribute('aria-label', displayMessage('md7e12cba020d'));
+    search.placeholder = displayMessage('instructions.searchInstructionNamesAndDescriptions');
+    search.setAttribute('aria-label', displayMessage('instructions.searchInstructions'));
+    category.setAttribute('aria-label', displayMessage('instructions.instructionCategory'));
+    list.setAttribute('aria-label', displayMessage('instructions.instructionsByCategory'));
     for (const option of category.options)
       option.textContent = option.value
         ? localizedContent(option.value)
-        : displayMessage('m7c98bf34443f');
+        : displayMessage('instructions.allCategories');
     entries = [];
     rendered = undefined;
     filter();

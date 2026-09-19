@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "Add and multiply integers. Calculate (7 + 5) * 3.",
+  "example.Arrays.comment": "Create an int array, write an element, then read it. Array indices start at 0.",
+  "example.Branches.comment": "Compare numbers and branch on the result. Try changing the first value.",
+  "example.Collections.comment": "Add two strings to an ArrayList. Discard the unused return value of add with pop.",
+  "example.HelloWorld.comment": "Print a string. Push the output stream with getstatic, then pass the string to println.",
+  "example.LongAndDouble.comment": "long and double each use two slots. Use arithmetic instructions for the matching type.",
+  "example.Loop.comment": "Print 1 through 5. Use local variable #1 as a counter.",
+  "example.Methods.comment": "Call another static method. Arguments go into slots #0 and #1 of calc.",
+  "example.Strings.comment": "Append a string and a number to StringBuilder to form one string.",
+  "example.answer": "Answer: ",
+  "example.greater": "greater than 10",
+  "example.hello": "Hello, JAL!",
+  "example.less": "10 or less"
+}

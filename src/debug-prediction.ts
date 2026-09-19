@@ -11,25 +11,25 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     after: [...before],
     consumed: 0,
     produced: 0,
-    beforeLabel: msg('m83aeddd37528'),
-    afterLabel: msg('m194f0b1f2a46'),
+    beforeLabel: msg('debug.current'),
+    afterLabel: msg('common.afterExecution'),
     limit: 65536,
   };
   if (localsBefore.length)
     result.locals = { before: localsBefore, after: [...localsBefore], changed: [] };
   const insn = frame.instruction;
   if (!insn) {
-    result.terminal = msg('mcd5b4a83053f');
+    result.terminal = msg('debug.instructionInformationIsUnavailable');
     return result;
   }
   const op = insn.opcode
     .toLowerCase()
     .replace(/_resolved$/, '')
     .replace(/^(getfield|putfield|getstatic|putstatic)_[bcsijfdzl]$/, '$1');
-  const unknown = (label: string) => label + msg('m93c4b2742fe7');
+  const unknown = (label: string) => label + msg('debug.unknown');
   const fieldType = () => {
     const match = insn.fieldDescriptor?.match(/^(\[*)(?:L([^;]+);|([ZBCSIJFD]))$/);
-    if (!match) return unknown(msg('m3e9743156256'));
+    if (!match) return unknown(msg('debug.fieldValue'));
     const primitives: Record<string, string> = {
       Z: 'boolean',
       B: 'byte',
@@ -43,14 +43,14 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     return (match[2] ?? primitives[match[3]]) + '[]'.repeat(match[1].length);
   };
   const replace = (count: number, values: string[]) => {
-    if (count > before.length) throw Error(msg('mf87dce3571c8'));
+    if (count > before.length) throw Error(msg('debug.notEnoughStackInformation'));
     result.consumed = count;
     result.produced = values.length;
     result.after = [...before.slice(0, before.length - count), ...values];
   };
   const top = () => before.at(-1)!;
   const local = () => {
-    if (insn.local < 0) throw Error(msg('m25af7eac5f09'));
+    if (insn.local < 0) throw Error(msg('debug.localVariableSlotIsUnknown'));
     return insn.local;
   };
   const terminal = (text: string) => {
@@ -60,7 +60,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
   const numeric = (v: string) => Number(v.replace(/[fFdD]$/, ''));
   try {
     if (/^[ilfda]load$/.test(op)) {
-      replace(0, [localsBefore[local()] ?? unknown(msg('m9bf67764bae7'))]);
+      replace(0, [localsBefore[local()] ?? unknown(msg('common.locals'))]);
     } else if (/^[ilfda]store$/.test(op)) {
       localsAfter[local()] = top();
       replace(1, []);
@@ -68,16 +68,16 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       const index = local();
       localsAfter[index] = String((Number(localsBefore[index]) + insn.increment) | 0);
     } else if (/^[ilfda]const$/.test(op) || op === 'aconst_null' || op === 'ldc') {
-      replace(0, [insn.constant ?? unknown(msg('m673af6892c3c'))]);
+      replace(0, [insn.constant ?? unknown(msg('common.constant'))]);
     } else if (op.startsWith('invoke')) {
-      if (insn.arguments < 0) throw Error(msg('mcb9fe228d1f4'));
-      replace(insn.arguments, insn.returns ? [unknown(msg('mcd8e4c178488'))] : []);
+      if (insn.arguments < 0) throw Error(msg('debug.notEnoughCallInformation'));
+      replace(insn.arguments, insn.returns ? [unknown(msg('common.returnValue'))] : []);
     } else if (op === 'return' || /^[ilfda]return$/.test(op)) {
       replace(op === 'return' ? 0 : 1, []);
-      terminal(msg('m6ff9abc732ee'));
+      terminal(msg('debug.returnToCaller'));
     } else if (op === 'athrow') {
       replace(1, []);
-      terminal(msg('m5d0bf5d23080'));
+      terminal(msg('debug.transferToExceptionHandler'));
     } else if (op === 'getstatic') {
       replace(0, [fieldType()]);
     } else if (op === 'getfield') {
@@ -89,22 +89,22 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       replace(2, []);
       if (before.at(-2) === 'null') terminal('NullPointerException');
     } else if (/^[ilfdabcs]aload$/.test(op)) {
-      replace(2, [unknown(msg('mb1b65da3c3a8'))]);
+      replace(2, [unknown(msg('debug.arrayElement'))]);
       if (before.at(-2) === 'null') terminal('NullPointerException');
     } else if (/^[ilfdabcs]astore$/.test(op)) {
       replace(3, []);
       if (before.at(-3) === 'null') terminal('NullPointerException');
     } else if (op === 'arraylength') {
-      replace(1, [unknown(msg('mf26688b57fd6'))]);
+      replace(1, [unknown(msg('debug.arrayLength'))]);
       if (top() === 'null') terminal('NullPointerException');
     } else if (op === 'new') {
-      replace(0, [msg('m68c68242c66e')]);
+      replace(0, [msg('debug.uninitializedObject')]);
     } else if (['newarray', 'anewarray', 'multianewarray'].includes(op)) {
-      replace(op === 'multianewarray' ? insn.dimensions : 1, [msg('me87f077ee96b')]);
+      replace(op === 'multianewarray' ? insn.dimensions : 1, [msg('debug.newArray')]);
     } else if (op === 'instanceof') {
-      replace(1, [top() === 'null' ? '0' : unknown(msg('m405fabd13ff8'))]);
+      replace(1, [top() === 'null' ? '0' : unknown(msg('debug.typeTestResult'))]);
     } else if (op === 'checkcast') {
-      result.note = msg('mcaaa6f58f63f');
+      result.note = msg('debug.ifTheTypeCheckSucceeds');
     } else if (op.startsWith('monitor')) {
       replace(1, []);
       if (top() === 'null') terminal('NullPointerException');
@@ -114,7 +114,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
       replace(1, []);
     } else if (['nop', 'goto', 'ret'].includes(op)) {
     } else if (op === 'jsr') {
-      replace(0, [unknown(msg('m4122fa922cdc'))]);
+      replace(0, [unknown(msg('debug.returnAddress'))]);
     } else if (op === 'pop' || op === 'pop2') {
       replace(op === 'pop' ? 1 : 2, []);
     } else if (op === 'swap') {
@@ -225,16 +225,16 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
         ),
       ]);
     } else if (/^[ilfd]2[ilfdbcs]$/.test(op)) {
-      replace(1, [unknown(msg('md9b10bd56c77'))]);
-    } else throw Error(msg('me9abc3e743ac'));
+      replace(1, [unknown(msg('debug.conversionResult'))]);
+    } else throw Error(msg('debug.theEffectOfThisInstructionCannotBePredictedYet'));
     const changed = Array.from(
       { length: Math.max(localsBefore.length, localsAfter.length) },
       (_, i) => i,
     ).filter((i) => localsBefore[i] !== localsAfter[i]);
     if (changed.length)
       result.locals = {
-        before: changed.map((i) => localsBefore[i] ?? msg('m621330591694')),
-        after: changed.map((i) => localsAfter[i] ?? msg('m621330591694')),
+        before: changed.map((i) => localsBefore[i] ?? msg('common.notSet')),
+        after: changed.map((i) => localsAfter[i] ?? msg('common.notSet')),
         labels: changed.map((i) => '#' + i),
         changed: changed.map((_, i) => i),
       };
@@ -242,7 +242,7 @@ export function predictDebugFrame(frame: DebugFrame): FrameTransition {
     result.after = [];
     result.consumed = 0;
     result.produced = 0;
-    result.terminal = msg('md655e5b8177c');
+    result.terminal = msg('debug.theEffectOfThisInstructionCannotBePredicted');
   }
   return result;
 }

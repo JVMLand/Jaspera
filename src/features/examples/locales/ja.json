@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "整数の足し算と掛け算。(7 + 5) * 3 を計算する。",
+  "example.Arrays.comment": "int 配列を作り，要素を書き込んで読み出す。配列の添字は 0 から。",
+  "example.Branches.comment": "数値を比較し，条件に応じてジャンプする。最初の値を変えて試そう。",
+  "example.Collections.comment": "ArrayList に 2 つの文字列を追加する。add の戻り値は使わないので pop する。",
+  "example.HelloWorld.comment": "文字列を表示する。getstatic で出力先を積み，println に文字列を渡す。",
+  "example.LongAndDouble.comment": "long と double はそれぞれ 2 スロットを使う。型に対応する演算命令を使う。",
+  "example.Loop.comment": "1 から 5 まで表示する。ローカル変数 #1 をカウンターに使う。",
+  "example.Methods.comment": "別の static メソッドを呼ぶ。calc の #0 と #1 に引数が入る。",
+  "example.Strings.comment": "StringBuilder に文字列と数値を追加し，1 本の文字列にする。",
+  "example.answer": "答え: ",
+  "example.greater": "10 より大きい",
+  "example.hello": "こんにちは，JAL！",
+  "example.less": "10 以下"
+}

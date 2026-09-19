@@ -1,0 +1,6 @@
+{
+  "changelog.close": "Fermer",
+  "changelog.error": "Impossible de charger les nouveautés. Fermez cette fenêtre et réessayez.",
+  "changelog.loading": "Chargement…",
+  "changelog.versions": "Versions"
+}

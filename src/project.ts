@@ -30,7 +30,7 @@ export function validatePath(path: string) {
       path.endsWith('.jal') &&
       !/[\\:<>"|?*\x00-\x1f]/.test(path) &&
       path.split('/').every((p) => p && p !== '.' && p !== '..' && p.trim() === p),
-    msg('m528e18f611dc'),
+    msg('project.useARelativeJalFilePathForExampleSrcMain'),
   );
   return path;
 }
@@ -38,29 +38,32 @@ export function validateProject(project: Project, limitContentSize = true): Proj
   const data = project;
   requireValue(
     typeof data.name === 'string' && data.name.trim().length > 0 && data.name.length <= 128,
-    msg('m7edc3415aa8b'),
+    msg('project.useCharactersForTheProjectName'),
   );
-  requireValue(Array.isArray(data.files) && data.files.length <= 64, msg('m20a0d8b5aeff'));
+  requireValue(
+    Array.isArray(data.files) && data.files.length <= 64,
+    msg('project.aProjectCanContainJALFiles'),
+  );
   const names = new Set<string>();
   let total = 0;
   const files = data.files.map((f: any) => {
     requireValue(
       f && typeof f.path === 'string' && typeof f.source === 'string',
-      msg('m9695c133fa8b'),
+      msg('project.eachFileNeedsAPathAndSource'),
     );
     validatePath(f.path);
-    requireValue(!names.has(f.path.toLowerCase()), msg('md1a60f346cae'));
+    requireValue(!names.has(f.path.toLowerCase()), msg('project.duplicateFileName'));
     names.add(f.path.toLowerCase());
     const size = bytes(f.source);
     total += size;
     requireValue(
       !limitContentSize || (size <= 1024 * 1024 && total <= 6 * 1024 * 1024),
-      msg('m8cea98e986be'),
+      msg('project.sourceFilesMustBeAtMostMiBEachAndMiB'),
     );
     return { path: f.path as string, source: f.source as string };
   });
   const w = data.workspace ?? {};
-  requireValue(typeof w === 'object' && !Array.isArray(w), msg('mccee5e820320'));
+  requireValue(typeof w === 'object' && !Array.isArray(w), msg('project.invalidWorkspace'));
   const activeFile = w.activeFile ?? files[0]?.path ?? '',
     entryFile =
       w.entryFile ??
@@ -72,14 +75,14 @@ export function validateProject(project: Project, limitContentSize = true): Proj
     !files.length ||
       (files.some((f: { path: string }) => f.path === activeFile) &&
         files.some((f: { path: string }) => f.path === entryFile)),
-    msg('m093dcd33196a'),
+    msg('project.theOpenFileOrEntryFileWasNotFound'),
   );
   const stdin = w.stdin ?? '',
     panel = w.panel ?? 'console',
     wordWrap = w.wordWrap ?? false;
   requireValue(
     typeof stdin === 'string' && (!limitContentSize || bytes(stdin) <= 1024 * 1024),
-    msg('md892e026e5ba'),
+    msg('project.standardInputMustNotExceedMiB'),
   );
   requireValue(
     panel === 'project' ||
@@ -88,13 +91,13 @@ export function validateProject(project: Project, limitContentSize = true): Proj
       panel === 'instructions' ||
       panel === 'graph' ||
       panel === 'debug',
-    msg('me9f9d28e3390'),
+    msg('project.invalidDisplayPanel'),
   );
-  requireValue(typeof wordWrap === 'boolean', msg('m04361e31d62e'));
+  requireValue(typeof wordWrap === 'boolean', msg('project.invalidWordWrapSetting'));
   const views: Record<string, FileView> = Object.create(null);
   requireValue(
     !w.views || (typeof w.views === 'object' && !Array.isArray(w.views)),
-    msg('m44c49b04bb2e'),
+    msg('project.invalidCursorPosition'),
   );
   for (const f of files) {
     const v = w.views?.[f.path];
@@ -103,7 +106,7 @@ export function validateProject(project: Project, limitContentSize = true): Proj
       (['line', 'column', 'scrollTop', 'scrollLeft'] as const).every(
         (k) => Number.isSafeInteger(v[k]) && v[k] >= (k === 'line' || k === 'column' ? 1 : 0),
       ),
-      msg('m44c49b04bb2e'),
+      msg('project.invalidCursorPosition'),
     );
     views[f.path] = {
       line: v.line,

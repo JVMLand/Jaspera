@@ -18,13 +18,14 @@ test(
     await mkdir(dist);
     await build({
       stdin: {
-        contents: `import { initializeOfflineUpdates } from './src/offline-updates';
-        import { openOfflinePreparation } from './src/offline';
+        contents: `import { initializeOfflineUpdates } from './src/features/offline/offline-updates';
+        import { openOfflinePreparation } from './src/features/offline/offline';
         document.querySelector('#prepare').onclick = () => openOfflinePreparation();
         initializeOfflineUpdates();`,
         resolveDir: resolve('.'),
       },
       bundle: true,
+      loader: { '.html': 'text' },
       format: 'esm',
       outfile: join(dist, 'app.js'),
       define: { 'import.meta.env.PROD': 'true', 'import.meta.env.BASE_URL': '"/"' },

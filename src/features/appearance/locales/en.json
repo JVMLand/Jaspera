@@ -1,0 +1,11 @@
+{
+  "appearance.theme.choose": "Theme",
+  "appearance.theme.savedImmediately": "Changes take effect immediately and are saved in this browser.",
+  "appearance.theme.title": "Theme and layout",
+  "presentation.exit": "Exit presentation",
+  "presentation.title": "Presentation mode",
+  "textSize.editor": "Editor",
+  "textSize.reset": "Reset to defaults",
+  "textSize.title": "Text size",
+  "textSize.ui": "Interface"
+}

@@ -71,11 +71,16 @@ export function inspectSource(source, parse = parseJal) {
           ...(removeArg ? [edit(arg, '')] : []),
           ...(wide ? [edit(ts[0], '')] : []),
         ];
-        if (terminated) report('unreachable', msg('m389e82feb8ec', [terminated]));
+        if (terminated)
+          report('unreachable', msg('execution.instructionsAfterAreUnreachable', [terminated]));
         if (/^(goto(?:_w)?|[ilfda]?return|athrow|tableswitch|lookupswitch)$/.test(name))
           terminated = name;
         if (/^[ilfda]?return$/.test(name) && expected && name !== expected)
-          report('return-type', msg('mdda8758de0fe', [returnType, expected]), 'error');
+          report(
+            'return-type',
+            msg('execution.returnTypeRequiresAlsoCheckTheStackType', [returnType, expected]),
+            'error',
+          );
         const value = integer(arg?.text);
         if (['bipush', 'sipush', 'ldc'].includes(name) && value !== undefined) {
           const replacement =
@@ -91,10 +96,12 @@ export function inspectSource(source, parse = parseJal) {
               (name === 'bipush' && (value < -128 || value > 127)) ||
               (name === 'sipush' && (value < -32768 || value > 32767));
             const short = replacement.startsWith('iconst_'),
-              title = msg('m953e91d324df', [replacement, short ? '' : ' ' + arg.text]);
+              title = msg('execution.changeTo', [replacement, short ? '' : ' ' + arg.text]);
             report(
               overflow ? 'push-range' : 'short-push',
-              overflow ? msg('mbd3e5d6983ef', [name, title]) : msg('m0e6f3c9e8193', [title]),
+              overflow
+                ? msg('execution.outOfRangeFor', [name, title])
+                : msg('execution.aShorterInstructionIsAvailable', [title]),
               overflow ? 'error' : 'warning',
               title,
               replace(replacement, short),
@@ -104,32 +111,44 @@ export function inspectSource(source, parse = parseJal) {
         if (/^(?:[ilfda](?:load|store)|ret|iinc)$/.test(name) && value !== undefined) {
           const increment = name === 'iinc' ? integer(ts[wide ? 3 : 2]?.text) : 0;
           if (value < 0 || value > 65534 || (/^[ld]/.test(name) && value > 65533)) {
-            report('local-range', msg('m2004faf0b357'), 'error');
+            report(
+              'local-range',
+              msg('execution.localVariableIndexIsOutOfRangeForTwoSlot'),
+              'error',
+            );
             continue;
           }
           if (increment === undefined) continue;
           if (increment < -32768 || increment > 32767) {
-            report('increment-range', msg('m66219646320d'), 'error');
+            report('increment-range', msg('execution.theIincIncrementMustBeBetweenAnd'), 'error');
             continue;
           }
           const needsWide = value > 255 || increment < -128 || increment > 127;
           if (needsWide && !wide) {
-            report('missing-wide', msg('m6a0a3dae4000'), 'error', msg('m1af5958d289f'), [
-              { start: op.start, end: op.start, text: 'wide ' },
-            ]);
+            report(
+              'missing-wide',
+              msg('execution.thisLocalIndexOrIncrementRequiresWide'),
+              'error',
+              msg('execution.addWide'),
+              [{ start: op.start, end: op.start, text: 'wide ' }],
+            );
           } else if (value <= 3 && /^[ilfda](?:load|store)$/.test(name)) {
             const replacement = name + '_' + value;
             report(
               'short-local',
-              msg('mf6e71fe2c47f', [replacement]),
+              msg('execution.theShortFormIsAvailable', [replacement]),
               'warning',
-              replacement + msg('me21e638ae14e'),
+              replacement + msg('execution.useThisInstead'),
               replace(replacement, true),
             );
           } else if (wide && !needsWide)
-            report('extra-wide', msg('m8af507cd6057'), 'warning', msg('m5fbd0de6b5da'), [
-              edit(ts[0], ''),
-            ]);
+            report(
+              'extra-wide',
+              msg('execution.thisInstructionDoesNotNeedWide'),
+              'warning',
+              msg('execution.removeUnnecessaryWide'),
+              [edit(ts[0], '')],
+            );
         }
       }
     }

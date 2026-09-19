@@ -7,13 +7,16 @@ export function installProblemsContextMenu(host: HTMLElement) {
     return [
       ...(item
         ? [
-            { label: msg('md3bed236948a'), action: () => item.click() },
-            { label: msg('m1e6645c063cf'), action: () => copyText(item.textContent ?? '') },
+            { label: msg('editor.goToSource'), action: () => item.click() },
+            {
+              label: msg('editor.copyThisProblem'),
+              action: () => copyText(item.textContent ?? ''),
+            },
             null,
           ]
         : []),
       {
-        label: msg('m473035efc46f'),
+        label: msg('editor.copyAllProblems'),
         disabled: !rows.length,
         action: () => copyText(rows.map((row) => row.textContent).join('\n')),
       },

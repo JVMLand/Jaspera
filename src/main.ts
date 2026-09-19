@@ -1,6 +1,7 @@
+import { renderShell } from './features/shell/shell';
 import { readDraft, draftWriter } from './draft-storage';
 import { initializeChangelog } from './changelog-state';
-import { initializeOfflineUpdates } from './offline-updates';
+import { initializeOfflineUpdates } from './features/offline/offline-updates';
 import { installRunMenu } from './run-menu';
 import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
@@ -19,7 +20,7 @@ import type { DebugState, DebugCommand, DebugFrame } from './debug-protocol';
 import { APP_NAME, APP_TAGLINE, APP_TITLE } from './brand';
 import { sourceMerge } from './source-merge';
 import { installEditorCommands, installWindowCommands } from './editor-commands';
-import { installSearchEverywhere } from './search-everywhere';
+import { installSearchEverywhere } from './features/search/search-everywhere';
 import type { AnalysisProgress } from './protocol';
 import { memoryPolicy } from './memory-policy';
 import { usageCompiler } from './usage-compilation';
@@ -42,7 +43,7 @@ import { installProblemsContextMenu } from './problems-panel';
 import { editMenuItems } from './edit-menu';
 import { fileKind, installFilePicker } from './file-opening';
 import type { JarArchive } from './jar-archive';
-import { helpMenuItems } from './help';
+import { helpMenuItems } from './features/help/help';
 import * as monaco from './editor-platform';
 import { WorkspaceStateStore } from './workspace-state';
 import { CompilationService } from './compilation-service';
@@ -91,10 +92,7 @@ import {
 } from './themes';
 
 registerLanguage(() => navigation.completionCatalog());
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = msg('m6d5204937715', [
-  APP_NAME,
-  APP_TAGLINE,
-]);
+document.querySelector<HTMLDivElement>('#app')!.innerHTML = renderShell([APP_NAME, APP_TAGLINE]);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 let project = defaultProject(false);
 let draftEnabled = false;
@@ -328,7 +326,7 @@ const graphCompilation = (
   const model = graphModel(doc);
   return model
     ? compilationService.compile(model, model.getValue(), onProgress, { graphs: true })
-    : Promise.reject(new Error(msg('ma83c65038a5b')));
+    : Promise.reject(new Error(msg('common.theDocumentVersionHasChanged')));
 };
 const graphNavigate = (doc: GraphDocument, line: number, column: number) => {
   if (graphModel(doc)) void openDefinition(doc.uri, { lineNumber: line, column });
@@ -361,7 +359,7 @@ export let editor = monaco.editor.create(el('editor'), {
   folding: true,
   glyphMargin: false,
   wordWrap: 'off',
-  ariaLabel: msg('mb6b9cb49c13c'),
+  ariaLabel: msg('shell.jalSourceCode'),
   quickSuggestions: { other: true, comments: false, strings: false },
 });
 const groupEditors = new Map<Side, monaco.editor.IStandaloneCodeEditor>([['source', editor]]);
@@ -518,7 +516,7 @@ const searchEverywhere = installSearchEverywhere(
   () => navigation.searchTargets(),
   async (target) => {
     const result = await navigation.searchDefinition(target);
-    if (!result) throw new Error(msg('m46a9300a9063'));
+    if (!result) throw new Error(msg('common.definitionNotFound'));
     return async () => {
       await openDefinition(result.uri, result.range);
     };
@@ -595,8 +593,8 @@ async function checkDocument(model: monaco.editor.ITextModel | null = editor.get
     const result = await compileExample(model);
     status(
       result.diagnostics.some((d) => d.severity === 'error')
-        ? msg('m428b24c11fc6')
-        : msg('mc2c1724a78a8'),
+        ? msg('shell.compilationError')
+        : msg('shell.readyToRun'),
       result.diagnostics.some((d) => d.severity === 'error') ? 'error' : 'ready',
     );
   } catch (error) {
@@ -686,30 +684,38 @@ const menus = installMenus(el('menus'), [
   {
     label: 'File',
     items: [
-      { id: 'new-file', label: msg('m79e3104df1cf'), action: () => void addFile() },
-      { id: 'new-project', label: msg('ma582ee597220'), action: () => void newProject() },
+      { id: 'new-file', label: msg('shell.newFile'), action: () => void addFile() },
+      { id: 'new-project', label: msg('shell.newProject'), action: () => void newProject() },
       null,
       {
         id: 'open-files',
-        label: msg('mba31551c9cbe'),
+        label: msg('common.open'),
         shortcut: 'Ctrl+O',
         action: filePicker.open,
       },
-      { id: 'open-project', label: msg('m3e527b2cb344'), action: () => void openProjectFolder() },
+      {
+        id: 'open-project',
+        label: msg('shell.openFolder'),
+        action: () => void openProjectFolder(),
+      },
       null,
       {
         id: 'save-project',
-        label: msg('ma3030bf8f16d'),
+        label: msg('common.save'),
         shortcut: 'Ctrl+S',
         action: () => void saveProject(),
       },
-      { id: 'save-project-as', label: msg('m97b4e8936a4b'), action: () => void saveProject(true) },
-      { id: 'export-project', label: msg('m36581f447816'), action: () => void exportProject() },
+      {
+        id: 'save-project-as',
+        label: msg('shell.saveElsewhere'),
+        action: () => void saveProject(true),
+      },
+      { id: 'export-project', label: msg('shell.exportZIP'), action: () => void exportProject() },
       { id: 'download-jar', label: msg('jar.download'), action: () => void downloadJar() },
       { id: 'close-jar', label: msg('jar.close'), action: () => void closeJar() },
       {
         id: 'save-class-source',
-        label: msg('m55345dd68b3a'),
+        label: msg('common.exportJAL'),
         action: () => {
           const p = activePreview ? classPreviews.get(activePreview) : undefined;
           if (p)
@@ -725,16 +731,20 @@ const menus = installMenus(el('menus'), [
       null,
       {
         id: 'close-tab',
-        label: msg('m7e4105690e2c'),
+        label: msg('shell.closeFile'),
         action: () => {
           const tab = visibleTabs().find((t) => t.active);
           if (tab) closeEditorTabs(tab.key);
         },
       },
-      { id: 'rename-file', label: msg('m845f8265321f'), action: () => void renameFile() },
-      { id: 'remove-file', label: msg('ma270f3c87416'), action: () => void removeFile() },
+      { id: 'rename-file', label: msg('common.rename'), action: () => void renameFile() },
+      { id: 'remove-file', label: msg('shell.delete'), action: () => void removeFile() },
       null,
-      { id: 'project-properties-menu', label: msg('mba06c39028c1'), action: openProperties },
+      {
+        id: 'project-properties-menu',
+        label: msg('shell.projectProperties'),
+        action: openProperties,
+      },
     ],
   },
   { label: 'Edit', items: editMenuItems(editAction) },
@@ -743,14 +753,14 @@ const menus = installMenus(el('menus'), [
     items: [
       {
         id: 'wrap',
-        label: msg('md3eca11714b3'),
+        label: msg('common.wordWrap'),
         action: () => {
           project.workspace.wordWrap = !project.workspace.wordWrap;
           editor.updateOptions({ wordWrap: project.workspace.wordWrap ? 'on' : 'off' });
           setDirty();
         },
       },
-      { id: 'theme-settings', label: msg('maa77a98a507d'), action: openThemePicker },
+      { id: 'theme-settings', label: msg('common.theme'), action: openThemePicker },
       languageMenuItem(),
       textSizeMenuItem(),
       presentationMenuItem(),
@@ -762,27 +772,31 @@ const menus = installMenus(el('menus'), [
           action: () => selectTab(name),
         }),
       ),
-      { id: 'swap-panes', label: msg('mcd86386ee2e5'), action: () => panelDock?.swap() },
+      {
+        id: 'swap-panes',
+        label: msg('shell.swapLeftAndRightPanes'),
+        action: () => panelDock?.swap(),
+      },
     ],
   },
   {
     label: 'Build',
     items: [
-      { id: 'check-project', label: msg('m8e28a92e2d4d'), action: () => void checkDocument() },
+      { id: 'check-project', label: msg('common.check'), action: () => void checkDocument() },
       {
         id: 'menu-run',
-        label: msg('m77721d5dea60'),
+        label: msg('common.run'),
         shortcut: 'Ctrl+Enter',
         action: () => void run(),
       },
-      { id: 'download', label: msg('m99847859379a'), action: downloadClass },
+      { id: 'download', label: msg('common.exportClass'), action: downloadClass },
     ],
   },
   { label: 'Debug', items: debugMenuItems(debugActions) },
   { label: 'Help', items: helpMenuItems() },
 ]);
 function status(text: string, kind: 'ready' | 'loading' | 'error' = 'ready') {
-  if (text === msg('mc2c1724a78a8') && !running) text = runUnavailable() || text;
+  if (text === msg('shell.readyToRun') && !running) text = runUnavailable() || text;
   workspaceState.update({ status: text });
   el('state').textContent = text;
   el('state-dot').className = `status-dot ${kind}`;
@@ -797,7 +811,8 @@ function setDirty(value = true) {
 }
 function validatePath(path: string) {
   relativePath(path);
-  if (projectProperties && !path.startsWith('src/')) throw new Error(msg('m35c9589b91c3'));
+  if (projectProperties && !path.startsWith('src/'))
+    throw new Error(msg('shell.placeSourceFilesUnderSrc'));
 }
 function refreshOffsets(view = editor) {
   showBytecodeOffsets(view, sourceAnalysis.offsets(view.getModel()));
@@ -855,7 +870,7 @@ function updateActions() {
   el<HTMLButtonElement>('summary-properties').disabled = !projectProperties;
   const runButton = el<HTMLButtonElement>('run');
   const runLabel = running
-    ? msg('mca4d973c0b00')
+    ? msg('common.stop')
     : msg(lastRunIgnoreBreakpoints ? 'run.normal' : 'run.debug');
   runButton.innerHTML = `<span aria-hidden="true">${running ? '■' : '▶'}</span> <span class="run-label"></span> <kbd>Ctrl ↵</kbd>`;
   runButton.querySelector('.run-label')!.textContent = runLabel;
@@ -868,13 +883,13 @@ function updateActions() {
   if (
     !running &&
     [
-      msg('mc2c1724a78a8'),
-      ...['run.noMain', 'run.noConstructor', 'run.abstractMain', 'run.checkingMain'].map((key) =>
-        msg(key),
+      msg('shell.readyToRun'),
+      ...(['run.noMain', 'run.noConstructor', 'run.abstractMain', 'run.checkingMain'] as const).map(
+        (key) => msg(key),
       ),
     ].includes(workspaceState.value.status)
   )
-    status(unavailable || msg('mc2c1724a78a8'));
+    status(unavailable || msg('shell.readyToRun'));
   runButton.setAttribute('aria-label', runLabel);
   menus.label('menu-run', runLabel);
   menus.disabled(
@@ -1236,7 +1251,7 @@ function download(blob: Blob, name: string) {
 function storageState(busy: boolean) {
   storageBusy = busy;
   publishWorkspaceAvailability();
-  if (busy) status(msg('m8877746a8f94'), 'loading');
+  if (busy) status(msg('shell.processingFiles'), 'loading');
   for (const id of [
     'new-project',
     'open-project',
@@ -1249,7 +1264,7 @@ function storageState(busy: boolean) {
 }
 function storageError(e: unknown, title: string) {
   if (e instanceof Error && e.name === 'AbortError') {
-    status(msg('m7d9e604e0806'));
+    status(msg('shell.cancelled'));
     return;
   }
   status(title, 'error');
@@ -1262,9 +1277,9 @@ async function openProjectFolder(requireProperties = false) {
     const root = await pickFolder();
     const loaded = await openFolder(root, requireProperties);
     if (await allowReplace()) await installProject(loaded.project, loaded.binding);
-    else status(msg('m7d9e604e0806'));
+    else status(msg('shell.cancelled'));
   } catch (e) {
-    storageError(e, msg('mcdd98f9ac910'));
+    storageError(e, msg('shell.couldNotOpenFolder'));
   } finally {
     storageState(false);
   }
@@ -1290,9 +1305,13 @@ async function saveProject(saveAs = false) {
     leaveDraft();
     folder = target;
     if (project === current && changeVersion === version) setDirty(false);
-    status(changeVersion === version ? msg('m4ae43a307956') : msg('ma8a3484ba33d'));
+    status(
+      changeVersion === version
+        ? msg('shell.savedToFolder')
+        : msg('shell.savedSubsequentChangesAreNotSaved'),
+    );
   } catch (e) {
-    storageError(e, msg('mc5291a547bd5'));
+    storageError(e, msg('shell.couldNotSave'));
   } finally {
     storageState(false);
   }
@@ -1304,9 +1323,9 @@ async function exportProject() {
     const bytes = await projectArchive(snapshot(), projectProperties);
     const name = project.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_') || 'Project';
     download(new Blob([new Uint8Array(bytes)], { type: 'application/zip' }), name + '.zip');
-    status(msg('mbd11d2e72230'));
+    status(msg('shell.zipExported'));
   } catch (e) {
-    storageError(e, msg('m38461b63a8bf'));
+    storageError(e, msg('shell.couldNotExport'));
   } finally {
     storageState(false);
   }
@@ -1388,12 +1407,16 @@ async function pollFolder() {
       else switchFile(active, false);
       setDirty(dirty);
       invalidate();
-      if (!running) status(msg('m72ea8d310b87'));
+      if (!running) status(msg('shell.folderChangesApplied'));
     }
-    if (conflicts.length) status(msg('m1c8e4e125589', [conflicts.join(', ')]), 'error');
+    if (conflicts.length)
+      status(
+        msg('shell.externalChangesConflictWithYourEditsYourEditsWereKept', [conflicts.join(', ')]),
+        'error',
+      );
   } catch (e) {
     if (folder === binding && !storageBusy)
-      status(msg('mef930ebfe351', [e instanceof Error ? e.message : String(e)]), 'error');
+      status(msg('shell.folderWatch', [e instanceof Error ? e.message : String(e)]), 'error');
   } finally {
     applyingExternal = false;
     watchBusy = false;
@@ -1533,11 +1556,11 @@ function detachEditorTab(item: EditorTab) {
         !classPreviews.get(item.previewKey)?.editable,
     )
   ) {
-    status(msg('mffebddbf6521'), 'error');
+    status(msg('shell.thePopUpWasBlockedClickOpenInDetachedWindow'), 'error');
     document.getElementById('detach-retry')?.remove();
     const retry = document.createElement('button');
     retry.id = 'detach-retry';
-    retry.textContent = msg('m8af85266ba4f');
+    retry.textContent = msg('common.openInDetachedWindow');
     retry.onclick = () => {
       retry.remove();
       detachEditorTab(item);
@@ -1557,7 +1580,7 @@ function detachEditorTab(item: EditorTab) {
   }
   renderFiles();
   updateActions();
-  status(msg('m79b0173358e5'));
+  status(msg('shell.openedInADetachedWindowEditsAreSharedWithThe'));
 }
 function movePane(key: string, side: Side, event: DragEvent) {
   const pane = paneIdentity(key);
@@ -1685,7 +1708,7 @@ async function openJarEntry(path: string) {
     return 'preview:' + key;
   }
   try {
-    if (classPreviews.size >= 16) throw Error(msg('ma5ae4b723858'));
+    if (classPreviews.size >= 16) throw Error(msg('shell.atMostDisassemblyTabsCanBeOpenCloseATab'));
     const { jarResource } = await import('./jar-archive');
     const isClass = path.endsWith('.class');
     if (isClass) status(msg('jar.opening'), 'loading');
@@ -1724,7 +1747,7 @@ async function openJarEntry(path: string) {
       }
     }
     selectClassPreview(key);
-    status(msg('m642ad04c5c40'));
+    status(msg('shell.disassembledReadOnly'));
     return 'preview:' + key;
   } catch (error) {
     storageError(error, path);
@@ -1750,7 +1773,7 @@ async function downloadJar() {
       archive.name,
     );
     result.saved();
-    status(msg('m642ad04c5c40'));
+    status(msg('shell.disassembledReadOnly'));
   } catch (error) {
     storageError(error, msg('jar.exportError'));
   } finally {
@@ -1772,13 +1795,14 @@ function queueClass(
     if (epoch !== previewEpoch) return;
     try {
       const file = await getFile();
-      if (file.size > 1024 * 1024) throw new Error(msg('m7c7094415719'));
+      if (file.size > 1024 * 1024) throw new Error(msg('shell.aClassFileMustNotExceedMiB'));
       const old = classPreviews.get(key);
       if (old && old.mtime === file.lastModified && old.size === file.size) {
         if (select) selectClassPreview(key);
         return;
       }
-      if (!old && classPreviews.size >= 16) throw new Error(msg('ma5ae4b723858'));
+      if (!old && classPreviews.size >= 16)
+        throw new Error(msg('shell.atMostDisassemblyTabsCanBeOpenCloseATab'));
       const bytes = new Uint8Array(await file.arrayBuffer());
       if (
         bytes.length < 10 ||
@@ -1787,11 +1811,11 @@ function queueClass(
         bytes[2] !== 0xba ||
         bytes[3] !== 0xbe
       )
-        throw new Error(msg('m68b13d02975b'));
+        throw new Error(msg('shell.notAValidJavaClassFile'));
       let binary = '';
       for (let i = 0; i < bytes.length; i += 8192)
         binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-      if (!silent) status(title + msg('m9374e8ba6346'), 'loading');
+      if (!silent) status(title + msg('shell.disassembling'), 'loading');
       const result = await compilationService.disassemble(btoa(binary));
       if (
         epoch !== previewEpoch ||
@@ -1803,7 +1827,7 @@ function queueClass(
         typeof result.source !== 'string' ||
         new TextEncoder().encode(result.source).length > 1024 * 1024
       )
-        throw new Error(msg('me81bf6a4c559'));
+        throw new Error(msg('shell.disassemblyOutputIsTooLarge'));
       const model =
         old?.model ??
         monaco.editor.createModel(
@@ -1827,11 +1851,11 @@ function queueClass(
       scheduleOffsets(model);
       if (select || activePreview === key) selectClassPreview(key);
       else if (!silent) renderFiles();
-      if (!silent) status(msg('m642ad04c5c40'));
+      if (!silent) status(msg('shell.disassembledReadOnly'));
     } catch (e) {
       if (!silent && epoch === previewEpoch) {
-        status(msg('md745c6b85e47'), 'error');
-        await dialog(title + msg('mcdabe1224c3d'), e instanceof Error ? e.message : String(e));
+        status(msg('shell.couldNotDisassemble'), 'error');
+        await dialog(title + msg('shell.couldNotOpen'), e instanceof Error ? e.message : String(e));
       }
     }
   });
@@ -1853,12 +1877,12 @@ function syncClassFiles(binding: FolderBinding, files: ClassFileEntry[]) {
 async function openFiles(files: File[]): Promise<string[]> {
   if (storageBusy) return [];
   if (files.length > 64) {
-    await dialog(msg('m5d6c611f808f'), msg('m380caa4874b5'));
+    await dialog(msg('shell.couldNotOpenFile'), msg('shell.openAtMostFilesAtOnce'));
     return [];
   }
   if (files.some((file) => fileKind(file.name) === 'zip')) {
     if (files.length !== 1) {
-      await dialog(msg('m1d25ade4db27'), msg('m7373ee74be3e'));
+      await dialog(msg('shell.openProject'), msg('shell.openOneProjectAtATime'));
       return [];
     }
     storageState(true);
@@ -1875,7 +1899,7 @@ async function openFiles(files: File[]): Promise<string[]> {
         return next.project.files.map((file) => 'source:' + file.path);
       }
     } catch (e) {
-      storageError(e, msg('mcdd98f9ac910'));
+      storageError(e, msg('shell.couldNotOpenFolder'));
     } finally {
       storageState(false);
     }
@@ -1883,21 +1907,23 @@ async function openFiles(files: File[]): Promise<string[]> {
   }
   if (files.some((file) => fileKind(file.name) === 'project')) {
     if (files.length !== 1) {
-      await dialog(msg('m1d25ade4db27'), msg('m7373ee74be3e'));
+      await dialog(msg('shell.openProject'), msg('shell.openOneProjectAtATime'));
       return [];
     }
     const file = files[0];
     try {
-      if (file.size > 65536) throw new Error(msg('m3be3f7e999c7'));
+      if (file.size > 65536) throw new Error(msg('shell.projectSettingsMustNotExceedKiB'));
       const text = await file.text();
       parseProperties(text);
       if (
         (await dialog(
-          msg('m1d25ade4db27'),
-          msg('m2acaf802780a') + file.name + msg('mfc08eaee47db'),
+          msg('shell.openProject'),
+          msg('shell.toLoadTheSourceFilesToo') +
+            file.name +
+            msg('shell.selectTheFolderContainingThisFile'),
           undefined,
           true,
-          msg('m6985b2151ba8'),
+          msg('shell.chooseFolder'),
         )) === null
       )
         return [];
@@ -1908,10 +1934,10 @@ async function openFiles(files: File[]): Promise<string[]> {
         loaded.binding.configName !== file.name ||
         loaded.binding.baseline.get(file.name) !== text
       )
-        throw new Error(msg('m8172fe61f0fc'));
+        throw new Error(msg('shell.thisIsNotTheSelectedProjectSFolder'));
       if (await allowReplace()) await installProject(loaded.project, loaded.binding);
     } catch (e) {
-      storageError(e, msg('m8476ce1c484f'));
+      storageError(e, msg('shell.couldNotOpenProject'));
     } finally {
       storageState(false);
     }
@@ -1934,14 +1960,14 @@ async function openFiles(files: File[]): Promise<string[]> {
           opened.push('preview:' + key);
         }
       } else if (kind === 'source') {
-        if (file.size > 1024 * 1024) throw new Error(msg('mc1c50ef487cf'));
+        if (file.size > 1024 * 1024) throw new Error(msg('shell.aSourceFileMustNotExceedMiB'));
         const source = await file.text();
         if (project !== owner) break;
         let path = 'src/' + file.name.replace(/\.jal$/i, '.jal');
         if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase())) {
           const selected = await dialog(
-            msg('m18fdff41665a'),
-            msg('mfa292d611b8d'),
+            msg('shell.aFileWithThisNameAlreadyExists'),
+            msg('shell.giveTheImportedFileADifferentName'),
             path.replace(/\.jal$/, '_2.jal'),
           );
           if (selected === null) continue;
@@ -1950,7 +1976,7 @@ async function openFiles(files: File[]): Promise<string[]> {
         if (project !== owner) break;
         validatePath(path);
         if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase()))
-          throw new Error(msg('md437709a0aed'));
+          throw new Error(msg('shell.aFileWithThisNameAlreadyExists2'));
         const copy = snapshot();
         copy.files.push({ path, source });
         if (copy.files.length === 1)
@@ -1962,9 +1988,12 @@ async function openFiles(files: File[]): Promise<string[]> {
         invalidate();
         setDirty();
         opened.push('source:' + path);
-      } else throw new Error(msg('m7950add9a759'));
+      } else throw new Error(msg('shell.supportedFilesJalClassAndJalprj'));
     } catch (e) {
-      await dialog(file.name + msg('mcdabe1224c3d'), e instanceof Error ? e.message : String(e));
+      await dialog(
+        file.name + msg('shell.couldNotOpen'),
+        e instanceof Error ? e.message : String(e),
+      );
     }
   }
   return opened;
@@ -1999,7 +2028,7 @@ function dialog(
   message: string,
   input?: string,
   confirm = false,
-  confirmLabel = msg('m79a5956d251c'),
+  confirmLabel = msg('shell.discardChangesAndContinue'),
   suffix = '',
 ): Promise<string | null> {
   const d = el<HTMLDialogElement>('dialog');
@@ -2031,7 +2060,13 @@ function dialog(
 }
 async function allowReplace() {
   return (
-    !dirty || (await dialog(msg('m946c28fb4132'), msg('m0fff9379ab08'), undefined, true)) !== null
+    !dirty ||
+    (await dialog(
+      msg('shell.unsavedChanges'),
+      msg('shell.discardTheCurrentChangesAndContinueToSaveThemCancel'),
+      undefined,
+      true,
+    )) !== null
   );
 }
 async function newProject() {
@@ -2061,7 +2096,7 @@ el('properties-form').onsubmit = (e) => {
   e.preventDefault();
   const field = el<HTMLInputElement>('properties-name'),
     name = field.value.trim();
-  field.setCustomValidity(name ? '' : msg('m7578a188e521'));
+  field.setCustomValidity(name ? '' : msg('shell.enterAProjectName'));
   if (!field.reportValidity()) return;
   const entry = el<HTMLSelectElement>('entry-file').value;
   if (!project.files.some((f) => f.path === entry)) return;
@@ -2077,8 +2112,8 @@ el<HTMLInputElement>('properties-name').oninput = () =>
 async function addFile(directory = 'src') {
   const owner = project;
   const name = await dialog(
-    msg('m74449f8523d7'),
-    msg('mcfc10df6467e'),
+    msg('shell.addJALFile'),
+    msg('shell.enterAFileNameForExampleSrcComExampleHelper'),
     (directory ? directory + '/' : '') + 'Helper',
     false,
     '',
@@ -2091,13 +2126,13 @@ async function addFile(directory = 'src') {
       .replace(/\.jal$/i, '')
       .replaceAll('.', '/') + '.jal';
   try {
-    if (path === '.jal') throw new Error(msg('m4d23aa128765'));
+    if (path === '.jal') throw new Error(msg('shell.enterAFileName'));
     validatePath(path);
-    if (project.files.length >= 64) throw new Error(msg('mcafda533f3d0'));
+    if (project.files.length >= 64) throw new Error(msg('shell.atMostFilesAreAllowed'));
     if (project.files.some((f) => f.path.toLowerCase() === path.toLowerCase()))
-      throw new Error(msg('m0fc670fbc8c3'));
+      throw new Error(msg('shell.aFileWithTheSameNameExists'));
   } catch (e) {
-    await dialog(msg('m02a8252f7eb7'), String(e instanceof Error ? e.message : e));
+    await dialog(msg('shell.couldNotAddFile'), String(e instanceof Error ? e.message : e));
     return;
   }
   const className = path
@@ -2125,8 +2160,14 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
     parent = old.split('/').slice(0, -1).join('/'),
     base = old.split('/').pop()!;
   const input = await dialog(
-    move ? msg('m2fd3f389d498') : isFolder ? msg('m83a637816e2f') : msg('m21ecfa3428e8'),
-    move ? msg('m214c81b69001') : msg('m90fcccddecc5'),
+    move
+      ? msg('shell.destinationFolder')
+      : isFolder
+        ? msg('shell.renameFolder')
+        : msg('shell.renameFile'),
+    move
+      ? msg('shell.enterTheDestinationFolderPathLeaveBlankToMoveTo')
+      : msg('shell.updateClassNamesAndReferencesInTheSourceCode'),
     move ? parent : isFolder ? base : base.replace(/\.jal$/i, ''),
     false,
     '',
@@ -2140,7 +2181,7 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
       (isFolder ? name : name.replace(/\.jal$/i, '').replaceAll('.', '/') + '.jal');
   if (destination === old) return;
   try {
-    if (!move && !name) throw new Error(msg('m64fa16304152'));
+    if (!move && !name) throw new Error(msg('shell.enterAName'));
     const paths = project.files.map((f) => f.path),
       changes = planPathChange(paths, old, destination, isFolder);
     if (
@@ -2152,7 +2193,7 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
         ),
       )
     )
-      throw new Error(msg('m00d100ab4b93'));
+      throw new Error(msg('shell.aFileWithThisNameAlreadyExistsAtTheDestination'));
     captureView();
     for (const [from, to] of changes) documents().rename(from, to);
     if (isFolder) {
@@ -2167,14 +2208,24 @@ async function changePath(old: string, isFolder: boolean, move: boolean) {
     setDirty();
     updateActions();
   } catch (error) {
-    await dialog(msg('maa8b870b5410'), error instanceof Error ? error.message : String(error));
+    await dialog(
+      msg('shell.couldNotMakeTheChange'),
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 async function removeFile() {
   if (activePreview) return;
   if (project.files.length <= 1) return;
   const path = project.workspace.activeFile;
-  if ((await dialog(msg('m7ea5e4d1250b'), msg('md75b21712bbf', [path]), undefined, true)) === null)
+  if (
+    (await dialog(
+      msg('shell.deleteFile'),
+      msg('shell.removeFromTheProject', [path]),
+      undefined,
+      true,
+    )) === null
+  )
     return;
   documents().remove(path);
   switchFile(project.workspace.activeFile, false);
@@ -2230,12 +2281,15 @@ panelDock = installPanelDock(
       closeEditorTabs(tab.key);
   },
   (name) => {
-    if (!detached.openPanel(name)) status(msg('ma13ecae5cbbc'), 'error');
+    if (!detached.openPanel(name))
+      status(msg('shell.thePopUpWasBlockedRightClickAndChooseOpen'), 'error');
   },
   window.jalwebDetached!.workspaceId,
   () => tabOrder,
   (name) =>
-    name === 'project' ? [{ label: msg('md3a91edcf75f'), action: () => void addFile() }, null] : [],
+    name === 'project'
+      ? [{ label: msg('common.newJALFile'), action: () => void addFile() }, null]
+      : [],
 );
 for (const side of ['project', 'output'] as const) {
   const container = document.createElement('div');
@@ -2246,7 +2300,7 @@ for (const side of ['project', 'output'] as const) {
     ...editor.getRawOptions(),
     model: null,
     automaticLayout: true,
-    ariaLabel: side + msg('m5f0e090a4cfe'),
+    ariaLabel: side + msg('shell.groupJALSourceCode'),
   });
   groupEditors.set(side, view);
   bindGroupEditor(view, side);
@@ -2346,13 +2400,13 @@ function showDiagnostics() {
   el('problem-count').textContent = String(count);
   const empty = document.querySelector<HTMLElement>('.empty-problems')!;
   empty.hidden = count > 0;
-  empty.textContent = msg('mdaaed0138661');
+  empty.textContent = msg('shell.noProblemsFound');
 }
 function hasErrors() {
   return [...results.values()].some((c) => c.diagnostics.some((d) => d.severity === 'error'));
 }
 compiler.onProgress = (loaded) => {
-  if (!running) status(msg('m859821d20656', [(loaded / 1024 / 1024).toFixed(1)]), 'loading');
+  if (!running) status(msg('shell.loadingJVMMB', [(loaded / 1024 / 1024).toFixed(1)]), 'loading');
 };
 async function analyze(): Promise<void> {
   if (disposed) return;
@@ -2362,7 +2416,7 @@ async function analyze(): Promise<void> {
     while (checked !== revision && !disposed) {
       checked = revision;
       const sources = [...models].map(([path, m]) => ({ path, model: m, source: m.getValue() }));
-      if (!running) status(msg('m5ca5e75fb40a'), 'loading');
+      if (!running) status(msg('shell.checkingSyntaxAndStack'), 'loading');
       try {
         const next = new Map<string, Compilation>();
         for (const f of sources) {
@@ -2379,7 +2433,7 @@ async function analyze(): Promise<void> {
             for (const path of paths)
               next.get(path)!.diagnostics.push({
                 severity: 'error',
-                message: msg('mbd6497361b54', [name, paths.join(', ')]),
+                message: msg('shell.duplicateClass', [name, paths.join(', ')]),
                 line: 1,
                 column: 1,
                 length: 1,
@@ -2390,7 +2444,7 @@ async function analyze(): Promise<void> {
         updateActions();
         if (!running)
           status(
-            hasErrors() ? msg('m428b24c11fc6') : msg('mc2c1724a78a8'),
+            hasErrors() ? msg('shell.compilationError') : msg('shell.readyToRun'),
             hasErrors() ? 'error' : 'ready',
           );
       } catch (e) {
@@ -2408,7 +2462,7 @@ async function analyze(): Promise<void> {
 }
 editor.onDidChangeCursorPosition(({ position }) => {
   el('cursor').textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
-  el('instruction-hint').textContent = msg('m90f066b614d2');
+  el('instruction-hint').textContent = msg('shell.hoverAnInstructionToSeeStackChanges');
 });
 function stopRun(show = true) {
   debugState({
@@ -2422,7 +2476,7 @@ function stopRun(show = true) {
   runner = undefined;
   running = false;
   updateActions();
-  if (show) status(msg('m4d87a69ae687'));
+  if (show) status(msg('shell.stopped'));
 }
 async function run(
   requestedModel?: monaco.editor.ITextModel,
@@ -2459,7 +2513,7 @@ async function run(
   el('clear').click();
   el('console-empty').hidden = true;
   selectTab('console');
-  status(msg('m405e2aafb5c8'), 'loading');
+  status(msg('shell.compiling'), 'loading');
   try {
     let entry: Compilation | undefined, classes: Compilation[];
     if (example) {
@@ -2469,10 +2523,11 @@ async function run(
       clearTimeout(analysisTimer);
       await analyze();
       if (token !== runToken) return;
-      if (checkedRevision !== revision) throw new Error(msg('m2ebbfe857338'));
+      if (checkedRevision !== revision)
+        throw new Error(msg('shell.compilationDidNotFinishPressRunAgain'));
       if (hasErrors()) {
         selectTab('problems');
-        status(msg('m428b24c11fc6'), 'error');
+        status(msg('shell.compilationError'), 'error');
         return;
       }
       entry = entryPath ? results.get(entryPath) : undefined;
@@ -2480,7 +2535,10 @@ async function run(
     }
     if (token !== runToken) return;
     if (!entry?.bytecode)
-      throw new Error(entry?.diagnostics.map((d) => d.message).join('\n') || msg('mf5cd797ea235'));
+      throw new Error(
+        entry?.diagnostics.map((d) => d.message).join('\n') ||
+          msg('shell.couldNotCompileTheEntryFile'),
+      );
     owned = new Runtime(memory.executionHeapMiB);
     runner = owned;
     owned.onOutput = (stream, text) => {
@@ -2488,7 +2546,10 @@ async function run(
     };
     owned.onProgress = (loaded) => {
       if (token === runToken)
-        status(msg('md6805dd1fc8f', [(loaded / 1024 / 1024).toFixed(1)]), 'loading');
+        status(
+          msg('shell.preparingExecutionJVMMB', [(loaded / 1024 / 1024).toFixed(1)]),
+          'loading',
+        );
     };
     if (debugging) {
       debugSources.clear();
@@ -2505,7 +2566,7 @@ async function run(
             m.onDidChangeContent(() => {
               if (token !== runToken) return;
               stopRun(false);
-              status(msg('m27b0fbbf124a'));
+              status(msg('shell.debuggingStoppedBecauseTheSourceChanged'));
             }),
             m.onWillDispose(() => {
               if (token === runToken) stopRun(false);
@@ -2521,7 +2582,7 @@ async function run(
           snapshot,
         });
         status(
-          msg('m7156a0f5bbad', [
+          msg('shell.pausedAt', [
             snapshot.location.className,
             snapshot.location.method,
             snapshot.location.pc,
@@ -2552,13 +2613,13 @@ async function run(
         : undefined,
     );
     if (token === runToken) {
-      status(msg('m55e6f907db2b'));
+      status(msg('shell.executionFinished'));
       el('timing').textContent = `${((performance.now() - started) / 1000).toFixed(2)} s`;
     }
   } catch (e) {
     if (token === runToken) {
       output(`${e instanceof Error ? e.message : String(e)}\n`, 'stderr');
-      status(msg('meefc3b522be5'), 'error');
+      status(msg('shell.executionFailed'), 'error');
     }
   } finally {
     for (const d of debugDisposals) d.dispose();

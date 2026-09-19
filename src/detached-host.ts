@@ -337,7 +337,7 @@ export function createDetachedHost(
     compilation(id, version) {
       const entry = entries.get(id);
       if (!entry || entry.model.isDisposed() || entry.model.getVersionId() !== version)
-        return Promise.reject(new Error(msg('ma83c65038a5b')));
+        return Promise.reject(new Error(msg('common.theDocumentVersionHasChanged')));
       return options.compile(entry.model);
     },
     async openFiles(files, group) {

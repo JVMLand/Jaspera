@@ -35,7 +35,7 @@ function outputText(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
   const accepted = bytes.subarray(0, remaining);
   outputBytes += accepted.length;
   buffers[stream] += decoders[stream].decode(accepted, { stream: true });
-  if (outputBytes >= 256 * 1024) buffers.stderr += msg('md67aad18906b');
+  if (outputBytes >= 256 * 1024) buffers.stderr += msg('execution.outputTruncatedAtKiB');
   flushTimer ??= setTimeout(flush, 32);
 }
 let compiling = false,
@@ -61,7 +61,7 @@ function output(stream: 'stdout' | 'stderr', bytes: Uint8Array) {
 }
 async function initialize(heapMiB: number) {
   if (!Number.isInteger(heapMiB) || heapMiB < 16 || heapMiB > 128)
-    throw new Error(msg('m176f8035c187'));
+    throw new Error(msg('execution.invalidJVMHeapSize'));
   if (initialization) return initialization;
   initialization = (async () => {
     const moduleUrl = new URL('bovine.js', root).href;
@@ -92,7 +92,7 @@ async function initialize(heapMiB: number) {
 }
 function encodeText(text: string) {
   const bytes = new TextEncoder().encode(text);
-  if (bytes.length > 1024 * 1024) throw new Error(msg('m38b8f543a25f'));
+  if (bytes.length > 1024 * 1024) throw new Error(msg('execution.inputMustNotExceedMiB'));
   let binary = '';
   for (let i = 0; i < bytes.length; i += 8192)
     binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
@@ -109,7 +109,7 @@ function endDebug() {
 let busy = false;
 const api = {
   debugCommand(command: DebugCommand) {
-    if (!debuggerSession) throw new Error(msg('m1eed52c6f78d'));
+    if (!debuggerSession) throw new Error(msg('execution.noDebugSessionIsRunning'));
     debuggerSession.command(command);
   },
   debugBreakpoints(points: DebugBreakpoint[]) {
@@ -122,7 +122,7 @@ const api = {
   ): Promise<Compilation | Disassembly | void> {
     if (busy) {
       port.close();
-      throw new Error(msg('mfd40741e352a'));
+      throw new Error(msg('execution.theJVMIsBusy'));
     }
     busy = true;
     outputBytes = 0;
@@ -145,27 +145,30 @@ const api = {
         );
         return compilation;
       } else if (data.type === 'disassemble') {
-        if (data.bytecode.length > 1400000) throw new Error(msg('m1a2a27fb915b'));
+        if (data.bytecode.length > 1400000)
+          throw new Error(msg('execution.aClassFileMustNotExceedMiB'));
         return JSON.parse(await bridge.disassemble(data.bytecode));
       } else {
         const { className, bytecode } = data.compilation;
         if (!/^[\w$/]+$/.test(className) || className.includes('..') || !bytecode)
-          throw new Error(msg('m6aa343a2a105'));
+          throw new Error(msg('execution.noClassToRun'));
         const classes = data.compilation.classes ?? [{ className, bytecode }];
         const names = new Set<string>();
-        if (!classes.length || classes.length > 64) throw new Error(msg('m69b19d42e14b'));
+        if (!classes.length || classes.length > 64)
+          throw new Error(msg('execution.invalidNumberOfClassesToRun'));
         for (const item of classes) {
           if (
             !/^[\w$]+(?:\/[\w$]+)*$/.test(item.className) ||
             !item.bytecode ||
             names.has(item.className)
           )
-            throw new Error(msg('m284c41941c9f'));
+            throw new Error(msg('execution.aClassToRunIsInvalidOrDuplicated'));
           names.add(item.className);
         }
-        if (!names.has(className)) throw new Error(msg('md7afc4fabe9c'));
+        if (!names.has(className)) throw new Error(msg('common.entryFileNotFound'));
         const manifest = classes.map((c) => c.className + '\t' + c.bytecode).join('\n');
-        if (manifest.length > 16 * 1024 * 1024) throw new Error(msg('mb1581e0f9145'));
+        if (manifest.length > 16 * 1024 * 1024)
+          throw new Error(msg('execution.compilationOutputIsTooLarge'));
         if (data.debug) {
           debuggerSession = new RuntimeDebugger(vm, data.debug, (snapshot) => {
             flush();

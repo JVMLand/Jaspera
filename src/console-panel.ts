@@ -9,10 +9,14 @@ export function installConsoleContextMenu(
     const selection = selectedText(output),
       text = output.textContent ?? '';
     return [
-      { label: msg('mfb8317d857a1'), disabled: !selection, action: () => copyText(selection) },
-      { label: msg('mae1918a75cb6'), disabled: !text, action: () => copyText(text) },
       {
-        label: msg('md3418f06aa97'),
+        label: msg('common.copySelection'),
+        disabled: !selection,
+        action: () => copyText(selection),
+      },
+      { label: msg('editor.copyAllOutput'), disabled: !text, action: () => copyText(text) },
+      {
+        label: msg('editor.selectAllOutput'),
         disabled: !text,
         action: () => {
           const range = document.createRange();
@@ -23,7 +27,7 @@ export function installConsoleContextMenu(
         },
       },
       null,
-      { label: msg('mafe907ab0c50'), disabled: !text, action: clear },
+      { label: msg('editor.clearConsole'), disabled: !text, action: clear },
     ];
   });
 }

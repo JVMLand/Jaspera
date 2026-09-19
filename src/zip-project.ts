@@ -16,19 +16,21 @@ export async function openZipProject(
     paths = paths.map((entry) => ({ ...entry, path: entry.path.slice(prefix.length) }));
   }
   const configs = paths.filter(({ path }) => !path.includes('/') && path.endsWith('.jalprj'));
-  if (configs.length > 1) throw new Error(msg('m95f7084c4d84'));
+  if (configs.length > 1)
+    throw new Error(msg('project.moreThanOneJalprjFileExistsAtTheFolderRoot'));
   const decode = (path: string) =>
     new TextDecoder('utf-8', { fatal: true }).decode(archive.entries[path]);
   const properties = configs[0] ? parseProperties(decode(configs[0].original)) : undefined;
   const sources = paths.filter(
     ({ path }) => path.endsWith('.jal') && (!properties || path.startsWith('src/')),
   );
-  if (sources.length > 64) throw new Error(msg('m20a0d8b5aeff'));
+  if (sources.length > 64) throw new Error(msg('project.aProjectCanContainJALFiles'));
   let total = 0;
   for (const { original } of sources) {
     const size = archive.entries[original].length;
     total += size;
-    if (size > 1024 * 1024 || total > 6 * 1024 * 1024) throw new Error(msg('m8cea98e986be'));
+    if (size > 1024 * 1024 || total > 6 * 1024 * 1024)
+      throw new Error(msg('project.sourceFilesMustBeAtMostMiBEachAndMiB'));
   }
   const files = sources
     .map(({ path, original }) => ({
@@ -44,7 +46,7 @@ export async function openZipProject(
     files.find((f) => f.path === 'Main.jal')?.path ??
     files[0]?.path ??
     '';
-  if (!files.some((f) => f.path === entryFile)) throw new Error(msg('md7afc4fabe9c'));
+  if (!files.some((f) => f.path === entryFile)) throw new Error(msg('common.entryFileNotFound'));
   return {
     properties: !!properties,
     project: validateProject({

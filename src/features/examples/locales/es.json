@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "Suma y multiplica enteros. Calcula (7 + 5) * 3.",
+  "example.Arrays.comment": "Crea una matriz int, escribe un elemento y léelo. Los índices empiezan en 0.",
+  "example.Branches.comment": "Compara números y salta según el resultado. Prueba a cambiar el primer valor.",
+  "example.Collections.comment": "Añade dos cadenas a un ArrayList. Descarta con pop el valor devuelto por add, que no se usa.",
+  "example.HelloWorld.comment": "Imprime una cadena. Apila la salida con getstatic y pasa la cadena a println.",
+  "example.LongAndDouble.comment": "long y double usan dos posiciones cada uno. Usa las instrucciones aritméticas del tipo correspondiente.",
+  "example.Loop.comment": "Imprime del 1 al 5. Usa la variable local #1 como contador.",
+  "example.Methods.comment": "Llama a otro método static. Los argumentos se colocan en #0 y #1 de calc.",
+  "example.Strings.comment": "Añade una cadena y un número a StringBuilder para formar una sola cadena.",
+  "example.answer": "Respuesta: ",
+  "example.greater": "mayor que 10",
+  "example.hello": "¡Hola, JAL!",
+  "example.less": "10 o menos"
+}

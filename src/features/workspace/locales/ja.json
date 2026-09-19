@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "元のワークスペースに接続できません。",
+  "workspace.checkTheSourceCompilationResults": "ソースのコンパイル結果を確認してください。",
+  "workspace.checkYourBrowserSPopUpSettings": "ブラウザのポップアップ設定を確認してください。",
+  "workspace.closeAltClickCloseOtherTabs": "閉じる（Alt＋クリック: 他のタブを閉じる）",
+  "workspace.closeOtherTabs": "他のタブを閉じる",
+  "workspace.closeTab": " のタブを閉じる",
+  "workspace.closeThisTab": "このタブを閉じる",
+  "workspace.closeWindow": "ウィンドウを閉じる",
+  "workspace.couldNotOpenTheDetachedWindow": "小窓を開けませんでした",
+  "workspace.couldNotSaveTheClassFile": "class を保存できませんでした",
+  "workspace.detachedTools.clearConsole": "コンソール を消去",
+  "workspace.detachedTools.noProblemsFound": "問題は見つかりませんでした。",
+  "workspace.detachedTools.standardInput": "標準入力",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": "（ドラッグ: 移動 / Alt＋クリック: 他のタブを閉じる）",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "編集内容は元のワークスペースと共有されます。",
+  "workspace.fileInProject": "プロジェクト内のファイル…",
+  "workspace.moveLeft": "左側へ移動",
+  "workspace.moveRight": "右側へ移動",
+  "workspace.moveToProjectGroup": "プロジェクト グループへ移動"
+}

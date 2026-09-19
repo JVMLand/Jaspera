@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "无法连接到原工作区。",
+  "workspace.checkTheSourceCompilationResults": "请检查源代码编译结果。",
+  "workspace.checkYourBrowserSPopUpSettings": "请检查浏览器的弹出窗口设置。",
+  "workspace.closeAltClickCloseOtherTabs": "关闭（Alt+点击：关闭其他标签页）",
+  "workspace.closeOtherTabs": "关闭其他标签页",
+  "workspace.closeTab": " — 关闭标签页",
+  "workspace.closeThisTab": "关闭此标签页",
+  "workspace.closeWindow": "关闭窗口",
+  "workspace.couldNotOpenTheDetachedWindow": "无法打开独立窗口",
+  "workspace.couldNotSaveTheClassFile": "无法保存 class 文件",
+  "workspace.detachedTools.clearConsole": "清空控制台",
+  "workspace.detachedTools.noProblemsFound": "未发现问题。",
+  "workspace.detachedTools.standardInput": "标准输入",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": "（拖动以移动 / Alt+点击关闭其他标签页）",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "编辑内容与原工作区共享。",
+  "workspace.fileInProject": "项目中的文件…",
+  "workspace.moveLeft": "移到左侧",
+  "workspace.moveRight": "移到右侧",
+  "workspace.moveToProjectGroup": "移到项目组"
+}

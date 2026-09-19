@@ -38,10 +38,10 @@ export function installInstructionGraph(
   filters.className = 'graph-filters';
   const enabled = new Set(['stack', 'local', 'control', 'exception']);
   for (const [kind, title] of [
-    ['stack', msg('m340ecc5d5f10')],
-    ['local', msg('m9bf67764bae7')],
-    ['control', msg('md20b40cb516b')],
-    ['exception', msg('m794a49d55773')],
+    ['stack', msg('common.stack')],
+    ['local', msg('common.locals')],
+    ['control', msg('instructions.controlFlow')],
+    ['exception', msg('instructions.exception')],
   ]) {
     const label = document.createElement('label'),
       input = document.createElement('input');
@@ -65,7 +65,10 @@ export function installInstructionGraph(
     if (text !== undefined) el.textContent = text;
     return el;
   };
-  const svg = ns('svg', { class: 'graph-canvas', 'aria-label': msg('m47f06783254a') }),
+  const svg = ns('svg', {
+      class: 'graph-canvas',
+      'aria-label': msg('instructions.instructionGraph'),
+    }),
     scene = ns('g');
   svg.append(scene);
   host.append(filters, status, svg);
@@ -140,7 +143,7 @@ export function installInstructionGraph(
       percent = total
         ? Math.floor((methods.reduce((sum, m) => sum + m.step, 0) / (3 * total)) * 100)
         : 0;
-    status.textContent = msg('mc14277a7c7bc', [
+    status.textContent = msg('instructions.methodsComplete', [
       owner,
       percent,
       complete,
@@ -209,7 +212,7 @@ export function installInstructionGraph(
     const method: MethodView = {
       name,
       step: 0,
-      phase: msg('mbd71d91cc8f0'),
+      phase: msg('common.waitingToStartAnalysis'),
       group: ns('g', { class: 'graph-method-group' }),
     };
     methods.push(method);
@@ -349,7 +352,7 @@ export function installInstructionGraph(
         class: 'graph-node' + (node.unreachable ? ' unreachable' : ''),
         role: 'button',
         tabindex: 0,
-        'aria-label': msg('ma88de429c5d9', [node.line, node.text]),
+        'aria-label': msg('instructions.line', [node.line, node.text]),
       });
       g.dataset.id = node.id;
       g.style.setProperty(
@@ -380,13 +383,13 @@ export function installInstructionGraph(
   }
   function enqueueLayout(method: MethodView) {
     const generation = layoutTicket;
-    method.phase = msg('mc99364e3fa39');
+    method.phase = msg('instructions.waitingForLayout');
     method.step = 2;
     placeholder(method);
     reflow();
     layoutQueue = layoutQueue.then(async () => {
       if (disposed || generation !== layoutTicket || !method.graph) return;
-      method.phase = msg('m37507d4d8758');
+      method.phase = msg('instructions.layingOut');
       placeholder(method);
       try {
         const graph = {
@@ -399,7 +402,7 @@ export function installInstructionGraph(
         if (!disposed && generation === layoutTicket) render(method, placed);
       } catch (error) {
         if (!disposed && generation === layoutTicket) {
-          method.phase = msg('mf2f96efe5bcd');
+          method.phase = msg('instructions.layoutFailed');
           placeholder(method);
           failure = String(error);
           summary();
@@ -412,7 +415,7 @@ export function installInstructionGraph(
     let method = methods.find((m) => m.name === graph.name);
     if (method?.graph) return;
     if (graph.nodes.length > 600) {
-      failure = msg('mb602c04858a2', [graph.name]);
+      failure = msg('instructions.exceedsTheDisplayLimitInstructionsPerMethod', [graph.name]);
       summary();
       return;
     }
@@ -433,19 +436,19 @@ export function installInstructionGraph(
   }
   function progress(value: AnalysisProgress) {
     const labels = {
-      queued: msg('ma77a4eedef82'),
-      loading: msg('m07547f2fe62c'),
-      parse: msg('m9604e23e9ade'),
-      analysis: msg('m6aa3c91224bd'),
-      frames: msg('mbf3fe0f5fe1d'),
-      layout: msg('m37507d4d8758'),
-      complete: msg('m82cb90f7ac1a'),
+      queued: msg('instructions.waitingForAnalysis'),
+      loading: msg('instructions.loadingJVM'),
+      parse: msg('instructions.parsing'),
+      analysis: msg('instructions.typeAndFlowAnalysis'),
+      frames: msg('instructions.frameAnalysis'),
+      layout: msg('instructions.layingOut'),
+      complete: msg('instructions.analysisComplete'),
     };
     stage =
       value.phase === 'queued'
-        ? (value.waitingFor ?? msg('m25bc2f915833'))
+        ? (value.waitingFor ?? msg('instructions.waitingForPreviousAnalysis'))
         : value.phase === 'loading' && value.total === 0
-          ? msg('ma61da4529a80')
+          ? msg('instructions.preparingJVM')
           : labels[value.phase];
     if ((value.phase === 'loading' || value.phase === 'parse') && value.total > 0)
       stage += ` ${Math.floor((value.completed / value.total) * 100)}%`;
@@ -454,12 +457,12 @@ export function installInstructionGraph(
     const waiting =
       value.phase === 'analysis'
         ? currentName
-          ? msg('mac04a2ceca97', [currentName])
-          : msg('m955067f3d9d0')
+          ? msg('instructions.waitingForTypeAndFlowAnalysisOf', [currentName])
+          : msg('instructions.waitingForClassTypeAndFlowAnalysis')
         : value.phase === 'frames'
           ? currentName
-            ? msg('m670830fbd669', [currentName])
-            : msg('mf5357f7b2128')
+            ? msg('instructions.waitingForFrameAnalysisOf', [currentName])
+            : msg('instructions.waitingToStartFrameAnalysis')
           : stage;
     for (const pending of methods)
       if (!pending.graph && !pending.layout && pending.name !== value.method) {
@@ -472,7 +475,7 @@ export function installInstructionGraph(
       method.phase = labels[value.phase];
       if (value.phase === 'analysis' && value.finished) {
         method.step = 1;
-        method.phase = msg('m266dfb2f21ca');
+        method.phase = msg('instructions.waitingForTypeAnalysisOfTheWholeClass');
       }
       if (value.phase === 'frames') method.step = 1;
       placeholder(method);
@@ -519,9 +522,9 @@ export function installInstructionGraph(
   });
   resize.observe(svg);
   const context = installContextMenu(host, () => [
-    { label: msg('mb786b491243b'), action: fit },
+    { label: msg('instructions.fitAll'), action: fit },
     {
-      label: msg('m0e9a0de01275'),
+      label: msg('instructions.analyzeAgain'),
       action: () => {
         const previous = doc;
         if (previous) graphDocuments.delete(previous.source);
@@ -549,11 +552,11 @@ export function installInstructionGraph(
     failure = '';
     autoFit = true;
     if (!next) {
-      status.textContent = msg('m0645a45ace0c');
+      status.textContent = msg('instructions.openAJALFile');
       return;
     }
     owner = next.uri.split('/').at(-1) ?? '';
-    stage = msg('meeafbbd5208c');
+    stage = msg('instructions.readingMethods');
     summary();
     const cached = graphDocuments.get(next.source);
     if (cached) {
@@ -576,11 +579,11 @@ export function installInstructionGraph(
         if (disposed || id !== ticket) return;
         for (const graph of result.graphs ?? []) acceptGraph(graph);
         failure = result.diagnostics.find((d) => d.severity === 'error')?.message ?? failure;
-        if (!methods.length && !failure) failure = msg('m4bb0cb0552df');
+        if (!methods.length && !failure) failure = msg('instructions.noInstructionsToDisplay');
         if (failure)
           for (const method of methods)
             if (!method.graph) {
-              method.phase = msg('maab839303e3d');
+              method.phase = msg('instructions.analysisFailed');
               placeholder(method);
             }
         summary();

@@ -48,7 +48,7 @@ export function openTextSize() {
   reset.textContent = msg('textSize.reset');
   reset.onclick = () => setTextSize(defaultTextSize);
   const close = document.createElement('button');
-  close.textContent = msg('mf6c244f98893');
+  close.textContent = msg('common.close');
   close.onclick = () => dialog.close();
   actions.append(reset, close);
   dialog.append(actions);

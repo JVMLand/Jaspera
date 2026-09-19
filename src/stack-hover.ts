@@ -13,7 +13,7 @@ export function installStackHover(
   panel.className = 'stack-hover';
   panel.hidden = true;
   panel.setAttribute('role', 'tooltip');
-  panel.setAttribute('aria-label', msg('m1616f521d21c'));
+  panel.setAttribute('aria-label', msg('instructions.stackBeforeAndAfterTheInstruction'));
   document.body.append(panel);
   let serial = 0,
     disposed = false,
@@ -55,7 +55,9 @@ export function installStackHover(
   }
   function render(frame: StackFrame) {
     if (frame.unreachable) {
-      panel.append(node('p', msg('mc6293dc94adb')));
+      panel.append(
+        node('p', msg('instructions.thisInstructionIsUnreachableThereIsNoBeforeOrAfter')),
+      );
       return;
     }
     const before = frame.before ?? [],
@@ -69,8 +71,8 @@ export function installStackHover(
         if (i !== frame.local && a[i] !== b[i]) indices.push(i);
       indices.sort((a, b) => a - b);
       locals = {
-        before: indices.map((i) => a[i] ?? msg('m621330591694')),
-        after: indices.map((i) => b[i] ?? msg('m621330591694')),
+        before: indices.map((i) => a[i] ?? msg('common.notSet')),
+        after: indices.map((i) => b[i] ?? msg('common.notSet')),
         labels: indices.map((i) => '#' + i),
         effect: frame.effect,
       };
@@ -118,10 +120,16 @@ export function installStackHover(
     const currentAnchor = anchor;
     const header = () => {
       const h = node('header');
-      h.append(node('code', word.word), node('span', msg('m682f5005670c')));
+      h.append(
+        node('code', word.word),
+        node('span', msg('instructions.frameAtThisPositionStaticAnalysis')),
+      );
       return h;
     };
-    panel.replaceChildren(header(), node('p', msg('m38889814003c'), 'stack-hover-loading'));
+    panel.replaceChildren(
+      header(),
+      node('p', msg('instructions.analyzingStack'), 'stack-hover-loading'),
+    );
     panel.hidden = false;
     place(currentAnchor);
     try {
@@ -147,7 +155,7 @@ export function installStackHover(
           node(
             'p',
             compilation.diagnostics.find((d) => d.severity === 'error')?.message ??
-              msg('maccecbcc82f6'),
+              msg('instructions.cannotAnalyzeThisInstructionSStateCheckTheSource'),
           ),
         );
       if (frame?.partial) {
@@ -160,7 +168,7 @@ export function installStackHover(
       if (request !== serial || disposed) return;
       panel.replaceChildren(
         header(),
-        node('p', error instanceof Error ? error.message : msg('m700200c26858')),
+        node('p', error instanceof Error ? error.message : msg('instructions.analysisFailed2')),
       );
       place(currentAnchor);
     }

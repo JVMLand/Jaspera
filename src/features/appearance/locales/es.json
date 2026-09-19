@@ -1,0 +1,11 @@
+{
+  "appearance.theme.choose": "Tema",
+  "appearance.theme.savedImmediately": "Los cambios se aplican al instante y se guardan en este navegador.",
+  "appearance.theme.title": "Tema y disposición",
+  "presentation.exit": "Salir de la presentación",
+  "presentation.title": "Modo presentación",
+  "textSize.editor": "Editor",
+  "textSize.reset": "Restablecer valores",
+  "textSize.title": "Tamaño del texto",
+  "textSize.ui": "Interfaz"
+}

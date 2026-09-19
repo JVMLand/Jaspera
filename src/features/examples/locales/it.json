@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "Somma e moltiplica interi. Calcola (7 + 5) * 3.",
+  "example.Arrays.comment": "Crea un array int, scrivi un elemento e leggilo. Gli indici iniziano da 0.",
+  "example.Branches.comment": "Confronta numeri e salta in base al risultato. Prova a cambiare il primo valore.",
+  "example.Collections.comment": "Aggiungi due stringhe a un ArrayList. Scarta con pop il valore restituito da add, che non viene usato.",
+  "example.HelloWorld.comment": "Stampa una stringa. Carica il flusso di uscita con getstatic e passa la stringa a println.",
+  "example.LongAndDouble.comment": "long e double usano due slot ciascuno. Usa le istruzioni aritmetiche del tipo corrispondente.",
+  "example.Loop.comment": "Stampa da 1 a 5. Usa la variabile locale #1 come contatore.",
+  "example.Methods.comment": "Chiama un altro metodo static. Gli argomenti vanno in #0 e #1 di calc.",
+  "example.Strings.comment": "Aggiungi una stringa e un numero a StringBuilder per formare un’unica stringa.",
+  "example.answer": "Risposta: ",
+  "example.greater": "maggiore di 10",
+  "example.hello": "Ciao, JAL!",
+  "example.less": "10 o meno"
+}

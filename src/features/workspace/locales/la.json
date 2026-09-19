@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "Cum spatio operis originali coniungi non potest.",
+  "workspace.checkTheSourceCompilationResults": "Exitus compilationis inspice.",
+  "workspace.checkYourBrowserSPopUpSettings": "Optiones fenestrarum emergentium in navigatro inspice.",
+  "workspace.closeAltClickCloseOtherTabs": "Claude (Alt+preme: ceteras schedas claude)",
+  "workspace.closeOtherTabs": "Ceteras schedas claude",
+  "workspace.closeTab": " — schedam claude",
+  "workspace.closeThisTab": "Hanc schedam claude",
+  "workspace.closeWindow": "Fenestram claude",
+  "workspace.couldNotOpenTheDetachedWindow": "Fenestra separata aperiri non potuit",
+  "workspace.couldNotSaveTheClassFile": "Tabula class servari non potuit",
+  "workspace.detachedTools.clearConsole": "Consolam purga",
+  "workspace.detachedTools.noProblemsFound": "Nulla problemata inventa sunt.",
+  "workspace.detachedTools.standardInput": "Ingressus ordinarius",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": " (trahe ut moveas / Alt+preme ut ceteras schedas claudas)",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "Emendationes cum spatio operis originali communicantur.",
+  "workspace.fileInProject": "Tabula in opere…",
+  "workspace.moveLeft": "Ad sinistram move",
+  "workspace.moveRight": "Ad dextram move",
+  "workspace.moveToProjectGroup": "Ad gregem operis move"
+}

@@ -1,0 +1,14 @@
+<dialog id="project-properties" aria-labelledby="properties-title">
+  <form id="properties-form" method="dialog">
+    <h2 id="properties-title">{{project.properties.title}}</h2>
+    <label for="properties-name">{{project.properties.name}}</label
+    ><input id="properties-name" required maxlength="128" autocomplete="off" />
+    <label for="entry-file">{{project.properties.entryFile}}</label
+    ><select id="entry-file" required></select>
+    <p class="properties-hint">{{project.properties.entryHint}}</p>
+    <div class="dialog-actions">
+      <button type="button" id="properties-cancel">{{common.cancel}}</button
+      ><button type="submit" id="properties-save">{{project.properties.apply}}</button>
+    </div>
+  </form>
+</dialog>

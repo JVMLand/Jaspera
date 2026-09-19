@@ -177,21 +177,21 @@ export function installPanelDock(
     nodes[name] = wrapper;
     pane.contextItems = () => [
       ...contextItems(name),
-      { label: msg('m5f6a87a981fd'), action: () => move(name, 'project') },
+      { label: msg('workspace.moveToProjectGroup'), action: () => move(name, 'project') },
       {
-        label: msg('m8b9b9cb54504'),
+        label: msg('workspace.moveLeft'),
         action: () =>
           move(name, workspace.classList.contains('dock-swapped') ? 'output' : 'source'),
       },
       {
-        label: msg('m5a71218a3669'),
+        label: msg('workspace.moveRight'),
         action: () =>
           move(name, workspace.classList.contains('dock-swapped') ? 'source' : 'output'),
       },
-      { label: msg('m8af85266ba4f'), action: () => detach(name) },
+      { label: msg('common.openInDetachedWindow'), action: () => detach(name) },
       null,
-      { label: msg('m75b77204a6c9'), action: () => close(name) },
-      { label: msg('mad5f178303ff'), action: () => closeOthers(name) },
+      { label: msg('workspace.closeThisTab'), action: () => close(name) },
+      { label: msg('workspace.closeOtherTabs'), action: () => closeOthers(name) },
     ];
   }
   workspace.classList.add('dock-arranged');

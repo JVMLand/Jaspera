@@ -151,7 +151,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
                 ? label + ' '
                 : (snippets[label] ?? label),
             command: /^(get|put|invoke|new|anewarray|checkcast|instanceof)/.test(label)
-              ? { id: 'editor.action.triggerSuggest', title: msg('m58164bcfe386') }
+              ? { id: 'editor.action.triggerSuggest', title: msg('editor.operandCompletion') }
               : undefined,
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             range,
@@ -174,7 +174,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
           kind: monaco.languages.CompletionItemKind.Reference,
           insertText: match[1],
           range,
-          detail: msg('mf0d815812e5d'),
+          detail: msg('editor.jumpLabel'),
         });
       for (const match of model.getValue().matchAll(/\[\s*->\s*([\w$]+)\s*\]/g))
         suggestions.push({
@@ -182,7 +182,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
           kind: monaco.languages.CompletionItemKind.Variable,
           insertText: match[1],
           range,
-          detail: msg('m9bf67764bae7'),
+          detail: msg('common.locals'),
         });
       const kinds = {
         field: monaco.languages.CompletionItemKind.Field,
@@ -204,7 +204,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
         const input = bare ? opcode : typed;
         const [workspace, jdk] = await Promise.all([workspaceCatalog(), getJdk()]);
         const candidates = [
-          ...completeOperand(opcode, typed, workspace, msg('mcae6357e5163')),
+          ...completeOperand(opcode, typed, workspace, msg('editor.workspace')),
           ...completeOperand(opcode, typed, jdk).filter(
             (c) => !Object.hasOwn(workspace, c.label.split('->')[0]),
           ),
@@ -220,7 +220,7 @@ export function registerLanguage(workspaceCatalog: () => Promise<Catalog> = asyn
             filterText: input + ' ' + c.label,
             sortText: String(i).padStart(4, '0'),
             command: c.continue
-              ? { id: 'editor.action.triggerSuggest', title: msg('mb7decc116c64') }
+              ? { id: 'editor.action.triggerSuggest', title: msg('editor.memberCompletion') }
               : undefined,
           }),
         );

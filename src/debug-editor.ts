@@ -72,7 +72,7 @@ export function installDebugEditor(
   });
   const action = editor.addAction({
     id: 'jaspera.toggleBreakpoint',
-    label: msg('m253c89fd3600'),
+    label: msg('debug.toggleBreakpoint'),
     keybindings: [monaco.KeyCode.F9],
     contextMenuGroupId: 'debug',
     run: (e) => {

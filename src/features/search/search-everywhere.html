@@ -1,0 +1,20 @@
+<header>
+  <h1>{{search.searchEverywhere.searchEverywhere}}</h1>
+  <button type="button" aria-label="{{search.searchEverywhere.close.ariaLabel}}">×</button>
+</header>
+<input
+  type="search"
+  placeholder="{{search.searchEverywhere.searchFilesClassesMethodsAndFields.placeholder}}"
+  aria-label="{{search.searchEverywhere.searchFilesAndDefinitions.ariaLabel}}"
+  role="combobox"
+  aria-autocomplete="list"
+  aria-controls="everywhere-results"
+  aria-expanded="true"
+/>
+<p role="status" aria-live="polite"></p>
+<div id="everywhere-results" role="listbox"></div>
+<footer>
+  <kbd>↑</kbd>
+  <kbd>↓</kbd
+  >{{search.searchEverywhere.select}}<kbd>Enter</kbd>{{search.searchEverywhere.open}}<kbd>Esc</kbd>{{search.searchEverywhere.close}}
+</footer>

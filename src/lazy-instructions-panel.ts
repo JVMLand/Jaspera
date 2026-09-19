@@ -14,7 +14,7 @@ export function installInstructionsPanel(
   const visibility = observePanelVisibility(host, (visible) => {
     if (!visible || panel || loading || disposed) return;
     loading = true;
-    host.textContent = msg('mec79e2e4092c');
+    host.textContent = msg('editor.loadingInstructionReference');
     void import('./instructions-panel')
       .then((module) => {
         if (disposed) return;
@@ -23,7 +23,10 @@ export function installInstructionsPanel(
         panel.showInstruction(selected);
       })
       .catch(() => {
-        if (!disposed) host.textContent = msg('m866670cee859');
+        if (!disposed)
+          host.textContent = msg(
+            'editor.couldNotLoadTheInstructionReferenceCheckYourConnectionAnd',
+          );
       })
       .finally(() => {
         loading = false;

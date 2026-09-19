@@ -48,10 +48,10 @@ export function renderFrameTransition(frame: FrameTransition) {
         node(
           'h4',
           unchanged
-            ? msg('m5766024f896e')
+            ? msg('editor.unchanged')
             : side
-              ? (frame.afterLabel ?? msg('m194f0b1f2a46'))
-              : (frame.beforeLabel ?? msg('ma9ebc102c9e5')),
+              ? (frame.afterLabel ?? msg('common.afterExecution'))
+              : (frame.beforeLabel ?? msg('editor.beforeExecution')),
         ),
         body,
       );
@@ -73,7 +73,7 @@ export function renderFrameTransition(frame: FrameTransition) {
         const visible = order.slice(0, frame.limit ?? 8);
         if (!values.length)
           body.append(
-            node('div', locals ? msg('m621330591694') : msg('m2f8267a89ad5'), 'frame-empty'),
+            node('div', locals ? msg('common.notSet') : msg('editor.empty'), 'frame-empty'),
           );
         for (const index of visible) {
           const changed =
@@ -88,7 +88,10 @@ export function renderFrameTransition(frame: FrameTransition) {
               'frame-value' + (changed ? (side ? ' is-produced' : ' is-consumed') : ''),
             );
           value.append(node('code', formatFrameValue(localizedContent(values[index]))));
-          if (changed) value.title = side ? msg('m4ce0e3f5d826') : msg('m8fd971c0d3a4');
+          if (changed)
+            value.title = side
+              ? msg('editor.valuesAddedOrUpdated')
+              : msg('editor.valuesConsumedOrUpdated');
           if (locals)
             row.append(node('small', frame.locals?.labels?.[index] ?? '#' + index, 'frame-marker'));
           else if (index === values.length - 1) row.append(node('small', 'TOP', 'frame-marker'));
@@ -102,7 +105,7 @@ export function renderFrameTransition(frame: FrameTransition) {
     });
     return grid;
   }
-  root.append(node('h3', msg('m340ecc5d5f10')), pair(frame.before, frame.after));
+  root.append(node('h3', msg('common.stack')), pair(frame.before, frame.after));
   if (frame.blocked && frame.requiredInputs?.length)
     root.append(
       node(
@@ -113,7 +116,7 @@ export function renderFrameTransition(frame: FrameTransition) {
     );
   if (frame.locals) {
     root.append(
-      node('h3', msg('m9bf67764bae7')),
+      node('h3', msg('common.locals')),
       pair(frame.locals.before, frame.locals.after, true),
     );
     if (frame.locals.effect) root.append(node('p', frame.locals.effect, 'frame-note'));

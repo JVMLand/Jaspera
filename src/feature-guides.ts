@@ -15,93 +15,98 @@ const selected = (name: string) => tab(name) + '[aria-selected="true"]';
 const guides: Guide[] = [
   {
     id: 'debug',
-    title: msg('m6d94f74d1eb3'),
-    text: msg('m25d7b8c28b99'),
+    title: msg('editor.runOneInstructionAtATime'),
+    text: msg('editor.useTheArrowButtonsToStepThroughExecutionStepInto'),
     target: '.debug-toolbar:not([hidden])[data-state="paused"]',
     context: true,
   },
   {
     id: 'instructions',
-    title: msg('mff3bc1cee969'),
-    text: msg('mf5e5d5aeffa2'),
+    title: msg('editor.lookUpAnInstruction'),
+    text: msg('editor.searchByInstructionNameOrDescriptionClickingAnInstructionIn'),
     target: selected('instructions'),
     trigger: tab('instructions'),
     context: true,
   },
   {
     id: 'graph',
-    title: msg('ma3cd8c2dab66'),
-    text: msg('mab7c3b72bf23'),
+    title: msg('common.followTheInstructionGraph'),
+    text: msg('editor.seeStackLocalVariableAndBranchDependenciesInAGraph'),
     target: selected('graph'),
     trigger: tab('graph'),
     context: true,
   },
   {
     id: 'problems',
-    title: msg('m8120a77552a8'),
-    text: msg('mef58950fd12e'),
+    title: msg('editor.checkErrors'),
+    text: msg('editor.clickAnItemToJumpToTheAffectedLineIf'),
     target: selected('problems'),
     trigger: tab('problems'),
     context: true,
   },
-  { id: 'run', title: msg('m3aae3ef0e5ba'), text: msg('m6c0032948a04'), target: '#run' },
+  {
+    id: 'run',
+    title: msg('editor.runTheProgram'),
+    text: msg('editor.pressRunAndCheckTheOutputInConsoleTheSame'),
+    target: '#run',
+  },
   {
     id: 'project',
-    title: msg('m6b4280944084'),
-    text: msg('m1fbcc9bcc602'),
+    title: msg('editor.filesAndExamples'),
+    text: msg('editor.theExampleFolderContainsRunnableSamplesOpenOneAndTry'),
     target: selected('project'),
     trigger: tab('project'),
   },
   {
     id: 'tabs',
-    title: msg('m65930baa5111'),
-    text: msg('m75f2eebf7b3a'),
+    title: msg('editor.arrangeYourWorkspace'),
+    text: msg('editor.holdATabBrieflyThenDragItToAnotherGroup'),
     target: '[data-pane-kind="editor"] [role="tab"][aria-selected="true"]',
     trigger: '[data-pane-kind="editor"] [role="tab"]',
   },
   {
     id: 'breakpoints',
-    title: msg('mb60bcf0b9ffc'),
-    text: msg('m120cc7d0c252'),
+    title: msg('editor.pauseDuringExecution'),
+    text: msg('editor.clickBetweenTheLineNumberAndBytecodeOffsetToSet'),
     target: '.jal-breakpoint-slot[data-guide="hello-breakpoint"]',
     trigger: '.jal-breakpoint-slot[data-guide="hello-breakpoint"]',
   },
   {
     id: 'console',
-    title: msg('m2857058320bb'),
-    text: msg('m71c9817e539b'),
+    title: msg('editor.outputAndInput'),
+    text: msg('editor.programOutputAppearsHereIfTheProgramNeedsInputFill'),
     target: selected('console'),
     trigger: tab('console'),
     context: true,
   },
   {
     id: 'view',
-    title: msg('md77919f32578'),
-    text: msg('m77e8f878cc2e'),
+    title: msg('editor.appearanceAndPanels'),
+    text: msg('editor.useViewToChangeTheThemeOrReopenAClosed'),
     target: '#menu-view',
     trigger: '#menu-view',
     context: true,
   },
   {
     id: 'file',
-    title: msg('md278d7fa1323'),
-    text: msg('m2dfebe9d85f4'),
+    title: msg('editor.openAndSaveFolders'),
+    text: msg('editor.openJALOrClassFilesFromFileOpenWhenA'),
     target: '#menu-file',
     trigger: '#menu-file',
     context: true,
   },
   {
     id: 'edit',
-    title: msg('m8bbabb24110d'),
-    text: msg('m3a502674d174'),
+    title: msg('editor.editAndFormat'),
+    text: msg('editor.editContainsFindReplaceAndFormattingCommandsTypingAnInstruction'),
     target: '#menu-edit',
     trigger: '#menu-edit',
     context: true,
   },
   {
     id: 'build',
-    title: msg('m9d5f837f2510'),
-    text: msg('m0e6b5a3a6466'),
+    title: msg('editor.checkAndExportClassFiles'),
+    text: msg('editor.useBuildToCheckCodeOrExportCompiledClassFiles'),
     target: '#menu-build',
     trigger: '#menu-build',
     context: true,
@@ -142,7 +147,7 @@ export function installFeatureGuides() {
   const skip = document.createElement('button');
   skip.type = 'button';
   skip.className = 'feature-guide-skip';
-  skip.textContent = msg('mad710be9236b');
+  skip.textContent = msg('editor.skipAll');
   const tip = document.createElement('span');
   tip.className = 'feature-guide-arrow';
   tip.setAttribute('aria-hidden', 'true');
@@ -213,7 +218,7 @@ export function installFeatureGuides() {
     const token = epoch;
     title.textContent = next.title;
     text.textContent = next.text;
-    close.setAttribute('aria-label', next.title + msg('mdff70799deaa'));
+    close.setAttribute('aria-label', next.title + msg('editor.closeGuide'));
     bubble.dataset.guide = next.id;
     bubble.hidden = false;
     bubble.style.visibility = 'hidden';

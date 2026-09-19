@@ -52,7 +52,7 @@ export class CompilationService {
     clearTimeout(this.idleTimer);
     this.pending++;
     const promise = this.queue.then(() => {
-      if (this.disposed) throw new Error(msg('m430ebe2657fc'));
+      if (this.disposed) throw new Error(msg('execution.theAnalysisServiceHasStopped'));
       return work();
     });
     this.queue = promise
@@ -76,7 +76,8 @@ export class CompilationService {
     this.scheduleIdle();
   }
   disassemble(bytecode: string) {
-    if (this.disposed) return Promise.reject(new Error(msg('m430ebe2657fc')));
+    if (this.disposed)
+      return Promise.reject(new Error(msg('execution.theAnalysisServiceHasStopped')));
     return this.enqueue(() => this.compiler.disassemble(bytecode));
   }
 
@@ -86,7 +87,8 @@ export class CompilationService {
     onProgress?: ProgressListener,
     options: CompileOptions = { stackFrames: true, graphs: true },
   ): Promise<Compilation> {
-    if (this.disposed) return Promise.reject(new Error(msg('m430ebe2657fc')));
+    if (this.disposed)
+      return Promise.reject(new Error(msg('execution.theAnalysisServiceHasStopped')));
     const cached = this.cache.get(document);
     if (cached) this.completed.get(cached);
     if (cached?.source === source) {
@@ -109,7 +111,7 @@ export class CompilationService {
     if (cached) this.completed.delete(cached);
     const promise = this.enqueue(() => {
       if (this.cache.get(document) !== entry) {
-        const error = new Error(msg('m20f0aa9e3abe'));
+        const error = new Error(msg('execution.analysisSkippedBecauseANewerEditSupersededIt'));
         error.name = 'AbortError';
         throw error;
       }
@@ -143,9 +145,9 @@ export class CompilationService {
         waitingFor:
           this.pending > 1
             ? cached?.source === source && cached.started && !cached.settled
-              ? msg('m16566deaf6a5')
-              : msg('m98d251e2bf9e')
-            : msg('mbd71d91cc8f0'),
+              ? msg('execution.waitingForThePreviousAnalysisOfThisDocument')
+              : msg('execution.waitingForEarlierAnalysisOrDisassembly')
+            : msg('common.waitingToStartAnalysis'),
       },
       partials: [],
       listeners: new Set(),

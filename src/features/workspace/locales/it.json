@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "Impossibile connettersi allo spazio di lavoro originale.",
+  "workspace.checkTheSourceCompilationResults": "Controlla i risultati della compilazione.",
+  "workspace.checkYourBrowserSPopUpSettings": "Controlla le impostazioni dei popup del browser.",
+  "workspace.closeAltClickCloseOtherTabs": "Chiudi (Alt+clic: chiudi le altre schede)",
+  "workspace.closeOtherTabs": "Chiudi le altre schede",
+  "workspace.closeTab": " — chiudi scheda",
+  "workspace.closeThisTab": "Chiudi questa scheda",
+  "workspace.closeWindow": "Chiudi finestra",
+  "workspace.couldNotOpenTheDetachedWindow": "Impossibile aprire la finestra separata",
+  "workspace.couldNotSaveTheClassFile": "Impossibile salvare il file class",
+  "workspace.detachedTools.clearConsole": "Svuota console",
+  "workspace.detachedTools.noProblemsFound": "Nessun problema rilevato.",
+  "workspace.detachedTools.standardInput": "Ingresso standard",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": " (trascina per spostare / Alt+clic per chiudere le altre schede)",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "Le modifiche sono condivise con lo spazio di lavoro originale.",
+  "workspace.fileInProject": "File del progetto…",
+  "workspace.moveLeft": "Sposta a sinistra",
+  "workspace.moveRight": "Sposta a destra",
+  "workspace.moveToProjectGroup": "Sposta nel gruppo del progetto"
+}

@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "Numeros integros adde et multiplica. (7 + 5) * 3 computa.",
+  "example.Arrays.comment": "Seriem int crea, elementum scribe et lege. Indices a 0 incipiunt.",
+  "example.Branches.comment": "Numeros compara et secundum exitum sali. Primum valorem mutare tenta.",
+  "example.Collections.comment": "Duas series litterarum in ArrayList adde. Valorem ab add redditum, qui non adhibetur, per pop remove.",
+  "example.HelloWorld.comment": "Seriem litterarum imprime. Fluxum exitus per getstatic impone, deinde seriem ad println trade.",
+  "example.LongAndDouble.comment": "long et double duos locos singuli occupant. Instructionibus arithmeticis generi congruentibus utere.",
+  "example.Loop.comment": "Numeros a 1 ad 5 imprime. Variabili locali #1 ad numerandum utere.",
+  "example.Methods.comment": "Aliam methodum static invoca. Argumenta in locos #0 et #1 methodi calc ponuntur.",
+  "example.Strings.comment": "Seriem litterarum et numerum ad StringBuilder adde ut unam seriem facias.",
+  "example.answer": "Responsum:",
+  "example.greater": "maius quam 10",
+  "example.hello": "Salve, JAL!",
+  "example.less": "10 aut minus"
+}

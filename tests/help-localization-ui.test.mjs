@@ -71,5 +71,38 @@ test(
       [],
       'removed breakpoints must not be recreated by translation',
     );
+    await page.evaluate(async () => (await import('/src/localization.ts')).openLanguageSettings());
+    await page.evaluate(async () => (await import('/src/localization.ts')).setLocale('it'));
+    assert.equal(await page.locator('#language-title').textContent(), 'Lingua');
+    await page.locator('#language-select').selectOption('en');
+    await page.locator('#language-dialog [data-action=apply]').click();
+    await page.waitForFunction(() => document.documentElement.lang === 'en');
+    assert.equal(await page.evaluate(() => localStorage.getItem('jaspera.locale')), 'en');
+    await page.locator('#language-dialog').waitFor({ state: 'detached' });
+
+    const rich = await page.evaluate(async () => {
+      const { renderTemplate } = await import('/src/i18n/template.ts');
+      const { setDisplayCatalog } = await import('/src/messages.js');
+      const { setLocale } = await import('/src/localization.ts');
+      try {
+        setDisplayCatalog({
+          'help.manual.start.intro': '{kbd}<img src=x onerror=alert(1)>{/kbd} {kbd}F8{/kbd}',
+        });
+        const host = document.createElement('div');
+        host.innerHTML = renderTemplate(
+          '<p data-i18n-rich="help.manual.start.intro"><kbd data-slot="kbd"></kbd></p>',
+          [],
+          true,
+        );
+        return {
+          text: host.textContent,
+          images: host.querySelectorAll('img').length,
+          keys: host.querySelectorAll('kbd').length,
+        };
+      } finally {
+        await setLocale('en');
+      }
+    });
+    assert.deepEqual(rich, { text: '<img src=x onerror=alert(1)> F8', images: 0, keys: 2 });
   },
 );

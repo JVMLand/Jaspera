@@ -1,0 +1,6 @@
+{
+  "changelog.close": "关闭",
+  "changelog.error": "无法加载更新日志。请关闭此窗口后重试。",
+  "changelog.loading": "正在加载…",
+  "changelog.versions": "版本"
+}

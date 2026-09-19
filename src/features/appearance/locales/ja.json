@@ -1,0 +1,11 @@
+{
+  "appearance.theme.choose": "テーマ",
+  "appearance.theme.savedImmediately": "変更はすぐに反映され，このブラウザに保存されます。",
+  "appearance.theme.title": "テーマとレイアウト",
+  "presentation.exit": "プレゼンテーションを終了",
+  "presentation.title": "プレゼンテーションモード",
+  "textSize.editor": "エディタ",
+  "textSize.reset": "標準に戻す",
+  "textSize.title": "文字サイズ",
+  "textSize.ui": "周辺 UI"
+}

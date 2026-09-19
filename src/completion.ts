@@ -87,9 +87,9 @@ export function completeOperand(
           label,
           insertText: label,
           kind: m.kind,
-          detail: msg('mcf421717d49d', [
+          detail: msg('editor.value', [
             m.static ? 'static ' : '',
-            m.kind === 'field' ? msg('mdb132d621cb1') : msg('m99942ce88f0b'),
+            m.kind === 'field' ? msg('common.field') : msg('common.method'),
             origin,
           ]),
         },
@@ -107,7 +107,7 @@ export function completeOperand(
           insertText: owner + (isMember ? '->' : ''),
           kind: 'class',
           continue: isMember,
-          detail: msg('m83ff6788f44f', [origin]),
+          detail: msg('editor.class', [origin]),
         },
         score: matched * 1000 + (isMember ? 200 : 0),
       });
@@ -134,9 +134,9 @@ export function consoleCompletions(typed: string): Candidate[] {
         label,
         kind: 'snippet',
         snippet: true,
-        detail: msg('m033d06269686', [
-          stream === 'out' ? msg('md38a2a54cf74') : msg('m8f2ead9ae16c'),
-          name === 'println' ? msg('m3c94951da277') : '',
+        detail: msg('editor.writeAStringToStandardInstructions', [
+          stream === 'out' ? msg('editor.output') : msg('editor.error'),
+          name === 'println' ? msg('editor.withANewline') : '',
         ]),
         insertText: `getstatic java/lang/System->${stream}:Ljava/io/PrintStream;\nldc "\${1:Hello, World!}"\ninvokevirtual java/io/PrintStream->${name}(Ljava/lang/String;)V`,
       });

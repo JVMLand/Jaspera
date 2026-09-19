@@ -117,8 +117,8 @@ export function copyText(text: string) {
       close = document.createElement('button');
     input.value = text;
     input.readOnly = true;
-    input.setAttribute('aria-label', msg('meb8927b82c0b'));
-    close.textContent = msg('mf6c244f98893');
+    input.setAttribute('aria-label', msg('editor.textToCopy'));
+    close.textContent = msg('common.close');
     close.onclick = () => dialog.close();
     dialog.onclose = () => dialog.remove();
     dialog.append(input, close);

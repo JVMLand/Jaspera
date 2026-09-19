@@ -7,9 +7,9 @@ export function planPathChange(
   folder: boolean,
 ) {
   if (folder && (destination === old || destination.startsWith(old + '/')))
-    throw new Error(msg('m11f99df1a8e3'));
+    throw new Error(msg('project.cannotMoveAnItemToItselfOrInsideItself'));
   const affected = paths.filter((path) => (folder ? path.startsWith(old + '/') : path === old));
-  if (!affected.length) throw new Error(msg('mcf0a5713e9f5'));
+  if (!affected.length) throw new Error(msg('project.targetFileNotFound'));
   const changes = new Map(
     affected.map((path) => [path, folder ? destination + path.slice(old.length) : destination]),
   );
@@ -20,7 +20,7 @@ export function planPathChange(
     new Set(lower).size !== lower.length ||
     lower.some((path) => lower.some((other) => other !== path && other.startsWith(path + '/')))
   )
-    throw new Error(msg('m017cff0dcc3b'));
+    throw new Error(msg('project.aFileOrFolderWithThisNameAlreadyExistsAt'));
   if (
     folder &&
     paths.some(
@@ -28,6 +28,6 @@ export function planPathChange(
         !changes.has(path) && path.toLowerCase().startsWith(destination.toLowerCase() + '/'),
     )
   )
-    throw new Error(msg('md5f1080cc54a'));
+    throw new Error(msg('project.aFolderWithTheSameNameExists'));
   return changes;
 }

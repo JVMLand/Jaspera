@@ -28,8 +28,8 @@ export abstract class Pane {
   ) {}
   contextItems(): ContextItem[] {
     return [
-      { label: msg('m75b77204a6c9'), action: () => this.close() },
-      { label: msg('mad5f178303ff'), action: () => this.close(true) },
+      { label: msg('workspace.closeThisTab'), action: () => this.close() },
+      { label: msg('workspace.closeOtherTabs'), action: () => this.close(true) },
     ];
   }
   select() {
@@ -79,7 +79,7 @@ export function paneTab(
     }
     tab.title =
       (pane.kind === 'tool' ? displayText(pane.title) : pane.title) +
-      displayMessage('md7e0aafb1eb8');
+      displayMessage('workspace.dragToMoveAltClickToCloseOtherTabs');
   });
   tab.setAttribute('role', 'tab');
   tab.setAttribute('aria-selected', String(selected));
@@ -118,9 +118,9 @@ export function paneTab(
     close.setAttribute(
       'aria-label',
       (pane.kind === 'tool' ? displayText(pane.title) : pane.title) +
-        displayMessage('m9523f5ce6ba6'),
+        displayMessage('workspace.closeTab'),
     );
-    close.title = displayMessage('m60a3d26b433c');
+    close.title = displayMessage('workspace.closeAltClickCloseOtherTabs');
   });
   close.onclick = (e) => pane.close(e.altKey);
   wrapper.append(tab, close);

@@ -1,0 +1,16 @@
+<dialog id="dialog">
+  <form method="dialog">
+    <h2 id="dialog-title"></h2>
+    <p id="dialog-message"></p>
+    <div id="dialog-input-row">
+      <input id="dialog-input" aria-labelledby="dialog-title" autocomplete="off" /><span
+        id="dialog-suffix"
+        hidden
+      ></span>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" id="dialog-cancel">{{common.cancel}}</button
+      ><button type="submit" value="ok" id="dialog-ok">OK</button>
+    </div>
+  </form>
+</dialog>

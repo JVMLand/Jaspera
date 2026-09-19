@@ -26,7 +26,7 @@ export class Runtime {
     timeout: number,
     onProgress?: (progress: AnalysisProgress) => void,
   ) {
-    if (this.active) throw new Error(msg('mfd40741e352a'));
+    if (this.active) throw new Error(msg('execution.theJVMIsBusy'));
     const token = {};
     this.active = token;
     const channel = new MessageChannel(),
@@ -89,7 +89,7 @@ export class Runtime {
   debugBreakpoints(points: DebugBreakpoint[]) {
     return this.rpc.call((api) => api.debugBreakpoints(points));
   }
-  stop(message = msg('me00bbb6d81ec')) {
+  stop(message = msg('common.stopped')) {
     this.active = undefined;
     this.rpc.stop(message);
   }

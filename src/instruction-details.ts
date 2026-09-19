@@ -8,56 +8,62 @@ export function instructionDetails(op: string) {
       bits = kind === 'l' ? 64 : 32;
     if (['and', 'or', 'xor'].includes(operation))
       return (
-        msg('md1dcfbbbaecc') +
+        msg('instructions.usesOfBitwiseOperations') +
         (
           {
-            and: msg('m36e36efbb343'),
-            or: msg('m353c0c86e4fa'),
-            xor: msg('mad02029d723f'),
+            and: msg('instructions.useAMaskToKeepOnlySelectedBitsForExample'),
+            or: msg('instructions.setSelectedBitsToForExampleORIs'),
+            xor: msg('instructions.toggleSelectedBitsForExampleXORIsXOROfA'),
           } as Record<string, string>
         )[operation]
       );
     if (['shl', 'shr', 'ushr'].includes(operation))
-      return msg('me7b7c4c96a05', [
+      return msg('instructions.bitHandlingShiftDistanceOnlyTheLowestBitsOfThe', [
         kind === 'l' ? 6 : 5,
         bits,
         operation === 'shl'
-          ? msg('m986045c42090')
+          ? msg('instructions.fillTheRightWithZerosAndDiscardBitsShiftedOut')
           : operation === 'shr'
-            ? msg('med1f3e951a8c')
-            : msg('md32187807c4c'),
+            ? msg('instructions.fillTheLeftWithTheOriginalSignBitNegativeValues')
+            : msg('instructions.fillTheLeftWithZerosShiftTheSignBitLike'),
       ]);
     if (integer) {
-      if (operation === 'div') return msg('mc280ded2681c');
-      if (operation === 'rem') return msg('m6c41c5afab95');
-      return msg('mecbc1e4eff99', [
+      if (operation === 'div')
+        return msg('instructions.integerDivisionRulesRoundingTruncateTowardZeroForExampleIs');
+      if (operation === 'rem')
+        return msg('instructions.integerRemainderRulesSignANonzeroResultHasTheDividend');
+      return msg('instructions.integerArithmeticRulesOverflowBitsBeyondBitsAreDiscardedExceeding', [
         bits,
-        kind === 'i' && operation === 'add' ? msg('m274ca1095350') : '',
+        kind === 'i' && operation === 'add' ? msg('instructions.forExampleBecomes') : '',
       ]);
     }
-    return msg('ma4cc76892a08', [
-      operation === 'rem' ? msg('mfd50d64a8da1') : msg('mbf76e15bf51e'),
-      operation === 'div' ? msg('m8ea2d6a35c70') : '',
+    return msg('instructions.floatingPointRulesPrecisionAndSpecialValues', [
+      operation === 'rem'
+        ? msg('instructions.theRemainderIsBasedOnAQuotientTruncatedTowardZero')
+        : msg('instructions.resultsAreRoundedToTheTypeSPrecisionOperationsInvolving'),
+      operation === 'div'
+        ? msg('instructions.divisionByZeroDoesNotThrowArithmeticExceptionItProducesInfinity')
+        : '',
     ]);
   }
   const conversions: Record<string, string> = {
-    i2l: msg('mdc53bb083b58'),
-    i2d: msg('mafe166d7309c'),
-    f2d: msg('mcd105db66a18'),
-    l2i: msg('m529ccca9d88a'),
-    i2f: msg('ma6a331fefef3'),
-    l2f: msg('ma6a331fefef3'),
-    l2d: msg('m0137afcb1c4d'),
-    d2f: msg('m62904f41d0cd'),
-    i2b: msg('m8d835b48b6ee'),
-    i2s: msg('mf225d2191cac'),
-    i2c: msg('m5641932f444a'),
-    f2i: msg('m2b9eb8b53622'),
-    f2l: msg('m2b9eb8b53622'),
-    d2i: msg('m2b9eb8b53622'),
-    d2l: msg('m2b9eb8b53622'),
+    i2l: msg('instructions.signExtendToBitsTheIntegerValueIsUnchanged'),
+    i2d: msg('instructions.everyIntValueIsExactlyRepresentableAsDoubleSoThe'),
+    f2d: msg('instructions.widenFloatToDoubleFiniteValuesAreRepresentedExactly'),
+    l2i: msg('instructions.keepOnlyTheLowBitsAValueOutsideTheInt'),
+    i2f: msg('instructions.integersNotExactlyRepresentableAsFloatAreRounded'),
+    l2f: msg('instructions.integersNotExactlyRepresentableAsFloatAreRounded'),
+    l2d: msg('instructions.largeIntegersNotExactlyRepresentableAsDoubleAreRounded'),
+    d2f: msg('instructions.roundToFloatPrecisionVeryLargeValuesMayBecomeInfinity'),
+    i2b: msg('instructions.keepTheLowBitsAndSignExtendToIntFor'),
+    i2s: msg('instructions.keepTheLowBitsAndSignExtendToInt'),
+    i2c: msg('instructions.keepTheLowBitsAndFillTheUpperBitsWith'),
+    f2i: msg('instructions.truncateTowardZeroNaNBecomesOutOfRangeValuesBecome'),
+    f2l: msg('instructions.truncateTowardZeroNaNBecomesOutOfRangeValuesBecome'),
+    d2i: msg('instructions.truncateTowardZeroNaNBecomesOutOfRangeValuesBecome'),
+    d2l: msg('instructions.truncateTowardZeroNaNBecomesOutOfRangeValuesBecome'),
   };
-  if (conversions[op]) return msg('ma1ca54f22df8') + conversions[op];
+  if (conversions[op]) return msg('instructions.conversionRules') + conversions[op];
   const section = (heading: string, text: string) => `### ${heading}\n\n${text}`;
   const type = (
     {
@@ -65,7 +71,7 @@ export function instructionDetails(op: string) {
       l: 'long',
       f: 'float',
       d: 'double',
-      a: msg('mad087912287e'),
+      a: msg('instructions.reference'),
       b: 'byte / boolean',
       c: 'char',
       s: 'short',
@@ -74,166 +80,238 @@ export function instructionDetails(op: string) {
   let match: RegExpMatchArray | null;
   if ((match = op.match(/^([ilfda])(load|store)(?:_([0-3]))?$/)))
     return section(
-      msg('m94dab4f6185b'),
-      (match[3] === undefined ? msg('m2dff03dbb4b0') : msg('m52f8ce9bf3a5', [match[3]])) +
+      msg('instructions.selectingALocalVariable'),
+      (match[3] === undefined
+        ? msg('instructions.writeAZeroBasedSlotIndexAfterTheInstructionUse')
+        : msg('instructions.theSuffixIsTheSlotIndexDoNotAddAn', [match[3]])) +
         '\n\n' +
-        (match[2] === 'load' ? msg('m0fa47a0fca57') : msg('me482cb162004')) +
-        (/[ld]/.test(match[1]) ? msg('m7d7d169bef84') : '') +
+        (match[2] === 'load'
+          ? msg('instructions.loadingLeavesTheLocalValueUnchangedTheSlotMustAlready')
+          : msg('instructions.overwriteThePreviousValue')) +
+        (/[ld]/.test(match[1])
+          ? msg('instructions.longAndDoubleUseTheSelectedSlotAndTheNext')
+          : '') +
         (match[1] === 'a'
-          ? '\n\n' + (match[2] === 'load' ? msg('m1f316ccc6ec8') : msg('m6a6f0af39e38'))
+          ? '\n\n' +
+            (match[2] === 'load'
+              ? msg('instructions.nullCanBeLoadedAsAnOrdinaryReferenceAloadCannot')
+              : msg('instructions.storingAReferenceDoesNotCopyTheObjectItCan'))
           : ''),
     );
-  if (op === 'iinc') return section(msg('ma07e7bd8a078'), msg('m285c5d84442a'));
-  if (op === 'aconst_null') return section(msg('m843c588b0954'), msg('m1351880c946c'));
+  if (op === 'iinc')
+    return section(
+      msg('instructions.incrementAmount'),
+      msg('instructions.writeTheSlotIndexFollowedByTheIntegerIncrementIinc'),
+    );
+  if (op === 'aconst_null')
+    return section(
+      msg('instructions.whatNullMeans'),
+      msg('instructions.aReferenceToNoObjectItsTypeDiffersFromThe'),
+    );
   if ((match = op.match(/^([ilfd])const_(m1|[0-5])$/)))
     return section(
-      msg('m52c825bec874'),
-      msg('mbc13fdaf59dd', [
+      msg('instructions.constantEncodedInTheInstruction'),
+      msg('instructions.theValueIsPartOfTheInstructionNameDoNot', [
         type,
         match[2] === 'm1' ? '-1' : match[2],
-        /[fd]/.test(match[1]) && match[2] === '0' ? msg('m0d5c47b6f297') : '',
+        /[fd]/.test(match[1]) && match[2] === '0' ? msg('instructions.thisZeroIsPositive') : '',
       ]),
     );
   if (/^[bs]ipush$/.test(op))
     return section(
-      msg('mb0085cc7b5b2'),
-      msg('m811c5131084b', [op === 'bipush' ? msg('me9fdc028953c') : msg('mb44bb077ec69')]),
+      msg('instructions.valueRange'),
+      msg('instructions.isEmbeddedInTheInstructionItIsSignExtendedTo', [
+        op === 'bipush'
+          ? msg('instructions.aSignedBitIntegerFromTo')
+          : msg('instructions.aSignedBitIntegerFromTo2'),
+      ]),
     );
   if (/^ldc/.test(op))
     return section(
-      msg('me9699fb1e75a'),
+      msg('instructions.supportedConstants'),
       op === 'ldc2_w'
-        ? msg('m01a784a5f6e7')
-        : msg('mff7373bef817', [op === 'ldc_w' ? msg('mc6f80ef27462') : msg('ma10ad9fa7488')]),
+        ? msg('instructions.loadsALongOrDoubleConstantFromTheConstantPool')
+        : msg('instructions.loadsIntFloatStringClassMethodTypeMethodHandleOr', [
+            op === 'ldc_w'
+              ? msg('instructions.usesABitConstantPoolIndexToSupportLargerPools')
+              : msg('instructions.ldcEncodesAnBitConstantPoolIndexFromTo'),
+          ]),
     );
   if (/^[ilfd]neg$/.test(op))
     return section(
-      msg('m158c6187099c'),
-      /[il]/.test(op[0]) ? msg('mf71f4bd419f6') : msg('m65e5bd3e6c41'),
+      msg('instructions.negation'),
+      /[il]/.test(op[0])
+        ? msg('instructions.zeroStaysZeroTheMinimumValueStaysUnchangedBecauseIts')
+        : msg('instructions.positiveAndNegativeZeroExchangeSignsInfinityAlsoChangesSign'),
     );
   if (/^[ilfdabcs]a(load|store)$/.test(op)) {
     const store = op.endsWith('store');
     const special: Record<string, string> = {
-      b: store ? msg('m27e0980bc86a') : msg('m441e836fd219'),
-      c: store ? msg('m333416651489') : msg('m886dd888a062'),
-      s: store ? msg('ma525d48b8a15') : msg('mb02cb3dd0752'),
-      a: store ? msg('m2bf487da9589') : msg('mbdaef410a7b1'),
+      b: store
+        ? msg('instructions.storesTheLowBitsInAByteArrayOrThe')
+        : msg('instructions.aByteElementIsSignExtendedToIntABoolean'),
+      c: store
+        ? msg('instructions.storesTheLowBitsAsChar')
+        : msg('instructions.zeroExtendsCharToIntInTheRange'),
+      s: store
+        ? msg('instructions.storesTheLowBitsAsShort')
+        : msg('instructions.signExtendsTheBitShortToInt'),
+      a: store
+        ? msg('instructions.theReferenceMustBeAssignableToTheArraySActual')
+        : msg('instructions.pushesTheStoredReferenceWithoutCopyingTheObjectANull'),
     };
-    return section(msg('m6a2b808b714e'), msg('m757b23347808', [type, special[op[0]] ?? '']));
+    return section(
+      msg('instructions.arrayElements'),
+      msg('instructions.indicesStartAtTheArrayContainsValuesANullArray', [
+        type,
+        special[op[0]] ?? '',
+      ]),
+    );
   }
   if (/^(get|put)(field|static)$/.test(op)) {
     const put = op.startsWith('put'),
       instance = op.endsWith('field');
     return section(
-      msg('m58555d38b30a'),
-      msg('mf35bf7c737fe') +
-        (instance ? msg('m29421d07b20a') : msg('m02b4e7dae579')) +
+      msg('instructions.specifyingAField'),
+      msg('instructions.writeTheClassNameFieldNameAndTypeDescriptorCounter') +
+        (instance
+          ? msg('instructions.aNullTargetReferenceThrowsNullPointerException')
+          : msg('instructions.ifTheDeclaringClassHasNotBeenInitializedItIs')) +
         (put
-          ? msg('m575f0fdfcc02') +
-            (instance ? msg('mec4be68dba1b') : msg('m3807c24e6dd8')) +
-            msg('ma579b401c2f6')
+          ? msg('instructions.theValueMustMatchTheFieldTypeAFinalField') +
+            (instance
+              ? msg('instructions.constructorInit')
+              : msg('instructions.classInitializerClinit')) +
+            msg('instructions.sentenceSeparator')
           : ''),
     );
   }
   const calls: Record<string, string> = {
-    invokevirtual: msg('m98db22b24c43'),
-    invokeinterface: msg('m9ac11155e8a8'),
-    invokespecial: msg('m199c4ecf8d60'),
-    invokestatic: msg('m82495767d195'),
-    invokedynamic: msg('mf4cdc77994c7'),
+    invokevirtual: msg('instructions.selectsTheOverriddenMethodUsingTheObjectSActualClass'),
+    invokeinterface: msg(
+      'instructions.callsAnInstanceMethodDeclaredByAnInterfaceTheImplementation',
+    ),
+    invokespecial: msg(
+      'instructions.usedForConstructorsInitAndSuperclassMethodsWithRulesDifferent',
+    ),
+    invokestatic: msg('instructions.callsAStaticMethodNoThisReferenceIsPushedIf'),
+    invokedynamic: msg('instructions.theTargetComesFromACallSiteResolvedByABootstrap'),
   };
   if (calls[op])
     return (
-      section(msg('mb03653bd04ac'), calls[op]) +
+      section(msg('instructions.howTheTargetIsSelected'), calls[op]) +
       sectionBreak(
-        msg('ma2a278c4c972'),
-        msg('mc765e1bc342f') +
-          (!['invokestatic', 'invokedynamic'].includes(op) ? msg('m9082c236f2f2') : '') +
-          msg('mf5881e28bd43'),
+        msg('instructions.argumentsAndReturnValue'),
+        msg('instructions.inADescriptorParenthesesContainTheParametersTheReturnType') +
+          (!['invokestatic', 'invokedynamic'].includes(op)
+            ? msg('instructions.pushTheTargetReferenceBeforeTheArgumentsANullReference')
+            : '') +
+          msg('instructions.aReturnTypeOfVPushesNoReturnValue'),
       )
     );
   if (/^[ilfda]?return$/.test(op))
     return section(
-      msg('ma8a78e1453cf'),
+      msg('instructions.returningToTheCaller'),
       op === 'return'
-        ? msg('m70b9e9048951')
-        : msg('m5d64710e5e68') +
+        ? msg('instructions.usedInMethodsReturningVVoidExecutionResumesAfterThe')
+        : msg('instructions.passesOneValueToTheCallerSStackAndResumes') +
             (op === 'ireturn'
-              ? msg('m7d58a26d553e')
+              ? msg('instructions.methodsReturningBooleanByteCharOrShortAlsoUseIreturn')
               : op === 'areturn'
-                ? msg('m201b645db068')
-                : msg('m8b86d625388f', [type])),
+                ? msg('instructions.theReferenceMustBeAssignableToTheDeclaredReturnType')
+                : msg('instructions.theMethodMustReturn', [type])),
     );
-  if (op === 'athrow') return section(msg('ma3d9d7d7cad1'), msg('m51519670e5e3'));
+  if (op === 'athrow')
+    return section(
+      msg('instructions.exceptionPropagation'),
+      msg('instructions.requiresAReferenceToThrowableOrASubclassThrowingNull'),
+    );
   if (/^if/.test(op))
     return section(
-      msg('maa07f94b198f'),
+      msg('instructions.valuesBeingCompared'),
       /^if_acmp/.test(op)
-        ? msg('m5ecc78041fee')
+        ? msg('instructions.comparesObjectIdentityNotContentsTwoNullReferencesAreEqual')
         : /^ifnonnull$|^ifnull$/.test(op)
-          ? msg('mc52b6aa1922b')
+          ? msg('instructions.comparesOneReferenceWithNullUsefulForCheckingAReference')
           : /^if_icmp/.test(op)
-            ? msg('md30da3fcbe8e')
-            : msg('me38fd97f8d19') +
-              (op === 'ifeq' ? msg('m4fba90a68456') : op === 'ifne' ? msg('ma2326d467013') : ''),
+            ? msg('instructions.comparesTwoIntValuesItCannotDirectlyCompareLongFloat')
+            : msg('instructions.popsOneIntAndComparesItWith') +
+              (op === 'ifeq'
+                ? msg('instructions.forABooleanBranchesOnFalse')
+                : op === 'ifne'
+                  ? msg('instructions.forABooleanBranchesOnTrueNonzero')
+                  : ''),
     );
   if (/^[lfd]cmp/.test(op))
     return section(
-      msg('m446fb189e6e6'),
-      msg('mf66ac3ce37c0') +
+      msg('instructions.comparisonResult'),
+      msg('instructions.pushesIfTheEarlierValueIsLessThanTOPIf') +
         (op === 'lcmp'
-          ? msg('ma3a673c211b8')
-          : msg('m68a324d0b9ca', [
+          ? msg('instructions.unlikeSubtractionThisComparisonCannotOverflow')
+          : msg('instructions.ifEitherOperandIsNaNPushesNaNWillNotTake', [
               op.endsWith('l') ? '−1' : '1',
-              op.endsWith('l') ? msg('ma30050be3370') : msg('m6e9bde1f3dd4'),
+              op.endsWith('l')
+                ? msg('instructions.whenTestingGreaterThanWithIfgt')
+                : msg('instructions.whenTestingLessThanWithIflt'),
             ])),
     );
   if (/switch$/.test(op))
     return section(
-      msg('md135a50dbe3d'),
-      op === 'tableswitch' ? msg('mc2ba8abafcca') : msg('m2f806778c6b4'),
+      msg('instructions.selectingABranch'),
+      op === 'tableswitch'
+        ? msg('instructions.aTableMapsAContinuousIntegerRangeToTargetsValues')
+        : msg('instructions.listsIntegerKeysAndTargetsIfNoKeyMatchesGoes'),
     );
   if (/^goto/.test(op))
     return section(
-      msg('m220a70796313'),
-      msg('m60cf8e35fc81') + (op === 'goto_w' ? msg('m4c9f5b0c2119') : msg('mb5fef8446838')),
+      msg('instructions.unconditionalBranch'),
+      msg('instructions.jumpsToALabelInTheSameMethodForExample') +
+        (op === 'goto_w'
+          ? msg('instructions.usesASignedBitRelativeOffsetAllowingLongerJumpsThan')
+          : msg('instructions.theBytecodeUsesASignedBitRelativeOffsetFromTo')),
     );
   if (/^jsr/.test(op) || op === 'ret')
     return section(
-      msg('mdcce8fb9f28b'),
-      (op === 'ret' ? msg('medf96a90b56a') : msg('mb8d8223c2f88', [op === 'jsr_w' ? '32' : '16'])) +
-        msg('m898b232a9448'),
+      msg('instructions.legacySubroutineInstruction'),
+      (op === 'ret'
+        ? msg('instructions.theOperandIsALocalSlotIndexResumesWithinThe')
+        : msg('instructions.pushesTheNextInstructionSAddressAsReturnAddressThenJumps', [
+            op === 'jsr_w' ? '32' : '16',
+          ])) + msg('instructions.usedByOldFinallyImplementationsForbiddenInClassFileVersion'),
     );
   const objectDetails: Record<string, string> = {
-    new: msg('mc67f98dc5730'),
-    newarray: msg('m748964757650'),
-    anewarray: msg('m3d3ceb7494b4'),
-    multianewarray: msg('m13124e8fa297'),
-    arraylength: msg('mecb86c0a4941'),
-    checkcast: msg('m5ff568f2921a'),
-    instanceof: msg('mb7e36751d226'),
-    monitorenter: msg('m068607887077'),
-    monitorexit: msg('mfa4caad4a1e0'),
-    nop: msg('ma198c4aad5d4'),
-    wide: msg('mc0acbf21ca63'),
+    new: msg('instructions.allocatesAnInstanceOfTheNamedClassFieldsStartAs'),
+    newarray: msg('instructions.specifyAPrimitiveDescriptorSuchAsIIntOrZ'),
+    anewarray: msg('instructions.specifyAReferenceTypeDescriptorAndPushTheLengthElements'),
+    multianewarray: msg('instructions.specifyAnArrayDescriptorAndHowManyDimensionsToAllocate'),
+    arraylength: msg('instructions.returnsTheNumberOfElementsTheLastIndexIsLength'),
+    checkcast: msg('instructions.checksWhetherTheReferenceCanBeTreatedAsTheSpecified'),
+    instanceof: msg('instructions.pushesIfTheReferencedObjectIsAssignableToTheSpecified'),
+    monitorenter: msg('instructions.acquiresTheObjectSMonitorWaitingIfAnotherThreadOwns'),
+    monitorexit: msg('instructions.decrementsTheCurrentThreadSMonitorCountAtZeroOther'),
+    nop: msg('instructions.doesNothingAndAdvancesToTheNextInstructionOccupiesOne'),
+    wide: msg('instructions.widensTheNextLoadStoreOrRetLocalIndexTo'),
   };
   if (objectDetails[op])
     return section(
       op.startsWith('monitor')
-        ? msg('mfd72d5f0e53a')
+        ? msg('instructions.monitorOwnership')
         : op === 'wide'
-          ? msg('m2ef2b0beb1b3')
-          : msg('m250de5f0835e'),
+          ? msg('instructions.widenedOperands')
+          : msg('instructions.behaviorAndConstraints'),
       objectDetails[op],
     );
   if (/^(pop|dup|swap)/.test(op))
     return section(
-      msg('m9eaa7830a34c'),
+      msg('instructions.rearrangingValues'),
       op.startsWith('pop')
-        ? msg('m759ef43d6cc4') + (op === 'pop' ? msg('mbcc58ea38bc6') : msg('m45f907f7bf17'))
+        ? msg('instructions.discardsAnUnusedValueSuchAsAReturnValue') +
+            (op === 'pop'
+              ? msg('instructions.removesOneCategoryValueItCannotRemoveHalfOfA')
+              : msg('instructions.removesTwoCategoryValuesOrOneLongOrDoubleA'))
         : op === 'swap'
-          ? msg('m8b3e25d0e365')
-          : msg('m11de3569c85d'),
+          ? msg('instructions.swapsTOPWithTheValueBelowItBothMustBe')
+          : msg('instructions.keepsACopyBeforeACalculationOrStoreConsumesThe'),
     );
   throw new Error(`Missing instruction explanation: ${op}`);
 }

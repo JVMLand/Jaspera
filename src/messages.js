@@ -1,4 +1,4 @@
-import japanese from './locales/ja.json' with { type: 'json' };
+import japanese from './generated/locales/ja.js';
 /** Canonical messages stay stable in models, workers and persisted state.
  * The presentation adapter resolves them in the selected locale. */
 export function msg(key, values = []) {
@@ -20,6 +20,7 @@ export function displayText(text) {
 }
 export function displayMessage(key, values = []) {
   const template = displayCatalog[key] ?? japanese[key];
+  if (template === undefined) throw new Error(`Unknown message: ${key}`);
   return template.replace(/\{(\d+)\}/g, (token, index) =>
     index < values.length ? displayText(String(values[index])) : token,
   );

@@ -1,0 +1,19 @@
+{
+  "search.class": "クラス",
+  "search.couldNotOpen": "開けませんでした。",
+  "search.file": "ファイル",
+  "search.noResultsFound": "見つかりませんでした。",
+  "search.openingDefinition": "定義を開いています…",
+  "search.preparingSearch": "検索の準備中…",
+  "search.results": "{0} 件{1}",
+  "search.searchEverywhere": "どこでも検索",
+  "search.searchEverywhere.close": "閉じる",
+  "search.searchEverywhere.close.ariaLabel": "閉じる",
+  "search.searchEverywhere.open": "開く",
+  "search.searchEverywhere.searchEverywhere": "どこでも検索",
+  "search.searchEverywhere.searchFilesAndDefinitions.ariaLabel": "ファイル・定義を検索",
+  "search.searchEverywhere.searchFilesClassesMethodsAndFields.placeholder": "ファイル・クラス・メソッド・フィールドを検索",
+  "search.searchEverywhere.select": "選択",
+  "search.someSearchSourcesCouldNotBeLoadedCloseAndTry": "一部の検索対象を読み込めませんでした。閉じてからもう一度お試しください。",
+  "search.top": "（上位100件）"
+}

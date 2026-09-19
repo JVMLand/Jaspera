@@ -13,7 +13,7 @@ export function installInstructionGraph(...args: Parameters<typeof install>) {
   const visibility = observePanelVisibility(host, (visible) => {
     if (!visible || panel || loading || disposed) return;
     loading = true;
-    host.textContent = msg('mec79e2e4092c');
+    host.textContent = msg('editor.loadingInstructionReference');
     void import('./instruction-graph')
       .then(({ installInstructionGraph }) => {
         if (disposed) return;
@@ -22,7 +22,10 @@ export function installInstructionGraph(...args: Parameters<typeof install>) {
         panel.update(pending);
       })
       .catch(() => {
-        if (!disposed) host.textContent = msg('m866670cee859');
+        if (!disposed)
+          host.textContent = msg(
+            'editor.couldNotLoadTheInstructionReferenceCheckYourConnectionAnd',
+          );
       })
       .finally(() => {
         loading = false;

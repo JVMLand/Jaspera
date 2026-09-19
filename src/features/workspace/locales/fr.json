@@ -1,0 +1,21 @@
+{
+  "workspace.cannotConnectToTheOriginalWorkspace": "Impossible de se connecter à l’espace de travail d’origine.",
+  "workspace.checkTheSourceCompilationResults": "Vérifiez les résultats de compilation.",
+  "workspace.checkYourBrowserSPopUpSettings": "Vérifiez les paramètres de fenêtres contextuelles du navigateur.",
+  "workspace.closeAltClickCloseOtherTabs": "Fermer (Alt+clic : fermer les autres onglets)",
+  "workspace.closeOtherTabs": "Fermer les autres onglets",
+  "workspace.closeTab": " — fermer l’onglet",
+  "workspace.closeThisTab": "Fermer cet onglet",
+  "workspace.closeWindow": "Fermer la fenêtre",
+  "workspace.couldNotOpenTheDetachedWindow": "Impossible d’ouvrir la fenêtre détachée",
+  "workspace.couldNotSaveTheClassFile": "Impossible d’enregistrer le fichier class",
+  "workspace.detachedTools.clearConsole": "Vider la console",
+  "workspace.detachedTools.noProblemsFound": "Aucun problème détecté.",
+  "workspace.detachedTools.standardInput": "Entrée standard",
+  "workspace.dragToMoveAltClickToCloseOtherTabs": " (glisser pour déplacer / Alt+clic pour fermer les autres onglets)",
+  "workspace.editsAreSharedWithTheOriginalWorkspace": "Les modifications sont partagées avec l’espace de travail d’origine.",
+  "workspace.fileInProject": "Fichier du projet…",
+  "workspace.moveLeft": "Déplacer à gauche",
+  "workspace.moveRight": "Déplacer à droite",
+  "workspace.moveToProjectGroup": "Déplacer vers le groupe Projet"
+}

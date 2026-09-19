@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "Additionner et multiplier des entiers. Calculer (7 + 5) * 3.",
+  "example.Arrays.comment": "Créer un tableau int, écrire puis lire un élément. Les indices commencent à 0.",
+  "example.Branches.comment": "Comparer des nombres et brancher selon le résultat. Essayez de changer la première valeur.",
+  "example.Collections.comment": "Ajouter deux chaînes à un ArrayList. Écarter avec pop la valeur renvoyée par add, qui n’est pas utilisée.",
+  "example.HelloWorld.comment": "Afficher une chaîne. Empiler le flux de sortie avec getstatic, puis passer la chaîne à println.",
+  "example.LongAndDouble.comment": "long et double occupent chacun deux emplacements. Utiliser les instructions arithmétiques du type correspondant.",
+  "example.Loop.comment": "Afficher de 1 à 5. Utiliser la variable locale #1 comme compteur.",
+  "example.Methods.comment": "Appeler une autre méthode static. Les arguments sont placés dans #0 et #1 de calc.",
+  "example.Strings.comment": "Ajouter une chaîne et un nombre à StringBuilder pour former une seule chaîne.",
+  "example.answer": "Réponse : ",
+  "example.greater": "supérieur à 10",
+  "example.hello": "Bonjour, JAL !",
+  "example.less": "10 ou moins"
+}

@@ -34,33 +34,38 @@ export function updateDebugMenu(
 }
 export function debugMenuItems(actions: DebugActions) {
   return [
-    { id: 'debug-start', label: msg('m2f13ffc43a6d'), shortcut: 'Shift+F5', action: actions.start },
+    {
+      id: 'debug-start',
+      label: msg('debug.startDebugging'),
+      shortcut: 'Shift+F5',
+      action: actions.start,
+    },
     {
       id: 'debug-continue',
-      label: msg('m788935e0a245'),
+      label: msg('debug.resume'),
       shortcut: 'F8',
       action: () => actions.command('continue'),
     },
-    { id: 'debug-pause', label: msg('mb8aaf2c6e030'), action: () => actions.command('pause') },
+    { id: 'debug-pause', label: msg('debug.pause'), action: () => actions.command('pause') },
     {
       id: 'debug-over',
-      label: msg('m0259fd6a7bf9'),
+      label: msg('debug.stepOver'),
       shortcut: 'F10',
       action: () => actions.command('over'),
     },
     {
       id: 'debug-into',
-      label: msg('mb1e84d37ea6a'),
+      label: msg('debug.stepInto'),
       shortcut: 'F11',
       action: () => actions.command('into'),
     },
     {
       id: 'debug-out',
-      label: msg('m472c720694de'),
+      label: msg('debug.stepOut'),
       shortcut: 'Shift+F11',
       action: () => actions.command('out'),
     },
-    { id: 'debug-stop', label: msg('mca4d973c0b00'), action: actions.stop },
+    { id: 'debug-stop', label: msg('common.stop'), action: actions.stop },
   ];
 }
 export function installDebugKeys(actions: DebugActions, state: () => DebugState | undefined) {
@@ -99,13 +104,13 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
   toolbar.className = 'debug-toolbar';
   toolbar.hidden = true;
   toolbar.setAttribute('role', 'toolbar');
-  toolbar.setAttribute('aria-label', msg('ma6fec8bbb87f'));
+  toolbar.setAttribute('aria-label', msg('debug.debugControls'));
   const stateLabel = document.createElement('p');
   stateLabel.className = 'debug-status';
   stateLabel.setAttribute('role', 'status');
   const list = document.createElement('div');
   list.className = 'debug-frames';
-  list.setAttribute('aria-label', msg('m99ad7e61e867'));
+  list.setAttribute('aria-label', msg('debug.callStack'));
   const content = document.createElement('div');
   content.className = 'debug-values';
   const icons: Record<string, string> = {
@@ -151,12 +156,12 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
   root.replaceChildren(stateLabel, list, content);
   let state: DebugState | undefined,
     selected = 0;
-  const waiting = msg('ma6a1d0493b22');
+  const waiting = msg('debug.theDebuggerIsIdleStartWithRunSetABreakpoint');
   const labels = {
     idle: waiting,
-    starting: msg('m6f92c03c2818'),
-    running: msg('md82113a7a9c6'),
-    paused: msg('m4d9c2e5034e9'),
+    starting: msg('debug.preparingDebugger'),
+    running: msg('debug.running'),
+    paused: msg('debug.frames'),
     finished: waiting,
   };
   function render() {
@@ -167,10 +172,10 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
     toolbar.hidden = !active;
     toolbar.dataset.state = state.status;
     indicator.textContent = paused
-      ? msg('m72eea71385de')
+      ? msg('debug.paused')
       : state.status === 'starting'
-        ? msg('m9e305eab23dd')
-        : msg('md82113a7a9c6');
+        ? msg('debug.preparing')
+        : msg('debug.running');
     buttons.forEach((b) => {
       const id = b.dataset.command;
       b.hidden = id === 'debug-continue' ? !paused : id === 'debug-pause' ? paused : false;
@@ -203,17 +208,17 @@ export function installDebugPanel(root: HTMLElement, actions: DebugActions) {
     const frame = state.snapshot.frames[selected] ?? state.snapshot.frames[0];
     if (!frame) return;
     if (frame.native) {
-      content.textContent = msg('mea43aff2daff');
+      content.textContent = msg('debug.nativeMethod');
       return;
     }
     const prediction = predictDebugFrame(frame);
-    if (selected > 0 && frame.callSnapshot) prediction.beforeLabel = msg('mb4fdfd2b05f7');
+    if (selected > 0 && frame.callSnapshot) prediction.beforeLabel = msg('debug.atCallTime');
     else if (selected > 0) {
       prediction.after = [];
       prediction.consumed = 0;
       prediction.produced = 0;
       prediction.locals = undefined;
-      prediction.terminal = msg('m815e19f20208');
+      prediction.terminal = msg('debug.waitingForTheCallee');
       prediction.note = undefined;
     }
     content.append(renderFrameTransition(prediction));

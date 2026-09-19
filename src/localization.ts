@@ -1,16 +1,11 @@
+import { openLanguageSettings } from './features/language/settings';
+export { openLanguageSettings } from './features/language/settings';
 import i18next from 'i18next';
-import japanese from './locales/ja.json';
+import japanese from './generated/locales/ja.js';
+import supportedLocales from './i18n/locales.json';
+import { localeLoaders } from './generated/locale-loaders';
 import { msg, setDisplayCatalog, displayMessage } from './messages.js';
-import './localization.css';
-export const locales = {
-  ja: '日本語',
-  en: 'English',
-  zh: '简体中文',
-  es: 'Español',
-  it: 'Italiano',
-  fr: 'Français',
-  la: 'Latina',
-};
+export const locales = supportedLocales;
 export type Locale = keyof typeof locales;
 type Catalog = Record<string, string>;
 const storageKey = 'jaspera.locale';
@@ -22,7 +17,6 @@ void engine.init({
   initAsync: false,
   interpolation: { prefix: '{', suffix: '}', escapeValue: false },
 });
-const loaders = import.meta.glob<{ default: Catalog }>('./locales/{en,zh,es,it,fr,la}.json');
 let locale: Locale = 'ja',
   request = 0;
 export const currentLocale = () => locale;
@@ -87,30 +81,6 @@ function rebuild(catalog: Catalog) {
   for (const [key, source] of Object.entries(canonical)) {
     const target = catalog[key] ?? source;
     register(source, target);
-    // Preserve markup and translate only its authored text/accessible attributes.
-    const fragments = (html: string) => {
-      const template = document.createElement('template');
-      template.innerHTML = html;
-      const result: string[] = [];
-      const walk = (node: Node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          result.push(node.textContent ?? '');
-          return;
-        }
-        if (node instanceof Element) {
-          for (const attr of attributes)
-            if (node.hasAttribute(attr)) result.push(node.getAttribute(attr)!);
-        }
-        for (const child of node.childNodes) walk(child);
-      };
-      walk(template.content);
-      return result;
-    };
-    if (/<\/?[a-z][^>]*>/i.test(source)) {
-      const a = fragments(source),
-        b = fragments(target);
-      if (a.length === b.length) a.forEach((value, i) => register(value, b[i]));
-    }
     // Markdown headings and paragraphs are rendered as separate DOM text nodes.
     const a = source.split(/\n+/),
       b = target.split(/\n+/);
@@ -190,7 +160,7 @@ const observer = new MutationObserver((records) => {
 });
 export async function setLocale(next: Locale, persist = true) {
   const version = ++request;
-  const catalog = next === 'ja' ? canonical : (await loaders[`./locales/${next}.json`]()).default;
+  const catalog = next === 'ja' ? canonical : (await localeLoaders[next]()).default;
   if (version !== request) return;
   engine.addResourceBundle(next, 'translation', catalog, true, true);
   await engine.changeLanguage(next);
@@ -217,61 +187,6 @@ export async function setLocale(next: Locale, persist = true) {
 }
 export function languageMenuItem() {
   return { id: 'language-settings', label: msg('language.menu'), action: openLanguageSettings };
-}
-export function openLanguageSettings() {
-  const existing = document.querySelector<HTMLDialogElement>('#language-dialog');
-  if (existing) {
-    existing.focus();
-    return;
-  }
-  const dialog = document.createElement('dialog');
-  dialog.id = 'language-dialog';
-  dialog.setAttribute('aria-labelledby', 'language-title');
-  const title = document.createElement('h2');
-  title.id = 'language-title';
-  title.textContent = msg('language.title');
-  const label = document.createElement('label');
-  label.htmlFor = 'language-select';
-  label.textContent = msg('language.choose');
-  const select = document.createElement('select');
-  select.id = 'language-select';
-  select.translate = false;
-  for (const [code, name] of Object.entries(locales)) {
-    const option = document.createElement('option');
-    option.value = code;
-    option.textContent = name;
-    option.lang = code;
-    select.append(option);
-  }
-  select.value = locale;
-  const status = document.createElement('p');
-  status.setAttribute('role', 'status');
-  const actions = document.createElement('div');
-  actions.className = 'dialog-actions';
-  const close = document.createElement('button');
-  close.textContent = msg('language.close');
-  close.onclick = () => dialog.close();
-  const apply = document.createElement('button');
-  apply.textContent = msg('language.apply');
-  apply.onclick = async () => {
-    apply.disabled = true;
-    status.textContent = msg('language.loading');
-    try {
-      await setLocale(select.value as Locale);
-      dialog.close();
-    } catch {
-      status.textContent = msg('language.error');
-    } finally {
-      apply.disabled = false;
-    }
-  };
-  actions.append(close, apply);
-  dialog.append(title, label, select, status, actions);
-  dialog.addEventListener('close', () => dialog.remove(), { once: true });
-  document.body.append(dialog);
-  visit(dialog);
-  dialog.showModal();
-  select.focus();
 }
 export function preferredLocale(languages: readonly string[]): Locale {
   for (const language of languages) {

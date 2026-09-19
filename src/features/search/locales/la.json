@@ -1,0 +1,19 @@
+{
+  "search.class": "Classis",
+  "search.couldNotOpen": "Aperiri non potuit.",
+  "search.file": "Tabula",
+  "search.noResultsFound": "Nulli exitus inventi.",
+  "search.openingDefinition": "Definitio aperitur…",
+  "search.preparingSearch": "Quaestio paratur…",
+  "search.results": "{0} exitus {1}",
+  "search.searchEverywhere": "Ubique quaere",
+  "search.searchEverywhere.close": "Claude",
+  "search.searchEverywhere.close.ariaLabel": "Claude",
+  "search.searchEverywhere.open": "Aperi",
+  "search.searchEverywhere.searchEverywhere": "Ubique quaere",
+  "search.searchEverywhere.searchFilesAndDefinitions.ariaLabel": "Tabulas et definitiones quaere",
+  "search.searchEverywhere.searchFilesClassesMethodsAndFields.placeholder": "Tabulas, classes, methodos et campos quaere",
+  "search.searchEverywhere.select": "Elige",
+  "search.someSearchSourcesCouldNotBeLoadedCloseAndTry": "Quidam fontes quaestionis legi non potuerunt. Claude et iterum tenta.",
+  "search.top": "(prima 100)"
+}

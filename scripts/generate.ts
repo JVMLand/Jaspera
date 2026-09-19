@@ -2,8 +2,10 @@ import { readFile, writeFile, mkdir, cp, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { generateFonts } from './generate-fonts.ts';
 import { generateTheme } from './generate-theme.ts';
+import { generateLocales } from './generate-locales.mjs';
 
 await mkdir('src/generated', { recursive: true });
+await generateLocales();
 await import('./generate-language.ts');
 await import('./generate-offset-parser.ts');
 await generateTheme();

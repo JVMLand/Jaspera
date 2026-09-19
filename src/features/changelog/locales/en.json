@@ -1,0 +1,6 @@
+{
+  "changelog.close": "Close",
+  "changelog.error": "Could not load the release notes. Close this window and try again.",
+  "changelog.loading": "Loading…",
+  "changelog.versions": "Versions"
+}

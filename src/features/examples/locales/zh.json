@@ -1,0 +1,15 @@
+{
+  "example.Arithmetic.comment": "整数加法与乘法。计算 (7 + 5) * 3。",
+  "example.Arrays.comment": "创建 int 数组，写入并读取元素。数组下标从 0 开始。",
+  "example.Branches.comment": "比较数值并根据结果跳转。试着修改第一个值。",
+  "example.Collections.comment": "向 ArrayList 添加两个字符串。add 的返回值不使用，因此用 pop 丢弃。",
+  "example.HelloWorld.comment": "输出字符串。用 getstatic 将输出流压栈，再将字符串传给 println。",
+  "example.LongAndDouble.comment": "long 和 double 各占两个槽位。使用与类型对应的运算指令。",
+  "example.Loop.comment": "输出 1 到 5。使用局部变量 #1 作为计数器。",
+  "example.Methods.comment": "调用另一个 static 方法。参数传入 calc 的 #0 和 #1 槽位。",
+  "example.Strings.comment": "向 StringBuilder 追加字符串和数值，组成一个字符串。",
+  "example.answer": "答案：",
+  "example.greater": "大于 10",
+  "example.hello": "你好，JAL！",
+  "example.less": "小于或等于 10"
+}

@@ -3,16 +3,16 @@ import { relatedInstructions } from './instruction-relations';
 import { instructionDetails } from './instruction-details';
 import language from './generated/language.json';
 export const categories = [
-  msg('m8e546e43c588'),
-  msg('mf69d44a6ff07'),
-  msg('m2dea9a4af76d'),
-  msg('mdba6a11d4d1e'),
-  msg('m2f4756018980'),
-  msg('me51441670471'),
-  msg('m8b03112bd0bb'),
-  msg('m794a49d55773'),
-  msg('m0ba8b412c1a3'),
-  msg('m7b7d672a1cc6'),
+  msg('instructions.loadsStoresAndConstants'),
+  msg('instructions.arithmeticAndBitOperations'),
+  msg('instructions.typeConversion'),
+  msg('instructions.objectsArraysAndFields'),
+  msg('instructions.stackManipulation'),
+  msg('instructions.comparisonsAndBranches'),
+  msg('instructions.methodCallsAndReturns'),
+  msg('instructions.exception'),
+  msg('instructions.synchronization'),
+  msg('instructions.auxiliaryInstructions'),
 ] as const;
 export function category(op: string): string {
   if (/^(?:[ilfda](?:load|store|const)|[bs]ipush|ldc)/.test(op)) return categories[0];
@@ -38,7 +38,7 @@ const types: Record<string, string> = {
   l: 'long',
   f: 'float',
   d: 'double',
-  a: msg('mad087912287e'),
+  a: msg('instructions.reference'),
   b: 'byte / boolean',
   c: 'char',
   s: 'short',
@@ -56,14 +56,14 @@ export function guide(op: string) {
   const markdown = doc.markdown;
   let summary = doc.title;
   const forms: Diagram[] = [],
-    type = displayText(types[op[0]] ?? '') || msg('m19126213b0d1');
+    type = displayText(types[op[0]] ?? '') || msg('instructions.value');
   let example = op;
   const add = (
     before: string[],
     after: string[],
     note?: string,
     locals?: Diagram['locals'],
-    label = msg('mbbbbf1a9c219'),
+    label = msg('instructions.basicForm'),
   ) => forms.push({ before, after, note, locals, label });
   let m = op.match(/^([ilfda])(load|store)(?:_(\d))?$/);
   if (m) {
@@ -71,33 +71,36 @@ export function guide(op: string) {
       value = `a : ${type}`;
     example = m[3] ? op : op + ' 1';
     if (m[2] === 'load') {
-      summary = msg('m2c1ad4ee5b02', [slot, type]);
+      summary = msg('instructions.copyTheValueFromLocalVariableToTheTopOf', [slot, type]);
       add([], [value]);
     } else {
-      summary = msg('m62897c1b4837', [type, slot]);
+      summary = msg('instructions.popTheTopValueAndStoreItInLocalVariable', [type, slot]);
       add([value], [], undefined, {
-        before: [msg('mdf917c29b768', [slot])],
+        before: [msg('instructions.previousValue', [slot])],
         after: [`#${slot}: ${value}`],
       });
     }
   } else if (op === 'iinc') {
-    summary = msg('m6045d562ddfd');
+    summary = msg('instructions.addTheSpecifiedNumberToAnIntLocalVariableUpdate');
     example = 'iinc 1 1';
-    add([], [], msg('m75266457fa9e'), { before: ['#1: 3 : int'], after: ['#1: 4 : int'] });
+    add([], [], msg('instructions.thisExampleIncrementsBy'), {
+      before: ['#1: 3 : int'],
+      after: ['#1: 4 : int'],
+    });
   } else if (/const_|^[bs]ipush$|^ldc/.test(op)) {
     const v =
       op === 'aconst_null'
         ? 'null'
         : op.startsWith('ldc')
           ? op === 'ldc2_w'
-            ? msg('m7f5e17f252b3')
-            : msg('m673af6892c3c')
+            ? msg('instructions.constantLongDouble')
+            : msg('common.constant')
           : op.endsWith('m1')
             ? '-1 : int'
             : op.includes('const_')
               ? op.split('_')[1] + ' : ' + type
-              : msg('m7905ab386e63');
-    summary = msg('mba9a5b466943');
+              : msg('instructions.integerInt');
+    summary = msg('instructions.pushTheSpecifiedConstantOntoTheStackForLaterInstructions');
     example = /^[bs]ipush$/.test(op)
       ? op + ' 10'
       : op.startsWith('ldc')
@@ -120,30 +123,37 @@ export function guide(op: string) {
         ushr: '>>>',
       };
     const descriptions: Record<string, string> = {
-      add: msg('m5d3de4d0c8be'),
-      sub: msg('m56d9b92495b5'),
-      mul: msg('md00445023b84'),
-      div: msg('m4b284500c9ec'),
-      rem: msg('m02ec4b50364e'),
-      and: msg('m529dfc32c756'),
-      or: msg('m075f61190e68'),
-      xor: msg('me915c414bdcf'),
+      add: msg('instructions.addition'),
+      sub: msg('instructions.subtraction'),
+      mul: msg('instructions.multiplication'),
+      div: msg('instructions.division'),
+      rem: msg('instructions.remainderCalculation'),
+      and: msg('instructions.bitwiseAND'),
+      or: msg('instructions.bitwiseOR'),
+      xor: msg('instructions.bitwiseXOR'),
     };
     if (['shl', 'shr', 'ushr'].includes(operation)) {
-      summary = msg('m449d8c62335d', [
+      summary = msg('instructions.shiftAValueToTheTheTopIntSpecifiesThe', [
         type,
-        operation === 'shl' ? msg('me2e0c454e5d5') : msg('m14ab1f2bce0a'),
+        operation === 'shl' ? msg('instructions.left') : msg('instructions.right'),
       ]);
       add([`a : ${type}`, 'b : int'], [`a ${symbols[operation]} b : ${type}`]);
     } else {
       const ordered = ['sub', 'div', 'rem'].includes(operation);
-      summary = msg('m500ce4222966', [type, descriptions[operation]]);
-      if (ordered) summary += operation === 'sub' ? msg('m762d756e0e91') : msg('m2290abcc5309');
+      summary = msg('instructions.popTwoValuesPerformAndPushOneResult', [
+        type,
+        descriptions[operation],
+      ]);
+      if (ordered)
+        summary +=
+          operation === 'sub'
+            ? msg('instructions.subtractTheTopValueFromTheValueBelowIt')
+            : msg('instructions.divideTheValueBelowTheTopByTheTopValue');
       const labels = ['a', 'b'];
       const bitNote: Record<string, string> = {
-        and: msg('mdde0bacf05c7'),
-        or: msg('mc112423ea5d0'),
-        xor: msg('me90f809d14da'),
+        and: msg('instructions.aResultBitIsOnlyWhenBothInputBitsAre'),
+        or: msg('instructions.aResultBitIsWhenAtLeastOneInputBit'),
+        xor: msg('instructions.aResultBitIsOnlyWhenTheTwoInputBits'),
       };
       add(
         labels.map((label) => `${label} : ${type}`),
@@ -153,28 +163,40 @@ export function guide(op: string) {
     }
   } else if (/^[ilfd]neg$/.test(op)) add([`a : ${type}`], [`−a : ${type}`]);
   else if (/^[ilfd]2/.test(op)) {
-    summary = msg('m1a5eb9d20ed3', [type, types[op[2]]]);
+    summary = msg('instructions.convertTheStackValueFromTo', [type, types[op[2]]]);
     add(
       [`a : ${type}`],
       [`a : ${'bcs'.includes(op[2]) ? 'int' : types[op[2]]}`],
-      'bcs'.includes(op[2]) ? msg('mf33346297ce4') : undefined,
+      'bcs'.includes(op[2])
+        ? msg('instructions.narrowToTheSpecifiedTypeWidthThenRepresentTheValue')
+        : undefined,
     );
   } else if (/^[ilfdabcs]a(load|store)$/.test(op)) {
     const store = op.endsWith('store'),
       valueType = 'bcs'.includes(op[0]) ? 'int' : type;
-    summary = store ? msg('m3832b966107f') : msg('m58a146a6fd20');
+    summary = store
+      ? msg('instructions.popAnArrayReferenceIndexAndValueThenStoreThe')
+      : msg('instructions.popAnArrayReferenceAndIndexThenReadTheSpecified');
     add(
-      [msg('mdb69a6fefc2b'), msg('m103cd80357aa'), ...(store ? [`a : ${valueType}`] : [])],
-      store ? [] : [msg('mea4bc0fefcb8', [valueType])],
-      'bcs'.includes(op[0]) ? msg('m611076c7f27a') : undefined,
+      [
+        msg('instructions.arrayReference'),
+        msg('instructions.indexInt'),
+        ...(store ? [`a : ${valueType}`] : []),
+      ],
+      store ? [] : [msg('instructions.element', [valueType])],
+      'bcs'.includes(op[0])
+        ? msg('instructions.byteBooleanCharAndShortArrayElementsAreRepresentedAs')
+        : undefined,
     );
   } else if (/^(get|put)(field|static)$/.test(op)) {
     const put = op.startsWith('put'),
       instance = op.endsWith('field');
-    summary = msg('m4bd13e15fba0', [
-      instance ? msg('m44c9e5b70aec') : msg('m0aade573c17c'),
-      put ? msg('m9a747b006815') : msg('m2467d08c11ed'),
-      instance ? msg('m3e4978ceb8e3') : msg('m79f1ea6a829b'),
+    summary = msg('instructions.theField', [
+      instance ? msg('instructions.instance2') : msg('instructions.staticClass'),
+      put ? msg('instructions.write') : msg('instructions.read'),
+      instance
+        ? msg('instructions.theTargetObjectReferenceMustAlsoBeOnTheStack')
+        : msg('instructions.noTargetObjectReferenceIsNeeded'),
     ]);
     example =
       op +
@@ -185,13 +207,18 @@ export function guide(op: string) {
           ? 'Counter->count:I'
           : 'java/lang/System->out:Ljava/io/PrintStream;');
     add(
-      [...(instance ? [msg('m6b8ca8ac63c6')] : []), ...(put ? [msg('md4b6298e2d74')] : [])],
-      put ? [] : [msg('m01eb3530196a')],
-      msg('m7b39f8ba5e6d'),
+      [
+        ...(instance ? [msg('instructions.targetObject')] : []),
+        ...(put ? [msg('instructions.valueMatchingTheFieldType')] : []),
+      ],
+      put ? [] : [msg('instructions.fieldValue')],
+      msg('instructions.theDescriptorAfterDeterminesTheType'),
     );
   } else if (op.startsWith('invoke')) {
     const instance = !['invokestatic', 'invokedynamic'].includes(op);
-    summary = msg('mf7cb071ef1f4', [instance ? msg('mdea704894d8b') : msg('m7d341bb44cea')]);
+    summary = msg('instructions.popAndCallTheMethodIfItReturnsAValue', [
+      instance ? msg('instructions.targetObjectAndArguments') : msg('instructions.arguments'),
+    ]);
     example =
       op === 'invokevirtual'
         ? 'invokevirtual java/io/PrintStream->println(Ljava/lang/String;)V'
@@ -199,62 +226,116 @@ export function guide(op: string) {
           ? 'invokestatic java/lang/Math->abs(I)I'
           : op;
     add(
-      [...(instance ? [msg('m6b8ca8ac63c6')] : []), msg('mb2907610236b'), msg('mc97edeb9770d')],
-      [msg('mcd8e4c178488')],
-      msg('m6f46d36ee7ec'),
+      [
+        ...(instance ? [msg('instructions.targetObject')] : []),
+        msg('instructions.argument'),
+        msg('instructions.argumentN'),
+      ],
+      [msg('common.returnValue')],
+      msg('instructions.aVVoidReturnTypePushesNoReturnValue'),
       undefined,
-      msg('mbdd478a08a9a'),
+      msg('instructions.methodReturningAValue'),
     );
     add(
-      [...(instance ? [msg('m6b8ca8ac63c6')] : []), msg('mb2907610236b'), msg('mc97edeb9770d')],
+      [
+        ...(instance ? [msg('instructions.targetObject')] : []),
+        msg('instructions.argument'),
+        msg('instructions.argumentN'),
+      ],
       [],
-      msg('mda5b944bc9cc'),
+      msg('instructions.inADescriptorParametersAreInsideTheParenthesesAndThe'),
       undefined,
-      msg('md1773c6cd594'),
+      msg('instructions.methodReturningVoid'),
     );
   } else if (/^[ilfda]?return$/.test(op)) {
-    summary = op === 'return' ? msg('m9145f942321c') : msg('mb05b298fbb6e', [type]);
-    add(op === 'return' ? [] : [`a : ${type}`], [msg('mdfd98a9ea8c1')], msg('ma66a2ceb6569'));
+    summary =
+      op === 'return'
+        ? msg('instructions.endTheCurrentMethodAndReturnToTheCallerWithout')
+        : msg('instructions.popAValueReturnItToTheCallerAndEnd', [type]);
+    add(
+      op === 'return' ? [] : [`a : ${type}`],
+      [msg('instructions.methodEnds')],
+      msg('instructions.theCurrentStackAndLocalVariableArrayAreDiscardedThe'),
+    );
   } else if (op === 'athrow')
-    add([msg('m2b1c97135153')], [msg('m254470c093e1')], msg('mbce0a329445b'));
+    add(
+      [msg('instructions.exceptionObject')],
+      [msg('instructions.handlerExceptionObject')],
+      msg('instructions.executionDoesNotContinueToTheNextInstructionAMatching'),
+    );
   else if (/^if/.test(op)) {
-    summary = msg('m47190a757fc6');
+    summary = msg('instructions.testTheConditionAndJumpToTheLabelIfTrue');
     example = op + ' Label';
     add(/cmp/.test(op) ? ['a', 'b'] : ['a'], []);
   } else if (/^[lfd]cmp/.test(op))
     add(
       [`a : ${type}`, `b : ${type}`],
       ['−1 / 0 / 1 : int'],
-      op === 'lcmp' ? msg('ma2fb959091ac') : msg('mc76520dbae4a', [op.endsWith('l') ? '−1' : '1']),
+      op === 'lcmp'
+        ? msg('instructions.pushTheComparisonResultThisDoesNotBranch')
+        : msg('instructions.ifEitherValueIsNaNPush', [op.endsWith('l') ? '−1' : '1']),
     );
-  else if (/switch$/.test(op)) add([msg('m8a5bb1efa37b')], [], msg('m0bf3d79b03e3'));
+  else if (/switch$/.test(op))
+    add(
+      [msg('instructions.switchKeyInt')],
+      [],
+      msg('instructions.jumpToTheMatchingTargetOrDefaultIfNoneMatches'),
+    );
   else if (/^goto/.test(op)) {
     example = op + ' Label';
-    add([], [], msg('m24708598c5e3'));
-  } else if (/^jsr/.test(op)) add([], [msg('mf29c52345c23')], msg('m671606955c50'));
-  else if (op === 'ret') add([], [], msg('m81390137ba0d'));
+    add([], [], msg('instructions.jumpToTheLabelWithoutMovingValues'));
+  } else if (/^jsr/.test(op))
+    add(
+      [],
+      [msg('instructions.returnAddress')],
+      msg('instructions.usedByOldFinallyImplementationsItsUseIsRestrictedIn'),
+    );
+  else if (op === 'ret') add([], [], msg('instructions.jumpToTheReturnAddressInLocalVariableNUse'));
   else if (op === 'new') {
     example = 'new java/lang/StringBuilder';
-    add([], [msg('md5c6513fe78e')], msg('mfdc34a81d4fa'));
+    add(
+      [],
+      [msg('instructions.uninitializedObjectReference')],
+      msg('instructions.afterAllocationCallInitUsingInvokespecialToInitializeTheObject'),
+    );
   } else if (/^(a?newarray|multianewarray)$/.test(op))
-    add(op === 'multianewarray' ? [msg('m5dd57919fa4f')] : [msg('m5d9a260ae01e')], [
-      msg('mdb69a6fefc2b'),
-    ]);
-  else if (op === 'arraylength') add([msg('mdb69a6fefc2b')], [msg('m5d9a260ae01e')]);
+    add(
+      op === 'multianewarray'
+        ? [msg('instructions.lengthOfEachDimensionInt')]
+        : [msg('instructions.lengthInt')],
+      [msg('instructions.arrayReference')],
+    );
+  else if (op === 'arraylength')
+    add([msg('instructions.arrayReference')], [msg('instructions.lengthInt')]);
   else if (op === 'checkcast')
-    add([msg('mad087912287e')], [msg('m6b11ed5a5bb9')], msg('mbe338a04678a'));
+    add(
+      [msg('instructions.reference')],
+      [msg('instructions.sameReference')],
+      msg('instructions.checkWhetherTheReferenceCanBeTreatedAsTheTarget'),
+    );
   else if (op === 'instanceof')
-    add([msg('mad087912287e')], [msg('m5e83723c8df8')], msg('ma3087e52e167'));
+    add(
+      [msg('instructions.reference')],
+      [msg('instructions.matchesDoesNotMatch')],
+      msg('instructions.theResultHasTypeIntForNullTheResultIs'),
+    );
   else if (op.startsWith('monitor'))
     add(
-      [msg('m6b8ca8ac63c6')],
+      [msg('instructions.targetObject')],
       [],
-      op === 'monitorenter' ? msg('m5d744ce937c9') : msg('mb2c11db74a82'),
+      op === 'monitorenter'
+        ? msg('instructions.acquireTheObjectSMonitor')
+        : msg('instructions.releaseTheObjectSMonitor'),
     );
-  else if (op === 'nop') add([], [], msg('m0825b9e7b65c'));
+  else if (op === 'nop')
+    add([], [], msg('instructions.changeNothingAndContinueToTheNextInstruction'));
   else if (op === 'wide') {
     example = 'wide iload 256';
-    add([], [msg('m7dc787e3963f')], msg('m11c5e568dfaf'));
+    add(
+      [],
+      [msg('instructions.valueInt')],
+      msg('instructions.thisExampleUsesWideIloadWideGivesTheNextInstruction'),
+    );
   } else {
     // The source documentation groups stack-manipulation variants; isolate the selected mnemonic.
     let section = markdown.split('スタック効果:**')[1]?.split(/\n##### /)[0] ?? '';
@@ -272,103 +353,123 @@ export function guide(op: string) {
           .split(',')
           .map((s) => s.trim())
           .filter((s) => s !== '...'),
-        m[2].trim() || msg('mbf5bd34425a0'),
+        m[2].trim() || msg('instructions.seeTheDetailedExplanationForValueCategoryRestrictions'),
         undefined,
-        pairs.length > 1 ? msg('m5ec329e9d315') + (i + 1) : msg('mbbbbf1a9c219'),
+        pairs.length > 1 ? msg('instructions.form') + (i + 1) : msg('instructions.basicForm'),
       ),
     );
   }
   const constraints: Record<string, string[]> = {
-    pop: [msg('m163318dce9b9')],
-    pop2: [msg('m237499e886a3'), msg('m87e00b404cda')],
-    dup: [msg('m163318dce9b9')],
-    swap: [msg('m237499e886a3')],
-    dup_x1: [msg('m4efd7b7ff248')],
-    dup_x2: [msg('m4efd7b7ff248'), msg('m5f4cacc6fe8d')],
-    dup2: [msg('m237499e886a3'), msg('m87e00b404cda')],
-    dup2_x1: [msg('m4efd7b7ff248'), msg('m176c3dab040d')],
+    pop: [msg('instructions.valueIsCategory')],
+    pop2: [msg('instructions.value1AndValue2AreCategory'), msg('instructions.valueIsCategory2')],
+    dup: [msg('instructions.valueIsCategory')],
+    swap: [msg('instructions.value1AndValue2AreCategory')],
+    dup_x1: [msg('instructions.allValuesAreCategory')],
+    dup_x2: [
+      msg('instructions.allValuesAreCategory'),
+      msg('instructions.theTopValue1IsCategoryValue2BelowItIsCategory'),
+    ],
+    dup2: [msg('instructions.value1AndValue2AreCategory'), msg('instructions.valueIsCategory2')],
+    dup2_x1: [
+      msg('instructions.allValuesAreCategory'),
+      msg('instructions.theTopValue1IsCategoryValue2BelowItIsCategory2'),
+    ],
     dup2_x2: [
-      msg('m4efd7b7ff248'),
-      msg('m77312eb2917b'),
-      msg('m2ff2a3cfed07'),
-      msg('m98c979da6874'),
+      msg('instructions.allValuesAreCategory'),
+      msg('instructions.theTopValue1IsCategoryValue2AndValue3BelowIt'),
+      msg('instructions.theTopValue1AndValue2AreCategoryValue3BelowThem'),
+      msg('instructions.value1AndValue2AreCategory2'),
     ],
   };
 
   if (/^if/.test(op)) {
     const relation: Record<string, string> = {
-      eq: msg('m2880241e47be'),
-      ne: msg('m0087b09be570'),
-      lt: msg('m6c458331fdb8'),
-      ge: msg('m159f4405819e'),
-      gt: msg('mf4d626e791cd'),
-      le: msg('m9b892087bc3a'),
+      eq: msg('instructions.equal'),
+      ne: msg('instructions.different'),
+      lt: msg('instructions.lessThan'),
+      ge: msg('instructions.greaterThanOrEqualTo'),
+      gt: msg('instructions.greaterThan'),
+      le: msg('instructions.lessThanOrEqualTo'),
     };
     const condition =
       op === 'ifnull'
-        ? msg('m0a1860fc5455')
+        ? msg('instructions.theReferenceIsNull')
         : op === 'ifnonnull'
-          ? msg('m6a728cfa68ee')
+          ? msg('instructions.theReferenceIsNotNull')
           : /cmp/.test(op)
             ? ['eq', 'ne'].includes(op.slice(-2))
-              ? msg('m739ad7c588e0', [relation[op.slice(-2)]])
-              : msg('mee426fee14bc', [relation[op.slice(-2)]])
-            : msg('m6f82f59d4842', [relation[op.slice(-2)]]);
-    summary = msg('maf409b650601', [condition]);
+              ? msg('instructions.theTwoValuesAre', [relation[op.slice(-2)]])
+              : msg('instructions.theValueBelowTheTopIsTheTopValue', [relation[op.slice(-2)]])
+            : msg('instructions.theTopIntValueIs', [relation[op.slice(-2)]]);
+    summary = msg('instructions.ifJumpToTheLabelOtherwiseContinueToTheNext', [condition]);
   }
   const summaries: Record<string, string> = {
-    invokevirtual: msg('m4d3effe6f10b'),
-    invokeinterface: msg('m43fb8fdebb4a'),
-    invokespecial: msg('m5405e17c55c6'),
-    invokestatic: msg('m2264b90bf20c'),
-    invokedynamic: msg('m70194b8d61df'),
-    new: msg('m0ea269be5023'),
-    newarray: msg('md47e56625d2b'),
-    anewarray: msg('m8dcb1fa10b03'),
-    multianewarray: msg('m2214f1e7f805'),
-    arraylength: msg('mb4056d78fc3d'),
-    checkcast: msg('m99845a0e7cff'),
-    instanceof: msg('m721b4c4fb435'),
-    athrow: msg('m7d29f12f7a23'),
-    monitorenter: msg('m74f36a272b55'),
-    monitorexit: msg('m5bddf6a54d7c'),
-    tableswitch: msg('m8099ed8d33fa'),
-    lookupswitch: msg('mb2f277e25979'),
-    nop: msg('mea0ab59c8d14'),
-    wide: msg('ma39ee8080899'),
-    ret: msg('m470fb4417bf1'),
-    pop: msg('me488bfb4faa5'),
-    pop2: msg('mfc143b663145'),
-    dup: msg('m277d04127866'),
-    dup_x1: msg('m936ce9660fa0'),
-    dup_x2: msg('mc772e70819d7'),
-    dup2: msg('mfc9d81428e36'),
-    dup2_x1: msg('mc927d48bc222'),
-    dup2_x2: msg('m1d821ffcdbc3'),
-    swap: msg('m0312649c8f5a'),
+    invokevirtual: msg('instructions.callAnInstanceMethodAccordingToTheObjectSActual'),
+    invokeinterface: msg('instructions.callTheImplementationOfAnInterfaceMethodProvidedByThe'),
+    invokespecial: msg('instructions.callAConstructorOrSuperclassMethodUsingRulesDifferentFrom'),
+    invokestatic: msg('instructions.callTheSpecifiedStaticMethodOnlyArgumentsAreNeededOn'),
+    invokedynamic: msg('instructions.invokeTheTargetLinkedByTheBootstrapMethodTheDescriptor'),
+    new: msg('instructions.allocateANewClassInstanceAndPushItsUninitializedReference'),
+    newarray: msg('instructions.createAPrimitiveArrayOfTheSpecifiedLengthAndPush'),
+    anewarray: msg('instructions.createAReferenceArrayOfTheSpecifiedLengthAndPush'),
+    multianewarray: msg('instructions.popTheLengthsOfTheDimensionsAndCreateAMultidimensional'),
+    arraylength: msg('instructions.popAnArrayReferenceAndPushItsElementCountAs'),
+    checkcast: msg('instructions.checkWhetherAReferenceCanBeTreatedAsTheSpecified'),
+    instanceof: msg('instructions.testWhetherTheReferencedObjectMatchesTheSpecifiedTypeAnd'),
+    athrow: msg(
+      'instructions.throwAnExceptionObjectInterruptingNormalExecutionAndTransferringControl',
+    ),
+    monitorenter: msg('instructions.acquireTheObjectSMonitorToBeginMutualExclusionWith'),
+    monitorexit: msg('instructions.releaseOneAcquisitionOfTheObjectSMonitor'),
+    tableswitch: msg('instructions.lookUpAnIntKeyInAContiguousRangeTable'),
+    lookupswitch: msg('instructions.findTheEntryMatchingTheIntKeyAndJumpTo'),
+    nop: msg('instructions.leaveTheStackAndLocalsUnchangedAndContinueToThe'),
+    wide: msg('instructions.widenTheLocalVariableIndexOrIincIncrementEncodedBy'),
+    ret: msg('instructions.jumpToAReturnAddressStoredInALocalVariableThis'),
+    pop: msg('instructions.removeOneCategoryValueFromTheTopOfTheStack'),
+    pop2: msg('instructions.removeTwoCategoryValuesOrOneCategoryValueFromThe'),
+    dup: msg('instructions.duplicateTheTopCategoryValueAndPushTheCopyAbove'),
+    dup_x1: msg('instructions.duplicateTheTopCategoryValueAndInsertTheCopyBelow'),
+    dup_x2: msg('instructions.duplicateTheTopCategoryValueAndInsertTheCopyBelow2'),
+    dup2: msg('instructions.duplicateTheTopTwoSlotsOfValuesAndPushThe'),
+    dup2_x1: msg('instructions.duplicateTheTopTwoSlotsAndInsertTheCopiesBelow'),
+    dup2_x2: msg('instructions.duplicateTheTopTwoSlotsAndInsertTheCopiesBelow2'),
+    swap: msg('instructions.swapTheTopTwoValuesBothMustBeCategory'),
   };
   if (summaries[op]) summary = summaries[op];
-  if (op === 'aconst_null') summary = msg('m9cad33eedae9');
+  if (op === 'aconst_null') summary = msg('instructions.pushNullAReferenceThatPointsToNoObject');
   if ((m = op.match(/^([ilfd])const_(m1|[0-5])$/)))
-    summary = msg('m93fd184cbb6f', [type, m[2] === 'm1' ? '-1' : m[2]]);
-  if (/^[bs]ipush$/.test(op)) summary = msg('mf3f6765e9890', [op === 'bipush' ? '8' : '16']);
+    summary = msg('instructions.pushTheConstant', [type, m[2] === 'm1' ? '-1' : m[2]]);
+  if (/^[bs]ipush$/.test(op))
+    summary = msg('instructions.pushTheInstructionSSignedBitIntegerAsInt', [
+      op === 'bipush' ? '8' : '16',
+    ]);
   if (/^ldc/.test(op))
     summary =
       op === 'ldc2_w'
-        ? msg('m9791989a8fd1')
-        : msg('m053ab8d3b5a0') + (op === 'ldc_w' ? msg('ma4fb1a1be573') : '');
-  if (/^[ilfd]neg$/.test(op)) summary = msg('m48289e61eefd', [type]);
-  if (/^[lfd]cmp/.test(op)) summary = msg('mc10d408e8574', [type]);
-  if (/^goto/.test(op)) summary = msg('ma154bf67ba26');
-  if (/^jsr/.test(op)) summary = msg('m63fd64956ec9');
+        ? msg('instructions.loadAndPushALongOrDoubleConstantFromThe')
+        : msg('instructions.loadAndPushAStringIntFloatOrOtherSupported') +
+          (op === 'ldc_w' ? msg('instructions.thisFormAllowsAWiderConstantPoolIndex') : '');
+  if (/^[ilfd]neg$/.test(op))
+    summary = msg('instructions.popAValueNegateItAndPushTheResult', [type]);
+  if (/^[lfd]cmp/.test(op))
+    summary = msg('instructions.compareTwoValuesAndPushIntOrThisInstructionDoes', [type]);
+  if (/^goto/.test(op))
+    summary = msg('instructions.jumpUnconditionallyToTheLabelWithoutChangingStackValues');
+  if (/^jsr/.test(op))
+    summary = msg('instructions.pushTheAddressOfTheFollowingInstructionThenJumpTo');
   if (/^if_acmp/.test(op))
-    summary = msg('mee060e3f3bf7', [
-      op.endsWith('eq') ? msg('mf43bdb68df12') : msg('m0087b09be570'),
+    summary = msg('instructions.ifTheTwoReferencesJumpToTheLabelBothCompared', [
+      op.endsWith('eq')
+        ? msg('instructions.pointToTheSameObjectOrAreBothNull')
+        : msg('instructions.different'),
     ]);
   if (/^[ilfdabcs]a(load|store)$/.test(op))
-    summary = msg('m5ae8881f0584', [
+    summary = msg('instructions.forTheIndexedElementOfAArray', [
       type,
-      op.endsWith('store') ? msg('m6df91e11478f') : msg('m164b68b66c7e'),
+      op.endsWith('store')
+        ? msg('instructions.writeItPopTheArrayReferenceIndexAndValue')
+        : msg('instructions.readItPopTheArrayReferenceAndIndexThenPush'),
     ]);
   const examples: Record<string, string> = {
     newarray: 'newarray I',

@@ -10,12 +10,12 @@ import { debugMenuItems, installDebugKeys } from './debug-panel';
 import { installDebugEditor } from './debug-editor';
 import { APP_NAME } from './brand';
 import { installEditorCommands, installWindowCommands } from './editor-commands';
-import { installSearchEverywhere } from './search-everywhere';
+import { installSearchEverywhere } from './features/search/search-everywhere';
 import { tabLabels } from './file-labels';
 import { inlayHintOptions } from './inlay-hint-style';
 import { editMenuItems } from './edit-menu';
 import { installFilePicker } from './file-opening';
-import { helpMenuItems, showHelpMessage } from './help';
+import { helpMenuItems, showHelpMessage } from './features/help/help';
 import * as monaco from './editor-platform';
 import { SourceAnalysis, showBytecodeOffsets } from './source-analysis';
 import {
@@ -30,7 +30,7 @@ import type { WindowLayout } from './workspace-layout';
 import type { FileView } from './project';
 import { paneDrop, paneWindowExit } from './tab-interactions';
 import { followInstructionClicks } from './instruction-click';
-import { installDetachedTools } from './detached-tools';
+import { installDetachedTools } from './features/workspace/detached-tools';
 import { installStackHover } from './stack-hover';
 import { installDefinitionUI } from './navigation';
 import { registerLanguage } from './language';
@@ -83,7 +83,7 @@ const stackHover = installStackHover(editor, (model) => {
   const tab = [...tabs.values()].find((t) => t.model === model);
   return tab && bridge
     ? bridge.compilation(tab.state.id, tab.state.version)
-    : Promise.reject(new Error(msg('md8e230ba93da')));
+    : Promise.reject(new Error(msg('workspace.cannotConnectToTheOriginalWorkspace')));
 });
 const syncTheme = () => (overlays.className = editor.getDomNode()!.className);
 const observer = new MutationObserver(syncTheme);
@@ -286,7 +286,7 @@ function updateActions() {
     '';
   menus.disabled('menu-run', !workspace.running && !!reason);
   menus.disabled('debug-start', workspace.running || !!reason);
-  menus.label('menu-run', workspace.running ? msg('mca4d973c0b00') : msg('m77721d5dea60'));
+  menus.label('menu-run', workspace.running ? msg('common.stop') : msg('common.run'));
 }
 const action = (id: string) => {
   editor.focus();
@@ -312,7 +312,10 @@ async function downloadClass() {
   if (!active) return;
   const result = await bridge?.classFile(active);
   if (!result) {
-    showHelpMessage(msg('m610c9cb03faf'), msg('m2707c2791337'));
+    showHelpMessage(
+      msg('workspace.couldNotSaveTheClassFile'),
+      msg('workspace.checkTheSourceCompilationResults'),
+    );
     return;
   }
   const bytes = Uint8Array.from(atob(result.bytecode), (c) => c.charCodeAt(0)),
@@ -346,17 +349,17 @@ const menus = installMenus(el('menus'), [
     items: [
       {
         id: 'open-files',
-        label: msg('mba31551c9cbe'),
+        label: msg('common.open'),
         shortcut: 'Ctrl+O',
         action: filePicker.open,
       },
-      { id: 'open-workspace-file', label: msg('ma8538563e6b2'), action: openFile },
+      { id: 'open-workspace-file', label: msg('workspace.fileInProject'), action: openFile },
       { id: 'download-jar', label: msg('jar.download'), action: () => bridge?.exportJar() },
       null,
-      { id: 'save-project', label: msg('ma3030bf8f16d'), shortcut: 'Ctrl+S', action: save },
+      { id: 'save-project', label: msg('common.save'), shortcut: 'Ctrl+S', action: save },
       {
         id: 'save-file-as',
-        label: msg('m55345dd68b3a'),
+        label: msg('common.exportJAL'),
         action: () => {
           const tab = current();
           if (!tab) return;
@@ -377,7 +380,7 @@ const menus = installMenus(el('menus'), [
       null,
       {
         id: 'close-tab',
-        label: msg('m75b77204a6c9'),
+        label: msg('workspace.closeThisTab'),
         action: () => {
           if (toolTabs?.active) bridge?.closePanel(group, toolTabs.active);
           else if (active) closeTab(active);
@@ -385,12 +388,12 @@ const menus = installMenus(el('menus'), [
       },
       {
         id: 'close-others',
-        label: msg('mad5f178303ff'),
+        label: msg('workspace.closeOtherTabs'),
         action: () => {
           if (active) closeTab(active, true);
         },
       },
-      { id: 'close-window', label: msg('m286b5f7afa80'), action: () => window.close() },
+      { id: 'close-window', label: msg('workspace.closeWindow'), action: () => window.close() },
     ],
   },
   {
@@ -406,7 +409,7 @@ const menus = installMenus(el('menus'), [
     items: [
       {
         id: 'wrap',
-        label: msg('md3eca11714b3'),
+        label: msg('common.wordWrap'),
         action: () =>
           editor.updateOptions({
             wordWrap: editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on',
@@ -414,7 +417,7 @@ const menus = installMenus(el('menus'), [
       },
       {
         id: 'theme',
-        label: msg('maa77a98a507d'),
+        label: msg('common.theme'),
         action: () => {
           el<HTMLSelectElement>('themes').value = workspace.theme;
           el<HTMLDialogElement>('theme-picker').showModal();
@@ -436,9 +439,9 @@ const menus = installMenus(el('menus'), [
   {
     label: 'Build',
     items: [
-      { id: 'check', label: msg('m8e28a92e2d4d'), action: () => bridge?.check(active) },
-      { id: 'menu-run', label: msg('m77721d5dea60'), shortcut: 'Ctrl+Enter', action: run },
-      { id: 'download', label: msg('m99847859379a'), action: () => void downloadClass() },
+      { id: 'check', label: msg('common.check'), action: () => bridge?.check(active) },
+      { id: 'menu-run', label: msg('common.run'), shortcut: 'Ctrl+Enter', action: run },
+      { id: 'download', label: msg('common.exportClass'), action: () => void downloadClass() },
     ],
   },
   { label: 'Debug', items: debugMenuItems(debugActions) },
@@ -483,7 +486,8 @@ const initial = bridge?.attach(group, {
     toolTabs?.update(state.tools, state.files, state.graphDocument, state.debug);
     debugEditor.update();
     applyTheme(state.theme, false);
-    el('status').textContent = state.status || msg('mb1e61e3ff112');
+    el('status').textContent =
+      state.status || msg('workspace.editsAreSharedWithTheOriginalWorkspace');
     updateActions();
   },
   reveal: (selection, id, revealMode) => {
@@ -500,12 +504,16 @@ const initial = bridge?.attach(group, {
 });
 for (const snapshot of bridge?.tabs(group) ?? []) update(snapshot);
 if (initial) select(initial.id);
-else if (!bridge) el('status').textContent = msg('md8e230ba93da');
+else if (!bridge) el('status').textContent = msg('workspace.cannotConnectToTheOriginalWorkspace');
 updateActions();
 for (const name of bridge?.panels(group) ?? []) toolTabs?.show(name);
 bridge?.ready(group);
 const exitDrag = paneWindowExit(bridge?.workspaceId ?? '', (key) => {
-  if (!bridge?.detach(group, key)) showHelpMessage(msg('m0b55b1e7085e'), msg('md8421f8771f0'));
+  if (!bridge?.detach(group, key))
+    showHelpMessage(
+      msg('workspace.couldNotOpenTheDetachedWindow'),
+      msg('workspace.checkYourBrowserSPopUpSettings'),
+    );
 });
 const dropFiles = paneDrop(document.body, bridge?.workspaceId ?? '', (key, event) => {
   const pane = paneIdentity(key);
@@ -526,7 +534,7 @@ const searchEverywhere = installSearchEverywhere(
   () => bridge?.searchTargets() ?? Promise.resolve([]),
   async (target) => {
     const result = await bridge?.searchDefinition(target);
-    if (!result) throw new Error(msg('m46a9300a9063'));
+    if (!result) throw new Error(msg('common.definitionNotFound'));
     return async () => {
       await bridge?.openDefinition(group, result.uri, result.range);
     };

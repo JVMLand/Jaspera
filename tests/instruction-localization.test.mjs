@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readCatalogs } from '../scripts/localization-catalogs.mjs';
 import { build } from 'esbuild';
 const { outputFiles } = await build({
   stdin: {
@@ -16,14 +17,7 @@ const { outputFiles } = await build({
 const { guide, instructionList, instructionCategory, setDisplayCatalog } = await import(
   'data:text/javascript;base64,' + Buffer.from(outputFiles[0].text).toString('base64')
 );
-const catalogs = Object.fromEntries(
-  await Promise.all(
-    ['ja', 'en', 'zh', 'es', 'it', 'fr', 'la'].map(async (lang) => [
-      lang,
-      JSON.parse(await readFile(`src/locales/${lang}.json`, 'utf8')),
-    ]),
-  ),
-);
+const { catalogs } = await readCatalogs();
 
 test('every instruction has translated titles, descriptions, diagrams and completion categories', () => {
   try {

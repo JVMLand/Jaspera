@@ -36,7 +36,10 @@ export function installGroupResize(workspace: HTMLElement, onLayout: () => void)
     handle.className = 'group-separator separator-' + i;
     handle.tabIndex = 0;
     handle.setAttribute('role', 'separator');
-    handle.setAttribute('aria-label', i === 0 ? msg('m9b22a06cc611') : msg('mbb3b8f4fac01'));
+    handle.setAttribute(
+      'aria-label',
+      i === 0 ? msg('editor.leftGroupSize') : msg('editor.centerGroupSize'),
+    );
     handle.setAttribute('aria-valuemin', '5');
     handle.setAttribute('aria-valuemax', '90');
     workspace.append(handle);

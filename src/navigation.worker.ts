@@ -12,7 +12,7 @@ const api = {
     if (!/^[\w$]+(?:\/[\w$]+)*$/.test(owner)) throw new Error('Invalid class name');
     archive ??= fetchRuntimeFile(new URL('../runtime/jdk27.jar', self.location.href).href)
       .then(async (r) => {
-        if (!r.ok) throw new Error(msg('m880fb2cfc25c'));
+        if (!r.ok) throw new Error(msg('editor.couldNotLoadOpenJDK'));
         return new Uint8Array(await r.arrayBuffer());
       })
       .catch((e) => {

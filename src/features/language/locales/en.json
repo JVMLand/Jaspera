@@ -1,0 +1,9 @@
+{
+  "language.apply": "Apply",
+  "language.choose": "Display language",
+  "language.close": "Close",
+  "language.error": "Could not load the language. Check your connection and try again.",
+  "language.loading": "Loading language…",
+  "language.menu": "Language…",
+  "language.title": "Language"
+}

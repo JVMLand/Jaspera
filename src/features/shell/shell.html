@@ -1,0 +1,160 @@
+<header class="toolbar">
+  <div class="brand">
+    <img
+      class="brand-logo"
+      src="./favicon.svg"
+      alt="{{shell.javasmLogo.alt}}"
+      width="40"
+      height="40"
+    />
+    <h1>{{@0}}</h1>
+    <span class="brand-caption">{{@1}}</span>
+  </div>
+  <button
+    id="header-search"
+    class="header-search"
+    type="button"
+    aria-haspopup="dialog"
+    title="{{shell.searchEverywherePressShiftTwice.title}}"
+  >
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="8" cy="8" r="5.5"></circle>
+      <path d="m12 12 5 5"></path></svg
+    ><span>{{shell.searchFilesClassesAndMethods}}</span><kbd>Shift ×2</kbd>
+  </button>
+  <div class="toolbar-actions">
+    <button id="run" class="run" title="{{shell.runCtrlEnterF5.title}}">
+      <span aria-hidden="true">▶</span>{{shell.run}}<kbd>Ctrl ↵</kbd>
+    </button>
+  </div>
+</header>
+<nav class="menubar" aria-label="{{shell.mainMenu.ariaLabel}}">
+  <div id="menus" role="menubar" aria-label="{{shell.applicationMenu.ariaLabel}}"></div>
+  <span id="project-name"></span>
+</nav>
+
+<!-- dialog -->
+<!-- project-properties -->
+<!-- theme-dialog -->
+<main class="workspace">
+  <section class="workspace-summary" aria-label="{{shell.workspaceOverview.ariaLabel}}">
+    <div>
+      <span class="summary-eyebrow"></span>
+      <h2 id="summary-project-name">Main</h2>
+      <p>{{shell.editSourceBuildAndRunInYourBrowser}}</p>
+    </div>
+    <button id="summary-properties">{{shell.projectSettings}}</button>
+  </section>
+  <aside class="project-pane" aria-label="{{shell.project.ariaLabel}}">
+    <div class="project-heading">
+      {{shell.project}}<button
+        id="add-file"
+        class="icon-button"
+        title="{{shell.addFile.title}}"
+        aria-label="{{shell.addFile.ariaLabel}}"
+      >
+        +
+      </button>
+    </div>
+    <div id="file-list" aria-label="{{shell.fileList.ariaLabel}}"></div>
+  </aside>
+  <section class="source-pane" aria-label="{{shell.jalSourceEditor.ariaLabel}}">
+    <div class="pane-header source-header">
+      <div id="file-tabs" role="tablist" aria-label="{{shell.sourceFiles.ariaLabel}}"></div>
+    </div>
+    <div id="editor"></div>
+    <div class="editor-footer">
+      <span id="cursor">Ln 1, Col 1</span><span>UTF-8 <span class="separator">/</span> JAL</span>
+    </div>
+  </section>
+  <section class="output-pane" aria-label="{{shell.executionResults.ariaLabel}}">
+    <div class="pane-header output-header">
+      <div class="tabs" role="tablist" aria-label="{{shell.executionPanels.ariaLabel}}">
+        <button role="tab" id="console-tab" aria-controls="console-panel" aria-selected="true">
+          {{shell.console}}</button
+        ><button
+          role="tab"
+          id="problems-tab"
+          aria-controls="problems-panel"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          {{shell.problems}}<span id="problem-count">0</span></button
+        ><button
+          role="tab"
+          id="instructions-tab"
+          aria-controls="instructions-panel"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          {{shell.instructions}}</button
+        ><button
+          role="tab"
+          id="graph-tab"
+          aria-controls="graph-panel"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          {{shell.graph}}</button
+        ><button
+          role="tab"
+          id="debug-tab"
+          aria-controls="debug-panel"
+          aria-selected="false"
+          tabindex="-1"
+        >
+          {{shell.debug}}
+        </button>
+      </div>
+      <button
+        id="clear"
+        class="icon-button"
+        title="{{shell.clearConsole.title}}"
+        aria-label="{{shell.clearConsole.ariaLabel}}"
+      >
+        ⌫
+      </button>
+    </div>
+    <div id="console-panel" role="tabpanel" aria-labelledby="console-tab">
+      <div id="console-empty">
+        <span class="terminal-symbol" aria-hidden="true">&gt;_</span>
+        <p>{{shell.writeSomeCodeAndRunIt}}</p>
+        <span>{{shell.runOrCtrlEnter}}</span>
+      </div>
+      <pre
+        id="output"
+        aria-label="{{shell.standardOutputAndStandardError.ariaLabel}}"
+        tabindex="0"
+      ></pre>
+    </div>
+    <div id="problems-panel" role="tabpanel" aria-labelledby="problems-tab" hidden>
+      <p class="empty-problems">{{shell.initialAnalysis}}</p>
+      <ul id="problems"></ul>
+    </div>
+    <div id="instructions-panel" role="tabpanel" aria-labelledby="instructions-tab" hidden></div>
+    <div id="graph-panel" role="tabpanel" aria-labelledby="graph-tab" hidden></div>
+    <div id="debug-panel" role="tabpanel" aria-labelledby="debug-tab" hidden></div>
+    <div class="stdin-section">
+      <label for="stdin">STANDARD INPUT <span>{{shell.readWhenExecutionStarts}}</span></label
+      ><textarea
+        id="stdin"
+        spellcheck="false"
+        placeholder="{{shell.standardInputOptional.placeholder}}"
+        aria-label="{{shell.standardInput.ariaLabel}}"
+      ></textarea>
+    </div>
+    <div class="runtime-card">
+      <span class="runtime-dot"></span>
+      <div><strong>WebAssembly JVM</strong><span>{{shell.openjdkRunsInYourBrowser}}</span></div>
+      <span class="runtime-label">LOCAL</span>
+    </div>
+  </section>
+</main>
+<footer class="statusbar">
+  <div>
+    <span id="state-dot" class="status-dot loading"></span
+    ><span id="state" role="status" aria-live="polite">{{shell.loadingJVM}}</span>
+  </div>
+  <span id="instruction-hint">{{shell.hoverAnInstructionToSeeStackChanges}}</span
+  ><span id="timing"></span>
+</footer>

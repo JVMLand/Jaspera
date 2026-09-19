@@ -1,3 +1,5 @@
+import gutterTemplate from './features/execution/gutter.html?raw';
+import { renderTemplate } from './i18n/template';
 import { msg } from './messages.js';
 import * as monaco from './editor-platform';
 import { WorkerRpc } from './worker-rpc';
@@ -48,9 +50,9 @@ export class SourceAnalysis {
                 kind: monaco.languages.InlayHintKind.Parameter,
                 paddingLeft: item.slot > 0,
                 paddingRight: true,
-                tooltip: msg('md0f0b7e486ad', [
+                tooltip: msg('execution.localVariableSlot', [
                   item.slot,
-                  item.width === 2 ? '・' + (item.slot + 1) + msg('md3971f64c1ad') : '',
+                  item.width === 2 ? '・' + (item.slot + 1) + msg('execution.slots') : '',
                 ]),
               }))
               .filter((hint) => range.containsPosition(hint.position))
@@ -84,7 +86,7 @@ export class SourceAnalysis {
           this.changed(model);
         })
         .catch((error) => {
-          if (!this.disposed) console.error(msg('m8c0e54949ad1'), error);
+          if (!this.disposed) console.error(msg('execution.sourceAnalysisFailed'), error);
         });
     }, 80);
     this.pending.set(model, { timer, dispose });
@@ -151,19 +153,15 @@ export function showBytecodeOffsets(
   renderGutter(view, state);
 }
 function renderGutter(view: monaco.editor.IStandaloneCodeEditor, state: GutterState) {
-  const escape = (s: string) =>
-    s.replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
-    );
   view.updateOptions({
     lineNumbers: (line) => {
       const items = state.lines.get(line) ?? [],
         first = items[0];
       const title = first
-        ? msg('mcb85463e1f1f') + items.map((i) => `${i.method}: ${i.offset}`).join('\n')
+        ? msg('execution.bytecodeOffsetEstimatedFromInstructionsDecimal') +
+          items.map((i) => `${i.method}: ${i.offset}`).join('\n')
         : '';
-      return msg('m3f8e942b08bd', [
+      return renderTemplate(gutterTemplate, [
         line,
         state.breakpoints.has(line) ? ' debug-breakpoint' : '',
         state.current === line ? ' debug-current-marker' : '',
@@ -171,9 +169,9 @@ function renderGutter(view: monaco.editor.IStandaloneCodeEditor, state: GutterSt
         line === 6 &&
         view.getModel()?.uri.authority === 'example' &&
         view.getModel()?.uri.path === '/example/HelloWorld.jal'
-          ? ' data-guide="hello-breakpoint"'
+          ? 'hello-breakpoint'
           : '',
-        escape(title),
+        title,
         first ? first.offset + (items.length > 1 ? '…' : '') : '',
       ]);
     },

@@ -1,0 +1,19 @@
+{
+  "search.class": "Class",
+  "search.couldNotOpen": "Could not open.",
+  "search.file": "File",
+  "search.noResultsFound": "No results found.",
+  "search.openingDefinition": "Opening definition…",
+  "search.preparingSearch": "Preparing search…",
+  "search.results": "{0} results {1}",
+  "search.searchEverywhere": "Search everywhere",
+  "search.searchEverywhere.close": "Close",
+  "search.searchEverywhere.close.ariaLabel": "Close",
+  "search.searchEverywhere.open": "Open",
+  "search.searchEverywhere.searchEverywhere": "Search everywhere",
+  "search.searchEverywhere.searchFilesAndDefinitions.ariaLabel": "Search files and definitions",
+  "search.searchEverywhere.searchFilesClassesMethodsAndFields.placeholder": "Search files, classes, methods and fields",
+  "search.searchEverywhere.select": "Select",
+  "search.someSearchSourcesCouldNotBeLoadedCloseAndTry": "Some search sources could not be loaded. Close and try again.",
+  "search.top": "(top 100)"
+}

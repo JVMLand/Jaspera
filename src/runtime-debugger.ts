@@ -40,7 +40,8 @@ export class RuntimeDebugger {
     this.classes = new Set(options.classes);
     this.breakpoints(options.breakpoints);
     const module = vm._module;
-    if (!module._jaspera_debug_enable) throw new Error(msg('m2a0c66fdee72'));
+    if (!module._jaspera_debug_enable)
+      throw new Error(msg('execution.debuggerEnabledJVMNotFoundRunPnpmRunBuildRuntime'));
     module.jasperaDebugger = this;
     module._jaspera_debug_enable(vm.getActiveThread().ptr);
   }
@@ -117,7 +118,7 @@ export class RuntimeDebugger {
       if (!this.paused) this.mode = 'pause';
       return;
     }
-    if (!this.paused) throw new Error(msg('m7b8efde7231b'));
+    if (!this.paused) throw new Error(msg('execution.theJVMIsNotPaused'));
     const rootReturn =
       this.location!.depth === this.rootDepths.get(this.location!.thread) &&
       /^(?:[ilfda]?return)$/.test(this.frames[0]?.instruction?.opcode ?? '');
