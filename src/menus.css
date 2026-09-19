@@ -22,3 +22,20 @@
   content: ' ✓';
   color: var(--theme-accent);
 }
+
+@media (max-width: 650px) {
+  /* Theme padding and localized labels can exceed the viewport width.
+     Mobile popups are fixed, so only the menu buttons scroll. */
+  .menubar #menus {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #menus .menu {
+    flex-shrink: 0;
+  }
+  #menus .menu > button {
+    white-space: nowrap;
+  }
+}

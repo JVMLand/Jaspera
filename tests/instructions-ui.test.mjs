@@ -187,6 +187,35 @@ test(
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await panel.scrollIntoViewIfNeeded();
     await page.screenshot({ path: '.cache/instructions-mobile.png' });
+    // Force wider labels to cover font metric differences on CI and theme padding.
+    await page.addStyleTag({ content: '#menus > .menu > button { font-size: 20px; }' });
+    for (const theme of ['vibe-night', 'denden-night', 'googol-night']) {
+      await page.evaluate(
+        async (id) => (await import('/src/themes.ts')).applyTheme(id, false),
+        theme,
+      );
+      assert.ok(
+        await page.locator('#menus').evaluate((el) => el.scrollWidth > el.clientWidth),
+        theme + ' has scrollable menu labels',
+      );
+      await page.locator('#menu-file').focus();
+      await page.keyboard.press('End');
+      assert.equal(
+        await page.locator('#menu-help').evaluate((el) => el === document.activeElement),
+        true,
+      );
+      const helpBounds = await page.locator('#menu-help').boundingBox();
+      assert.ok(helpBounds.x >= 0 && helpBounds.x + helpBounds.width <= 390, theme);
+      await page.locator('#menu-help').click();
+      assert.ok(await page.locator('#popup-help').isVisible());
+      const popupBounds = await page.locator('#popup-help').boundingBox();
+      assert.ok(popupBounds.x >= 0 && popupBounds.x + popupBounds.width <= 390, theme);
+      assert.ok(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        theme + ' mobile menu overflow',
+      );
+      await page.keyboard.press('Escape');
+    }
     assert.equal(
       await page.evaluate(async () => (await import('/src/main.ts')).editor.getValue()),
       original,
