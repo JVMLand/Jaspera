@@ -8,7 +8,10 @@ await build({
   platform: 'node',
   format: 'esm',
 });
-const { simplifyGraphRoutes } = await import('../.cache/graph-routes.mjs');
+// This bundle is created above at runtime, so it need not exist during type checking.
+const { simplifyGraphRoutes } = await import(
+  new URL('../.cache/graph-routes.mjs', import.meta.url).href
+);
 const source = { id: 's', x: 20, y: 20, width: 100, height: 30 },
   target = { id: 't', x: 240, y: 160, width: 100, height: 30 },
   bounds = { x: 0, y: 0, width: 500, height: 350 };

@@ -9,7 +9,10 @@ await build({
   platform: 'node',
   format: 'esm',
 });
-const { positionGraphs } = await import('../.cache/graph-layout.mjs');
+// This bundle is created above at runtime, so it need not exist during type checking.
+const { positionGraphs } = await import(
+  new URL('../.cache/graph-layout.mjs', import.meta.url).href
+);
 const elk = new ELK();
 const node = (id) => ({
   id,

@@ -9,7 +9,9 @@ await build({
   format: 'cjs',
   outfile: '.cache/jar-unit.cjs',
 });
-const { JarArchive } = (await import('../.cache/jar-unit.cjs')).default;
+// This bundle is created above at runtime, so it need not exist during type checking.
+const { JarArchive } = (await import(new URL('../.cache/jar-unit.cjs', import.meta.url).href))
+  .default;
 const file = (entries) => new File([zipSync(entries)], 'sample.jar');
 const source = async () => ({ source: 'original', className: 'Sample' });
 const compiled = (bytes, className = 'Sample') => ({

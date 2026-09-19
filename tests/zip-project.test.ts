@@ -9,7 +9,10 @@ await build({
   format: 'cjs',
   outfile: '.cache/zip-project.cjs',
 });
-const { openZipProject } = (await import('../.cache/zip-project.cjs')).default;
+// This bundle is created above at runtime, so it need not exist during type checking.
+const { openZipProject } = (
+  await import(new URL('../.cache/zip-project.cjs', import.meta.url).href)
+).default;
 const zip = (entries: Record<string, string | Uint8Array>) =>
   new File(
     [

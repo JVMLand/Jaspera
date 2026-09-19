@@ -36,7 +36,7 @@ test(
       const failures: (
         | {
             op: string;
-            errors: import('Z:/projects/PeyaPeyaPeyang/JALWeb/src/protocol').Diagnostic[];
+            errors: import('../src/protocol').Diagnostic[];
             missing: number[];
             frames: number | undefined;
           }
