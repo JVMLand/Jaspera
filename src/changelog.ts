@@ -5,7 +5,14 @@ type Entry = {
   title: string;
   introduction: string;
   imageAlt: string;
-  sections: { title: string; body: string; image: string; imageAlt: string }[];
+  screenshotLocale?: string;
+  sections: {
+    title: string;
+    body: string;
+    image: string;
+    imageAlt: string;
+    screenshotLocale?: string;
+  }[];
 };
 const pages = import.meta.glob<{ default: Entry }>('./changelog/*/*.json');
 const images = import.meta.glob<string>('./changelog/*/*.jpg', {
@@ -62,12 +69,13 @@ export function openChangelog(initial = __APP_VERSION__) {
       if (!load) throw new Error('Missing release notes');
       const { default: entry } = await load();
       if (token !== generation || !dialog.isConnected) return;
+      const screenshotLocale = entry.screenshotLocale ?? 'en';
       const title = document.createElement('h1');
       title.textContent = `${version} — ${entry.title}`;
       const intro = document.createElement('p');
       intro.textContent = entry.introduction;
       const image = document.createElement('img');
-      image.src = images[`./changelog/${version}/${locale}.jpg`];
+      image.src = images[`./changelog/${version}/${screenshotLocale}.jpg`];
       image.alt = entry.imageAlt;
       image.loading = 'lazy';
       image.decoding = 'async';
@@ -79,7 +87,10 @@ export function openChangelog(initial = __APP_VERSION__) {
         h.textContent = section.title;
         p.textContent = section.body;
         const screenshot = document.createElement('img');
-        screenshot.src = images[`./changelog/${version}/${section.image}-${locale}.jpg`];
+        screenshot.src =
+          images[
+            `./changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`
+          ];
         screenshot.alt = section.imageAlt;
         screenshot.loading = 'lazy';
         screenshot.decoding = 'async';

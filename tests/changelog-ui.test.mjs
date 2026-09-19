@@ -8,7 +8,7 @@ const currentVersion = JSON.parse(await readFile('package.json', 'utf8')).versio
   '',
 );
 const langs = ['ja', 'en', 'zh', 'es', 'it', 'fr', 'la'];
-test('every release has localized text and screenshots, including the package version', async () => {
+test('every release has localized text and shared English screenshots, including the package version', async () => {
   const versions = (await readdir('src/changelog', { withFileTypes: true }))
     .filter((e) => e.isDirectory())
     .map((e) => e.name);
@@ -17,6 +17,7 @@ test('every release has localized text and screenshots, including the package ve
   for (const version of versions)
     for (const lang of langs) {
       const entry = JSON.parse(await readFile(`src/changelog/${version}/${lang}.json`, 'utf8'));
+      const screenshotLocale = entry.screenshotLocale ?? 'en';
       for (const key of ['title', 'introduction', 'imageAlt'])
         assert.ok(entry[key]?.trim(), `${version}/${lang}/${key}`);
       assert.ok(entry.sections.length > 0);
@@ -24,10 +25,14 @@ test('every release has localized text and screenshots, including the package ve
         assert.ok(section.title && section.body && section.imageAlt);
         assert.match(section.image, /^[a-z-]+$/);
         assert.ok(
-          (await stat(`src/changelog/${version}/${section.image}-${lang}.jpg`)).size > 1000,
+          (
+            await stat(
+              `src/changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`,
+            )
+          ).size > 1000,
         );
       }
-      assert.ok((await stat(`src/changelog/${version}/${lang}.jpg`)).size > 1000);
+      assert.ok((await stat(`src/changelog/${version}/${screenshotLocale}.jpg`)).size > 1000);
     }
 });
 test(
@@ -78,13 +83,16 @@ test(
       '2026.1',
     ]);
     for (const lang of langs) {
+      const entry = JSON.parse(
+        await readFile(`src/changelog/${currentVersion}/${lang}.json`, 'utf8'),
+      );
       await page.evaluate(async (lang) => {
         const { setLocale } = await import('/src/localization.ts');
         await setLocale(lang);
       }, lang);
       await page.waitForFunction(
-        (lang) => document.querySelector('#changelog img')?.src.includes(`/${lang}.jpg`),
-        lang,
+        (title) => document.querySelector('#changelog article h1')?.textContent.endsWith(title),
+        entry.title,
       );
       await page.waitForFunction(() => {
         const images = [...document.querySelectorAll('#changelog img')];
@@ -94,6 +102,10 @@ test(
           images.length === 4 && images.every((image) => image.complete && image.naturalWidth > 0)
         );
       });
+      for (const src of await page
+        .locator('#changelog article img')
+        .evaluateAll((images) => images.map((image) => image.src)))
+        assert.match(src, /(?:\/en|-en)\.jpg(?:\?|$)/);
     }
     await page.getByRole('button', { name: '2026.1', exact: true }).click();
     await page.waitForFunction(() =>
@@ -116,8 +128,12 @@ test(
     await page.evaluate(async () => {
       await (await import('/src/localization.ts')).setLocale('ja');
     });
-    await page.waitForFunction(() =>
-      document.querySelector('#changelog img')?.src.endsWith('/ja.jpg'),
+    const japaneseEntry = JSON.parse(
+      await readFile(`src/changelog/${currentVersion}/ja.json`, 'utf8'),
+    );
+    await page.waitForFunction(
+      (title) => document.querySelector('#changelog article h1')?.textContent.endsWith(title),
+      japaneseEntry.title,
     );
     await page.waitForFunction(() => {
       const image = document.querySelector('#changelog img');
