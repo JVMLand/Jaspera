@@ -120,10 +120,7 @@ export function installStackHover(
     const currentAnchor = anchor;
     const header = () => {
       const h = node('header');
-      h.append(
-        node('code', word.word),
-        node('span', msg('instructions.frameAtThisPositionStaticAnalysis')),
-      );
+      h.append(node('code', word.word));
       return h;
     };
     panel.replaceChildren(

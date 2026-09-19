@@ -71,7 +71,10 @@ test(
     assert.equal(await hover.locator('.frame-missing').textContent(), '× 不足: String');
     assert.equal(await hover.locator('.is-produced,.is-consumed').count(), 0);
     assert.equal(await hover.locator('.frame-note').count(), 0);
-    assert.doesNotMatch((await hover.textContent())!, /必要|実行前|実行後/);
+    assert.doesNotMatch(
+      (await hover.textContent())!,
+      /必要|実行前|実行後|この位置のフレーム|静的解析/,
+    );
     const clip = await hover.evaluate((panel) => {
       const bounds = panel.getBoundingClientRect();
       const line = [...document.querySelectorAll('.view-line')].find((line) =>
