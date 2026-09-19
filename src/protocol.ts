@@ -4,6 +4,9 @@ export interface CompileOptions {
   graphs?: boolean;
 }
 export interface StackFrame {
+  blocked?: boolean;
+  missing?: number;
+  requiredInputs?: string[];
   partial?: boolean;
   consumed?: number;
   produced?: number;

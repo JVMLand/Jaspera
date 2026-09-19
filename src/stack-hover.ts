@@ -77,6 +77,9 @@ export function installStackHover(
     }
     panel.append(
       renderFrameTransition({
+        blocked: frame.blocked,
+        missing: frame.missing,
+        requiredInputs: frame.requiredInputs,
         before,
         after,
         consumed: frame.consumed ?? 0,
@@ -148,7 +151,7 @@ export function installStackHover(
           ),
         );
       if (frame?.partial) {
-        panel.append(node('p', msg('analysis.partial')));
+        if (!frame.blocked) panel.append(node('p', msg('analysis.partial')));
         const problem = compilation.diagnostics.find((d) => d.severity === 'error');
         if (problem) panel.append(node('p', problem.message));
       }

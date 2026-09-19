@@ -56,6 +56,20 @@ test(
     assert.equal(ranges.length, 1);
     assert.equal(ranges[0].line, 5);
     assert.equal(ranges[0].text, 'Ljava/lang/String;');
+    await page
+      .locator('.view-line span')
+      .filter({ hasText: /^invokevirtual$/ })
+      .first()
+      .hover();
+    const hover = page.locator('.stack-hover:visible');
+    await hover.getByText('実行前', { exact: true }).waitFor();
+    await hover.getByText('実行後', { exact: true }).waitFor();
+    assert.match(await hover.locator('.frame-missing').textContent(), /値が 1 個不足/);
+    assert.match(await hover.locator('.frame-blocked').textContent(), /実行不可/);
+    assert.equal(await hover.locator('.is-produced,.is-consumed').count(), 0);
+    assert.match(await hover.locator('.frame-note').textContent(), /PrintStream.*String/);
+    await page.screenshot({ path: '.cache/missing-stack-hover.png' });
+    await page.keyboard.press('Escape');
     await page.locator('#problems-tab').click();
     await page.locator('#problems button.error').click();
     assert.equal(

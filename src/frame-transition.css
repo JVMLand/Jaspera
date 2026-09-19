@@ -77,6 +77,8 @@
   font-size: calc(18px * var(--ui-font-scale, 1));
 }
 .frame-empty,
+.frame-missing,
+.frame-blocked,
 .frame-terminal {
   border: 1px dashed var(--theme-border, #40515c);
   border-radius: 4px;
@@ -86,6 +88,12 @@
   color: var(--theme-muted, #91a19e);
   min-height: 30px;
   box-sizing: border-box;
+}
+.frame-missing,
+.frame-blocked {
+  border-color: #c55259;
+  background: color-mix(in srgb, #e95762 12%, var(--theme-bg, #151a21));
+  color: var(--theme-text, #d6e1e6);
 }
 .frame-rest {
   text-align: center;

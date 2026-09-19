@@ -3,6 +3,9 @@ import { msg } from './messages.js';
 import { formatFrameValue } from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {
+  blocked?: boolean;
+  missing?: number;
+  requiredInputs?: string[];
   before: string[];
   after: string[];
   consumed: number;
@@ -32,6 +35,7 @@ export function renderFrameTransition(frame: FrameTransition) {
   const root = node('div', undefined, 'frame-transition');
   function pair(before: string[], after: string[], locals = false) {
     const unchanged =
+      !frame.blocked &&
       (locals || !frame.terminal) &&
       before.length === after.length &&
       before.every((value, index) => value === after[index]);
@@ -52,8 +56,18 @@ export function renderFrameTransition(frame: FrameTransition) {
         body,
       );
       const terminal = side === 1 && !locals && frame.terminal;
-      if (terminal) body.append(node('div', terminal, 'frame-terminal'));
+      if (side === 1 && !locals && frame.blocked)
+        body.append(node('div', '× ' + msg('analysis.blocked'), 'frame-blocked'));
+      else if (terminal) body.append(node('div', terminal, 'frame-terminal'));
       else {
+        if (!locals && side === 0 && frame.missing) {
+          const missing = node(
+            'div',
+            '× ' + msg('analysis.missing', [frame.missing]),
+            'frame-missing',
+          );
+          body.append(missing);
+        }
         const order = values.map((_, i) => i);
         if (!locals) order.reverse();
         const visible = order.slice(0, frame.limit ?? 8);
@@ -89,6 +103,14 @@ export function renderFrameTransition(frame: FrameTransition) {
     return grid;
   }
   root.append(node('h3', msg('m340ecc5d5f10')), pair(frame.before, frame.after));
+  if (frame.blocked && frame.requiredInputs?.length)
+    root.append(
+      node(
+        'p',
+        msg('analysis.requiredInputs', [frame.requiredInputs.map(formatFrameValue).join(' → ')]),
+        'frame-note',
+      ),
+    );
   if (frame.locals) {
     root.append(
       node('h3', msg('m9bf67764bae7')),

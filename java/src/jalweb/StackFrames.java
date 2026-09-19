@@ -149,6 +149,21 @@ final class StackFrames {
         append(result, method, frames, verifier, true);
     }
 
+    /** Invocation operands in JVM stack order: receiver, then arguments. */
+    private static List<String> requiredInputs(AbstractInsnNode instruction) {
+        String descriptor;
+        List<String> inputs = new ArrayList<>();
+        if (instruction instanceof MethodInsnNode method) {
+            descriptor = method.desc;
+            if (method.getOpcode() != Opcodes.INVOKESTATIC) inputs.add(
+                Type.getObjectType(method.owner).getClassName()
+            );
+        } else if (instruction instanceof InvokeDynamicInsnNode dynamic) descriptor = dynamic.desc;
+        else return inputs;
+        for (Type argument : Type.getArgumentTypes(descriptor)) inputs.add(argument.getClassName());
+        return inputs;
+    }
+
     static void append(
         List<String> result,
         MethodNode method,
@@ -193,6 +208,17 @@ final class StackFrames {
                 after.execute(instruction, verifier);
             } catch (AnalyzerException | RuntimeException error) {
                 if (!partial) throw error;
+                List<String> required = requiredInputs(instruction);
+                result.add(
+                    prefix +
+                        ",\"blocked\":true,\"before\":" +
+                        stack(before, null) +
+                        ",\"missing\":" +
+                        Math.max(0, required.size() - before.getStackSize()) +
+                        ",\"requiredInputs\":[" +
+                        String.join(",", required.stream().map(Bridge::quote).toList()) +
+                        "]}"
+                );
                 continue;
             }
             Frame<SourceValue> originBefore = originFrames == null ? null : originFrames[i],
