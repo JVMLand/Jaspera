@@ -185,7 +185,10 @@ public class JALClassCompiler {
                         this.methodCompilers.add(evaluator);
                     }
                 } catch (RuntimeException error) {
-                    classNode.methods.subList(before, classNode.methods.size()).clear();
+                    // Analysis runs after the complete instruction tree has been built.
+                    // Editor recovery can retain it for inspecting invalid control flow.
+                    if (!(error instanceof tokyo.peya.langjal.compiler.exceptions.analyse.ClassAnalyseException))
+                        classNode.methods.subList(before, classNode.methods.size()).clear();
                     this.methodError.accept(item.methodDefinition(), error);
                 } finally { this.methodListener.accept(item.methodDefinition(), true); }
             }

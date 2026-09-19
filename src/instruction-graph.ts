@@ -128,6 +128,11 @@ export function installInstructionGraph(
   function summary() {
     if (failure) {
       status.textContent = failure;
+      if (methods.some((m) => m.graph?.partial)) {
+        const note = document.createElement('span');
+        note.textContent = '\n' + msg('analysis.partialGraph');
+        status.append(note);
+      }
       return;
     }
     const complete = methods.filter((m) => m.step === 3).length,

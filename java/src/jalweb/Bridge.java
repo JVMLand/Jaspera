@@ -41,7 +41,14 @@ public final class Bridge {
     }
 
     private static void compileError(CompileErrorException e) {
-        if (e instanceof InstructionAnalysisException analysis) {
+        if (
+            e instanceof
+                tokyo.peya.langjal.compiler.exceptions.analyse.StackSizeDifferentException merge
+        ) {
+            StackDiagnostics.Problem problem = StackDiagnostics.describe(merge);
+            StackDiagnostics.Range range = problem.range();
+            add("error", problem.message(), range.line(), range.column(), range.length());
+        } else if (e instanceof InstructionAnalysisException analysis) {
             StackDiagnostics.Problem problem = StackDiagnostics.describe(analysis);
             StackDiagnostics.Range range = problem.range();
             add("error", problem.message(), range.line(), range.column(), range.length());
@@ -110,6 +117,21 @@ public final class Bridge {
                 }
             }
         return b.append('"').toString();
+    }
+
+    private static boolean hasMethodError(MethodNode method) {
+        int first = Integer.MAX_VALUE,
+            last = 0;
+        for (AbstractInsnNode instruction : method.instructions) {
+            var source = tokyo.peya.langjal.compiler.member.InstructionSources.get(instruction);
+            if (source != null) {
+                first = Math.min(first, source.start.getLine());
+                last = Math.max(last, source.stop.getLine());
+            }
+        }
+        for (Diagnostic d : diagnostics)
+            if (d.severity().equals("error") && d.line() >= first && d.line() <= last) return true;
+        return false;
     }
 
     private static String diagnosticJson() {
@@ -369,9 +391,10 @@ public final class Bridge {
                             wideJumps.put(jump, jump.getOpcode());
                             jump.setOpcode(jump.getOpcode() == 200 ? Opcodes.GOTO : Opcodes.JSR);
                         }
+                    BasicVerifier verifier = new StackFrames.Verifier();
+                    Analyzer<BasicValue> analyzer = new Analyzer<>(verifier);
                     try {
-                        BasicVerifier verifier = new StackFrames.Verifier();
-                        Frame<BasicValue>[] frames = new Analyzer<>(verifier).analyzeAndComputeMaxs(
+                        Frame<BasicValue>[] frames = analyzer.analyzeAndComputeMaxs(
                             node.name,
                             method
                         );
@@ -396,6 +419,17 @@ public final class Bridge {
                             graph
                         );
                     } catch (AnalyzerException e) {
+                        // Failed verification still leaves useful, provisional input frames.
+                        Frame<BasicValue>[] partial = analyzer.getFrames();
+                        if ((outputs & 1) != 0) StackFrames.appendPartial(
+                            stackFrames,
+                            method,
+                            partial,
+                            verifier
+                        );
+                        if ((outputs & 2) != 0) graphs.add(
+                            InstructionGraph.computePartial(node.name, method, partial)
+                        );
                         int line = 1;
                         for (
                             AbstractInsnNode insn = method.instructions.getFirst();
@@ -406,7 +440,7 @@ public final class Bridge {
                             if (insn == e.node) break;
                         }
                         StackDiagnostics.Range range = StackDiagnostics.opcode(e.node, line);
-                        add(
+                        if (!hasMethodError(method)) add(
                             "error",
                             method.name + ": " + e.getMessage(),
                             range.line(),

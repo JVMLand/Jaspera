@@ -1,4 +1,7 @@
 {
+  "analysis.stackMerge": "Las rutas que llegan a la etiqueta «{0}» tienen distintas alturas de pila.\nPrimera ruta ({1} posiciones): {2}\nOtra ruta ({3} posiciones): {4}\nLas bifurcaciones y los retornos de bucle deben tener alturas de pila iguales y tipos de valores compatibles en su destino.",
+  "analysis.partial": "Pila provisional: aún no se ha verificado la coherencia con las otras rutas entrantes.",
+  "analysis.partialGraph": "Los métodos con errores de análisis solo muestran el flujo de control. Las dependencias de la pila y de las variables locales aún no están verificadas.",
   "language.title": "Idioma",
   "language.choose": "Idioma de la interfaz",
   "language.apply": "Aplicar",

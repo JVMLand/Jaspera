@@ -26,6 +26,7 @@
   gap: 3px;
 }
 .graph-status {
+  white-space: pre-wrap;
   font: calc(11px * var(--ui-font-scale, 1)) var(--font-ui);
   color: var(--theme-muted, #98a4b3);
   margin: 0;

@@ -1,4 +1,7 @@
 {
+  "analysis.stackMerge": "Incoming paths have different stack heights at label “{0}”.\nFirst incoming path ({1} slots): {2}\nAnother incoming path ({3} slots): {4}\nBranches and loop back edges must have consistent stack heights and compatible value types at their destination.",
+  "analysis.partial": "Provisional stack: consistency with other incoming paths has not been verified.",
+  "analysis.partialGraph": "Methods with analysis errors show control flow only. Stack and local variable dependencies are not yet verified.",
   "language.title": "Language",
   "language.choose": "Display language",
   "language.apply": "Apply",

@@ -4,6 +4,7 @@ export interface CompileOptions {
   graphs?: boolean;
 }
 export interface StackFrame {
+  partial?: boolean;
   consumed?: number;
   produced?: number;
   terminal?: string;
@@ -44,6 +45,7 @@ export interface GraphEdge {
   label: string;
 }
 export interface MethodGraph {
+  partial?: boolean;
   name: string;
   nodes: GraphNode[];
   edges: GraphEdge[];

@@ -147,6 +147,11 @@ export function installStackHover(
               msg('maccecbcc82f6'),
           ),
         );
+      if (frame?.partial) {
+        panel.append(node('p', msg('analysis.partial')));
+        const problem = compilation.diagnostics.find((d) => d.severity === 'error');
+        if (problem) panel.append(node('p', problem.message));
+      }
       place(currentAnchor);
     } catch (error) {
       if (request !== serial || disposed) return;

@@ -144,6 +144,7 @@ public class LabelsHolder {
         // 新しいラベルを登録
         Label newLabel = new Label();
         LabelInfo labelInfo = new LabelInfo(labelName.getText(), newLabel, instructionIndex);
+        InstructionSources.put(labelInfo.node(), labelName);
         this.labels.add(labelInfo);
         this.labels.sort(Comparator.comparingInt(LabelInfo::instructionIndex));
 

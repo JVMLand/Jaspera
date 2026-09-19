@@ -28,6 +28,20 @@ final class InstructionGraph {
 
     static String compute(String owner, MethodNode method, Frame<BasicValue>[] frames)
         throws AnalyzerException {
+        return compute(owner, method, frames, false);
+    }
+
+    static String computePartial(String owner, MethodNode method, Frame<BasicValue>[] frames)
+        throws AnalyzerException {
+        return compute(owner, method, frames, true);
+    }
+
+    private static String compute(
+        String owner,
+        MethodNode method,
+        Frame<BasicValue>[] frames,
+        boolean partial
+    ) throws AnalyzerException {
         SourceInterpreter interpreter = new SourceInterpreter();
         Map<Integer, Set<Integer>> control = new HashMap<>();
         Analyzer<SourceValue> analyzer = new Analyzer<>(interpreter) {
@@ -36,11 +50,14 @@ final class InstructionGraph {
                 control.computeIfAbsent(from, key -> new LinkedHashSet<>()).add(to);
             }
         };
-        Frame<SourceValue>[] sources = analyzer.analyze(owner, method);
+        Frame<SourceValue>[] sources = partial ? null : analyzer.analyze(owner, method);
         Map<AbstractInsnNode, String> ids = new IdentityHashMap<>();
         for (int i = 0; i < method.instructions.size(); i++) {
             AbstractInsnNode insn = method.instructions.get(i);
-            if (InstructionSources.get(insn) != null) ids.put(insn, "n" + i);
+            if (InstructionSources.get(insn) != null && insn.getOpcode() >= 0) ids.put(
+                insn,
+                "n" + i
+            );
         }
         List<String> nodes = new ArrayList<>();
         Set<String> edges = new LinkedHashSet<>();
@@ -83,7 +100,7 @@ final class InstructionGraph {
         for (int i = 0; i < method.instructions.size(); i++) {
             AbstractInsnNode insn = method.instructions.get(i);
             String id = ids.get(insn);
-            if (id == null) continue;
+            if (id == null || insn.getOpcode() < 0) continue;
             var source = InstructionSources.get(insn);
             String text = source.start
                 .getInputStream()
@@ -92,7 +109,7 @@ final class InstructionGraph {
             Frame<BasicValue> before = frames[i];
             int consumed = 0,
                 produced = 0;
-            if (before != null) {
+            if (before != null && !partial) {
                 StackFrames.Transition after = new StackFrames.Transition(before);
                 after.execute(insn, new StackFrames.Verifier());
                 consumed = before.getStackSize() - after.untouched;
@@ -128,7 +145,7 @@ final class InstructionGraph {
                     ",\"produced\":" +
                     produced +
                     ",\"unreachable\":" +
-                    (before == null) +
+                    (!partial && before == null) +
                     "}"
             );
             int opcode = insn.getOpcode();
@@ -213,7 +230,9 @@ final class InstructionGraph {
                 String.join("\n", route.getValue())
             );
         return (
-            "{\"name\":" +
+            "{\"partial\":" +
+            partial +
+            ",\"name\":" +
             Bridge.quote(method.name + method.desc) +
             ",\"nodes\":[" +
             String.join(",", nodes) +

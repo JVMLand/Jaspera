@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.*;
 import tokyo.peya.langjal.analyser.stack.*;
 import tokyo.peya.langjal.compiler.JALParser;
 import tokyo.peya.langjal.compiler.exceptions.analyse.InstructionAnalysisException;
+import tokyo.peya.langjal.compiler.exceptions.analyse.StackSizeDifferentException;
 import tokyo.peya.langjal.compiler.jvm.EOpcodes;
 import tokyo.peya.langjal.compiler.member.InstructionSources;
 
@@ -16,6 +17,32 @@ final class StackDiagnostics {
     record Range(int line, int column, int length) {}
 
     record Problem(String message, Range range) {}
+
+    static Problem describe(StackSizeDifferentException error) {
+        var label = error.getAtLabel();
+        Range range = opcode(label.node(), 1);
+        String expected = java.util.Arrays.stream(error.getExpected())
+            .map(StackDiagnostics::typeName)
+            .collect(java.util.stream.Collectors.joining(" | ", "[", "]"));
+        String actual = java.util.Arrays.stream(error.getActual())
+            .map(StackDiagnostics::typeName)
+            .collect(java.util.stream.Collectors.joining(" | ", "[", "]"));
+        return new Problem(
+            "ラベル「" +
+                label.name() +
+                "」で合流する経路のスタックの高さが一致しません。" +
+                "\n先に到達した経路（" +
+                error.getExpected().length +
+                " スロット）: " +
+                expected +
+                "\n別の経路（" +
+                error.getActual().length +
+                " スロット）: " +
+                actual +
+                "\n分岐やループから戻る際は，合流先のスタックの高さと各値の型を整合させてください。",
+            range
+        );
+    }
 
     static ParserRuleContext find(ParserRuleContext node, String rule) {
         if (node == null) return null;

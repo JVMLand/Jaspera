@@ -140,17 +140,35 @@ final class StackFrames {
         }
     }
 
+    static void appendPartial(
+        List<String> result,
+        MethodNode method,
+        Frame<BasicValue>[] frames,
+        BasicVerifier verifier
+    ) throws AnalyzerException {
+        append(result, method, frames, verifier, true);
+    }
+
     static void append(
         List<String> result,
         MethodNode method,
         Frame<BasicValue>[] frames,
         BasicVerifier verifier
     ) throws AnalyzerException {
+        append(result, method, frames, verifier, false);
+    }
+
+    private static void append(
+        List<String> result,
+        MethodNode method,
+        Frame<BasicValue>[] frames,
+        BasicVerifier verifier,
+        boolean partial
+    ) throws AnalyzerException {
         Origins origins = new Origins();
-        Frame<SourceValue>[] originFrames = new Analyzer<>(origins).analyze(
-            "java/lang/Object",
-            method
-        );
+        Frame<SourceValue>[] originFrames = partial
+            ? null
+            : new Analyzer<>(origins).analyze("java/lang/Object", method);
         for (int i = 0; i < method.instructions.size(); i++) {
             AbstractInsnNode instruction = method.instructions.get(i);
             ParserRuleContext source = InstructionSources.get(instruction);
@@ -161,15 +179,23 @@ final class StackFrames {
                 ",\"column\":" +
                 (source.start.getCharPositionInLine() + 1) +
                 ",\"length\":" +
-                (source.start.getStopIndex() - source.start.getStartIndex() + 1);
+                (source.start.getStopIndex() - source.start.getStartIndex() + 1) +
+                ",\"partial\":" +
+                partial;
             Frame<BasicValue> before = frames[i];
             if (before == null) {
+                if (partial) continue;
                 result.add(prefix + ",\"unreachable\":true}");
                 continue;
             }
             Transition after = new Transition(before);
-            after.execute(instruction, verifier);
-            Frame<SourceValue> originBefore = originFrames[i],
+            try {
+                after.execute(instruction, verifier);
+            } catch (AnalyzerException | RuntimeException error) {
+                if (!partial) throw error;
+                continue;
+            }
+            Frame<SourceValue> originBefore = originFrames == null ? null : originFrames[i],
                 originAfter = originBefore == null ? null : new Frame<>(originBefore);
             if (originAfter != null) originAfter.execute(instruction, origins);
             int opcode = instruction.getOpcode();
