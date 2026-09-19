@@ -75,26 +75,29 @@ export function openChangelog(initial = __APP_VERSION__) {
       const intro = document.createElement('p');
       intro.textContent = entry.introduction;
       const image = document.createElement('img');
-      image.src = images[`./changelog/${version}/${screenshotLocale}.jpg`];
+      if (navigator.onLine) image.src = images[`./changelog/${version}/${screenshotLocale}.jpg`];
       image.alt = entry.imageAlt;
       image.loading = 'lazy';
       image.decoding = 'async';
       image.className = 'changelog-hero';
-      article.replaceChildren(image, title, intro);
+      image.onerror = () => image.remove();
+      article.replaceChildren(...(navigator.onLine ? [image] : []), title, intro);
       for (const section of entry.sections) {
         const h = document.createElement('h2'),
           p = document.createElement('p');
         h.textContent = section.title;
         p.textContent = section.body;
         const screenshot = document.createElement('img');
-        screenshot.src =
-          images[
-            `./changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`
-          ];
+        if (navigator.onLine)
+          screenshot.src =
+            images[
+              `./changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`
+            ];
         screenshot.alt = section.imageAlt;
         screenshot.loading = 'lazy';
         screenshot.decoding = 'async';
-        article.append(h, p, screenshot);
+        screenshot.onerror = () => screenshot.remove();
+        article.append(h, p, ...(navigator.onLine ? [screenshot] : []));
       }
       article.scrollTop = 0;
       if (version === __APP_VERSION__) viewedCurrent = true;

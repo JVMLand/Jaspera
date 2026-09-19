@@ -61,6 +61,21 @@ test(
     await page.waitForFunction(() => !document.querySelector('.offline-start')?.disabled);
     assert.match(await page.locator('.offline-status').textContent(), /保存が完了しました/);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    const cachedUrls = await page.evaluate(async () => {
+      const urls = [];
+      for (const name of await caches.keys())
+        for (const request of await (await caches.open(name)).keys()) urls.push(request.url);
+      return urls;
+    });
+    assert.equal(
+      cachedUrls.some((url) => url.includes('/assets/changelog/')),
+      false,
+    );
+    const manifest = JSON.parse(await readFile('dist/offline-manifest.json', 'utf8'));
+    assert.equal(
+      manifest.urls.some((url) => url.startsWith('assets/changelog/')),
+      false,
+    );
     await page.locator('.offline-close').click();
     await page.evaluate(async () => {
       for (const name of await caches.keys()) {
@@ -88,6 +103,17 @@ test(
     assert.equal(await page.locator('.graph-node').count(), 4);
     await runHello(page);
     assert.equal(await page.locator('#output').textContent(), 'こんにちは，JAL！\n');
+    await page.locator('#menu-help').click();
+    await page.locator('#help-changelog').click();
+    await page.locator('#changelog article h1').waitFor();
+    assert.ok((await page.locator('#changelog article p').count()) > 0);
+    assert.equal(await page.locator('#changelog article img').count(), 0);
+    await page.getByRole('button', { name: '2026.1', exact: true }).click();
+    await page.waitForFunction(() =>
+      document.querySelector('#changelog article h1')?.textContent.startsWith('2026.1'),
+    );
+    assert.ok((await page.locator('#changelog article p').count()) > 0);
+    await page.locator('.changelog-close').click();
     await page.locator('#menu-help').click();
     await page.locator('#help-offline').click();
     await page.locator('.offline-start').click();

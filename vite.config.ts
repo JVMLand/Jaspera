@@ -35,6 +35,14 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       output: {
+        assetFileNames(asset) {
+          const changelog = asset.originalFileNames.some((path) =>
+            path.replaceAll('\\', '/').includes('src/changelog/'),
+          );
+          return changelog
+            ? 'assets/changelog/[name]-[hash][extname]'
+            : 'assets/[name]-[hash][extname]';
+        },
         manualChunks(id) {
           if (id.replaceAll('\\', '/').includes('/node_modules/monaco-editor/')) return 'monaco';
         },
