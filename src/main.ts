@@ -2661,7 +2661,8 @@ window.addEventListener('beforeunload', (e) => {
   }
 });
 window.addEventListener('pagehide', () => {
-  saveDraft();
+  // visibilitychange can follow pagehide; stop drafts before disposing editor models.
+  leaveDraft();
   disposed = true;
   runMenu?.dispose();
   unsubscribeDebug();

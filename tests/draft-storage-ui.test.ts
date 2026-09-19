@@ -22,6 +22,8 @@ test(
     const browser = await launchBrowser();
     t.after(() => browser.close());
     const page = await newAppPage(browser);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.stack ?? error.message));
     page.on('dialog', (dialog) => dialog.accept());
     await page.goto(base);
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
@@ -74,5 +76,6 @@ test(
     assert.equal(await value(), '// recovered');
     assert.equal(await page.getByRole('tab', { name: 'Imported', exact: true }).count(), 0);
     assert.equal(JSON.parse(before!).project.files.length, 1);
+    assert.deepEqual(errors, []);
   },
 );

@@ -73,9 +73,10 @@ test(
       assert.equal(await page.locator('#output').textContent(), output, name);
     }
     await open('HelloWorld');
-    await page.evaluate(async () => {
+    const editedSource = await page.evaluate(async () => {
       const { editor } = await import('/src/main.ts');
       editor.setValue(editor.getValue().replace('こんにちは，JAL！', 'Edited sample'));
+      return editor.getValue();
     });
     await page
       .getByRole('button', { name: 'example/HelloWorld.jal のタブを閉じる', exact: true })
@@ -156,9 +157,10 @@ test(
     await popup.close();
     await page.reload();
     await open('HelloWorld');
-    assert.match(
+    // Example edits stay out of project exports but are restored from the browser draft.
+    assert.equal(
       await page.evaluate(async () => (await import('/src/main.ts')).editor.getValue()),
-      /こんにちは，JAL！/,
+      editedSource,
     );
     await menu('open-project');
     await page.locator('#project-name').waitFor();

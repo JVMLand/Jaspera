@@ -27,8 +27,8 @@ test(
     const context = await newAppContext(browser, { viewport: { width: 1440, height: 960 } }),
       page = await context.newPage(),
       errors: string[] = [];
-    context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.message)));
-    page.on('pageerror', (e) => errors.push(e.message));
+    context.on('page', (p) => p.on('pageerror', (e) => errors.push(e.stack ?? e.message)));
+    page.on('pageerror', (e) => errors.push(e.stack ?? e.message));
     await page.goto(base);
     await createTestProject(page);
     await page.waitForFunction(
@@ -98,7 +98,8 @@ test(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         id + ' overflow',
       );
-      assert.ok(await page.getByRole('tab', { name: 'HelloWorld', exact: true }).isVisible());
+      // Reload restores the scratch project created above, including its active Main tab.
+      assert.ok(await page.getByRole('tab', { name: 'Main', exact: true }).isVisible());
       await page.screenshot({ path: '.cache/brand-themes/' + id + '-mobile.png', fullPage: true });
       await page.setViewportSize({ width: 1440, height: 960 });
     }
