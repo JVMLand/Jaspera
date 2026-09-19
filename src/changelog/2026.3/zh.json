@@ -1,0 +1,19 @@
+{
+  "title": "OpenJDK 27 与离线更新通知",
+  "introduction": "浏览器内的运行环境已升级至 OpenJDK 27。已保存离线数据的环境现在可以提示可用更新。",
+  "imageAlt": "运行 JAL 代码后，控制台显示 Java 版本 27。",
+  "sections": [
+    {
+      "title": "使用 OpenJDK 27 运行",
+      "body": "浏览器内的 Java 运行环境和标准库已升级至 OpenJDK 27，并支持 Java 27 类文件。生成类文件的默认目标版本仍为 Java 23。",
+      "image": "runtime",
+      "imageAlt": "运行环境卡片显示 OpenJDK 27 和浏览器内运行。"
+    },
+    {
+      "title": "更新已保存的离线版本",
+      "body": "联网时，Jaspera 会检查已保存的离线版本是否有更新。选择保存更新即可下载，也可选择稍后以继续工作。更新保存完成后，请保存工作，关闭所有 Jaspera 标签页和独立窗口，再重新打开。",
+      "image": "offline",
+      "imageAlt": "离线更新通知，提供保存更新和稍后两个按钮。"
+    }
+  ]
+}

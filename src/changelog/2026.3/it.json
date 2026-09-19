@@ -1,0 +1,19 @@
+{
+  "title": "OpenJDK 27 e notifiche di aggiornamento offline",
+  "introduction": "Il runtime nel browser ora usa OpenJDK 27. Le installazioni salvate per l’uso offline possono avvisarti quando è disponibile un aggiornamento.",
+  "imageAlt": "Codice JAL che mostra la versione 27 di Java nella console.",
+  "sections": [
+    {
+      "title": "Eseguire con OpenJDK 27",
+      "body": "Il runtime Java e la libreria standard del browser sono stati aggiornati a OpenJDK 27, con supporto per i file di classe Java 27. La versione di destinazione predefinita per le classi generate rimane Java 23.",
+      "image": "runtime",
+      "imageAlt": "La scheda del runtime mostra OpenJDK 27 e l’esecuzione nel browser."
+    },
+    {
+      "title": "Aggiornare la copia offline",
+      "body": "Quando sei online, Jaspera verifica se è disponibile un aggiornamento per la copia salvata. Puoi salvarlo per scaricarlo oppure rimandare e continuare a lavorare. Dopo il download, salva il lavoro, chiudi tutte le schede e le finestre separate di Jaspera e riapri Jaspera.",
+      "image": "offline",
+      "imageAlt": "Notifica di aggiornamento offline con i pulsanti per salvare l’aggiornamento o rimandarlo."
+    }
+  ]
+}

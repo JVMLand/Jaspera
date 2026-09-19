@@ -8,6 +8,8 @@ const currentVersion = JSON.parse(await readFile('package.json', 'utf8')).versio
   '',
 );
 const langs = ['ja', 'en', 'zh', 'es', 'it', 'fr', 'la'];
+const currentEntry = JSON.parse(await readFile(`src/changelog/${currentVersion}/en.json`, 'utf8'));
+const imageCount = currentEntry.sections.length + 1;
 test('every release has localized text and shared English screenshots, including the package version', async () => {
   const versions = (await readdir('src/changelog', { withFileTypes: true }))
     .filter((e) => e.isDirectory())
@@ -63,12 +65,12 @@ test(
     const context = await newAppContext(browser);
     await context.addInitScript(() => {
       if (!localStorage.getItem('jaspera.lastVersion'))
-        localStorage.setItem('jaspera.lastVersion', '2026.2');
+        localStorage.setItem('jaspera.lastVersion', '2026.2.1');
     });
     const page = await context.newPage();
     await page.goto('http://127.0.0.1:5297');
     await page.locator('#changelog article h1').waitFor();
-    assert.equal(await page.locator('#changelog article img').count(), 4);
+    assert.equal(await page.locator('#changelog article img').count(), imageCount);
     assert.equal(
       await page.locator('#changelog article > :first-child').evaluate((e) => e.className),
       'changelog-hero',
@@ -79,6 +81,7 @@ test(
     );
     assert.deepEqual(await page.locator('#changelog nav button').allTextContents(), [
       currentVersion,
+      '2026.2.1',
       '2026.2',
       '2026.1',
     ]);
@@ -94,14 +97,15 @@ test(
         (title) => document.querySelector('#changelog article h1')?.textContent.endsWith(title),
         entry.title,
       );
-      await page.waitForFunction(() => {
+      await page.waitForFunction((expected) => {
         const images = [...document.querySelectorAll('#changelog img')];
         // Load all topic images, including those initially below the fold.
         images.forEach((image) => (image.loading = 'eager'));
         return (
-          images.length === 4 && images.every((image) => image.complete && image.naturalWidth > 0)
+          images.length === expected &&
+          images.every((image) => image.complete && image.naturalWidth > 0)
         );
-      });
+      }, imageCount);
       for (const src of await page
         .locator('#changelog article img')
         .evaluateAll((images) => images.map((image) => image.src)))

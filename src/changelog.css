@@ -83,7 +83,8 @@
 }
 #changelog article img {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  width: auto;
   height: auto;
   border: 1px solid var(--theme-border);
   border-radius: 12px;

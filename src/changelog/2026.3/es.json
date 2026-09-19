@@ -1,0 +1,19 @@
+{
+  "title": "OpenJDK 27 y avisos de actualización sin conexión",
+  "introduction": "El entorno de ejecución del navegador ahora usa OpenJDK 27. Las instalaciones guardadas para uso sin conexión pueden avisarte cuando hay una actualización.",
+  "imageAlt": "Código JAL que muestra la versión 27 de Java en la consola.",
+  "sections": [
+    {
+      "title": "Ejecutar con OpenJDK 27",
+      "body": "El entorno Java y la biblioteca estándar del navegador se han actualizado a OpenJDK 27, con soporte para archivos de clase de Java 27. El destino predeterminado de las clases generadas sigue siendo Java 23.",
+      "image": "runtime",
+      "imageAlt": "La tarjeta del entorno muestra OpenJDK 27 y la ejecución en el navegador."
+    },
+    {
+      "title": "Mantener actualizada tu copia sin conexión",
+      "body": "Cuando hay conexión, Jaspera comprueba si hay actualizaciones para tu copia guardada. Puedes guardar la actualización para descargarla o dejarla para más tarde y seguir trabajando. Después de descargarla, guarda tu trabajo, cierra todas las pestañas y ventanas independientes de Jaspera y vuelve a abrirlo.",
+      "image": "offline",
+      "imageAlt": "Aviso de actualización sin conexión con botones para guardar la actualización o dejarla para más tarde."
+    }
+  ]
+}

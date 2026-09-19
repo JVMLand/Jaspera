@@ -1,0 +1,19 @@
+{
+  "title": "OpenJDK 27 et notifications de mise à jour hors ligne",
+  "introduction": "Le moteur Java du navigateur utilise désormais OpenJDK 27. Les installations enregistrées pour un usage hors ligne peuvent signaler les mises à jour disponibles.",
+  "imageAlt": "Du code JAL affichant la version 27 de Java dans la console.",
+  "sections": [
+    {
+      "title": "Exécuter avec OpenJDK 27",
+      "body": "Le moteur Java et la bibliothèque standard du navigateur ont été mis à jour vers OpenJDK 27, avec la prise en charge des fichiers de classe Java 27. La version cible par défaut des classes générées reste Java 23.",
+      "image": "runtime",
+      "imageAlt": "La carte du moteur indique OpenJDK 27 et une exécution dans le navigateur."
+    },
+    {
+      "title": "Mettre à jour votre copie hors ligne",
+      "body": "Lorsque vous êtes en ligne, Jaspera recherche les mises à jour de votre copie enregistrée. Vous pouvez télécharger la mise à jour ou la remettre à plus tard pour continuer à travailler. Après le téléchargement, enregistrez votre travail, fermez tous les onglets et toutes les fenêtres détachées de Jaspera, puis rouvrez Jaspera.",
+      "image": "offline",
+      "imageAlt": "Notification de mise à jour hors ligne avec les boutons pour enregistrer la mise à jour ou la remettre à plus tard."
+    }
+  ]
+}
