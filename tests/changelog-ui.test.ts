@@ -26,10 +26,11 @@ test('every release has localized text and shared English screenshots, including
       for (const section of entry.sections) {
         assert.ok(section.title && section.body && section.imageAlt);
         assert.match(section.image, /^[a-z-]+$/);
+        assert.ok(['jpg', 'gif'].includes(section.imageFormat ?? 'jpg'));
         assert.ok(
           (
             await stat(
-              `src/changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`,
+              `src/changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.${section.imageFormat ?? 'jpg'}`,
             )
           ).size > 1000,
         );
@@ -113,7 +114,21 @@ test(
       for (const src of await page
         .locator('#changelog article img')
         .evaluateAll((images) => images.map((image) => (image as HTMLImageElement).src)))
-        assert.match(src, /(?:\/en|-en)\.jpg(?:\?|$)/);
+        assert.match(src, /(?:\/en|-en)\.(?:jpg|gif)(?:\?|$)/);
+      for (const section of entry.sections.filter((section) => section.imageFormat === 'gif')) {
+        assert.equal(
+          await page
+            .locator('#changelog article img')
+            .evaluateAll(
+              (images, name) =>
+                images.filter((image) =>
+                  new URL((image as HTMLImageElement).src).pathname.endsWith('/' + name),
+                ).length,
+              section.image + '-en.gif',
+            ),
+          1,
+        );
+      }
     }
     await page.getByRole('button', { name: '2026.1', exact: true }).click();
     await page.waitForFunction(() =>

@@ -10,12 +10,13 @@ type Entry = {
     title: string;
     body: string;
     image: string;
+    imageFormat?: 'jpg' | 'gif';
     imageAlt: string;
     screenshotLocale?: string;
   }[];
 };
 const pages = import.meta.glob<{ default: Entry }>('./changelog/*/*.json');
-const images = import.meta.glob<string>('./changelog/*/*.jpg', {
+const images = import.meta.glob<string>('./changelog/*/*.{jpg,gif}', {
   query: '?url',
   import: 'default',
   eager: true,
@@ -91,7 +92,7 @@ export function openChangelog(initial = __APP_VERSION__) {
         if (navigator.onLine)
           screenshot.src =
             images[
-              `./changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.jpg`
+              `./changelog/${version}/${section.image}-${section.screenshotLocale ?? screenshotLocale}.${section.imageFormat ?? 'jpg'}`
             ];
         screenshot.alt = section.imageAlt;
         screenshot.loading = 'lazy';

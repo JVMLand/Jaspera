@@ -7,7 +7,8 @@
       "title": "Riprendere dalla bozza",
       "body": "Il codice appena creato e le modifiche agli esempi vengono salvati automaticamente nel browser e ripristinati dopo il ricaricamento. Sono esclusi i file e le cartelle aperti dall’esterno dell’applicazione.",
       "image": "draft",
-      "imageAlt": "Un esempio modificato e ripristinato dopo il ricaricamento."
+      "imageAlt": "Animazione della modifica di un esempio, del ricaricamento della pagina e del ripristino della bozza.",
+      "imageFormat": "gif"
     },
     {
       "title": "Vedere i valori mancanti durante la modifica",

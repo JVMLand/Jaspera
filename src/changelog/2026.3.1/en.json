@@ -7,7 +7,8 @@
       "title": "Resume from your draft",
       "body": "Newly created code and edits to examples are saved automatically in your browser and restored after reloading. Files and folders opened from outside the app are excluded.",
       "image": "draft",
-      "imageAlt": "An edited example restored after reloading."
+      "imageAlt": "Animation showing an example being edited, the page reloaded, and the draft restored.",
+      "imageFormat": "gif"
     },
     {
       "title": "See missing stack values while editing",

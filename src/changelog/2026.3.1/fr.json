@@ -7,7 +7,8 @@
       "title": "Reprendre un brouillon",
       "body": "Le code nouvellement créé et les modifications des exemples sont enregistrés automatiquement dans le navigateur, puis restaurés après un rechargement. Les fichiers et dossiers ouverts depuis l’extérieur de l’application sont exclus.",
       "image": "draft",
-      "imageAlt": "Un exemple modifié, restauré après un rechargement."
+      "imageAlt": "Animation montrant la modification d’un exemple, le rechargement de la page et la restauration du brouillon.",
+      "imageFormat": "gif"
     },
     {
       "title": "Voir les valeurs manquantes pendant la saisie",

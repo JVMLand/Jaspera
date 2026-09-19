@@ -7,7 +7,8 @@
       "title": "Retomar el borrador",
       "body": "El código nuevo y los cambios en los ejemplos se guardan automáticamente en el navegador y se restauran al recargar. No se incluyen los archivos ni las carpetas abiertos desde fuera de la aplicación.",
       "image": "draft",
-      "imageAlt": "Un ejemplo editado y restaurado al recargar."
+      "imageAlt": "Animación de la edición de un ejemplo, la recarga de la página y la recuperación del borrador.",
+      "imageFormat": "gif"
     },
     {
       "title": "Ver los valores que faltan al editar",
