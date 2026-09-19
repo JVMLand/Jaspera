@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "Esecuzione impossibile",
+  "analysis.missing": "Mancano {0} valori",
+  "analysis.requiredInputs": "Valori necessari (basso → alto): {0}",
   "analysis.stackMerge": "I percorsi che arrivano all’etichetta «{0}» hanno altezze dello stack diverse.\nPrimo percorso ({1} slot): {2}\nAltro percorso ({3} slot): {4}\nLe diramazioni e i ritorni dei cicli devono avere altezze dello stack uguali e tipi di valori compatibili alla destinazione.",
   "analysis.partial": "Stack provvisorio: la coerenza con gli altri percorsi in ingresso non è stata verificata.",
   "analysis.partialGraph": "I metodi con errori di analisi mostrano solo il flusso di controllo. Le dipendenze dello stack e delle variabili locali non sono ancora verificate.",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "Aggiornamento offline disponibile",
   "offline.updateDescription": "È disponibile una nuova versione. Puoi aggiornare i dati offline. Al termine del download, salva il lavoro, chiudi tutte le schede e le finestre separate di Jaspera e riaprilo.",
   "offline.updateSave": "Salva aggiornamento",
-  "offline.updateLater": "Più tardi"
+  "offline.updateLater": "Più tardi",
+  "draft.error.title": "Impossibile salvare la bozza",
+  "draft.error.body": "Lo spazio di archiviazione del browser è pieno o non disponibile. Salva il lavoro necessario in un file, poi elimina i file inutili o riducine il contenuto. Ricaricando la pagina potresti perdere le ultime modifiche.",
+  "draft.read.error": "Impossibile leggere la bozza salvata."
 }

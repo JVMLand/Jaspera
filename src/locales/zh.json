@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "无法执行",
+  "analysis.missing": "缺少 {0} 个值",
+  "analysis.requiredInputs": "所需的值（栈底 → 栈顶）：{0}",
   "analysis.stackMerge": "到达标签“{0}”的各条路径的栈高度不一致。\n先到达的路径（{1} 个槽位）：{2}\n另一条路径（{3} 个槽位）：{4}\n分支和循环回边到达汇合点时，栈高度必须一致，各值的类型必须兼容。",
   "analysis.partial": "这是分析中的临时栈状态，尚未验证其与其他传入路径是否一致。",
   "analysis.partialGraph": "存在分析错误的方法仅显示控制流。栈和局部变量的依赖关系尚未确定。",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "离线版本有更新",
   "offline.updateDescription": "已有新版本，可以更新离线数据。下载完成后，请保存工作，关闭所有 Jaspera 标签页和独立窗口，然后重新打开。",
   "offline.updateSave": "保存更新",
-  "offline.updateLater": "稍后"
+  "offline.updateLater": "稍后",
+  "draft.error.title": "无法保存草稿",
+  "draft.error.body": "浏览器存储空间不足或不允许保存。请先将需要的内容保存到文件，再删除不需要的文件或减少内容。重新加载可能会丢失最新更改。",
+  "draft.read.error": "无法读取已保存的草稿。"
 }

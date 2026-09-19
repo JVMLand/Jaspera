@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "No se puede ejecutar",
+  "analysis.missing": "Faltan {0} valores",
+  "analysis.requiredInputs": "Valores necesarios (abajo → arriba): {0}",
   "analysis.stackMerge": "Las rutas que llegan a la etiqueta «{0}» tienen distintas alturas de pila.\nPrimera ruta ({1} posiciones): {2}\nOtra ruta ({3} posiciones): {4}\nLas bifurcaciones y los retornos de bucle deben tener alturas de pila iguales y tipos de valores compatibles en su destino.",
   "analysis.partial": "Pila provisional: aún no se ha verificado la coherencia con las otras rutas entrantes.",
   "analysis.partialGraph": "Los métodos con errores de análisis solo muestran el flujo de control. Las dependencias de la pila y de las variables locales aún no están verificadas.",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "Actualización sin conexión disponible",
   "offline.updateDescription": "Hay una nueva versión. Puedes actualizar los datos sin conexión. Al terminar la descarga, guarda tu trabajo, cierra todas las pestañas y ventanas separadas de Jaspera y vuelve a abrirlo.",
   "offline.updateSave": "Guardar actualización",
-  "offline.updateLater": "Más tarde"
+  "offline.updateLater": "Más tarde",
+  "draft.error.title": "No se pudo guardar el borrador",
+  "draft.error.body": "El almacenamiento del navegador está lleno o no está disponible. Guarda el trabajo que necesites en un archivo y luego elimina los archivos innecesarios o reduce su contenido. Al recargar, podrías perder los últimos cambios.",
+  "draft.read.error": "No se pudo leer el borrador guardado."
 }

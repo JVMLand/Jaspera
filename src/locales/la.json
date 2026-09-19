@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "Exsequi non potest",
+  "analysis.missing": "Desunt {0} valores",
+  "analysis.requiredInputs": "Valores requisiti (ab imo → ad summum): {0}",
   "analysis.stackMerge": "Viae ad titulum «{0}» venientes diversas acervi altitudines habent.\nPrima via ({1} loca): {2}\nAlia via ({3} loca): {4}\nRami et reditus iterationum ad destinatum eandem acervi altitudinem et genera valorum congruentia habere debent.",
   "analysis.partial": "Acervus interim descriptus: congruentia cum aliis viis nondum comprobata est.",
   "analysis.partialGraph": "Methodi cum erroribus analysis solum fluxum imperii ostendunt. Dependentiae acervi et variabilium localium nondum comprobatae sunt.",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "Nova editio sine rete praesto est",
   "offline.updateDescription": "Nova editio praesto est. Data ad usum sine rete renovare potes. Receptis datis, opus serva, omnes paginas et fenestras separatas Jaspera claude, deinde Jaspera rursus aperi.",
   "offline.updateSave": "Renovationem serva",
-  "offline.updateLater": "Postea"
+  "offline.updateLater": "Postea",
+  "draft.error.title": "Adumbratio servari non potuit",
+  "draft.error.body": "Spatium navigatoris plenum est aut servatio non permittitur. Quae retinere vis in fasciculo serva, deinde fasciculos supervacuos dele aut eorum textum minue. Si paginam renovas, mutationes novissimae perire possunt.",
+  "draft.read.error": "Adumbratio servata legi non potuit."
 }

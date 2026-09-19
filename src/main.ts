@@ -1,3 +1,4 @@
+import { readDraft, draftWriter } from './draft-storage';
 import { initializeChangelog } from './changelog-state';
 import { initializeOfflineUpdates } from './offline-updates';
 import { installRunMenu } from './run-menu';
@@ -28,6 +29,7 @@ import { planPathChange } from './project-paths';
 import { tabLabels } from './file-labels';
 import {
   examples,
+  exampleEdits,
   exampleSource,
   rememberExample,
   withoutExampleLayout,
@@ -95,6 +97,31 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = msg('m6d5204937715',
 ]);
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 let project = defaultProject(false);
+let draftEnabled = false;
+let draftReady = false;
+let draftTimer: ReturnType<typeof setTimeout> | undefined;
+const writeDraft = draftWriter(
+  () => localStorage,
+  () => {
+    void dialog(msg('draft.error.title'), msg('draft.error.body'));
+  },
+);
+function saveDraft() {
+  clearTimeout(draftTimer);
+  if (!draftEnabled || !draftReady) return;
+  const copy = snapshot();
+  copy.workspace.layout = captureWorkspace();
+  writeDraft({ version: 1, project: copy, examples: exampleEdits(), dirty });
+}
+function scheduleDraft() {
+  if (!draftEnabled || !draftReady) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 300);
+}
+function leaveDraft() {
+  saveDraft();
+  draftEnabled = false;
+}
 const workspaceState = new WorkspaceStateStore();
 workspaceState.update({ debug: { status: 'idle', breakpoints: [] } });
 const debugSources = new Map<string, string>();
@@ -546,6 +573,7 @@ function ensureExample(path: string) {
   }
   model.onDidChangeContent(() => {
     rememberExample(path, model.getValue());
+    scheduleDraft();
     scheduleOffsets(model);
     updateActions();
     monaco.editor.setModelMarkers(model, 'jal', []);
@@ -762,6 +790,7 @@ function status(text: string, kind: 'ready' | 'loading' | 'error' = 'ready') {
 function setDirty(value = true) {
   if (value) changeVersion++;
   dirty = value;
+  scheduleDraft();
   el('project-name').textContent = project.name + (dirty ? ' •' : '');
   document.title = `${dirty ? '• ' : ''}${project.name} — ${APP_TITLE}`;
   el('summary-project-name').textContent = project.name;
@@ -1022,7 +1051,11 @@ async function installProject(
   next: Project,
   binding?: FolderBinding,
   properties = binding?.properties !== false,
+  scratch = false,
 ) {
+  leaveDraft();
+  draftReady = false;
+  draftEnabled = scratch;
   restoringLayout = true;
   detached.closeAll();
   panelDock?.restore();
@@ -1065,6 +1098,8 @@ async function installProject(
   el('clear').click();
   el('timing').textContent = '';
   setDirty(false);
+  draftReady = true;
+  scheduleDraft();
   showDiagnostics();
   void analyze();
 }
@@ -1112,7 +1147,9 @@ async function restorePreviewTabs(layout: WorkspaceLayout) {
     ...layout.tabs.map((t) => t.key),
     ...layout.windows.flatMap((w) => w.tabs),
   ])) {
-    if (key.startsWith('preview:folder:')) {
+    if (key.startsWith('preview:example:')) {
+      ensureExample(key.slice('preview:example:'.length));
+    } else if (key.startsWith('preview:folder:')) {
       const path = key.slice('preview:folder:'.length),
         file = folder?.classFiles?.find((f) => f.path === path);
       if (file)
@@ -1250,6 +1287,7 @@ async function saveProject(saveAs = false) {
       if (!folder && target.baseline.size) folder = target;
       throw e;
     }
+    leaveDraft();
     folder = target;
     if (project === current && changeVersion === version) setDirty(false);
     status(changeVersion === version ? msg('m4ae43a307956') : msg('ma8a3484ba33d'));
@@ -1631,6 +1669,7 @@ async function openJar(file: File) {
   const { JarArchive } = await import('./jar-archive');
   const archive = await JarArchive.open(file);
   if (jar && !(await closeJar())) return;
+  leaveDraft();
   jar = archive;
   renderFiles();
   updateActions();
@@ -1890,7 +1929,10 @@ async function openFiles(files: File[]): Promise<string[]> {
       } else if (kind === 'class') {
         const key = 'drop:' + ++dropSequence;
         await queueClass(async () => file, key, file.name);
-        if (project === owner && classPreviews.has(key)) opened.push('preview:' + key);
+        if (project === owner && classPreviews.has(key)) {
+          leaveDraft();
+          opened.push('preview:' + key);
+        }
       } else if (kind === 'source') {
         if (file.size > 1024 * 1024) throw new Error(msg('mc1c50ef487cf'));
         const source = await file.text();
@@ -1914,6 +1956,7 @@ async function openFiles(files: File[]): Promise<string[]> {
         if (copy.files.length === 1)
           copy.workspace = { ...copy.workspace, activeFile: path, entryFile: path };
         validateProject(copy);
+        leaveDraft();
         documents().add(path, source);
         switchFile(path);
         invalidate();
@@ -1992,7 +2035,8 @@ async function allowReplace() {
   );
 }
 async function newProject() {
-  if (!storageBusy && (await allowReplace())) await installProject(defaultProject());
+  if (!storageBusy && (await allowReplace()))
+    await installProject(defaultProject(), undefined, true, true);
 }
 function openProperties() {
   const d = el<HTMLDialogElement>('project-properties');
@@ -2545,13 +2589,18 @@ const windowCommands = installWindowCommands({
   save: () => void saveProject(),
   open: filePicker.open,
 });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveDraft();
+});
 window.addEventListener('beforeunload', (e) => {
+  saveDraft();
   if (dirty || storageBusy || jar?.dirty || jarBusy) {
     e.preventDefault();
     e.returnValue = '';
   }
 });
 window.addEventListener('pagehide', () => {
+  saveDraft();
   disposed = true;
   runMenu?.dispose();
   unsubscribeDebug();
@@ -2587,9 +2636,21 @@ window.addEventListener('pagehide', () => {
   editor.dispose();
   for (const model of models.values()) model.dispose();
 });
-void installProject(project).then(() => {
-  ensureExample('example/HelloWorld.jal');
-  selectClassPreview('example:example/HelloWorld.jal');
+let restoredDraft: ReturnType<typeof readDraft>;
+try {
+  restoredDraft = readDraft(localStorage);
+  if (restoredDraft)
+    for (const [path, source] of Object.entries(restoredDraft.examples))
+      rememberExample(path, source);
+} catch {
+  void dialog(msg('draft.error.title'), msg('draft.read.error'));
+}
+void installProject(restoredDraft?.project ?? project, undefined, true, true).then(() => {
+  if (restoredDraft) setDirty(restoredDraft.dirty);
+  else {
+    ensureExample('example/HelloWorld.jal');
+    selectClassPreview('example:example/HelloWorld.jal');
+  }
   initializeChangelog();
   initializeOfflineUpdates();
 });

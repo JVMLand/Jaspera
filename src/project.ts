@@ -34,7 +34,7 @@ export function validatePath(path: string) {
   );
   return path;
 }
-export function validateProject(project: Project): Project {
+export function validateProject(project: Project, limitContentSize = true): Project {
   const data = project;
   requireValue(
     typeof data.name === 'string' && data.name.trim().length > 0 && data.name.length <= 128,
@@ -53,7 +53,10 @@ export function validateProject(project: Project): Project {
     names.add(f.path.toLowerCase());
     const size = bytes(f.source);
     total += size;
-    requireValue(size <= 1024 * 1024 && total <= 6 * 1024 * 1024, msg('m8cea98e986be'));
+    requireValue(
+      !limitContentSize || (size <= 1024 * 1024 && total <= 6 * 1024 * 1024),
+      msg('m8cea98e986be'),
+    );
     return { path: f.path as string, source: f.source as string };
   });
   const w = data.workspace ?? {};
@@ -74,7 +77,10 @@ export function validateProject(project: Project): Project {
   const stdin = w.stdin ?? '',
     panel = w.panel ?? 'console',
     wordWrap = w.wordWrap ?? false;
-  requireValue(typeof stdin === 'string' && bytes(stdin) <= 1024 * 1024, msg('md892e026e5ba'));
+  requireValue(
+    typeof stdin === 'string' && (!limitContentSize || bytes(stdin) <= 1024 * 1024),
+    msg('md892e026e5ba'),
+  );
   requireValue(
     panel === 'project' ||
       panel === 'console' ||

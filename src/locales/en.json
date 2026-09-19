@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "Cannot execute",
+  "analysis.missing": "Missing {0} values",
+  "analysis.requiredInputs": "Required values (bottom → top): {0}",
   "analysis.stackMerge": "Incoming paths have different stack heights at label “{0}”.\nFirst incoming path ({1} slots): {2}\nAnother incoming path ({3} slots): {4}\nBranches and loop back edges must have consistent stack heights and compatible value types at their destination.",
   "analysis.partial": "Provisional stack: consistency with other incoming paths has not been verified.",
   "analysis.partialGraph": "Methods with analysis errors show control flow only. Stack and local variable dependencies are not yet verified.",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "Offline update available",
   "offline.updateDescription": "A new build is available. You can update your offline data. After the download finishes, save your work, close all Jaspera tabs and detached windows, and reopen Jaspera.",
   "offline.updateSave": "Save update",
-  "offline.updateLater": "Later"
+  "offline.updateLater": "Later",
+  "draft.error.title": "Could not save draft",
+  "draft.error.body": "Browser storage is full or unavailable. Save any work you need to a file, then delete unneeded files or reduce their contents. Your latest changes may be lost if you reload.",
+  "draft.read.error": "Could not read the saved draft."
 }

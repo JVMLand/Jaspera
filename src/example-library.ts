@@ -22,6 +22,7 @@ export const examples = Object.entries({
 }).map(([name, source]) => ({ path: 'example/' + name + '.jal', source }));
 export const isExampleKey = (key: string) => key.startsWith('preview:example:');
 const edits = new Map<string, string>();
+export const exampleEdits = () => Object.fromEntries(edits);
 export function translatedExample(path: string) {
   const example = examples.find((e) => e.path === path);
   if (!example) return;

@@ -1,4 +1,7 @@
 {
+  "analysis.blocked": "Exécution impossible",
+  "analysis.missing": "{0} valeurs manquantes",
+  "analysis.requiredInputs": "Valeurs requises (bas → haut) : {0}",
   "analysis.stackMerge": "Les chemins arrivant à l’étiquette « {0} » ont des hauteurs de pile différentes.\nPremier chemin ({1} emplacements) : {2}\nAutre chemin ({3} emplacements) : {4}\nLes branches et les retours de boucle doivent avoir des hauteurs de pile identiques et des types de valeurs compatibles à leur destination.",
   "analysis.partial": "Pile provisoire : la cohérence avec les autres chemins entrants n’a pas été vérifiée.",
   "analysis.partialGraph": "Les méthodes comportant des erreurs d’analyse affichent uniquement le flux de contrôle. Les dépendances de la pile et des variables locales ne sont pas encore vérifiées.",
@@ -960,5 +963,8 @@
   "offline.updateTitle": "Mise à jour hors connexion disponible",
   "offline.updateDescription": "Une nouvelle version est disponible. Vous pouvez mettre à jour les données hors connexion. Après le téléchargement, enregistrez votre travail, fermez tous les onglets et fenêtres détachées de Jaspera, puis rouvrez-le.",
   "offline.updateSave": "Enregistrer la mise à jour",
-  "offline.updateLater": "Plus tard"
+  "offline.updateLater": "Plus tard",
+  "draft.error.title": "Impossible d’enregistrer le brouillon",
+  "draft.error.body": "Le stockage du navigateur est plein ou indisponible. Enregistrez votre travail dans un fichier, puis supprimez les fichiers inutiles ou réduisez leur contenu. Un rechargement peut entraîner la perte des dernières modifications.",
+  "draft.read.error": "Impossible de lire le brouillon enregistré."
 }
