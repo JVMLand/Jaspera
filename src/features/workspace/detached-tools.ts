@@ -1,6 +1,6 @@
 import template from './detached-tools.html?raw';
 import { renderTemplate } from '../../i18n/template';
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 import { installDebugPanel } from '../../debug-panel';
 import type { DebugState } from '../../debug-protocol';
 import { installInstructionGraph } from '../../lazy-instruction-graph';

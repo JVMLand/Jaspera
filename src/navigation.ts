@@ -4,7 +4,7 @@ import type { NavigationApi } from './navigation.worker';
 import type { Catalog } from './completion';
 import * as monaco from './editor-platform';
 import NavigationWorker from './navigation.worker?worker';
-import type { SymbolIndex, SymbolReference, ClassSymbol, Span } from './symbols.js';
+import type { SymbolIndex, SymbolReference, ClassSymbol, Span } from './symbols.ts';
 export interface SearchTarget {
   label: string;
   detail: string;
@@ -144,7 +144,7 @@ export function createNavigation(host: Host) {
   async function findClass(
     owner: string,
   ): Promise<{ model: monaco.editor.ITextModel; symbol: ClassSymbol }[]> {
-    const found = [];
+    const found: { model: monaco.editor.ITextModel; symbol: ClassSymbol }[] = [];
     for (const model of host.models()) {
       if (model.isDisposed()) continue;
       for (const symbol of (await index(model)).classes)
@@ -199,7 +199,7 @@ export function createNavigation(host: Host) {
     if (visited.has(ref.owner) || visited.size >= 32) return [];
     visited.add(ref.owner);
     const classes = await findClass(ref.owner),
-      found = [];
+      found: { model: monaco.editor.ITextModel; span: Span }[] = [];
     for (const { model, symbol } of classes) {
       if (ref.kind === 'class') {
         found.push({ model, span: symbol });

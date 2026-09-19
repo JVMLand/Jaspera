@@ -1,4 +1,4 @@
-import { msg, displayMessage, type MessageKey } from '../messages.js';
+import { msg, displayMessage, type MessageKey } from '../messages.ts';
 
 const escapeHTML = (value: unknown) =>
   String(value).replace(

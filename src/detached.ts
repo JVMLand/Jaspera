@@ -3,7 +3,7 @@ import { presentationMenuItem } from './presentation';
 import { textSizeMenuItem } from './text-size';
 import { codeFontFamily } from './fonts';
 import { languageMenuItem } from './localization';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { revealEditorPosition } from './editor-reveal';
 import { installFeatureGuides } from './feature-guides';
 import { debugMenuItems, installDebugKeys } from './debug-panel';

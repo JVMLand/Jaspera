@@ -1,5 +1,5 @@
 import * as monaco from './editor-platform';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 
 const key = 'jaspera.text-size';
 export const defaultTextSize = { editor: 15, ui: 14 };

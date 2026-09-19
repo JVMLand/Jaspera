@@ -1,5 +1,5 @@
 import { type OfflineManifest } from '../../offline-cache';
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 
 const checkInterval = 30 * 60 * 1000;
 const focusInterval = 5 * 60 * 1000;

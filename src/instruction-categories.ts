@@ -1,4 +1,4 @@
-import { msg, displayText } from './messages.js';
+import { msg, displayText } from './messages.ts';
 import descriptions from '../vendor/javasm/completion-ja.json';
 const types: Record<string, string> = {
   i: 'int',

@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { DebugCommand, DebugBreakpoint, DebugOptions, DebugSnapshot } from './debug-protocol';
 import { expose, transfer } from 'comlink';
 import { WorkerRpc, scopedEndpoint } from './worker-rpc';

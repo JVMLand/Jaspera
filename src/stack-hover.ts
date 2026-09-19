@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { renderFrameTransition } from './frame-transition';
 import * as monaco from './editor-platform';
 import { instructionNames } from './language';

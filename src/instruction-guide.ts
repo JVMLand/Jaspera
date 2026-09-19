@@ -1,4 +1,4 @@
-import { msg, displayMessage, displayText } from './messages.js';
+import { msg, displayMessage, displayText } from './messages.ts';
 import { relatedInstructions } from './instruction-relations';
 import { instructionDetails } from './instruction-details';
 import language from './generated/language.json';

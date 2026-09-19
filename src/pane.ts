@@ -1,4 +1,4 @@
-import { msg, displayMessage, displayText } from './messages.js';
+import { msg, displayMessage, displayText } from './messages.ts';
 import { bindTranslation } from './localization';
 import { installContextMenu, type ContextItem } from './context-menu';
 import { paneDrag } from './tab-interactions';

@@ -1,7 +1,7 @@
 import { JarArchive } from './jar-archive';
 import { parseProperties } from './folder-project';
 import { validateProject, type Project } from './project';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 
 /** Import sources into an unbound project; saving must choose a real folder. */
 export async function openZipProject(

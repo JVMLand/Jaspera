@@ -135,7 +135,7 @@ JAR は一度に一つ開けます。JAR の変更はプロジェクトやフォ
 
 ## 開発環境
 
-必要なものは Node.js 22 以降，pnpm 10.13.1，JDK 23 以降，Git，Python 3.12 以降，CMake 3.15〜3.31，Ninja です。
+必要なものは Node.js 22.14 以降，pnpm 10.13.1，JDK 23 以降，Git，Python 3.12 以降，CMake 3.15〜3.31，Ninja です。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -149,12 +149,14 @@ Windows では MSYS2 UCRT64 の CMake と Ninja も使えます。C コードの
 
 | コマンド                  | 内容                                             |
 | ------------------------- | ------------------------------------------------ |
-| `pnpm run typecheck`      | TypeScript の型検査                              |
+| `pnpm run typecheck`      | アプリ・スクリプト・テストの TypeScript 型検査   |
 | `pnpm test`               | テスト。ブラウザを使うテストを含む               |
 | `pnpm run build:compiler` | Java 側のコンパイラを再ビルド                    |
 | `pnpm run build:runtime`  | パッチを適用した JVM を再ビルド                  |
 | `pnpm run build`          | 配布用ファイルとオフライン用キャッシュ情報を生成 |
 | `pnpm run preview`        | 配布用ビルドをローカルで確認                     |
+
+テストは `tests/*.test.ts` にあり，Node 標準の型除去機能で実行します。個別実行は `node --experimental-strip-types --test tests/formatter.test.ts`，テストだけの型検査は `pnpm run typecheck:tests` です。Playwright に渡す関数へ変換用の補助関数が混入しないよう，テストの実行には `tsx` を使いません。テストの設定は `tsconfig.tests.json` に分け，既存の動的なモックやバンドルの読み込みに合わせて `noImplicitAny` を無効にしています。アプリ側は引き続き `strict` で検査します。
 
 公開するファイルは `dist/` に出力されます。HTTPS で配信し，`.wasm` の MIME タイプを `application/wasm` に設定してください。フォルダーの読み書きには File System Access API が必要で，Chrome / Edge での利用を想定しています。ローカル開発では localhost でも利用できます。
 
@@ -191,7 +193,7 @@ OpenJDK 27 のクラスライブラリを同梱していますが，ブラウザ
 
 Bovine は `package.json` の `devDependencies.bovine-jvm` に GitHub リポジトリとコミット SHA を指定し，`pnpm-lock.yaml` とともに管理しています。`pnpm install` でソースを取得し，`pnpm run setup` または `pnpm run build:runtime` で Emscripten を使って WASM をビルドします。生成物は `.cache/bovine-build/<SHA>/` に保存します。更新時は `pnpm add -D bovine-jvm@github:JVMLand/bovine-jvm#<SHA>` を実行し，セットアップ後に動作を確認してください。
 
-`pnpm run generate` は文法・命令データ，ANTLR の JavaScript 解析器，Darcula 配色，JDK の補完情報，公開用ライセンスを生成します。`dev`・`typecheck`・`test` の前にも実行されます。`build` は型チェックを通じて同じ生成処理を使います。生成物を削除した場合も，セットアップ済みなら同じコマンドで復元できます。
+`pnpm run generate` は文法・命令データ，ANTLR の TypeScript 解析器，翻訳カタログ，Darcula 配色，JDK の補完情報，公開用ライセンスを生成します。`dev`・`typecheck`・`test` の前にも実行されます。`build` は型チェックを通じて同じ生成処理を使います。生成物を削除した場合も，セットアップ済みなら同じコマンドで復元できます。
 
 `src/generated/`，`public/licenses/`，`public/THIRD_PARTY_NOTICES.md` は Git に含めません。生成元の `vendor/`，`licenses/`，ルートの `THIRD_PARTY_NOTICES.md`，依存関係のロックファイルは管理対象です。公開用の Darcula ライセンスは `vendor/themes/LICENSE.txt` からコピーします。
 

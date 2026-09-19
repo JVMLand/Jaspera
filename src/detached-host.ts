@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { RevealMode } from './editor-reveal';
 import type { DebugCommand, DebugFrame } from './debug-protocol';
 import type { AnalysisProgress } from './protocol';

@@ -1,6 +1,6 @@
 import { installPresentationPanelSizing } from './presentation-panel-sizing';
 import { textSize, setTemporaryTextSize } from './text-size';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { bindTranslation, localizedMessage } from './localization';
 import './presentation.css';
 

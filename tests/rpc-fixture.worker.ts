@@ -1,5 +1,5 @@
 import { expose, transfer } from 'comlink';
-expose({
+const api = {
   async delay(value: number, ms: number) {
     await new Promise((r) => setTimeout(r, ms));
     return value;
@@ -15,11 +15,13 @@ expose({
     setTimeout(() => {
       throw new Error('fixture crash');
     }, 0);
-    return new Promise(() => {});
+    return new Promise<never>(() => {});
   },
   hang() {
     while (true) {
       /* Terminated by the client timeout. */
     }
   },
-});
+};
+export type RpcFixture = typeof api;
+expose(api);

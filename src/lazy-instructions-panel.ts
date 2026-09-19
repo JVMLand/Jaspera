@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { observePanelVisibility } from './panel-visibility';
 import type { Compilation } from './protocol';
 import type { installInstructionsPanel as install } from './instructions-panel';

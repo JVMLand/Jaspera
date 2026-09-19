@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
 const bundle = await build({
   stdin: {
-    contents: `export {analyzeSource} from './src/source-analysis-core.js';export {parseJal} from './src/jal-parse.js';export {parameterSlots} from './src/parameter-slots.js';export {calculateOffsets} from './src/offsets.js';export {inspectSource} from './src/inspections.js';`,
+    contents: `export {analyzeSource} from './src/source-analysis-core.ts';export {parseJal} from './src/jal-parse.ts';export {parameterSlots} from './src/parameter-slots.ts';export {calculateOffsets} from './src/offsets.ts';export {inspectSource} from './src/inspections.ts';`,
     resolveDir: process.cwd(),
   },
   bundle: true,

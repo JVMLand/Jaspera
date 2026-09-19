@@ -1,5 +1,5 @@
 import { localizedContent } from './localization';
-import { msg, displayMessage } from './messages.js';
+import { msg, displayMessage } from './messages.ts';
 import { observePanelVisibility } from './panel-visibility';
 import { installInstructionUsage } from './instruction-usage-view';
 import type { Compilation } from './protocol';

@@ -1,5 +1,5 @@
 import { unzip, zip, type Unzipped } from 'fflate';
-import { displayMessage as text } from './messages.js';
+import { displayMessage as text } from './messages.ts';
 import type { Compilation } from './protocol';
 
 export function toBase64(bytes: Uint8Array) {

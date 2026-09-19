@@ -1,5 +1,5 @@
 import { estimatedSize } from './estimated-size';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { BoundedCache, defaultCacheBudget } from './bounded-cache';
 import type { Compilation, Disassembly, AnalysisProgress, CompileOptions } from './protocol';
 

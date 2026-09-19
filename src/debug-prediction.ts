@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { DebugFrame } from './debug-protocol';
 import type { FrameTransition } from './frame-transition';
 /** Pure preview: never resumes the VM or calls a Java method. Values are logical JVM values (category 2 is one entry). */

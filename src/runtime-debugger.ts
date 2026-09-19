@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type {
   DebugBreakpoint,
   DebugCommand,

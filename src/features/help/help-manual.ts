@@ -11,7 +11,7 @@ import layoutTemplate from './manual-layout.html?raw';
 import shortcutsTemplate from './manual-shortcuts.html?raw';
 import offlineTemplate from './manual-offline.html?raw';
 import { bindMessage } from '../../localization';
-import { displayMessage } from '../../messages.js';
+import { displayMessage } from '../../messages.ts';
 import './help-manual.css';
 
 // Authored HTML only. Do not interpolate source code or user input into these pages.

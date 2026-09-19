@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { DebugCommand, DebugState, DebugFrame } from './debug-protocol';
 import { renderFrameTransition } from './frame-transition';
 import { predictDebugFrame } from './debug-prediction';

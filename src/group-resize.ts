@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 export function installGroupResize(workspace: HTMLElement, onLayout: () => void) {
   let weights = [0.17, 0.48, 0.35];
   try {

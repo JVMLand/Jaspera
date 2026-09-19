@@ -1,6 +1,6 @@
 import template from './search-everywhere.html?raw';
 import { renderTemplate } from '../../i18n/template';
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 import type { SearchTarget } from '../../navigation';
 import type { Catalog } from '../../completion';
 import './search-everywhere.css';

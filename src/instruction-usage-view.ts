@@ -1,5 +1,5 @@
 import { codeFontFamily } from './fonts';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import * as monaco from './editor-platform';
 import { installStackHover } from './stack-hover';
 import { instructionUsage } from './instruction-usage';

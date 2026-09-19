@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { readWorkspaceLayout, type WorkspaceLayout } from './workspace-layout';
 import { hello } from './examples';
 export interface FileView {

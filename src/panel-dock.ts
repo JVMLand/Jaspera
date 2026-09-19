@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { ContextItem } from './context-menu';
 import { layoutPanels, type DockLayout } from './workspace-layout';
 import './panel-dock.css';

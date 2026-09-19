@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 export type Member = { name: string; kind: 'field' | 'method'; static: boolean };
 export type Catalog = Record<string, Member[]>;
 export interface Candidate {

@@ -1,5 +1,5 @@
 import { localizedContent } from './localization';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { formatFrameValue } from './frame-value';
 import './frame-transition.css';
 export interface FrameTransition {

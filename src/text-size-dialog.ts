@@ -1,5 +1,5 @@
 import { defaultTextSize, textSize, setTextSize, type TextSize } from './text-size';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import './text-size-dialog.css';
 
 export function openTextSize() {

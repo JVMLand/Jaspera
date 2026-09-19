@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { RuntimeDebugger } from './runtime-debugger';
 import type { DebugCommand, DebugBreakpoint } from './debug-protocol';
 /// <reference lib="webworker" />

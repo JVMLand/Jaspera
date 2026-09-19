@@ -1,4 +1,4 @@
-import { displayMessage as msg } from './messages.js';
+import { displayMessage as msg } from './messages.ts';
 import { inlayHintColors } from './inlay-hint-style';
 import { instructionHighlightGroups, instructionColorRules } from './instruction-colors';
 import * as monaco from './editor-platform';

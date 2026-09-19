@@ -1,4 +1,4 @@
-import { analyzeSymbols } from './symbols.js';
+import { analyzeSymbols } from './symbols.ts';
 import { expose } from 'comlink';
 import ELK from 'elkjs/lib/elk-api.js';
 import ElkWorker from 'elkjs/lib/elk-worker.min.js?worker';

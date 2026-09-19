@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { installContextMenu, copyText, selectedText } from './context-menu';
 export function installConsoleContextMenu(
   host: HTMLElement,

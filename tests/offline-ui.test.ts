@@ -1,0 +1,151 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+import { launchBrowser, newAppContext, newAppPage, runHello } from './helpers/browser.ts';
+test(
+  'prepared production build restarts, shows lazy panels and runs Java without network',
+  { timeout: 180000 },
+  async (t) => {
+    const base = 'http://127.0.0.1:5230/';
+    const server = spawn(
+      process.execPath,
+      [
+        'node_modules/vite/bin/vite.js',
+        'preview',
+        '--host',
+        '127.0.0.1',
+        '--port',
+        '5230',
+        '--strictPort',
+      ],
+      { stdio: 'pipe', windowsHide: true },
+    );
+    t.after(() => server.kill());
+    for (let i = 0; i < 100; i++) {
+      try {
+        if ((await fetch(base)).ok) break;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const browser = await launchBrowser({ headless: true });
+    t.after(() => browser.close());
+    const context = await newAppContext(browser),
+      page = await context.newPage();
+    page.setDefaultTimeout(90000);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.addInitScript(() => localStorage.setItem('jalweb.theme', 'vs-dark'));
+    const requests: string[] = [];
+    page.on('request', (r) => requests.push(r.url()));
+    await page.goto(base);
+    await page.waitForFunction(
+      () => document.querySelector('#state')?.textContent === '実行できます',
+    );
+    assert.equal(
+      requests.some((url) => url.includes('/instructions-panel-')),
+      false,
+    );
+    assert.deepEqual(
+      requests.filter((url) =>
+        /\/(?:licenses|runtime)\/|\/(?:instruction-graph|jar-archive|instructions-panel)-/.test(
+          url,
+        ),
+      ),
+      [],
+      'Initial editor display must not download optional features or offline resources',
+    );
+    await page.locator('#menu-help').click();
+    await page.locator('#help-offline').click();
+    await page.locator('.offline-start').click();
+    await page.waitForFunction(
+      () => !(document.querySelector('.offline-start') as HTMLButtonElement)?.disabled,
+    );
+    assert.match((await page.locator('.offline-status').textContent())!, /保存が完了しました/);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    const cachedUrls = await page.evaluate(async () => {
+      const urls: string[] = [];
+      for (const name of await caches.keys())
+        for (const request of await (await caches.open(name)).keys()) urls.push(request.url);
+      return urls;
+    });
+    assert.equal(
+      cachedUrls.some((url) => url.includes('/assets/changelog/')),
+      false,
+    );
+    const manifest = JSON.parse(await readFile('dist/offline-manifest.json', 'utf8'));
+    assert.equal(
+      manifest.urls.some((url) => url.startsWith('assets/changelog/')),
+      false,
+    );
+    await page.locator('.offline-close').click();
+    await page.evaluate(async () => {
+      for (const name of await caches.keys()) {
+        const cache = await caches.open(name);
+        for (const request of await cache.keys())
+          if (request.url.includes('elk-worker')) await cache.delete(request);
+      }
+    });
+    await page.locator('#menu-help').click();
+    await page.locator('#help-offline').click();
+    await page.locator('.offline-start').click();
+    await page.waitForFunction(
+      () => !(document.querySelector('.offline-start') as HTMLButtonElement)?.disabled,
+    );
+    assert.match((await page.locator('.offline-status').textContent())!, /保存が完了しました/);
+    await page.locator('.offline-close').click();
+    await context.setOffline(true);
+    await page.reload();
+    await page.waitForFunction(
+      () => document.querySelector('#state')?.textContent === '実行できます',
+    );
+    await page.locator('#instructions-tab').click();
+    await page.locator('.instruction-detail').waitFor();
+    await page.locator('.instruction-usage').waitFor({ state: 'attached' });
+    await page.locator('#graph-tab').click();
+    await page.locator('.graph-node rect').first().waitFor();
+    assert.equal(await page.locator('.graph-node').count(), 4);
+    await runHello(page);
+    assert.equal(await page.locator('#output').textContent(), 'こんにちは，JAL！\n');
+    await page.locator('#menu-help').click();
+    await page.locator('#help-changelog').click();
+    await page.locator('#changelog article h1').waitFor();
+    assert.ok((await page.locator('#changelog article p').count()) > 0);
+    assert.equal(await page.locator('#changelog article img').count(), 0);
+    await page.getByRole('button', { name: '2026.1', exact: true }).click();
+    await page.waitForFunction(() =>
+      document.querySelector('#changelog article h1')?.textContent!.startsWith('2026.1'),
+    );
+    assert.ok((await page.locator('#changelog article p').count()) > 0);
+    await page.locator('.changelog-close').click();
+    await page.locator('#menu-help').click();
+    await page.locator('#help-offline').click();
+    await page.locator('.offline-start').click();
+    await page.waitForFunction(() =>
+      document.querySelector('.offline-status')?.textContent!.includes('保存済みです'),
+    );
+    await page.locator('.offline-close').click();
+    await page.locator('#instructions-tab').click();
+    const popupEvent = page.waitForEvent('popup');
+    await page.locator('#instructions-tab').click({ button: 'right' });
+    await page.locator('.panel-context-menu').getByText('小窓で開く', { exact: true }).click();
+    const popup = await popupEvent;
+    await popup.locator('.instruction-usage').waitFor();
+    await popup.close();
+    const update = JSON.parse(await readFile('dist/offline-update.json', 'utf8'));
+    update.buildId = 'a'.repeat(64);
+    await context.route('**/offline-update.json', (route) => route.fulfill({ json: update }));
+    await page.bringToFront();
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await page.locator('#offline-update').waitFor({ timeout: 15000 });
+    assert.equal(await page.locator('.offline-update-save').textContent(), '更新を保存する');
+    await page.screenshot({ path: '.cache/offline-update-desktop.png' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const box = await page.locator('#offline-update').boundingBox();
+    assert.ok(box!.x >= 0 && box!.x + box!.width <= 390);
+    await page.screenshot({ path: '.cache/offline-update-mobile.png' });
+    await page.getByRole('button', { name: 'あとで', exact: true }).click();
+    assert.deepEqual(errors, []);
+  },
+);

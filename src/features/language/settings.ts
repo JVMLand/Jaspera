@@ -1,5 +1,5 @@
 import { locales, currentLocale, setLocale, type Locale } from '../../localization';
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 import { renderTemplate } from '../../i18n/template';
 import template from './settings.html?raw';
 import './settings.css';

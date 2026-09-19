@@ -1,12 +1,12 @@
 import gutterTemplate from './features/execution/gutter.html?raw';
 import { renderTemplate } from './i18n/template';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import * as monaco from './editor-platform';
 import { WorkerRpc } from './worker-rpc';
 import type { OffsetsApi } from './offsets.worker';
 import OffsetWorker from './offsets.worker?worker';
 import { publishInspections } from './inspection-actions';
-import type { SourceOffset } from './offsets.js';
+import type { SourceOffset } from './offsets.ts';
 
 type Model = monaco.editor.ITextModel;
 type Analysis = ReturnType<OffsetsApi['analyze']>;

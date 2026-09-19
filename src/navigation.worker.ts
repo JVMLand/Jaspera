@@ -1,8 +1,8 @@
 import { fetchRuntimeFile } from './runtime-download.js';
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { expose, transfer } from 'comlink';
 import { unzipSync } from 'fflate';
-import { analyzeSymbols } from './symbols.js';
+import { analyzeSymbols } from './symbols.ts';
 let archive: Promise<Uint8Array> | undefined;
 const api = {
   analyze(source: string) {

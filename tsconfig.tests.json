@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["node", "vite/client"],
+    "allowJs": true,
+    "checkJs": false,
+    "paths": {
+      "/src/*": ["./src/*"],
+      "/tests/*": ["./tests/*"],
+      "/node_modules/*": ["./node_modules/*"]
+    }
+  },
+  "include": ["tests/**/*.ts", "src/**/*.d.ts"]
+}

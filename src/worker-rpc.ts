@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { wrap, type Endpoint, type Remote } from 'comlink';
 // Only lifecycle management lives here; Comlink owns RPC dispatch and serialization.
 export function scopedEndpoint(target: Worker | MessagePort) {

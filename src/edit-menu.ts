@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import type { Item } from './menus';
 export function editMenuItems(action: (id: string) => void): (Item | null)[] {
   return [

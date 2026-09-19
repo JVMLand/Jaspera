@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { autoUpdate, computePosition, offset, flip, shift, arrow } from '@floating-ui/dom';
 import './feature-guides.css';
 

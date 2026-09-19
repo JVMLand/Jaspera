@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { fileLabel } from './file-labels';
 import { installContextMenu, copyText } from './context-menu';
 import { paneDrag } from './tab-interactions';

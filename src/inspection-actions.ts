@@ -1,5 +1,5 @@
 import * as monaco from './editor-platform';
-import type { Inspection } from './inspections.js';
+import type { Inspection } from './inspections.ts';
 const cache = new WeakMap<monaco.editor.ITextModel, { version: number; items: Inspection[] }>();
 const range = (model: monaco.editor.ITextModel, start: number, end: number) => {
   const a = model.getPositionAt(start),

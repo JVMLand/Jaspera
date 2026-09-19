@@ -16,7 +16,7 @@ const result = spawnSync(
   [
     '-jar',
     '.cache/java/antlr4-4.13.2-complete.jar',
-    '-Dlanguage=JavaScript',
+    '-Dlanguage=TypeScript',
     '-no-listener',
     '-o',
     'src/generated/offset-parser',
@@ -27,11 +27,16 @@ const result = spawnSync(
 );
 if (result.error) throw result.error;
 if (result.status !== 0) throw new Error('ANTLR generation failed');
-// The browser imports only the generated JavaScript lexer and parser.
+// Remove metadata and stale JavaScript from builds before the TypeScript migration.
 await Promise.all(
-  ['JAL.tokens', 'JAL.interp', 'JALLexer.tokens', 'JALLexer.interp'].map((name) =>
-    rm('src/generated/offset-parser/' + name, { force: true }),
-  ),
+  [
+    'JAL.tokens',
+    'JAL.interp',
+    'JALLexer.tokens',
+    'JALLexer.interp',
+    'JALLexer.js',
+    'JALParser.js',
+  ].map((name) => rm('src/generated/offset-parser/' + name, { force: true })),
 );
 const opcodes = await readFile(
   'vendor/langjal/java/tokyo/peya/langjal/compiler/jvm/EOpcodes.java',

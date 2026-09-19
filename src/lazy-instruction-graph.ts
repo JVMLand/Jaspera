@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { observePanelVisibility } from './panel-visibility';
 import type { GraphDocument } from './protocol';
 import type { installInstructionGraph as install } from './instruction-graph';

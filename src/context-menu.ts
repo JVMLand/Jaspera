@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import './context-menu.css';
 export type ContextItem = { label: string; action: () => void; disabled?: boolean } | null;
 let dismissActive: (() => void) | undefined;

@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { showDebugGutter } from './source-analysis';
 import * as monaco from './editor-platform';
 import type { DebugState } from './debug-protocol';

@@ -1,4 +1,4 @@
-import { msg } from './messages.js';
+import { msg } from './messages.ts';
 import { methodLayouts, graphDocuments, rememberGraph } from './graph-cache';
 import { observePanelVisibility } from './panel-visibility';
 import type { AnalysisProgress, Compilation, GraphDocument, MethodGraph } from './protocol';

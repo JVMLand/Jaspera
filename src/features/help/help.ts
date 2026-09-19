@@ -1,4 +1,4 @@
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 import { bindMessage } from '../../localization';
 import { resetFeatureGuides } from '../../feature-guides';
 import { APP_NAME, APP_TAGLINE } from '../../brand';

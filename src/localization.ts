@@ -4,7 +4,7 @@ import i18next from 'i18next';
 import japanese from './generated/locales/ja.js';
 import supportedLocales from './i18n/locales.json';
 import { localeLoaders } from './generated/locale-loaders';
-import { msg, setDisplayCatalog, displayMessage } from './messages.js';
+import { msg, setDisplayCatalog, displayMessage } from './messages.ts';
 export const locales = supportedLocales;
 export type Locale = keyof typeof locales;
 type Catalog = Record<string, string>;

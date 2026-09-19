@@ -6,7 +6,7 @@ import {
   waitForWorker,
   type OfflineManifest,
 } from '../../offline-cache';
-import { msg } from '../../messages.js';
+import { msg } from '../../messages.ts';
 let current: HTMLDialogElement | undefined;
 export async function openOfflinePreparation(startImmediately = false) {
   if (current?.open) {

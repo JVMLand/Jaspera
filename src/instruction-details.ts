@@ -1,4 +1,4 @@
-import { displayMessage as msg } from './messages.js';
+import { displayMessage as msg } from './messages.ts';
 // Behaviour beyond the diagrams. Every supported instruction has an explicit family.
 export function instructionDetails(op: string) {
   const arithmetic = op.match(/^([ilfd])(add|sub|mul|div|rem|and|or|xor|shl|shr|ushr)$/);

@@ -1,6 +1,6 @@
 import notices from '../../../THIRD_PARTY_NOTICES.md?raw';
 import { bindMessage } from '../../localization';
-import { displayMessage as msg } from '../../messages.js';
+import { displayMessage as msg } from '../../messages.ts';
 import './licenses.css';
 
 // These files are also available without JavaScript and included in the offline cache.

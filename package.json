@@ -3,16 +3,19 @@
   "version": "2026.3.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "setup": "tsx scripts/setup.ts",
     "build:compiler": "tsx scripts/build-compiler.ts",
     "generate": "tsx scripts/generate.ts",
-    "typecheck": "pnpm run generate && tsc --noEmit && pnpm run typecheck:scripts",
+    "typecheck": "pnpm run generate && tsc --noEmit && pnpm run typecheck:scripts && pnpm run typecheck:tests",
     "perf": "tsx scripts/measure-workspace-performance.ts",
     "build": "pnpm run typecheck && vite build && tsx scripts/prepare-pages.ts && tsx scripts/build-offline.ts",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "test": "node --experimental-strip-types --test --test-concurrency=1 tests/*.test.ts",
     "prebuild": "tsx scripts/check-runtime.ts",
     "build:runtime": "tsx scripts/build-runtime.ts",
     "format": "prettier --write .",
@@ -21,7 +24,8 @@
     "predev": "pnpm run generate",
     "pretest": "pnpm run generate",
     "build:pages": "pnpm run build",
-    "preview:pages": "wrangler pages dev dist"
+    "preview:pages": "wrangler pages dev dist",
+    "typecheck:tests": "tsc -p tsconfig.tests.json"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
