@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-export const revision = 'fb4df55cda5d6b29016e2421a037251a8b7852ab';
+export const revision = 'a6c914dd835388ebe24c1ef09f367397b3b4915a';
 export const sdkVersion = '4.0.2';
 export const source = resolve('.cache/bovine-jvm');
 export const output = resolve(source, 'build-debugger');

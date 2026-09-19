@@ -14,12 +14,12 @@
 | Javasm instruction documents | local source snapshot; `vendor/provenance.json` | `licenses/Javasm.txt` |
 | ANTLR | 4.13.2, https://github.com/antlr/antlr4/tree/4.13.2 | BSD-3-Clause |
 | ASM | 9.10, https://asm.ow2.io/ | BSD-3-Clause |
-| Bovine JVM | fb4df55cda5d6b29016e2421a037251a8b7852ab, https://github.com/JVMLand/bovine-jvm | MIT, `licenses/Bovine-JVM.txt` |
+| Bovine JVM | a6c914dd835388ebe24c1ef09f367397b3b4915a, https://github.com/JVMLand/bovine-jvm | MIT, `licenses/Bovine-JVM.txt` |
 | OpenJDK 27 | GPL OpenJDK 27+35; `vendor/jdk27-runtime.json` | GPLv2 with Classpath Exception where applicable; `licenses/OpenJDK*` and `licenses/OpenJDK27/` |
 | JZlib | 1.1.3, https://github.com/ymnk/jzlib/tree/1.1.3 | BSD-style, `licenses/JZlib.txt` |
 
 OpenJDK upstream source: https://github.com/openjdk/jdk/tree/jdk-27%2B35
-Runtime distribution provenance: https://github.com/JVMLand/bovine-jvm/blob/fb4df55cda5d6b29016e2421a037251a8b7852ab/scripts/setup-runtime.py
+Runtime distribution provenance: https://github.com/JVMLand/bovine-jvm/blob/a6c914dd835388ebe24c1ef09f367397b3b4915a/scripts/setup-runtime.py
 The setup script builds a reduced class archive and module image from the verified OpenJDK distribution. Hashes before Jaspera's runtime adaptations are recorded in `vendor/jdk27-runtime.json`. The upstream source link identifies the distribution source; it is not a claim of a bit-for-bit rebuild of OpenJDK.
 
 JALWeb replaces java.util.zip.Deflater, Inflater, CRC32 and Adler32 with adapters to JZlib. The complete adapter source and build procedure are included in `java/patches/` and `scripts/build-compiler.ts`. These files are modifications by JALWeb, not unmodified OpenJDK source.
