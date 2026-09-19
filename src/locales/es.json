@@ -953,5 +953,9 @@
   "changelog.close": "Cerrar",
   "changelog.versions": "Versiones",
   "changelog.loading": "Cargando…",
-  "changelog.error": "No se pudieron cargar las novedades. Cierra esta ventana e inténtalo de nuevo."
+  "changelog.error": "No se pudieron cargar las novedades. Cierra esta ventana e inténtalo de nuevo.",
+  "offline.updateTitle": "Actualización sin conexión disponible",
+  "offline.updateDescription": "Hay una nueva versión. Puedes actualizar los datos sin conexión. Al terminar la descarga, guarda tu trabajo, cierra todas las pestañas y ventanas separadas de Jaspera y vuelve a abrirlo.",
+  "offline.updateSave": "Guardar actualización",
+  "offline.updateLater": "Más tarde"
 }

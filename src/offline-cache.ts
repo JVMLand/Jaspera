@@ -1,4 +1,6 @@
 export interface OfflineManifest {
+  version?: string;
+  buildId?: string;
   bytes: number;
   cacheId: string;
   entries: { url: string; revision: string | null }[];

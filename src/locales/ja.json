@@ -953,5 +953,9 @@
   "changelog.close": "閉じる",
   "changelog.versions": "バージョン",
   "changelog.loading": "読み込み中…",
-  "changelog.error": "変更履歴を読み込めませんでした。いったん閉じて，もう一度お試しください。"
+  "changelog.error": "変更履歴を読み込めませんでした。いったん閉じて，もう一度お試しください。",
+  "offline.updateTitle": "オフライン版の更新があります",
+  "offline.updateDescription": "新しい版が配信されています。オフライン用のデータを更新できます。保存が終わったら，作業を保存し，Jaspera のタブと小窓をすべて閉じて開き直してください。",
+  "offline.updateSave": "更新を保存する",
+  "offline.updateLater": "あとで"
 }

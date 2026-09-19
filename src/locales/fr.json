@@ -953,5 +953,9 @@
   "changelog.close": "Fermer",
   "changelog.versions": "Versions",
   "changelog.loading": "Chargement…",
-  "changelog.error": "Impossible de charger les nouveautés. Fermez cette fenêtre et réessayez."
+  "changelog.error": "Impossible de charger les nouveautés. Fermez cette fenêtre et réessayez.",
+  "offline.updateTitle": "Mise à jour hors connexion disponible",
+  "offline.updateDescription": "Une nouvelle version est disponible. Vous pouvez mettre à jour les données hors connexion. Après le téléchargement, enregistrez votre travail, fermez tous les onglets et fenêtres détachées de Jaspera, puis rouvrez-le.",
+  "offline.updateSave": "Enregistrer la mise à jour",
+  "offline.updateLater": "Plus tard"
 }

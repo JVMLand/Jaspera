@@ -22,6 +22,9 @@
 /offline-manifest.json
   Cache-Control: no-cache
 
+/offline-update.json
+  Cache-Control: no-store
+
 /
   Cache-Control: no-cache
 

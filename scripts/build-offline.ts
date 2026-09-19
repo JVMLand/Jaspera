@@ -1,6 +1,8 @@
 import { generateSW, getManifest } from 'workbox-build';
 import { readdir, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { version } from '../package.json';
 async function inventory(
   directory: string,
   prefix = '',
@@ -12,7 +14,9 @@ async function inventory(
       files.push(...(await inventory(join(directory, entry.name), relative + '/')));
     else if (
       !entry.name.startsWith('.') &&
-      !['sw.js', 'offline-manifest.json', '_headers', '_redirects'].includes(entry.name) &&
+      !['sw.js', 'offline-manifest.json', 'offline-update.json', '_headers', '_redirects'].includes(
+        entry.name,
+      ) &&
       !entry.name.endsWith('.map')
     )
       files.push({ url: relative, bytes: (await stat(join(directory, entry.name))).size });
@@ -23,7 +27,15 @@ const files = await inventory('dist');
 const manifestOptions = {
   globDirectory: 'dist',
   globPatterns: ['**/*'],
-  globIgnores: ['**/*.map', '**/.*', '_headers', '_redirects', 'sw.js', 'offline-manifest.json'],
+  globIgnores: [
+    '**/*.map',
+    '**/.*',
+    '_headers',
+    '_redirects',
+    'sw.js',
+    'offline-manifest.json',
+    'offline-update.json',
+  ],
   maximumFileSizeToCacheInBytes: 64 * 1024 * 1024,
 };
 const { manifestEntries, warnings } = await getManifest(manifestOptions);
@@ -31,21 +43,25 @@ if (warnings.length) throw new Error(warnings.join('\n'));
 // Workbox already keys every entry by its revision. A build-specific cache name
 // would download unchanged runtime archives and licenses again on every update.
 const cacheId = 'jaspera';
-await writeFile(
-  'dist/offline-manifest.json',
-  JSON.stringify({
-    bytes: files.reduce((n, f) => n + f.bytes, 0),
-    files: files.length,
-    urls: files.map((f) => f.url),
-    cacheId,
-    entries: manifestEntries,
-  }),
-);
+const manifest = JSON.stringify({
+  version: version.replace(/\.0$/, ''),
+  buildId: createHash('sha256')
+    .update(JSON.stringify([...manifestEntries].sort((a, b) => a.url.localeCompare(b.url))))
+    .digest('hex'),
+  bytes: files.reduce((n, f) => n + f.bytes, 0),
+  files: files.length,
+  urls: files.map((f) => f.url),
+  cacheId,
+  entries: manifestEntries,
+});
+await writeFile('dist/offline-manifest.json', manifest);
+// This separate URL must never be precached: cache: 'no-store' alone does not bypass a SW.
+await writeFile('dist/offline-update.json', manifest);
 const result = await generateSW({
   cacheId,
   globDirectory: 'dist',
   globPatterns: ['**/*'],
-  globIgnores: ['**/*.map', '**/.*', '_headers', '_redirects', 'sw.js'],
+  globIgnores: ['**/*.map', '**/.*', '_headers', '_redirects', 'sw.js', 'offline-update.json'],
   swDest: 'dist/sw.js',
   maximumFileSizeToCacheInBytes: 64 * 1024 * 1024,
   inlineWorkboxRuntime: true,

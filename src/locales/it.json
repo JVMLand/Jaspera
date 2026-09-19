@@ -953,5 +953,9 @@
   "changelog.close": "Chiudi",
   "changelog.versions": "Versioni",
   "changelog.loading": "Caricamento…",
-  "changelog.error": "Impossibile caricare le novità. Chiudi questa finestra e riprova."
+  "changelog.error": "Impossibile caricare le novità. Chiudi questa finestra e riprova.",
+  "offline.updateTitle": "Aggiornamento offline disponibile",
+  "offline.updateDescription": "È disponibile una nuova versione. Puoi aggiornare i dati offline. Al termine del download, salva il lavoro, chiudi tutte le schede e le finestre separate di Jaspera e riaprilo.",
+  "offline.updateSave": "Salva aggiornamento",
+  "offline.updateLater": "Più tardi"
 }

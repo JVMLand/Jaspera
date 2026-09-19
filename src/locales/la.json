@@ -953,5 +953,9 @@
   "changelog.close": "Claudere",
   "changelog.versions": "Editiones",
   "changelog.loading": "Legitur…",
-  "changelog.error": "Mutationes legi non potuerunt. Hanc fenestram claude et iterum conare."
+  "changelog.error": "Mutationes legi non potuerunt. Hanc fenestram claude et iterum conare.",
+  "offline.updateTitle": "Nova editio sine rete praesto est",
+  "offline.updateDescription": "Nova editio praesto est. Data ad usum sine rete renovare potes. Receptis datis, opus serva, omnes paginas et fenestras separatas Jaspera claude, deinde Jaspera rursus aperi.",
+  "offline.updateSave": "Renovationem serva",
+  "offline.updateLater": "Postea"
 }

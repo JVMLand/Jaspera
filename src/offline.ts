@@ -1,7 +1,7 @@
 import { offlineComplete, abortable, waitForWorker, type OfflineManifest } from './offline-cache';
 import { msg } from './messages.js';
 let current: HTMLDialogElement | undefined;
-export async function openOfflinePreparation() {
+export async function openOfflinePreparation(startImmediately = false) {
   if (current?.open) {
     current.focus();
     return;
@@ -43,10 +43,13 @@ export async function openOfflinePreparation() {
   };
   const loading = beginOperation();
   try {
-    const response = await fetch(new URL('offline-manifest.json', base), {
-      signal: loading.signal,
-      cache: 'no-store',
-    });
+    const response = await fetch(
+      new URL(navigator.onLine ? 'offline-update.json' : 'offline-manifest.json', base),
+      {
+        signal: loading.signal,
+        cache: 'no-store',
+      },
+    );
     if (!response.ok) throw new Error(msg('mcd3df9fc8025'));
     manifest = await response.json();
     status.textContent = msg('me9991f0f3e4e', [(manifest.bytes / 1024 / 1024).toFixed(1)]);
@@ -99,4 +102,5 @@ export async function openOfflinePreparation() {
       start.disabled = false;
     }
   };
+  if (startImmediately) start.click();
 }

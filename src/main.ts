@@ -1,4 +1,5 @@
 import { initializeChangelog } from './changelog-state';
+import { initializeOfflineUpdates } from './offline-updates';
 import { installRunMenu } from './run-menu';
 import { updateDebugMenu } from './debug-panel';
 import { presentationMenuItem } from './presentation';
@@ -2577,6 +2578,7 @@ void installProject(project).then(() => {
   ensureExample('example/HelloWorld.jal');
   selectClassPreview('example:example/HelloWorld.jal');
   initializeChangelog();
+  initializeOfflineUpdates();
 });
 
 installFeatureGuides();

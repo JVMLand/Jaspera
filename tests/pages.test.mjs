@@ -86,6 +86,10 @@ test('Pages output contains only static assets below the upload limits', async (
   const compressed = await readFile('dist/runtime/jdk27/lib/modules.gzip');
   assert.deepEqual(gunzipSync(compressed), await readFile('public/runtime/jdk27/lib/modules'));
   const manifest = JSON.parse(await readFile('dist/offline-manifest.json', 'utf8'));
+  assert.match(manifest.buildId, /^[a-f0-9]{64}$/);
+  assert.deepEqual(JSON.parse(await readFile('dist/offline-update.json', 'utf8')), manifest);
+  assert.ok(!manifest.urls.includes('offline-update.json'));
+  assert.ok(!(await readFile('dist/sw.js', 'utf8')).includes('offline-update.json'));
   assert.ok(manifest.urls.includes('runtime/jdk27/lib/modules.gzip'));
   assert.ok(manifest.urls.includes('runtime/jdk27.jar.gzip'));
   assert.ok(!manifest.urls.includes('runtime/jdk27.jar'));

@@ -953,5 +953,9 @@
   "changelog.close": "Close",
   "changelog.versions": "Versions",
   "changelog.loading": "Loading…",
-  "changelog.error": "Could not load the release notes. Close this window and try again."
+  "changelog.error": "Could not load the release notes. Close this window and try again.",
+  "offline.updateTitle": "Offline update available",
+  "offline.updateDescription": "A new build is available. You can update your offline data. After the download finishes, save your work, close all Jaspera tabs and detached windows, and reopen Jaspera.",
+  "offline.updateSave": "Save update",
+  "offline.updateLater": "Later"
 }

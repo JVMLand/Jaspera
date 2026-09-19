@@ -953,5 +953,9 @@
   "changelog.close": "关闭",
   "changelog.versions": "版本",
   "changelog.loading": "正在加载…",
-  "changelog.error": "无法加载更新日志。请关闭此窗口后重试。"
+  "changelog.error": "无法加载更新日志。请关闭此窗口后重试。",
+  "offline.updateTitle": "离线版本有更新",
+  "offline.updateDescription": "已有新版本，可以更新离线数据。下载完成后，请保存工作，关闭所有 Jaspera 标签页和独立窗口，然后重新打开。",
+  "offline.updateSave": "保存更新",
+  "offline.updateLater": "稍后"
 }

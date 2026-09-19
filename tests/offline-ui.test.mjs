@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { launchBrowser, newAppContext, newAppPage, runHello } from './helpers/browser.mjs';
 test(
   'prepared production build restarts, shows lazy panels and runs Java without network',
@@ -101,6 +102,20 @@ test(
     const popup = await popupEvent;
     await popup.locator('.instruction-usage').waitFor();
     await popup.close();
+    const update = JSON.parse(await readFile('dist/offline-update.json', 'utf8'));
+    update.buildId = 'a'.repeat(64);
+    await context.route('**/offline-update.json', (route) => route.fulfill({ json: update }));
+    await page.bringToFront();
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await page.locator('#offline-update').waitFor({ timeout: 15000 });
+    assert.equal(await page.locator('.offline-update-save').textContent(), '更新を保存する');
+    await page.screenshot({ path: '.cache/offline-update-desktop.png' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const box = await page.locator('#offline-update').boundingBox();
+    assert.ok(box.x >= 0 && box.x + box.width <= 390);
+    await page.screenshot({ path: '.cache/offline-update-mobile.png' });
+    await page.getByRole('button', { name: 'あとで', exact: true }).click();
     assert.deepEqual(errors, []);
   },
 );
