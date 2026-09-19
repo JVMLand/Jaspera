@@ -1,0 +1,25 @@
+{
+  "title": "Borradores automáticos y errores de pila más claros",
+  "introduction": "Recupera el código al recargar y examina los errores de pila con más facilidad. Las capturas de las notas de versión ya no se guardan para uso sin conexión, lo que reduce el espacio ocupado.",
+  "imageAlt": "Una ayuda muestra el valor String que falta junto al diccionario de instrucciones.",
+  "sections": [
+    {
+      "title": "Retomar el borrador",
+      "body": "El código nuevo y los cambios en los ejemplos se guardan automáticamente en el navegador y se restauran al recargar. No se incluyen los archivos ni las carpetas abiertos desde fuera de la aplicación.",
+      "image": "draft",
+      "imageAlt": "Un ejemplo editado y restaurado al recargar."
+    },
+    {
+      "title": "Ver los valores que faltan al editar",
+      "body": "Al editar un ejemplo, se actualizan los problemas y las marcas de error sin pulsar Ejecutar. Las ayudas de las instrucciones muestran los tipos de los valores que faltan y cuándo una instrucción no puede ejecutarse.",
+      "image": "stack",
+      "imageAlt": "La ayuda muestra que falta el argumento String de println."
+    },
+    {
+      "title": "Seguir el flujo de control con errores de pila",
+      "body": "Si las pilas entrantes no coinciden en una unión de ramas, puedes examinar las pilas analizadas parcialmente. El gráfico muestra el flujo de control y explica la unión incoherente en el diagnóstico.",
+      "image": "graph",
+      "imageAlt": "Diagnóstico y flujo de control de un bucle con alturas de pila distintas."
+    }
+  ]
+}

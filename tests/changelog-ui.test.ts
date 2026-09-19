@@ -81,6 +81,7 @@ test(
     );
     assert.deepEqual(await page.locator('#changelog nav button').allTextContents(), [
       currentVersion,
+      '2026.3',
       '2026.2.1',
       '2026.2',
       '2026.1',

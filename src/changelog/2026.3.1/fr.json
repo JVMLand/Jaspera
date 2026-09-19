@@ -1,0 +1,25 @@
+{
+  "title": "Brouillons automatiques et erreurs de pile plus claires",
+  "introduction": "Retrouvez votre code après un rechargement et examinez plus facilement les erreurs de pile. Les captures des notes de version sont exclues de la sauvegarde hors ligne pour réduire le stockage utilisé.",
+  "imageAlt": "Une infobulle indique la valeur String manquante à côté du dictionnaire des instructions.",
+  "sections": [
+    {
+      "title": "Reprendre un brouillon",
+      "body": "Le code nouvellement créé et les modifications des exemples sont enregistrés automatiquement dans le navigateur, puis restaurés après un rechargement. Les fichiers et dossiers ouverts depuis l’extérieur de l’application sont exclus.",
+      "image": "draft",
+      "imageAlt": "Un exemple modifié, restauré après un rechargement."
+    },
+    {
+      "title": "Voir les valeurs manquantes pendant la saisie",
+      "body": "Modifier un exemple actualise les problèmes et les marques d’erreur sans lancer l’exécution. Les infobulles des instructions indiquent les types des valeurs manquantes et signalent quand une instruction ne peut pas s’exécuter.",
+      "image": "stack",
+      "imageAlt": "Une infobulle indique que l’argument String de println manque."
+    },
+    {
+      "title": "Suivre le flux de contrôle malgré une pile incohérente",
+      "body": "Si les piles entrantes diffèrent à une jonction de branches, vous pouvez encore examiner les piles partiellement analysées. Le graphe affiche le flux de contrôle et le diagnostic explique la jonction incohérente.",
+      "image": "graph",
+      "imageAlt": "Diagnostic et flux de contrôle d’une boucle dont les hauteurs de pile diffèrent."
+    }
+  ]
+}

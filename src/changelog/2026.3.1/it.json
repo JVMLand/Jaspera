@@ -1,0 +1,25 @@
+{
+  "title": "Bozze automatiche ed errori dello stack più chiari",
+  "introduction": "Riprendi il codice dopo aver ricaricato la pagina e controlla più facilmente gli errori dello stack. Le immagini delle note di rilascio non vengono più salvate offline, riducendo lo spazio occupato.",
+  "imageAlt": "Un suggerimento mostra il valore String mancante accanto al dizionario delle istruzioni.",
+  "sections": [
+    {
+      "title": "Riprendere dalla bozza",
+      "body": "Il codice appena creato e le modifiche agli esempi vengono salvati automaticamente nel browser e ripristinati dopo il ricaricamento. Sono esclusi i file e le cartelle aperti dall’esterno dell’applicazione.",
+      "image": "draft",
+      "imageAlt": "Un esempio modificato e ripristinato dopo il ricaricamento."
+    },
+    {
+      "title": "Vedere i valori mancanti durante la modifica",
+      "body": "Modificare un esempio aggiorna i problemi e gli indicatori di errore senza premere Esegui. I suggerimenti delle istruzioni mostrano i tipi dei valori mancanti e indicano quando un’istruzione non può essere eseguita.",
+      "image": "stack",
+      "imageAlt": "Un suggerimento indica che manca l’argomento String di println."
+    },
+    {
+      "title": "Seguire il flusso di controllo anche con errori dello stack",
+      "body": "Se gli stack in ingresso non coincidono in un punto di unione, puoi comunque esaminare gli stack analizzati parzialmente. Il grafo mostra il flusso di controllo e la diagnostica spiega l’incoerenza.",
+      "image": "graph",
+      "imageAlt": "Diagnostica e flusso di controllo di un ciclo con altezze dello stack diverse."
+    }
+  ]
+}

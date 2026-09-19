@@ -1,0 +1,25 @@
+{
+  "title": "Automatic drafts and clearer stack errors",
+  "introduction": "Resume unfinished code after reloading and inspect stack errors more easily. Release screenshots are no longer included in offline saves, reducing storage use.",
+  "imageAlt": "An instruction hover showing a missing String beside the instruction dictionary.",
+  "sections": [
+    {
+      "title": "Resume from your draft",
+      "body": "Newly created code and edits to examples are saved automatically in your browser and restored after reloading. Files and folders opened from outside the app are excluded.",
+      "image": "draft",
+      "imageAlt": "An edited example restored after reloading."
+    },
+    {
+      "title": "See missing stack values while editing",
+      "body": "Editing an example now updates Problems and error markers without pressing Run. Instruction hovers show the types of missing values and when an instruction cannot execute.",
+      "image": "stack",
+      "imageAlt": "A hover showing the missing String argument for println."
+    },
+    {
+      "title": "Follow control flow through stack errors",
+      "body": "When incoming stacks disagree at a branch merge, you can still inspect partially analyzed stacks. The graph shows control flow and explains the inconsistent merge in its diagnostics.",
+      "image": "graph",
+      "imageAlt": "Diagnostics and control flow for a loop with inconsistent stack heights."
+    }
+  ]
+}
