@@ -187,6 +187,8 @@ OpenJDK 27 のクラスライブラリを同梱していますが，ブラウザ
 `scripts/*.ts` は `tsx` で実行し，`pnpm run typecheck:scripts` で型チェックします。
 初回は Java 23 とビルドツールを用意し，`pnpm install --frozen-lockfile`，`pnpm run setup` の順に実行してください。
 
+Bovine は `package.json` の `devDependencies.bovine-jvm` に GitHub リポジトリとコミット SHA を指定し，`pnpm-lock.yaml` とともに管理しています。`pnpm install` でソースを取得し，`pnpm run setup` または `pnpm run build:runtime` で Emscripten を使って WASM をビルドします。生成物は `.cache/bovine-build/<SHA>/` に保存します。更新時は `pnpm add -D bovine-jvm@github:JVMLand/bovine-jvm#<SHA>` を実行し，セットアップ後に動作を確認してください。
+
 `pnpm run generate` は文法・命令データ，ANTLR の JavaScript 解析器，Darcula 配色，JDK の補完情報，公開用ライセンスを生成します。`dev`・`typecheck`・`test` の前にも実行されます。`build` は型チェックを通じて同じ生成処理を使います。生成物を削除した場合も，セットアップ済みなら同じコマンドで復元できます。
 
 `src/generated/`，`public/licenses/`，`public/THIRD_PARTY_NOTICES.md` は Git に含めません。生成元の `vendor/`，`licenses/`，ルートの `THIRD_PARTY_NOTICES.md`，依存関係のロックファイルは管理対象です。公開用の Darcula ライセンスは `vendor/themes/LICENSE.txt` からコピーします。

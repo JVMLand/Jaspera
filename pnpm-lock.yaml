@@ -47,6 +47,9 @@ importers:
       '@types/wawoff2':
         specifier: 1.0.2
         version: 1.0.2
+      bovine-jvm:
+        specifier: github:JVMLand/bovine-jvm#cce6884ad811fafe5778cce6279347fc1d24dfd6
+        version: https://codeload.github.com/JVMLand/bovine-jvm/tar.gz/cce6884ad811fafe5778cce6279347fc1d24dfd6
       esbuild:
         specifier: 0.25.12
         version: 0.25.12
@@ -1423,6 +1426,10 @@ packages:
 
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
+
+  bovine-jvm@https://codeload.github.com/JVMLand/bovine-jvm/tar.gz/cce6884ad811fafe5778cce6279347fc1d24dfd6:
+    resolution: {tarball: https://codeload.github.com/JVMLand/bovine-jvm/tar.gz/cce6884ad811fafe5778cce6279347fc1d24dfd6}
+    version: 0.1.0
 
   brace-expansion@2.1.4:
     resolution: {integrity: sha512-hGfVzPxthbf3+2yjg/RBs60cB0FhqBS/zvdV/4wn4/BmN0bNMMHPc4V/BbFieqf1TKAGGAHnY4eSjajCl0f2Xg==}
@@ -3661,6 +3668,8 @@ snapshots:
   baseline-browser-mapping@2.11.21: {}
 
   blake3-wasm@2.1.5: {}
+
+  bovine-jvm@https://codeload.github.com/JVMLand/bovine-jvm/tar.gz/cce6884ad811fafe5778cce6279347fc1d24dfd6: {}
 
   brace-expansion@2.1.4:
     dependencies:

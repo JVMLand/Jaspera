@@ -1,23 +1,20 @@
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
-export const revision = 'a6c914dd835388ebe24c1ef09f367397b3b4915a';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const dependency: string = manifest.devDependencies['bovine-jvm'];
+const match = /^github:JVMLand\/bovine-jvm#([a-f0-9]{40})$/.exec(dependency);
+if (!match) throw new Error('Pin bovine-jvm to a full GitHub commit SHA in package.json.');
+export const revision = match[1];
 export const sdkVersion = '4.0.2';
-export const source = resolve('.cache/bovine-jvm');
-export const output = resolve(source, 'build-debugger');
+export const source = dirname(require.resolve('bovine-jvm/package.json'));
+// Keep generated files outside pnpm's immutable package store, separately per revision.
+export const output = resolve('.cache/bovine-build', revision);
 export function ensureBovineSource() {
-  function git(args: string[], cwd?: string) {
-    const result = spawnSync('git', args, { cwd, encoding: 'utf8', windowsHide: true });
-    if (result.error) throw result.error;
-    if (result.status !== 0) throw new Error(result.stderr || 'Bovine git operation failed');
-    return result.stdout.trim();
-  }
-  if (!existsSync(resolve(source, '.git')))
-    git(['clone', '--filter=blob:none', 'https://github.com/JVMLand/bovine-jvm.git', source]);
-  if (git(['rev-parse', 'HEAD'], source) !== revision) {
-    if (git(['status', '--porcelain', '--', '.', ':(exclude)build-debugger'], source))
-      throw new Error('Cached Bovine sources have local changes; preserve them before updating.');
-    git(['fetch', 'origin', revision], source);
-    git(['checkout', '--detach', revision], source);
+  for (const file of ['CMakeLists.txt', 'js/bjvm2.ts', 'scripts/setup-runtime.py']) {
+    if (!existsSync(resolve(source, file)))
+      throw new Error(`Bovine source is incomplete (${file}); run pnpm install --frozen-lockfile.`);
   }
 }

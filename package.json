@@ -37,6 +37,7 @@
     "@types/node": "^22.20.1",
     "@types/turndown": "^5.0.6",
     "@types/wawoff2": "1.0.2",
+    "bovine-jvm": "github:JVMLand/bovine-jvm#cce6884ad811fafe5778cce6279347fc1d24dfd6",
     "esbuild": "0.25.12",
     "prettier": "^3.9.6",
     "prettier-plugin-java": "^2.10.3",

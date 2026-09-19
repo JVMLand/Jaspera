@@ -2,10 +2,11 @@ import { gzipSync } from 'node:zlib';
 import { resolve } from 'node:path';
 import { readFile, copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { build } from 'esbuild';
+import { source as bovineSource, output } from './bovine.ts';
 export async function bundleRuntime() {
-  const out = '.cache/bovine-jvm/build-debugger';
-  let source = await readFile('.cache/bovine-jvm/js/bjvm2.ts', 'utf8');
-  source = source.replace('../build/bjvm_main', '../build-debugger/bjvm_main');
+  const out = output;
+  let source = await readFile(resolve(bovineSource, 'js/bjvm2.ts'), 'utf8');
+  source = source.replace('"../build/bjvm_main"', JSON.stringify(resolve(output, 'bjvm_main.js')));
   const fetchCall = 'await fetch(`${runtimeUrl}/${file}`';
   if (!source.includes(fetchCall)) throw new Error('Bovine runtime fetch call changed');
   source = source.replace(fetchCall, 'await fetchRuntimeFile(`${runtimeUrl}/${file}`');
@@ -34,7 +35,7 @@ export async function bundleRuntime() {
   );
   await mkdir('public/runtime', { recursive: true });
   await build({
-    stdin: { contents: source, resolveDir: '.cache/bovine-jvm/js', loader: 'ts' },
+    stdin: { contents: source, resolveDir: resolve(bovineSource, 'js'), loader: 'ts' },
     bundle: true,
     format: 'esm',
     platform: 'browser',
