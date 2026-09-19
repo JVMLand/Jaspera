@@ -246,7 +246,8 @@ const closedSourceTabs = new Set<string>();
 let tabOrder: string[] = [];
 let restoringLayout = false;
 let results = new Map<string, Compilation>();
-let problemTargets: { path: string; line: number; column: number }[] = [];
+const exampleResults = new WeakMap<monaco.editor.ITextModel, Compilation>();
+let problemTargets: { model: monaco.editor.ITextModel; line: number; column: number }[] = [];
 const sourceAnalysis = new SourceAnalysis(
   (model) => {
     if ([...models.values()].includes(model)) showDiagnostics();
@@ -436,8 +437,8 @@ const detached = createDetachedHost(
     clearOutput: () => el('clear').click(),
     problem: (index, group) => {
       const target = problemTargets[index],
-        model = target ? models.get(target.path) : undefined;
-      if (target && model)
+        model = target?.model;
+      if (target && model && !model.isDisposed())
         void window.jalwebDetached?.openDefinition(
           group,
           model.uri.toString(),
@@ -518,6 +519,27 @@ function ensureExample(path: string) {
   );
   const preview: ClassPreview = { key, title: path, model, example: true, mtime: 0, size: 0 };
   classPreviews.set(key, preview);
+  let diagnosticTimer: ReturnType<typeof setTimeout>;
+  const scheduleDiagnostics = () => {
+    clearTimeout(diagnosticTimer);
+    diagnosticTimer = setTimeout(() => {
+      if (disposed || model.isDisposed()) return;
+      const version = model.getVersionId();
+      void compileExample(model).catch((error) => {
+        if (
+          !disposed &&
+          !model.isDisposed() &&
+          model.getVersionId() === version &&
+          !(error instanceof Error && error.name === 'AbortError')
+        )
+          status(String(error), 'error');
+      });
+    }, 500);
+  };
+  model.onWillDispose(() => {
+    clearTimeout(diagnosticTimer);
+    exampleResults.delete(model);
+  });
   if (path === 'example/HelloWorld.jal') {
     const line = source.split(/\r?\n/).findIndex((text) => /^\s*invokevirtual\b/.test(text));
     if (line >= 0) breakpoints.toggle(model, line + 1);
@@ -527,8 +549,12 @@ function ensureExample(path: string) {
     scheduleOffsets(model);
     updateActions();
     monaco.editor.setModelMarkers(model, 'jal', []);
+    exampleResults.delete(model);
+    showDiagnostics();
+    scheduleDiagnostics();
   });
   scheduleOffsets(model);
+  scheduleDiagnostics();
   return preview;
 }
 async function checkDocument(model: monaco.editor.ITextModel | null = editor.getModel()) {
@@ -552,27 +578,10 @@ async function checkDocument(model: monaco.editor.ITextModel | null = editor.get
 async function compileExample(model: monaco.editor.ITextModel) {
   const version = model.getVersionId(),
     result = await compilationService.compile(model, model.getValue(), undefined, {});
-  if (!model.isDisposed() && model.getVersionId() === version)
-    monaco.editor.setModelMarkers(
-      model,
-      'jal',
-      result.diagnostics.map((d) => {
-        const p = model.validatePosition({ lineNumber: d.line, column: d.column });
-        return {
-          severity:
-            d.severity === 'error' ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning,
-          message: d.message,
-          startLineNumber: p.lineNumber,
-          startColumn: p.column,
-          endLineNumber: p.lineNumber,
-          endColumn: Math.min(
-            model.getLineMaxColumn(p.lineNumber),
-            p.column + Math.max(1, d.length),
-          ),
-          source: 'JAL',
-        };
-      }),
-    );
+  if (!disposed && !model.isDisposed() && model.getVersionId() === version) {
+    exampleResults.set(model, result);
+    showDiagnostics();
+  }
   return result;
 }
 function detachableDocument(keyOrUri: string) {
@@ -1434,6 +1443,7 @@ function closeEditorTabs(key: string, others = false) {
       }
     }
   }
+  showDiagnostics();
   if (next) selectEditorTab(next);
   else {
     groupEditors.get(side)!.setModel(null);
@@ -2235,8 +2245,18 @@ function showDiagnostics() {
   el('problems').replaceChildren();
   problemTargets = [];
   let count = 0;
-  for (const [path, model] of models) {
-    const items = results.get(path)?.diagnostics ?? [];
+  const documents = [
+    ...[...models].map(([path, model]) => ({ path, model, result: results.get(path) })),
+    ...[...classPreviews.values()]
+      .filter((preview) => preview.example && !preview.model.isDisposed())
+      .map((preview) => ({
+        path: preview.title,
+        model: preview.model,
+        result: exampleResults.get(preview.model),
+      })),
+  ];
+  for (const { path, model, result } of documents) {
+    const items = result?.diagnostics ?? [];
     count += items.length;
     monaco.editor.setModelMarkers(
       model,
@@ -2264,7 +2284,7 @@ function showDiagnostics() {
     });
     count += inspections.length;
     for (const d of [...items, ...inspections]) {
-      problemTargets.push({ path, line: d.line, column: d.column });
+      problemTargets.push({ model, line: d.line, column: d.column });
       const label = `${path}:${d.line}:${d.column}  ${d.message}`;
       problems.push({ label, severity: d.severity });
       const li = document.createElement('li'),
@@ -2272,14 +2292,7 @@ function showDiagnostics() {
       b.className = d.severity;
       b.textContent = label;
       b.onclick = () => {
-        if (detached.has('source:' + path)) {
-          detached.focus('source:' + path);
-          return;
-        }
-        switchFile(path);
-        editor.setPosition(model.validatePosition({ lineNumber: d.line, column: d.column }));
-        editor.revealLineInCenter(d.line);
-        editor.focus();
+        void openDefinition(model.uri.toString(), { lineNumber: d.line, column: d.column });
       };
       li.append(b);
       el('problems').append(li);
