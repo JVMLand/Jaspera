@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "无法执行",
-  "analysis.missing": "缺少 {0} 个值",
+  "analysis.missing": "缺少: {0}",
   "analysis.partial": "这是分析中的临时栈状态，尚未验证其与其他传入路径是否一致。",
   "analysis.partialGraph": "存在分析错误的方法仅显示控制流。栈和局部变量的依赖关系尚未确定。",
   "analysis.requiredInputs": "所需的值（栈底 → 栈顶）：{0}",

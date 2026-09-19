@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "Exsequi non potest",
-  "analysis.missing": "Desunt {0} valores",
+  "analysis.missing": "Desunt: {0}",
   "analysis.partial": "Acervus interim descriptus: congruentia cum aliis viis nondum comprobata est.",
   "analysis.partialGraph": "Methodi cum erroribus analysis solum fluxum imperii ostendunt. Dependentiae acervi et variabilium localium nondum comprobatae sunt.",
   "analysis.requiredInputs": "Valores requisiti (ab imo → ad summum): {0}",

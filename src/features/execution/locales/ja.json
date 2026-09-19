@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "実行不可",
-  "analysis.missing": "値が {0} 個不足",
+  "analysis.missing": "不足: {0}",
   "analysis.partial": "解析途中のスタックです。別の経路から合流した場合の整合性は確認できていません。",
   "analysis.partialGraph": "解析エラーのあるメソッドは制御フローのみ表示しています。スタックとローカル変数の依存関係は未確定です。",
   "analysis.requiredInputs": "必要な値（下 → 上）: {0}",

@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "Esecuzione impossibile",
-  "analysis.missing": "Mancano {0} valori",
+  "analysis.missing": "Manca: {0}",
   "analysis.partial": "Stack provvisorio: la coerenza con gli altri percorsi in ingresso non è stata verificata.",
   "analysis.partialGraph": "I metodi con errori di analisi mostrano solo il flusso di controllo. Le dipendenze dello stack e delle variabili locali non sono ancora verificate.",
   "analysis.requiredInputs": "Valori necessari (basso → alto): {0}",

@@ -21,7 +21,10 @@ test(
     }
     const browser = await launchBrowser();
     t.after(() => browser.close());
-    const page = await newAppPage(browser, { viewport: { width: 1400, height: 900 } });
+    const page = await newAppPage(browser, {
+      viewport: { width: 1400, height: 900 },
+      theme: 'googol-light',
+    });
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('http://127.0.0.1:5196');
@@ -62,13 +65,31 @@ test(
       .first()
       .hover();
     const hover = page.locator('.stack-hover:visible');
-    await hover.getByText('実行前', { exact: true }).waitFor();
-    await hover.getByText('実行後', { exact: true }).waitFor();
-    assert.match((await hover.locator('.frame-missing').textContent())!, /値が 1 個不足/);
-    assert.match((await hover.locator('.frame-blocked').textContent())!, /実行不可/);
+    await hover.getByRole('heading', { name: '実行不可', exact: true }).waitFor();
+    assert.equal(await hover.locator('.frame-column').count(), 1);
+    assert.equal(await hover.locator('.frame-arrow').count(), 0);
+    assert.equal(await hover.locator('.frame-missing').textContent(), '× 不足: String');
     assert.equal(await hover.locator('.is-produced,.is-consumed').count(), 0);
-    assert.match((await hover.locator('.frame-note').textContent())!, /PrintStream.*String/);
-    await page.screenshot({ path: '.cache/missing-stack-hover.png' });
+    assert.equal(await hover.locator('.frame-note').count(), 0);
+    assert.doesNotMatch((await hover.textContent())!, /必要|実行前|実行後/);
+    const clip = await hover.evaluate((panel) => {
+      const bounds = panel.getBoundingClientRect();
+      const line = [...document.querySelectorAll('.view-line')].find((line) =>
+        line.textContent?.includes('invokevirtual'),
+      )!;
+      const range = document.createRange();
+      range.selectNodeContents(line);
+      const instruction = range.getBoundingClientRect();
+      const x = Math.max(0, Math.floor(Math.min(bounds.left, instruction.left)) - 6);
+      const y = Math.max(0, Math.floor(Math.min(bounds.top, instruction.top)) - 6);
+      return {
+        x,
+        y,
+        width: Math.ceil(Math.max(bounds.right, instruction.right)) + 6 - x,
+        height: Math.ceil(Math.max(bounds.bottom, instruction.bottom)) + 6 - y,
+      };
+    });
+    await page.screenshot({ path: '.cache/missing-stack-hover.png', clip });
     await page.keyboard.press('Escape');
     await page.locator('#problems-tab').click();
     await page.locator('#problems button.error').click();

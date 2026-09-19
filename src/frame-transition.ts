@@ -34,36 +34,40 @@ export function renderFrameTransition(frame: FrameTransition) {
   };
   const root = node('div', undefined, 'frame-transition');
   function pair(before: string[], after: string[], locals = false) {
+    const blocked = !locals && frame.blocked;
     const unchanged =
       !frame.blocked &&
       (locals || !frame.terminal) &&
       before.length === after.length &&
       before.every((value, index) => value === after[index]);
-    const grid = node('div', undefined, 'frame-pair' + (unchanged ? ' is-unchanged' : ''));
-    (unchanged ? [before] : [before, after]).forEach((values, side) => {
+    const grid = node('div', undefined, 'frame-pair' + (unchanged || blocked ? ' is-single' : ''));
+    (unchanged || blocked ? [before] : [before, after]).forEach((values, side) => {
       if (side) grid.append(node('span', '→', 'frame-arrow'));
       const col = node('section', undefined, 'frame-column'),
         body = node('div', undefined, 'frame-values');
       col.append(
         node(
           'h4',
-          unchanged
-            ? msg('editor.unchanged')
-            : side
-              ? (frame.afterLabel ?? msg('common.afterExecution'))
-              : (frame.beforeLabel ?? msg('editor.beforeExecution')),
+          blocked
+            ? msg('analysis.blocked')
+            : unchanged
+              ? msg('editor.unchanged')
+              : side
+                ? (frame.afterLabel ?? msg('common.afterExecution'))
+                : (frame.beforeLabel ?? msg('editor.beforeExecution')),
         ),
         body,
       );
       const terminal = side === 1 && !locals && frame.terminal;
-      if (side === 1 && !locals && frame.blocked)
-        body.append(node('div', '× ' + msg('analysis.blocked'), 'frame-blocked'));
-      else if (terminal) body.append(node('div', terminal, 'frame-terminal'));
+      if (terminal) body.append(node('div', terminal, 'frame-terminal'));
       else {
         if (!locals && side === 0 && frame.missing) {
           const missing = node(
             'div',
-            '× ' + msg('analysis.missing', [frame.missing]),
+            '× ' +
+              msg('analysis.missing', [
+                (frame.requiredInputs ?? []).slice(-frame.missing).map(formatFrameValue).join(', '),
+              ]),
             'frame-missing',
           );
           body.append(missing);
@@ -77,6 +81,7 @@ export function renderFrameTransition(frame: FrameTransition) {
           );
         for (const index of visible) {
           const changed =
+            !frame.blocked &&
             !unchanged &&
             (locals
               ? (frame.locals?.changed ?? values.map((_, i) => i)).includes(index)
@@ -106,14 +111,6 @@ export function renderFrameTransition(frame: FrameTransition) {
     return grid;
   }
   root.append(node('h3', msg('common.stack')), pair(frame.before, frame.after));
-  if (frame.blocked && frame.requiredInputs?.length)
-    root.append(
-      node(
-        'p',
-        msg('analysis.requiredInputs', [frame.requiredInputs.map(formatFrameValue).join(' → ')]),
-        'frame-note',
-      ),
-    );
   if (frame.locals) {
     root.append(
       node('h3', msg('common.locals')),

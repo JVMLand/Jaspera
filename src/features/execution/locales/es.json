@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "No se puede ejecutar",
-  "analysis.missing": "Faltan {0} valores",
+  "analysis.missing": "Falta: {0}",
   "analysis.partial": "Pila provisional: aún no se ha verificado la coherencia con las otras rutas entrantes.",
   "analysis.partialGraph": "Los métodos con errores de análisis solo muestran el flujo de control. Las dependencias de la pila y de las variables locales aún no están verificadas.",
   "analysis.requiredInputs": "Valores necesarios (abajo → arriba): {0}",

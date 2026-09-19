@@ -1,6 +1,6 @@
 {
   "analysis.blocked": "Exécution impossible",
-  "analysis.missing": "{0} valeurs manquantes",
+  "analysis.missing": "Manque : {0}",
   "analysis.partial": "Pile provisoire : la cohérence avec les autres chemins entrants n’a pas été vérifiée.",
   "analysis.partialGraph": "Les méthodes comportant des erreurs d’analyse affichent uniquement le flux de contrôle. Les dépendances de la pile et des variables locales ne sont pas encore vérifiées.",
   "analysis.requiredInputs": "Valeurs requises (bas → haut) : {0}",
