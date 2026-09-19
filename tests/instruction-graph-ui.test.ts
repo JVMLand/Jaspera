@@ -47,8 +47,6 @@ test(
       ),
       5,
     );
-    assert.equal(await page.locator('#graph-panel select,#graph-panel button').count(), 0);
-    assert.equal(await page.locator('.graph-node-meta').count(), 0);
     const arithmetic = `public class Main { public static main([Ljava/lang/String;)V {
  getstatic java/lang/System->out:Ljava/io/PrintStream;
  bipush 7

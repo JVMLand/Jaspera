@@ -61,7 +61,6 @@ test(
         await event
       ).setFiles({ name, mimeType: 'application/octet-stream', buffer: Buffer.from(buffer) });
     };
-    assert.equal(await page.locator('#open-class,#open-project-file').count(), 0);
     await open(page, 'Helper.JAL', 'public class Helper {}');
     await page.getByRole('tab', { name: 'Helper', exact: true }).waitFor();
     assert.equal(

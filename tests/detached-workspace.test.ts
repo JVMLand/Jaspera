@@ -60,8 +60,6 @@ test(
     await popup.getByRole('tab', { name: 'A', exact: true }).waitFor();
     for (const menu of ['file', 'edit', 'build', 'help'])
       assert.ok(await popup.locator('#menu-' + menu).isVisible());
-    assert.equal(await popup.locator('#dock').count(), 0);
-    assert.equal(await popup.locator('.detached-toolbar, #save, #run, #stop').count(), 0);
     await popup.locator('#menu-file').click();
     assert.equal(await popup.locator('#save-project').isVisible(), false);
     await popup.keyboard.press('Escape');

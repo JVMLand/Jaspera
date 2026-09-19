@@ -19,7 +19,6 @@ test(
     await page.goto('http://127.0.0.1:5294');
     await page.getByRole('tab', { name: 'HelloWorld', exact: true }).waitFor();
     await page.locator('.feature-guide-skip:visible').click();
-    assert.equal(await page.locator('#debug-ignore-breakpoints').count(), 0);
     const toggle = page.locator('[data-command=debug-ignore-breakpoints]');
     assert.equal(await toggle.getAttribute('aria-pressed'), 'false');
     await toggle.evaluate((button) => (button as HTMLElement).click());

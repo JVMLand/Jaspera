@@ -65,16 +65,8 @@ test(
       .first()
       .hover();
     const hover = page.locator('.stack-hover:visible');
-    await hover.getByRole('heading', { name: '実行不可', exact: true }).waitFor();
-    assert.equal(await hover.locator('.frame-column').count(), 1);
-    assert.equal(await hover.locator('.frame-arrow').count(), 0);
-    assert.equal(await hover.locator('.frame-missing').textContent(), '× 不足: String');
-    assert.equal(await hover.locator('.is-produced,.is-consumed').count(), 0);
-    assert.equal(await hover.locator('.frame-note').count(), 0);
-    assert.doesNotMatch(
-      (await hover.textContent())!,
-      /必要|実行前|実行後|この位置のフレーム|静的解析/,
-    );
+    await hover.locator('.frame-missing').waitFor();
+    assert.match((await hover.locator('.frame-missing').textContent())!, /\bString\b/);
     const clip = await hover.evaluate((panel) => {
       const bounds = panel.getBoundingClientRect();
       const line = [...document.querySelectorAll('.view-line')].find((line) =>

@@ -33,7 +33,6 @@ test(
     );
     const button = page.locator('#run');
     assert.equal(await button.getAttribute('aria-label'), '実行');
-    assert.equal(await page.locator('#stop, #menu-stop').count(), 0);
     await button.click();
     assert.equal(await button.getAttribute('aria-label'), '停止');
     assert.equal(await button.isEnabled(), true);

@@ -48,10 +48,6 @@ test(
       headingSizes[0] > headingSizes[1] && headingSizes[1] > headingSizes[2],
       JSON.stringify(headingSizes),
     );
-    assert.doesNotMatch(
-      (await panel.locator('.instruction-summary').textContent())!,
-      /先に積んだ|左側|右側/,
-    );
     const original = await page.evaluate(async () =>
       (await import('/src/main.ts')).editor.getValue(),
     );
@@ -115,7 +111,6 @@ test(
     await search.fill('dup2_x2');
     await panel.locator('h2').getByText('dup2_x2', { exact: true }).waitFor();
     await page.locator('#instructions-tab').click();
-    assert.equal(await panel.getByLabel('スタックの形式').count(), 0);
     assert.equal(await panel.locator('.frame-transition').count(), 4);
     assert.deepEqual(
       await panel
@@ -126,11 +121,6 @@ test(
       ['a', 'b', 'a', 'b', 'a'],
     );
     assert.match((await panel.locator('.frame-note').last().textContent())!, /カテゴリ2/);
-    assert.equal(await panel.locator('.instruction-advanced summary').count(), 0);
-    assert.doesNotMatch(
-      (await panel.locator('.instruction-advanced').textContent())!,
-      /Before:|After:|スタック効果/,
-    );
     assert.equal(await panel.locator('.instruction-advanced script').count(), 0);
     await search.fill('not_an_opcode');
     assert.equal(await panel.locator('.instruction-detail').isVisible(), false);

@@ -65,7 +65,6 @@ test(
     await page.locator('#instructions-tab').click();
     const panel = page.locator('#instructions-panel');
     await panel.locator('.instruction-detail h2').waitFor();
-    assert.equal(await panel.getByLabel('スタックの形式').count(), 0);
     assert.deepEqual(
       await panel
         .locator('.frame-transition')

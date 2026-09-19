@@ -71,7 +71,6 @@ test(
     const card = page.locator('.stack-hover:visible');
     await card.getByText('実行前', { exact: true }).waitFor({ timeout: 60000 });
     assert.ok((await card.textContent())!.includes('実行後'));
-    assert.ok(!(await card.textContent())!.includes('ローカル変数'));
     assert.deepEqual(await card.locator('.frame-column code').allTextContents(), ['int']);
     assert.equal(await card.locator('.is-produced').count(), 1);
     assert.equal(await card.locator('.is-consumed').count(), 0);

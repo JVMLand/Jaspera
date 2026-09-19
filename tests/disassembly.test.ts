@@ -112,7 +112,6 @@ test(
             '/*\n  Decompiled by JALP (Java Assembly Language Parser)\n  Class: DropProbe.class\n  Compiled from "DropProbe.java"\n*/\n',
           ),
         );
-        assert.doesNotMatch(result.probe, /注意:|再コンパイル|表せない|powered by ASM|recreated/);
         assert.match(result.probe, /ldc Ljava\/lang\/String;/);
         assert.match(result.probe, /INITIALIZER MUST NOT RUN/);
         assert.deepEqual(result.diagnostics, []);

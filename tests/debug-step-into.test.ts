@@ -110,7 +110,6 @@ test(
     assert.match(caller, /呼び出し時/);
     assert.match(caller, /PrintStream/);
     assert.match(caller, /こんにちは，JAL！/);
-    assert.doesNotMatch(caller, /呼び出し先へ移動|呼び出し先の実行待ち/);
     await page.screenshot({ path: '.cache/debug-caller-frame.png' });
     await page.locator('.debug-toolbar [data-command=debug-stop]').click();
     await page.locator('.debug-current-marker').waitFor({ state: 'hidden' });

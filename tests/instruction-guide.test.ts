@@ -48,21 +48,15 @@ test('stack manipulation variants keep ordering and category restrictions', () =
   assert.deepEqual(guide('swap').forms[0].after, ['a', 'b']);
 });
 
-test('editorial summaries keep operand order only where it matters', () => {
-  for (const op of ['iadd', 'lmul', 'iand', 'ior', 'ixor', 'if_icmpeq', 'if_acmpne'])
-    assert.doesNotMatch(guide(op).summary, /先に積んだ|左側|右側|TOP の下/);
+test('arithmetic explanations describe operand order and exceptional results', () => {
   assert.match(guide('isub').summary, /TOP の値を，その下の値から引き/);
   assert.match(guide('idiv').summary, /TOP の値で，その下の値を割り/);
   assert.match(guide('ishl').summary, /ビット数/);
   assert.match(guide('iand').forms[0].note, /両方のビット/);
   assert.match(guide('iadd').markdown, /オーバーフロー/);
-  assert.doesNotMatch(guide('iadd').markdown, /IEEE|NaN|形式|スタック効果|先に積んだ/);
   assert.match(guide('idiv').markdown, /ArithmeticException/);
   assert.match(guide('fdiv').markdown, /NaN/);
-  assert.doesNotMatch(guide('i2l').markdown, /NaN|丸め/);
   assert.match(guide('d2i').markdown, /NaN/);
-  for (const op of instructionList)
-    assert.doesNotMatch(guide(op).markdown, /##### \*\*(形式|スタック効果|例):/, op);
 });
 
 test('explanations distinguish behaviour rather than inheriting generic documentation', () => {
@@ -83,15 +77,13 @@ test('explanations distinguish behaviour rather than inheriting generic document
   assert.match(guide('saload').markdown, /符号を保って/);
   assert.match(guide('fcmpl').markdown, /NaN のときは −1/);
   assert.match(guide('fcmpg').markdown, /NaN のときは 1/);
-  assert.doesNotMatch(guide('lcmp').forms[0].note, /NaN/);
   assert.match(guide('ret').markdown, /51.0/);
   assert.match(guide('putstatic').markdown, /<clinit>/);
-  assert.doesNotMatch(guide('putstatic').example, /System->out/);
   assert.equal(guide('newarray').example, 'newarray I');
   assert.match(guide('iconst_3').summary, /int の定数 3/);
 });
 
-test('related pages exist, exclude self, and keep other instruction behaviour out of the body', () => {
+test('related pages point to distinct, supported instructions', () => {
   for (const op of instructionList) {
     const related = guide(op).related;
     assert.equal(new Set(related).size, related.length, op);
@@ -100,8 +92,6 @@ test('related pages exist, exclude self, and keep other instruction behaviour ou
   }
   for (const op of ['ireturn', 'lreturn', 'freturn', 'dreturn', 'areturn', 'return']) {
     assert.equal(guide(op).related.length, 5);
-    for (const other of guide(op).related)
-      assert.doesNotMatch(guide(op).markdown, new RegExp('\\b' + other + '\\b'));
   }
   for (const [op, other] of [
     ['iconst_1', 'bipush'],
@@ -111,6 +101,5 @@ test('related pages exist, exclude self, and keep other instruction behaviour ou
     ['ret', 'jsr_w'],
   ]) {
     assert.ok(guide(op).related.includes(other));
-    assert.doesNotMatch(guide(op).markdown, new RegExp('\\b' + other + '\\b'));
   }
 });

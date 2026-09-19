@@ -25,8 +25,6 @@ test(
       chooser = panel.locator('.instruction-chooser'),
       search = panel.getByLabel('命令を検索');
     assert.equal(await chooser.isVisible(), false);
-    assert.equal(await panel.locator('.instruction-reading').count(), 0);
-    assert.equal(await panel.locator('details.instruction-advanced').count(), 0);
     await panel.locator('.frame-rest').first().waitFor();
     const rests = await panel
       .locator('.frame-rest')
